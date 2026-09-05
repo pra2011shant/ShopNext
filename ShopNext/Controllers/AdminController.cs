@@ -22,13 +22,15 @@ namespace ShopNext.Controllers
         private readonly ShopNextDbContext _context;
         private readonly IAuditService _auditService;
         private readonly ICustomerRiskService _riskService;
+        private readonly IAddressRiskService _addressRiskService;
 
-        public AdminController(IShopNextService service, ShopNextDbContext context, IAuditService auditService, ICustomerRiskService riskService)
+        public AdminController(IShopNextService service, ShopNextDbContext context, IAuditService auditService, ICustomerRiskService riskService, IAddressRiskService addressRiskService)
         {
             _service = service;
             _context = context;
             _auditService = auditService;
             _riskService = riskService;
+            _addressRiskService = addressRiskService;
         }
 
         private bool IsAdminLoggedIn()
@@ -529,7 +531,8 @@ namespace ShopNext.Controllers
                 BrandsList = brandsList,
                 ComplaintsList = complaintsList,
                 NotificationsList = notificationsList,
-                Reports = await _service.GetAdminReportsAsync("Sales", "30Days")
+                Reports = await _service.GetAdminReportsAsync("Sales", "30Days"),
+                AddressRiskList = await _addressRiskService.GetAddressRiskAnalyticsAsync()
             };
 
             ViewBag.PendingShops = pendingShops;
@@ -3643,8 +3646,68 @@ namespace ShopNext.Controllers
                 }
             });
         }
+
+        #region Point 47: Address Risk Management APIs
+
+        // GET: /Admin/GetAddressRiskDetails?addressKey=...
+        [HttpGet]
+        public async Task<IActionResult> GetAddressRiskDetails(string addressKey)
+        {
+            if (string.IsNullOrWhiteSpace(addressKey))
+            {
+                return Json(new { success = false, message = "Address key is required." });
+            }
+
+            var addressRisk = await _addressRiskService.GetAddressRiskDetailsAsync(addressKey);
+            if (addressRisk == null)
+            {
+                return Json(new { success = false, message = "Address risk profile not found." });
+            }
+
+            return Json(new
+            {
+                success = true,
+                data = addressRisk
+            });
+        }
+
+        // POST: /Admin/UpdateAddressInvestigation
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateAddressInvestigation([FromBody] UpdateAddressInvestigationRequest request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.AddressKey))
+            {
+                return Json(new { success = false, message = "Invalid investigation request." });
+            }
+
+            var success = await _addressRiskService.UpdateAddressInvestigationAsync(
+                request.AddressKey,
+                request.InvestigationStatus,
+                request.AdminNotes,
+                request.RequireManualOtpVerification
+            );
+
+            if (!success)
+            {
+                return Json(new { success = false, message = "Failed to update address investigation state." });
+            }
+
+            return Json(new
+            {
+                success = true,
+                message = $"Address '{request.AddressKey}' marked as '{request.InvestigationStatus}'. Non-punitive safeguard confirmed.",
+                investigationStatus = request.InvestigationStatus,
+                adminNotes = request.AdminNotes,
+                requireManualOtp = request.RequireManualOtpVerification,
+                updatedDate = DateTime.Now.ToString("dd MMM yyyy, hh:mm tt")
+            });
+        }
+
+        #endregion
     }
 }
+
 
 
 

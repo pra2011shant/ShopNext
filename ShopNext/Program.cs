@@ -35,6 +35,7 @@ builder.Services.AddScoped<IRiderService>(sp => sp.GetRequiredService<ShopNextSe
 builder.Services.AddScoped<IAdminReportService>(sp => sp.GetRequiredService<ShopNextService>());
 builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<ICustomerRiskService, CustomerRiskService>();
+builder.Services.AddScoped<IAddressRiskService, AddressRiskService>();
 
 // 3. Point 46 & 29: Security & Role-Based Authentication Configuration
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

@@ -55,6 +55,9 @@ namespace ShopNext.Models
 
         // Point 45: Reports & Analytics Suite Dataset
         public AdminReportsViewModel Reports { get; set; } = new AdminReportsViewModel();
+
+        // Point 47: Address Risk Management Dataset
+        public List<AdminAddressRiskDto> AddressRiskList { get; set; } = new List<AdminAddressRiskDto>();
     }
 
     /// <summary>
@@ -645,6 +648,81 @@ namespace ShopNext.Models
         public decimal NetSellerPayout { get; set; }
         public string PayoutStatus { get; set; } = "Settled";
         public string SettlementDate { get; set; } = string.Empty;
+    }
+
+    #endregion
+
+    #region Point 47: Address Risk Management DTOs
+
+    /// <summary>
+    /// Point 47: Address Risk Management DTO
+    /// Aggregates orders, returns, cancellations, delivered counts, and customer accounts for a normalized address/pincode cluster.
+    /// Non-punitive policy: Strictly an investigation/telemetry tool to detect abnormal spikes without auto-blocking customers.
+    /// </summary>
+    public class AdminAddressRiskDto
+    {
+        public string AddressKey { get; set; } = string.Empty;
+        public string FormattedAddress { get; set; } = string.Empty;
+        public string Locality { get; set; } = string.Empty;
+        public string City { get; set; } = "Patna";
+        public string State { get; set; } = "Bihar";
+        public string Pincode { get; set; } = "800001";
+        
+        // Volume telemetry
+        public int TotalOrders { get; set; }
+        public int DeliveredOrders { get; set; }
+        public int ReturnedOrders { get; set; }
+        public int CancelledOrders { get; set; }
+        public decimal TotalAmount { get; set; }
+        public decimal ReturnRate { get; set; }
+        public decimal CancellationRate { get; set; }
+        public int DistinctCustomersCount { get; set; }
+        
+        // Risk & Alert classification
+        public string RiskLevel { get; set; } = "Normal"; // Normal (🟢), Medium Risk (🟡), High Risk (🔴)
+        public string AlertBadge { get; set; } = "Normal Activity"; // "Normal Activity", "⚠ High Activity", "High Return Rate", "Multi-Account Cluster"
+        
+        // Investigation & Safeguard status (Non-punitive workflow)
+        public string InvestigationStatus { get; set; } = "Monitoring"; // "Monitoring", "Flagged for Review", "Under Investigation", "Verified / Clean", "High Risk Area"
+        public string? AdminNotes { get; set; }
+        public string? LastEvaluatedDate { get; set; }
+        public bool RequireManualOtpVerification { get; set; } = false; // Flag high-value shipments for manual pre-dispatch call
+        
+        // Associated details for drilldown
+        public List<AdminAddressLinkedCustomerDto> LinkedCustomers { get; set; } = new List<AdminAddressLinkedCustomerDto>();
+        public List<AdminAddressOrderItemDto> RecentOrders { get; set; } = new List<AdminAddressOrderItemDto>();
+    }
+
+    public class AdminAddressLinkedCustomerDto
+    {
+        public int CustomerId { get; set; }
+        public string CustomerName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
+        public int OrdersCount { get; set; }
+        public int ReturnsCount { get; set; }
+        public string RestrictionLevel { get; set; } = "Normal";
+        public string Status { get; set; } = "Active";
+    }
+
+    public class AdminAddressOrderItemDto
+    {
+        public int OrderId { get; set; }
+        public string CustomerName { get; set; } = string.Empty;
+        public decimal Amount { get; set; }
+        public string Status { get; set; } = "Delivered";
+        public string PaymentMode { get; set; } = "COD";
+        public string OrderDate { get; set; } = string.Empty;
+        public string? ReturnReason { get; set; }
+        public string? CancelReason { get; set; }
+    }
+
+    public class UpdateAddressInvestigationRequest
+    {
+        public string AddressKey { get; set; } = string.Empty;
+        public string InvestigationStatus { get; set; } = "Under Investigation";
+        public string? AdminNotes { get; set; }
+        public bool RequireManualOtpVerification { get; set; }
     }
 
     #endregion

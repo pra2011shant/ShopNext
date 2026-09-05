@@ -376,6 +376,10 @@
             <span><i class="fa-solid fa-store text-warning"></i> Sellers</span>
             <span class="sidebar-badge bg-warning bg-opacity-20 text-warning">250</span>
         </div>
+        <div class="nav-sidebar-item" onclick="switchAdminTab('addressrisk', this)" id="nav-addressrisk">
+            <span><i class="fa-solid fa-map-location-dot text-danger"></i> Address Risk</span>
+            <span class="sidebar-badge bg-danger bg-opacity-20 text-danger" id="sidebarAddressRiskBadge">@Model.AddressRiskList.Count(x => x.RiskLevel == "High Risk" || x.AlertBadge == "⚠ High Activity") Alert</span>
+        </div>
 
         <!-- Group 3: CATALOG & INVENTORY -->
         <div class="sidebar-group-title">Catalog & Inventory</div>
@@ -933,6 +937,284 @@
                                                 </button>
                                             }
                                         </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- POINT 47: TAB: ADDRESS RISK MANAGEMENT (Cluster Telemetry & Non-Punitive Investigation) -->
+        <div class="tab-panel-container" id="panel-addressrisk">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <h3 class="fw-bold text-white mb-0"><i class="fa-solid fa-map-location-dot text-danger me-2"></i> Address Risk Management</h3>
+                            <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 rounded-pill px-3 py-1">POINT 47</span>
+                        </div>
+                        <p class="text-secondary small mb-0">Cluster telemetry to detect abnormal order spikes, returns, and cancellation patterns at specific addresses without auto-punishing customers.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-outline-info btn-sm rounded-pill px-3 py-2" onclick="location.reload()">
+                            <i class="fa-solid fa-arrows-rotate me-1"></i> Refresh Telemetry
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4 Top KPI Cards for Address Risk -->
+                <div class="row g-3 mb-4">
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-secondary small fw-semibold text-uppercase">Monitored Clusters</div>
+                                    <div class="text-white fw-bold fs-3 mt-1">@Model.AddressRiskList.Count</div>
+                                </div>
+                                <div class="p-3 rounded-3 bg-primary bg-opacity-15 text-primary fs-4">
+                                    <i class="fa-solid fa-map-pin"></i>
+                                </div>
+                            </div>
+                            <div class="text-secondary small mt-2"><i class="fa-solid fa-city text-info me-1"></i> Across Patna & Bihar</div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="p-3 rounded-4" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-danger small fw-semibold text-uppercase">⚠ High Activity Hotspots</div>
+                                    <div class="text-white fw-bold fs-3 mt-1">@Model.AddressRiskList.Count(x => x.AlertBadge == "⚠ High Activity" || x.RiskLevel == "High Risk")</div>
+                                </div>
+                                <div class="p-3 rounded-3 bg-danger bg-opacity-20 text-danger fs-4">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                </div>
+                            </div>
+                            <div class="text-danger small mt-2"><i class="fa-solid fa-arrow-trend-up me-1"></i> High Order/Return Spikes</div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="p-3 rounded-4" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-warning small fw-semibold text-uppercase">Return Spike Zones</div>
+                                    <div class="text-white fw-bold fs-3 mt-1">@Model.AddressRiskList.Count(x => x.ReturnRate >= 35)</div>
+                                </div>
+                                <div class="p-3 rounded-3 bg-warning bg-opacity-20 text-warning fs-4">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                                </div>
+                            </div>
+                            <div class="text-warning small mt-2"><i class="fa-solid fa-percent me-1"></i> Return Rate &ge; 35%</div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="p-3 rounded-4" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-success small fw-semibold text-uppercase">Active Investigations</div>
+                                    <div class="text-white fw-bold fs-3 mt-1">@Model.AddressRiskList.Count(x => x.InvestigationStatus == "Under Investigation")</div>
+                                </div>
+                                <div class="p-3 rounded-3 bg-success bg-opacity-20 text-success fs-4">
+                                    <i class="fa-solid fa-magnifying-glass-chart"></i>
+                                </div>
+                            </div>
+                            <div class="text-success small mt-2"><i class="fa-solid fa-shield-halved me-1"></i> Non-punitive monitoring</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Anti-Bias Safeguard Notice Banner -->
+                <div class="p-3 mb-4 rounded-4" style="background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3);">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-3 rounded-3 bg-primary bg-opacity-25 text-primary fs-3 flex-shrink-0">
+                            <i class="fa-solid fa-scale-balanced"></i>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <h6 class="fw-bold text-white mb-0">🛡️ Fair Play & Non-Punitive Address Risk Telemetry Policy</h6>
+                                <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30 rounded-pill px-2.5 py-0.5" style="font-size: 0.72rem;">Safe Operational Guideline</span>
+                            </div>
+                            <p class="text-light text-opacity-80 small mb-0 mt-1">
+                                Ek address par agar abnormal suspicious orders/returns (e.g. 50 Orders, 30 Returns, 10 Cancellations) ho rahe hon, toh yeh alert sirf <strong>Admin Investigation</strong> ke liye flag karta hai.
+                                <span class="text-warning fw-semibold">Sirf area ya address ke basis par customer ko guilty maan kar automatic account block ya penalize nahi kiya jata.</span>
+                                Admin manual review karke sirf high-value packages par optional pre-dispatch verification enable kar sakta hai.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters & Live Search Toolbar -->
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div class="btn-group bg-dark p-1 rounded-3 border border-secondary border-opacity-25" role="group">
+                        <button type="button" class="btn btn-sm btn-dark address-filter-btn active" onclick="filterAddressRiskTable('all', this)">All Clusters</button>
+                        <button type="button" class="btn btn-sm btn-dark address-filter-btn" onclick="filterAddressRiskTable('high-activity', this)">
+                            <span class="text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i> ⚠ High Activity</span>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-dark address-filter-btn" onclick="filterAddressRiskTable('high-return', this)">
+                            <span class="text-warning"><i class="fa-solid fa-rotate-left me-1"></i> High Returns</span>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-dark address-filter-btn" onclick="filterAddressRiskTable('under-investigation', this)">
+                            <span class="text-info"><i class="fa-solid fa-magnifying-glass me-1"></i> Under Investigation</span>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-dark address-filter-btn" onclick="filterAddressRiskTable('clean', this)">
+                            <span class="text-success"><i class="fa-solid fa-circle-check me-1"></i> Verified Clean</span>
+                        </button>
+                    </div>
+
+                    <div class="input-group" style="max-width: 340px;">
+                        <span class="input-group-text bg-dark border-secondary border-opacity-25 text-secondary"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" class="form-control bg-dark text-white border-secondary border-opacity-25" placeholder="Search Area, Road, Pincode..." onkeyup="searchAddressRiskTable(this.value)" id="addressRiskSearchInput" />
+                    </div>
+                </div>
+
+                <!-- Address Risk Management Table -->
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0" id="addressRiskMainTable">
+                        <thead>
+                            <tr class="text-secondary small text-uppercase border-bottom border-secondary border-opacity-25">
+                                <th style="width: 28%;">Address / Area & Pincode</th>
+                                <th style="width: 22%;">Activity Breakdown (Orders / Returns / Cancels)</th>
+                                <th style="width: 12%; text-align: center;">Accounts</th>
+                                <th style="width: 14%;">Risk Classification</th>
+                                <th style="width: 14%;">Investigation Status</th>
+                                <th style="width: 10%; text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.AddressRiskList)
+                            {
+                                string filterClass = "all";
+                                if (item.AlertBadge == "⚠ High Activity" || item.RiskLevel == "High Risk") { filterClass += " high-activity"; }
+                                if (item.ReturnRate >= 35 || item.AlertBadge == "High Return Rate") { filterClass += " high-return"; }
+                                if (item.InvestigationStatus == "Under Investigation") { filterClass += " under-investigation"; }
+                                if (item.InvestigationStatus == "Verified / Clean") { filterClass += " clean"; }
+
+                                string rowIdSafe = System.Text.RegularExpressions.Regex.Replace(item.AddressKey, @"[^a-zA-Z0-9]", "_");
+
+                                <tr class="address-risk-row @filterClass" 
+                                    data-address-key="@item.AddressKey"
+                                    data-locality="@item.Locality"
+                                    data-pincode="@item.Pincode"
+                                    data-risk-level="@item.RiskLevel"
+                                    data-alert-badge="@item.AlertBadge"
+                                    data-status="@item.InvestigationStatus"
+                                    id="address-row-@rowIdSafe">
+                                    <td>
+                                        <div class="d-flex align-items-start gap-2.5">
+                                            <div class="p-2.5 rounded-3 bg-secondary bg-opacity-20 text-white flex-shrink-0 mt-0.5">
+                                                <i class="fa-solid fa-location-dot @(item.RiskLevel == "High Risk" ? "text-danger" : (item.RiskLevel == "Medium Risk" ? "text-warning" : "text-success"))"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-white fw-bold mb-0.5 addr-name">@item.AddressKey</div>
+                                                <div class="text-secondary small text-truncate" style="max-width: 320px;">@item.FormattedAddress</div>
+                                                <div class="d-flex align-items-center gap-2 mt-1">
+                                                    <span class="badge bg-secondary bg-opacity-35 text-light border border-secondary border-opacity-30 rounded-pill px-2 py-0.5" style="font-size: 0.72rem;">PIN: @item.Pincode</span>
+                                                    <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-30 rounded-pill px-2 py-0.5" style="font-size: 0.72rem;">@item.City</span>
+                                                    <span class="text-secondary small font-monospace">₹@item.TotalAmount.ToString("N0") gross</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <div class="d-flex justify-content-between align-items-center small mb-1">
+                                                <span class="text-white fw-bold font-monospace">@item.TotalOrders Orders</span>
+                                                <span class="text-secondary">@item.DeliveredOrders Deliv &bull; <strong class="text-danger">@item.ReturnedOrders Ret</strong> &bull; <strong class="text-warning">@item.CancelledOrders Canc</strong></span>
+                                            </div>
+                                            <!-- Mini Progress Bar Breakdown -->
+                                            <div class="progress" style="height: 7px; background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden;">
+                                                @{
+                                                    decimal delivPct = item.TotalOrders > 0 ? (decimal)item.DeliveredOrders / item.TotalOrders * 100m : 0m;
+                                                    decimal retPct = item.TotalOrders > 0 ? (decimal)item.ReturnedOrders / item.TotalOrders * 100m : 0m;
+                                                    decimal canPct = item.TotalOrders > 0 ? (decimal)item.CancelledOrders / item.TotalOrders * 100m : 0m;
+                                                }
+                                                <div class="progress-bar bg-success" style="width: @delivPct%" title="Delivered: @item.DeliveredOrders"></div>
+                                                <div class="progress-bar bg-danger" style="width: @retPct%" title="Returned: @item.ReturnedOrders (@item.ReturnRate%)"></div>
+                                                <div class="progress-bar bg-warning" style="width: @canPct%" title="Cancelled: @item.CancelledOrders (@item.CancellationRate%)"></div>
+                                            </div>
+                                            <div class="d-flex justify-content-between text-secondary small mt-1 font-monospace" style="font-size: 0.73rem;">
+                                                <span class="text-danger">Return: @item.ReturnRate%</span>
+                                                <span class="text-warning">Cancel: @item.CancellationRate%</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <span class="badge bg-secondary bg-opacity-40 text-light border border-secondary border-opacity-30 rounded-pill px-3 py-1.5 font-monospace fs-6">
+                                            <i class="fa-solid fa-users me-1 text-info"></i> @item.DistinctCustomersCount
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (item.AlertBadge == "⚠ High Activity" || (item.TotalOrders >= 40 && item.ReturnedOrders >= 20))
+                                        {
+                                            <span class="badge bg-danger text-white border border-danger px-2.5 py-1.5 rounded-pill fw-bold">
+                                                <i class="fa-solid fa-triangle-exclamation me-1"></i> ⚠ High Activity
+                                            </span>
+                                        }
+                                        else if (item.AlertBadge == "High Return Rate" || item.ReturnRate >= 35)
+                                        {
+                                            <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 px-2.5 py-1.5 rounded-pill fw-bold">
+                                                <i class="fa-solid fa-rotate-left me-1"></i> High Return Rate
+                                            </span>
+                                        }
+                                        else if (item.AlertBadge == "Multi-Account Cluster")
+                                        {
+                                            <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30 px-2.5 py-1.5 rounded-pill fw-bold">
+                                                <i class="fa-solid fa-people-arrows me-1"></i> Multi-Account Cluster
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30 px-2.5 py-1.5 rounded-pill fw-bold">
+                                                <i class="fa-solid fa-circle-check me-1"></i> Normal Activity
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div id="status-badge-container-@rowIdSafe">
+                                            @if (item.InvestigationStatus == "Under Investigation")
+                                            {
+                                                <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-40 px-2.5 py-1.5 rounded-pill fw-bold">
+                                                    <i class="fa-solid fa-magnifying-glass me-1"></i> Under Investigation
+                                                </span>
+                                            }
+                                            else if (item.InvestigationStatus == "Flagged for Review")
+                                            {
+                                                <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 px-2.5 py-1.5 rounded-pill fw-bold">
+                                                    <i class="fa-solid fa-flag me-1"></i> Flagged for Review
+                                                </span>
+                                            }
+                                            else if (item.InvestigationStatus == "Verified / Clean")
+                                            {
+                                                <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30 px-2.5 py-1.5 rounded-pill fw-bold">
+                                                    <i class="fa-solid fa-circle-check me-1"></i> Verified / Clean
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary bg-opacity-40 text-light border border-secondary border-opacity-30 px-2.5 py-1.5 rounded-pill fw-bold">
+                                                    <i class="fa-solid fa-eye me-1"></i> Monitoring
+                                                </span>
+                                            }
+                                        </div>
+                                        @if (item.RequireManualOtpVerification)
+                                        {
+                                            <div class="small text-info mt-1" style="font-size: 0.72rem;" id="manual-verify-indicator-@rowIdSafe">
+                                                <i class="fa-solid fa-shield-halved me-1"></i> Manual OTP / Call Active
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="small text-info mt-1 d-none" style="font-size: 0.72rem;" id="manual-verify-indicator-@rowIdSafe">
+                                                <i class="fa-solid fa-shield-halved me-1"></i> Manual OTP / Call Active
+                                            </div>
+                                        }
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <button type="button" class="btn btn-outline-warning btn-sm rounded-pill px-3 py-1.5 fw-semibold"
+                                                onclick="openAddressRiskModal('@item.AddressKey')">
+                                            <i class="fa-solid fa-magnifying-glass me-1"></i> Investigate
+                                        </button>
                                     </td>
                                 </tr>
                             }
@@ -5044,6 +5326,188 @@
                 <button type="button" class="btn btn-secondary px-3 py-2" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-danger px-4 py-2 fw-bold" id="btnConfirmDeleteReview" onclick="confirmDeleteReview()">
                     <i class="fa-solid fa-trash me-1"></i> Confirm Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- POINT 47: Address Risk Investigation & Management Modal -->
+<div class="modal fade" id="addressRiskModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+        <div class="modal-content modal-content-glass" style="background: rgba(15, 23, 42, 0.96); border: 1px solid rgba(255, 255, 255, 0.12);">
+            <div class="modal-header border-bottom border-secondary border-opacity-25 p-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 rounded-3 bg-danger bg-opacity-20 text-danger fs-3" id="modalAddrIcon">
+                        <i class="fa-solid fa-map-location-dot"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <h5 class="modal-title fw-bold text-white mb-0" id="modalAddrKeyDisplay">Boring Road, Patna - 800001</h5>
+                            <span class="badge bg-danger text-white px-2.5 py-1 rounded-pill fw-bold" id="modalAddrAlertBadge">⚠ High Activity</span>
+                        </div>
+                        <div class="text-secondary small mt-1" id="modalAddrFullDisplay">Plot 42, Near Alankar Jewellers, Boring Road, Patna, Bihar - 800001</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- 4 KPI Telemetry Bar -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 rounded-3 text-center" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+                            <div class="text-secondary small fw-semibold text-uppercase">Total Orders</div>
+                            <div class="text-white fw-bold fs-3 font-monospace mt-1" id="modalAddrTotalOrders">50</div>
+                            <div class="text-info small" id="modalAddrTotalAmount">₹1,45,800 gross</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 rounded-3 text-center" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);">
+                            <div class="text-danger small fw-semibold text-uppercase">Returns</div>
+                            <div class="text-danger fw-bold fs-3 font-monospace mt-1" id="modalAddrReturnedOrders">30</div>
+                            <div class="text-danger small fw-bold" id="modalAddrReturnRate">60.0% Return Rate</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 rounded-3 text-center" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3);">
+                            <div class="text-warning small fw-semibold text-uppercase">Cancellations</div>
+                            <div class="text-warning fw-bold fs-3 font-monospace mt-1" id="modalAddrCancelledOrders">10</div>
+                            <div class="text-warning small fw-bold" id="modalAddrCancelRate">20.0% Cancel Rate</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 rounded-3 text-center" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">
+                            <div class="text-primary small fw-semibold text-uppercase">Distinct Accounts</div>
+                            <div class="text-primary fw-bold fs-3 font-monospace mt-1" id="modalAddrCustomerCount">4</div>
+                            <div class="text-secondary small">Linked Users</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Non-Punitive Safeguard Box -->
+                <div class="p-3 mb-4 rounded-3" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25);">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fa-solid fa-shield-halved text-success fs-4 flex-shrink-0"></i>
+                        <div class="small text-light">
+                            <strong>Fair-Play Policy Enforced:</strong> Address risk telemetry is for anomaly detection only. <span class="text-warning">All legitimate customers ordering from this location retain standard account access.</span> To protect platform margins against return fraud, admin may flag high-ticket shipments for manual phone/OTP verification before dispatch.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs inside Modal -->
+                <ul class="nav nav-pills mb-3 p-1 rounded-3 bg-dark border border-secondary border-opacity-25" id="modalAddrTabNav" role="tablist">
+                    <li class="nav-item flex-fill" role="presentation">
+                        <button class="nav-link active w-100 fw-bold py-2 text-center" id="tab-addr-customers-btn" data-bs-toggle="pill" data-bs-target="#tab-addr-customers" type="button" role="tab">
+                            <i class="fa-solid fa-users me-1 text-primary"></i> Linked Customer Accounts (<span id="modalAddrCustCountBadge">4</span>)
+                        </button>
+                    </li>
+                    <li class="nav-item flex-fill" role="presentation">
+                        <button class="nav-link w-100 fw-bold py-2 text-center" id="tab-addr-orders-btn" data-bs-toggle="pill" data-bs-target="#tab-addr-orders" type="button" role="tab">
+                            <i class="fa-solid fa-bag-shopping me-1 text-success"></i> Recent Orders Breakdown
+                        </button>
+                    </li>
+                    <li class="nav-item flex-fill" role="presentation">
+                        <button class="nav-link w-100 fw-bold py-2 text-center" id="tab-addr-manage-btn" data-bs-toggle="pill" data-bs-target="#tab-addr-manage" type="button" role="tab">
+                            <i class="fa-solid fa-clipboard-check me-1 text-warning"></i> Investigation &amp; Safeguards
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content pt-2" id="modalAddrTabContent">
+                    <!-- Tab 1: Linked Customer Accounts -->
+                    <div class="tab-pane fade show active" id="tab-addr-customers" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover align-middle mb-0">
+                                <thead>
+                                    <tr class="text-secondary small text-uppercase border-bottom border-secondary border-opacity-25">
+                                        <th>Customer</th>
+                                        <th>Contact</th>
+                                        <th>Orders at Address</th>
+                                        <th>Returns</th>
+                                        <th>Account Restriction</th>
+                                        <th>Status</th>
+                                        <th style="text-align: right;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="modalAddrCustomersTableBody">
+                                    <!-- Populated dynamically via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Recent Orders History -->
+                    <div class="tab-pane fade" id="tab-addr-orders" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover align-middle mb-0">
+                                <thead>
+                                    <tr class="text-secondary small text-uppercase border-bottom border-secondary border-opacity-25">
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Amount</th>
+                                        <th>Payment</th>
+                                        <th>Order Status</th>
+                                        <th>Return / Cancel Reason</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="modalAddrOrdersTableBody">
+                                    <!-- Populated dynamically via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tab 3: Investigation Status & Admin Controls -->
+                    <div class="tab-pane fade" id="tab-addr-manage" role="tabpanel">
+                        <form id="formAddressInvestigation" onsubmit="event.preventDefault(); submitUpdateAddressInvestigation();">
+                            <input type="hidden" id="modalAddrKeyHidden" />
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-light fw-semibold small">Investigation Status</label>
+                                    <select class="form-select bg-dark text-white border-secondary border-opacity-25" id="modalAddrStatusSelect">
+                                        <option value="Under Investigation">🔍 Under Investigation (Active Monitoring & Telemetry)</option>
+                                        <option value="Flagged for Review">⚠ Flagged for Review (Abnormal Return/Cancel Ratio)</option>
+                                        <option value="Monitoring">👁 Monitoring (Standard Baseline Observation)</option>
+                                        <option value="Verified / Clean">✅ Verified / Clean (Legitimate Residential Zone)</option>
+                                        <option value="High Risk Area">🚨 High Risk Area (Frequent Logistics Transit Fraud)</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label text-light fw-semibold small">Pre-Dispatch Operational Safeguard</label>
+                                    <div class="p-2.5 rounded-3 bg-dark border border-secondary border-opacity-25">
+                                        <div class="form-check form-switch mb-0">
+                                            <input class="form-check-input" type="checkbox" id="modalAddrRequireOtpCheck">
+                                            <label class="form-check-label text-light small fw-semibold" for="modalAddrRequireOtpCheck">
+                                                Require Manual Call / OTP for orders &gt; ₹5,000
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="text-secondary small mt-1" style="font-size: 0.72rem;">Non-intrusive phone confirmation prevents counterfeit returns without penalizing users.</div>
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label text-light fw-semibold small">Preset Reason / Investigation Notes</label>
+                                    <div class="d-flex flex-wrap gap-1.5 mb-2">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0.5 px-2.5 small" onclick="setPresetAddressNote('Observational telemetry: Suspicious spike in returns. Flagged for review. Non-punitive safeguard applied - no automated customer block.')">Return Spike Review</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0.5 px-2.5 small" onclick="setPresetAddressNote('High cancellation cluster on COD orders. Delivery logistics partner notified to verify address accessibility.')">COD Rejection Cluster</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0.5 px-2.5 small" onclick="setPresetAddressNote('Multi-account residential/commercial building. Verified normal legitimate behavior.')">Legitimate Multi-Account Hub</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0.5 px-2.5 small" onclick="setPresetAddressNote('Investigation completed. Delivery operations verified clean. False positive cleared.')">Verified Clean Address</button>
+                                    </div>
+                                    <textarea class="form-control bg-dark text-white border-secondary border-opacity-25" id="modalAddrAdminNotes" rows="3" placeholder="Enter administrative observations or investigation details..."></textarea>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-secondary border-opacity-25 p-3">
+                <button type="button" class="btn btn-secondary px-3 py-2" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-warning px-4 py-2 fw-bold" onclick="submitUpdateAddressInvestigation()" id="btnSaveAddressInvestigation">
+                    <i class="fa-solid fa-floppy-disk me-1"></i> Save Investigation Status
                 </button>
             </div>
         </div>
@@ -9200,6 +9664,271 @@
         rows.forEach(row => {
             const text = row.innerText.toLowerCase();
             row.style.display = text.includes(filter) ? '' : 'none';
+        });
+    }
+
+    // ==========================================
+    // POINT 47: ADDRESS RISK MANAGEMENT (Telemetry & Non-Punitive Investigation)
+    // ==========================================
+
+    function filterAddressRiskTable(filter, btn) {
+        document.querySelectorAll('.address-filter-btn').forEach(b => b.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+
+        const rows = document.querySelectorAll('.address-risk-row');
+        rows.forEach(row => {
+            if (filter === 'all') {
+                row.style.display = '';
+            } else if (filter === 'high-activity') {
+                row.style.display = row.classList.contains('high-activity') ? '' : 'none';
+            } else if (filter === 'high-return') {
+                row.style.display = row.classList.contains('high-return') ? '' : 'none';
+            } else if (filter === 'under-investigation') {
+                row.style.display = row.classList.contains('under-investigation') ? '' : 'none';
+            } else if (filter === 'clean') {
+                row.style.display = row.classList.contains('clean') ? '' : 'none';
+            }
+        });
+    }
+
+    function searchAddressRiskTable(query) {
+        const q = (query || '').toLowerCase().trim();
+        const rows = document.querySelectorAll('.address-risk-row');
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            const addrKey = (row.getAttribute('data-address-key') || '').toLowerCase();
+            const locality = (row.getAttribute('data-locality') || '').toLowerCase();
+            const pin = (row.getAttribute('data-pincode') || '').toLowerCase();
+
+            if (!q || text.includes(q) || addrKey.includes(q) || locality.includes(q) || pin.includes(q)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    function setPresetAddressNote(noteText) {
+        const textarea = document.getElementById('modalAddrAdminNotes');
+        if (textarea) textarea.value = noteText;
+    }
+
+    function openAddressRiskModal(addressKey) {
+        if (!addressKey) return;
+
+        // Reset display
+        document.getElementById('modalAddrKeyHidden').value = addressKey;
+        document.getElementById('modalAddrKeyDisplay').innerText = addressKey;
+        document.getElementById('modalAddrFullDisplay').innerText = 'Loading address telemetry...';
+        document.getElementById('modalAddrCustomersTableBody').innerHTML = '<tr><td colspan="7" class="text-center py-4 text-secondary"><i class="fa-solid fa-spinner fa-spin me-2"></i> Fetching linked customers...</td></tr>';
+        document.getElementById('modalAddrOrdersTableBody').innerHTML = '<tr><td colspan="7" class="text-center py-4 text-secondary"><i class="fa-solid fa-spinner fa-spin me-2"></i> Fetching recent orders...</td></tr>';
+
+        // Default tab
+        const firstTab = new bootstrap.Tab(document.getElementById('tab-addr-customers-btn'));
+        firstTab.show();
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('addressRiskModal'));
+        modal.show();
+
+        // Fetch details via AJAX
+        $.ajax({
+            url: '@Url.Action("GetAddressRiskDetails", "Admin")',
+            type: 'GET',
+            data: { addressKey: addressKey },
+            success: function(res) {
+                if (res && res.success && res.data) {
+                    const d = res.data;
+                    document.getElementById('modalAddrKeyDisplay').innerText = d.addressKey;
+                    document.getElementById('modalAddrFullDisplay').innerText = d.formattedAddress;
+                    document.getElementById('modalAddrTotalOrders').innerText = d.totalOrders;
+                    document.getElementById('modalAddrTotalAmount').innerText = '₹' + Number(d.totalAmount).toLocaleString('en-IN') + ' gross';
+                    document.getElementById('modalAddrReturnedOrders').innerText = d.returnedOrders;
+                    document.getElementById('modalAddrReturnRate').innerText = d.returnRate + '% Return Rate';
+                    document.getElementById('modalAddrCancelledOrders').innerText = d.cancelledOrders;
+                    document.getElementById('modalAddrCancelRate').innerText = d.cancellationRate + '% Cancel Rate';
+                    document.getElementById('modalAddrCustomerCount').innerText = d.distinctCustomersCount;
+                    document.getElementById('modalAddrCustCountBadge').innerText = d.distinctCustomersCount;
+
+                    // Alert Badge styling
+                    const badgeEl = document.getElementById('modalAddrAlertBadge');
+                    if (d.alertBadge === '⚠ High Activity' || d.riskLevel === 'High Risk') {
+                        badgeEl.className = 'badge bg-danger text-white px-2.5 py-1 rounded-pill fw-bold';
+                        badgeEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i> ' + d.alertBadge;
+                    } else if (d.alertBadge === 'High Return Rate') {
+                        badgeEl.className = 'badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill fw-bold';
+                        badgeEl.innerHTML = '<i class="fa-solid fa-rotate-left me-1"></i> High Return Rate';
+                    } else if (d.alertBadge === 'Multi-Account Cluster') {
+                        badgeEl.className = 'badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30 px-2.5 py-1 rounded-pill fw-bold';
+                        badgeEl.innerHTML = '<i class="fa-solid fa-people-arrows me-1"></i> Multi-Account Cluster';
+                    } else {
+                        badgeEl.className = 'badge bg-success bg-opacity-20 text-success border border-success border-opacity-30 px-2.5 py-1 rounded-pill fw-bold';
+                        badgeEl.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> Normal Activity';
+                    }
+
+                    // Form controls
+                    document.getElementById('modalAddrStatusSelect').value = d.investigationStatus || 'Under Investigation';
+                    document.getElementById('modalAddrRequireOtpCheck').checked = d.requireManualOtpVerification;
+                    document.getElementById('modalAddrAdminNotes').value = d.adminNotes || '';
+
+                    // Linked customers table
+                    let custHtml = '';
+                    if (d.linkedCustomers && d.linkedCustomers.length > 0) {
+                        d.linkedCustomers.forEach(c => {
+                            let restrictionBadge = `<span class="badge bg-success bg-opacity-20 text-success">Normal</span>`;
+                            if (c.restrictionLevel === 'Account Blocked') {
+                                restrictionBadge = `<span class="badge bg-danger text-white">Blocked</span>`;
+                            } else if (c.restrictionLevel === 'Account Suspended') {
+                                restrictionBadge = `<span class="badge bg-secondary">Suspended</span>`;
+                            } else if (c.restrictionLevel === 'COD Restricted') {
+                                restrictionBadge = `<span class="badge bg-warning bg-opacity-25 text-warning">COD Restricted</span>`;
+                            } else if (c.restrictionLevel === 'Return Restricted') {
+                                restrictionBadge = `<span class="badge bg-warning bg-opacity-25 text-warning">Return Restricted</span>`;
+                            } else if (c.restrictionLevel === 'Warning') {
+                                restrictionBadge = `<span class="badge bg-warning bg-opacity-25 text-warning">Warning</span>`;
+                            }
+
+                            custHtml += `<tr>
+                                <td>
+                                    <div class="fw-bold text-white">${c.customerName}</div>
+                                    <div class="text-secondary small">ID: #${c.customerId}</div>
+                                </td>
+                                <td>
+                                    <div class="text-light small">${c.email}</div>
+                                    <div class="font-monospace text-secondary small">${c.phone}</div>
+                                </td>
+                                <td class="fw-bold font-monospace text-center">${c.ordersCount}</td>
+                                <td class="fw-bold font-monospace text-danger text-center">${c.returnsCount}</td>
+                                <td>${restrictionBadge}</td>
+                                <td><span class="badge bg-success bg-opacity-15 text-success">Active</span></td>
+                                <td style="text-align: right;">
+                                    <button type="button" class="btn btn-outline-info btn-sm rounded-pill py-0.5 px-2.5 small" 
+                                            onclick="openCustomerRestrictionModal(${c.customerId}, '${c.customerName}')">
+                                        <i class="fa-solid fa-user-shield me-1"></i> View Profile
+                                    </button>
+                                </td>
+                            </tr>`;
+                        });
+                    } else {
+                        custHtml = '<tr><td colspan="7" class="text-center py-3 text-secondary">No customer accounts currently linked to this cluster.</td></tr>';
+                    }
+                    document.getElementById('modalAddrCustomersTableBody').innerHTML = custHtml;
+
+                    // Recent orders table
+                    let ordHtml = '';
+                    if (d.recentOrders && d.recentOrders.length > 0) {
+                        d.recentOrders.forEach(o => {
+                            let statusBadge = `<span class="badge bg-success bg-opacity-20 text-success">${o.status}</span>`;
+                            if (o.status === 'Returned') statusBadge = `<span class="badge bg-danger bg-opacity-20 text-danger">Returned</span>`;
+                            else if (o.status === 'Cancelled') statusBadge = `<span class="badge bg-warning bg-opacity-20 text-warning">Cancelled</span>`;
+
+                            const reason = o.returnReason || o.cancelReason || '<span class="text-secondary">—</span>';
+
+                            ordHtml += `<tr>
+                                <td class="fw-bold font-monospace text-info">#ORD${o.orderId}</td>
+                                <td class="text-white">${o.customerName}</td>
+                                <td class="fw-bold font-monospace text-white">₹${Number(o.amount).toLocaleString('en-IN')}</td>
+                                <td><span class="badge bg-secondary bg-opacity-40 text-light">${o.paymentMode}</span></td>
+                                <td>${statusBadge}</td>
+                                <td class="small text-light text-opacity-90" style="max-width: 240px;">${reason}</td>
+                                <td class="text-secondary small font-monospace">${o.orderDate}</td>
+                            </tr>`;
+                        });
+                    } else {
+                        ordHtml = '<tr><td colspan="7" class="text-center py-3 text-secondary">No recent orders recorded for this address.</td></tr>';
+                    }
+                    document.getElementById('modalAddrOrdersTableBody').innerHTML = ordHtml;
+                } else {
+                    showToast(res ? res.message : 'Could not fetch address details.', true);
+                }
+            },
+            error: function() {
+                showToast('Failed to fetch address risk telemetry.', true);
+            }
+        });
+    }
+
+    function submitUpdateAddressInvestigation() {
+        const addressKey = document.getElementById('modalAddrKeyHidden').value;
+        const status = document.getElementById('modalAddrStatusSelect').value;
+        const notes = document.getElementById('modalAddrAdminNotes').value;
+        const requireManualOtp = document.getElementById('modalAddrRequireOtpCheck').checked;
+
+        if (!addressKey) return;
+
+        const btn = document.getElementById('btnSaveAddressInvestigation');
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Saving...';
+
+        const token = $('input[name="__RequestVerificationToken"]').val();
+
+        $.ajax({
+            url: '@Url.Action("UpdateAddressInvestigation", "Admin")',
+            type: 'POST',
+            contentType: 'application/json',
+            headers: {
+                "RequestVerificationToken": token,
+                "X-CSRF-TOKEN": token
+            },
+            data: JSON.stringify({
+                AddressKey: addressKey,
+                InvestigationStatus: status,
+                AdminNotes: notes,
+                RequireManualOtpVerification: requireManualOtp
+            }),
+            success: function(res) {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+
+                if (res && res.success) {
+                    showToast(res.message || 'Address investigation status saved successfully.');
+
+                    // Update live table row
+                    const safeKey = addressKey.replace(/[^a-zA-Z0-9]/g, '_');
+                    const statusContainer = document.getElementById('status-badge-container-' + safeKey);
+                    if (statusContainer) {
+                        let newBadge = '';
+                        if (status === 'Under Investigation') {
+                            newBadge = '<span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-40 px-2.5 py-1.5 rounded-pill fw-bold"><i class="fa-solid fa-magnifying-glass me-1"></i> Under Investigation</span>';
+                        } else if (status === 'Flagged for Review') {
+                            newBadge = '<span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 px-2.5 py-1.5 rounded-pill fw-bold"><i class="fa-solid fa-flag me-1"></i> Flagged for Review</span>';
+                        } else if (status === 'Verified / Clean') {
+                            newBadge = '<span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30 px-2.5 py-1.5 rounded-pill fw-bold"><i class="fa-solid fa-circle-check me-1"></i> Verified / Clean</span>';
+                        } else {
+                            newBadge = '<span class="badge bg-secondary bg-opacity-40 text-light border border-secondary border-opacity-30 px-2.5 py-1.5 rounded-pill fw-bold"><i class="fa-solid fa-eye me-1"></i> Monitoring</span>';
+                        }
+                        statusContainer.innerHTML = newBadge;
+                    }
+
+                    const otpIndicator = document.getElementById('manual-verify-indicator-' + safeKey);
+                    if (otpIndicator) {
+                        if (requireManualOtp) otpIndicator.classList.remove('d-none');
+                        else otpIndicator.classList.add('d-none');
+                    }
+
+                    const row = document.getElementById('address-row-' + safeKey);
+                    if (row) {
+                        row.setAttribute('data-status', status);
+                        if (status === 'Under Investigation') row.classList.add('under-investigation');
+                        else row.classList.remove('under-investigation');
+                        if (status === 'Verified / Clean') row.classList.add('clean');
+                        else row.classList.remove('clean');
+                    }
+
+                    // Hide modal
+                    const modalEl = document.getElementById('addressRiskModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+                } else {
+                    showToast(res ? res.message : 'Error updating investigation status.', true);
+                }
+            },
+            error: function() {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+                showToast('Server communication error.', true);
+            }
         });
     }
 
