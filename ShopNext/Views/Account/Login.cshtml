@@ -1,0 +1,64 @@
+@{
+    ViewData["Title"] = "Login - ShopNext";
+    var selectedRole = (string?)ViewBag.Role ?? "Customer";
+}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-7 col-lg-5">
+            <div class="glass-card p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <i class="fa-solid fa-circle-user fa-3x text-info mb-3"></i>
+                    <h2 class="fw-bold text-white">Login to ShopNext</h2>
+                    <p class="text-muted mb-0">Use the account details saved in the database.</p>
+                </div>
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert alert-danger">@ViewBag.Error</div>
+                }
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success">@TempData["Success"]</div>
+                }
+                <form asp-controller="Account" asp-action="Login" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+                    <div class="mb-3">
+                        <label class="form-label text-white">Account type</label>
+                        @if (selectedRole == "Admin")
+                        {
+                            <input type="hidden" name="role" value="Admin" />
+                            <div class="form-control bg-dark text-warning">Administrator portal</div>
+                        }
+                        else
+                        {
+                            <select name="role" class="form-select" required>
+                                <option value="Customer" selected="@(selectedRole == "Customer")">Customer</option>
+                                <option value="Seller" selected="@(selectedRole == "Seller")">Seller</option>
+                                <option value="Rider" selected="@(selectedRole == "Rider")">Rider</option>
+                            </select>
+                        }
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-white">Phone, email, or admin ID</label>
+                        <input name="identifier" class="form-control" autocomplete="username" required />
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label text-white">Password</label>
+                        <input type="password" name="password" class="form-control" autocomplete="current-password" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fa-solid fa-right-to-bracket me-2"></i>Login
+                    </button>
+                </form>
+                <div class="text-center mt-3">
+                    <a asp-controller="Account" asp-action="ForgotPassword" asp-route-role="@selectedRole" class="text-info">Forgot password?</a>
+                </div>
+                <div class="d-flex justify-content-center gap-3 mt-3 small">
+                    <a asp-controller="Customer" asp-action="Register">Customer registration</a>
+                    <a asp-controller="Vendor" asp-action="Register">Seller registration</a>
+                    <a asp-controller="Rider" asp-action="Register">Rider registration</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

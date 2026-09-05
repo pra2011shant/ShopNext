@@ -1,0 +1,24 @@
+@{
+    ViewData["Title"] = "Page Not Found (404)";
+}
+
+<div class="container py-5 my-md-4">
+    <div class="empty-state-card shadow-lg p-5">
+        <div class="empty-state-icon-wrapper warning mb-4">
+            <i class="fa-solid fa-compass fa-2x"></i>
+        </div>
+        <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill fw-bold mb-3">Error 404 &bull; Page Not Found</span>
+        <h1 class="empty-state-title fw-extrabold mb-3">Oops! We Lost This Page</h1>
+        <p class="empty-state-desc mb-4">
+            The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
+        </p>
+        <div class="d-flex flex-wrap justify-content-center gap-3">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-primary px-4 py-2 rounded-pill shadow-sm">
+                <i class="fa-solid fa-house me-1"></i> Return to Home
+            </a>
+            <a asp-controller="Home" asp-action="Products" class="btn btn-outline-primary px-4 py-2 rounded-pill">
+                <i class="fa-solid fa-basket-shopping me-1"></i> Browse Marketplace
+            </a>
+        </div>
+    </div>
+</div>

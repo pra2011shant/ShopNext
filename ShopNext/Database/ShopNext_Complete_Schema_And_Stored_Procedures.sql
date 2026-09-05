@@ -1,0 +1,901 @@
+-- ==============================================================================
+-- SHOPNEXT PLATFORM - COMPLETE DATABASE SCHEMA, INDEXES & STORED PROCEDURES
+-- Database: SQL Server (Express / Developer / Enterprise)
+-- Target: Fast Query Execution, Audit Trail, Anti-Fraud & Real-time Analytics
+-- ==============================================================================
+
+USE [ShopNext];
+GO
+
+-- ==============================================================================
+-- 1. TABLES CREATION WITH FULL CONSTRAINTS & COLUMNS
+-- ==============================================================================
+
+-- 1.1 USERS TABLE
+IF OBJECT_ID('dbo.Users', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Users (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        PhoneNumber NVARCHAR(50) NOT NULL,
+        Name NVARCHAR(200) NOT NULL DEFAULT '',
+        Email NVARCHAR(200) NULL,
+        Password NVARCHAR(MAX) NULL,
+        Role NVARCHAR(50) NOT NULL DEFAULT 'Customer', -- Admin, Seller, Customer, Rider
+        ProfilePhoto NVARCHAR(MAX) NULL,
+        Gender NVARCHAR(50) NULL,
+        DateOfBirth DATETIME2 NULL,
+        CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+        
+        -- Anti-Fraud & Risk Telemetry (Point 36)
+        RiskScore INT NOT NULL DEFAULT 15,
+        RiskLevel NVARCHAR(50) NOT NULL DEFAULT 'Low', -- Low, Medium, High
+        RiskFactorsJson NVARCHAR(MAX) NULL,
+        IsCodDisabled BIT NOT NULL DEFAULT 0,
+        IsFlaggedForReview BIT NOT NULL DEFAULT 0,
+        RiskLastEvaluatedDate DATETIME2 NULL,
+        
+        -- BaseModel Audit Fields
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
+IF OBJECT_ID('dbo.PasswordResetTokens', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.PasswordResetTokens (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        Role NVARCHAR(30) NOT NULL,
+        Identifier NVARCHAR(250) NOT NULL,
+        TokenHash NVARCHAR(128) NOT NULL,
+        ExpiresAt DATETIME2 NOT NULL,
+        UsedAt DATETIME2 NULL,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+    CREATE INDEX IX_PasswordResetTokens_TokenHash ON dbo.PasswordResetTokens(TokenHash);
+END;
+GO
+
+-- 1.2 SHOPS TABLE
+IF OBJECT_ID('dbo.Shops', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Shops (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        ShopName NVARCHAR(250) NOT NULL,
+        PhoneNumber NVARCHAR(50) NOT NULL,
+        Category NVARCHAR(100) NOT NULL DEFAULT 'General',
+        Latitude DECIMAL(18,6) NOT NULL DEFAULT 0,
+        Longitude DECIMAL(18,6) NOT NULL DEFAULT 0,
+        IsApproved BIT NOT NULL DEFAULT 0,
+        OwnerName NVARCHAR(200) NULL,
+        Email NVARCHAR(200) NULL,
+        Address NVARCHAR(500) NULL,
+        City NVARCHAR(100) NULL DEFAULT 'Patna',
+        State NVARCHAR(100) NULL DEFAULT 'Bihar',
+        Pincode NVARCHAR(50) NULL DEFAULT '800001',
+        BankAccountNumber NVARCHAR(100) NULL,
+        IfscCode NVARCHAR(50) NULL,
+        Password NVARCHAR(MAX) NULL,
+        
+        -- BaseModel Audit Fields
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
+-- 1.3 PRODUCTS TABLE
+IF OBJECT_ID('dbo.Products', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Products (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        ShopId INT NOT NULL,
+        ProductName NVARCHAR(300) NOT NULL,
+        Category NVARCHAR(100) NOT NULL DEFAULT 'General',
+        SubCategory NVARCHAR(100) NULL,
+        Brand NVARCHAR(100) NULL,
+        Description NVARCHAR(MAX) NULL,
+        Price DECIMAL(18,2) NOT NULL DEFAULT 0,
+        Mrp DECIMAL(18,2) NULL,
+        Discount DECIMAL(18,2) NULL,
+        Stock INT NOT NULL DEFAULT 0,
+        Sku NVARCHAR(100) NULL,
+        StockStatus NVARCHAR(50) NOT NULL DEFAULT 'InStock',
+        ImageUrl NVARCHAR(MAX) NOT NULL DEFAULT '',
+        ImageFront NVARCHAR(MAX) NULL,
+        ImageBack NVARCHAR(MAX) NULL,
+        ImageSide NVARCHAR(MAX) NULL,
+        ImagePackaging NVARCHAR(MAX) NULL,
+        HasVariants BIT NOT NULL DEFAULT 0,
+        IsApproved BIT NOT NULL DEFAULT 1,
+        ApprovalStatus NVARCHAR(50) NOT NULL DEFAULT 'Approved',
+        RejectionReason NVARCHAR(MAX) NULL,
+        ApprovedDate DATETIME2 NULL,
+        
+        -- BaseModel Audit Fields
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1,
+        
+        CONSTRAINT FK_Products_Shops FOREIGN KEY (ShopId) REFERENCES dbo.Shops(Id) ON DELETE CASCADE
+    );
+END;
+GO
+
+-- 1.4 ORDERS TABLE
+IF OBJECT_ID('dbo.Orders', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Orders (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        CustomerId INT NOT NULL,
+        ShopId INT NOT NULL,
+        RiderId INT NULL,
+        TotalAmount DECIMAL(18,2) NOT NULL DEFAULT 0,
+        OrderStatus NVARCHAR(50) NOT NULL DEFAULT 'Pending',
+        PaymentMode NVARCHAR(50) NOT NULL DEFAULT 'COD',
+        PaymentStatus NVARCHAR(50) NOT NULL DEFAULT 'Pending',
+        CancelReason NVARCHAR(MAX) NULL,
+        ReturnReason NVARCHAR(MAX) NULL,
+        DeliveredDate DATETIME2 NULL,
+        DeliveryAddress NVARCHAR(500) NULL,
+        
+        -- Return Workflow & Swap Protection (Point 34)
+        ReturnStatus NVARCHAR(50) NULL,
+        ReturnVerificationNotes NVARCHAR(MAX) NULL,
+        ReturnRequestedDate DATETIME2 NULL,
+        ReturnVerifiedDate DATETIME2 NULL,
+        ShopName NVARCHAR(250) NULL,
+        
+        -- BaseModel Audit Fields
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1,
+
+        CONSTRAINT FK_Orders_Users FOREIGN KEY (CustomerId) REFERENCES dbo.Users(Id),
+        CONSTRAINT FK_Orders_Shops FOREIGN KEY (ShopId) REFERENCES dbo.Shops(Id)
+    );
+END;
+GO
+
+-- 1.5 ORDERITEMS TABLE
+IF OBJECT_ID('dbo.OrderItems', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.OrderItems (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        OrderId INT NOT NULL,
+        ProductId INT NOT NULL,
+        Quantity INT NOT NULL DEFAULT 1,
+        UnitPrice DECIMAL(18,2) NOT NULL DEFAULT 0,
+        TotalPrice DECIMAL(18,2) NOT NULL DEFAULT 0,
+        
+        -- Point 34 Outbound Inspection
+        Sku NVARCHAR(100) NULL,
+        SerialNumber NVARCHAR(100) NULL,
+        DispatchCondition NVARCHAR(250) NULL DEFAULT 'Brand New / Sealed',
+        IsProductVerified BIT NOT NULL DEFAULT 1,
+        IsQuantityVerified BIT NOT NULL DEFAULT 1,
+        IsSkuVerified BIT NOT NULL DEFAULT 1,
+        IsPackagingVerified BIT NOT NULL DEFAULT 1,
+        
+        -- Point 34 Inbound Inspection
+        ReturnReceivedSerial NVARCHAR(100) NULL,
+        IsReturnSkuMatched BIT NULL,
+        IsReturnSerialMatched BIT NULL,
+        IsReturnConditionMatched BIT NULL,
+        ReturnVerificationRemarks NVARCHAR(MAX) NULL,
+        ReturnStatus NVARCHAR(50) NULL,
+        
+        -- BaseModel Audit Fields
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1,
+
+        CONSTRAINT FK_OrderItems_Orders FOREIGN KEY (OrderId) REFERENCES dbo.Orders(Id) ON DELETE CASCADE,
+        CONSTRAINT FK_OrderItems_Products FOREIGN KEY (ProductId) REFERENCES dbo.Products(Id)
+    );
+END;
+GO
+
+-- 1.6 PRODUCTVARIANTS TABLE
+IF OBJECT_ID('dbo.ProductVariants', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.ProductVariants (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        ProductId INT NOT NULL,
+        VariantType NVARCHAR(50) NOT NULL,
+        VariantValue NVARCHAR(100) NOT NULL,
+        Sku NVARCHAR(100) NULL,
+        Price DECIMAL(18,2) NOT NULL DEFAULT 0,
+        Mrp DECIMAL(18,2) NULL,
+        Stock INT NOT NULL DEFAULT 0,
+        ImageUrl NVARCHAR(MAX) NULL,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1,
+
+        CONSTRAINT FK_ProductVariants_Products FOREIGN KEY (ProductId) REFERENCES dbo.Products(Id) ON DELETE CASCADE
+    );
+END;
+GO
+
+-- 1.7 CUSTOMERADDRESSES TABLE
+IF OBJECT_ID('dbo.CustomerAddresses', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.CustomerAddresses (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        CustomerId INT NOT NULL,
+        RecipientName NVARCHAR(200) NOT NULL,
+        PhoneNumber NVARCHAR(50) NOT NULL,
+        AddressLine NVARCHAR(500) NOT NULL,
+        City NVARCHAR(100) NOT NULL DEFAULT 'Patna',
+        State NVARCHAR(100) NOT NULL DEFAULT 'Bihar',
+        Pincode NVARCHAR(50) NOT NULL DEFAULT '800001',
+        AddressType NVARCHAR(50) NOT NULL DEFAULT 'Home',
+        IsDefault BIT NOT NULL DEFAULT 0,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1,
+
+        CONSTRAINT FK_CustomerAddresses_Users FOREIGN KEY (CustomerId) REFERENCES dbo.Users(Id) ON DELETE CASCADE
+    );
+END;
+GO
+
+-- 1.8 CATEGORIES TABLE
+IF OBJECT_ID('dbo.Categories', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Categories (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        Name NVARCHAR(150) NOT NULL,
+        Icon NVARCHAR(100) NOT NULL DEFAULT 'fa-solid fa-layer-group',
+        Description NVARCHAR(500) NOT NULL DEFAULT '',
+        DisplayOrder INT NOT NULL DEFAULT 0,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
+-- 1.9 BRANDS TABLE
+IF OBJECT_ID('dbo.Brands', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Brands (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        Name NVARCHAR(150) NOT NULL,
+        Category NVARCHAR(100) NOT NULL DEFAULT 'General',
+        LogoUrl NVARCHAR(MAX) NULL,
+        Description NVARCHAR(500) NOT NULL DEFAULT '',
+        Rating FLOAT NOT NULL DEFAULT 4.5,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
+-- 1.10 COUPONS TABLE
+IF OBJECT_ID('dbo.Coupons', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Coupons (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        Code NVARCHAR(100) NOT NULL,
+        Description NVARCHAR(500) NOT NULL DEFAULT '',
+        DiscountType NVARCHAR(50) NOT NULL DEFAULT 'Flat',
+        DiscountValue DECIMAL(18,2) NOT NULL DEFAULT 100,
+        MinOrderAmount DECIMAL(18,2) NOT NULL DEFAULT 999,
+        MaxDiscountAmount DECIMAL(18,2) NULL,
+        StartDate DATETIME2 NULL,
+        ExpiryDate DATETIME2 NULL,
+        UsageLimit INT NOT NULL DEFAULT 500,
+        UsedCount INT NOT NULL DEFAULT 0,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
+-- Bring older coupon tables up to the current model without dropping data.
+IF COL_LENGTH('dbo.Coupons', 'StartDate') IS NULL
+    ALTER TABLE dbo.Coupons ADD StartDate DATETIME2 NULL;
+IF COL_LENGTH('dbo.Coupons', 'UsageLimit') IS NULL
+    ALTER TABLE dbo.Coupons ADD UsageLimit INT NOT NULL CONSTRAINT DF_Coupons_UsageLimit DEFAULT 500;
+IF COL_LENGTH('dbo.Coupons', 'UsedCount') IS NULL
+    ALTER TABLE dbo.Coupons ADD UsedCount INT NOT NULL CONSTRAINT DF_Coupons_UsedCount DEFAULT 0;
+IF COL_LENGTH('dbo.Coupons', 'MinOrderAmount') IS NULL
+    ALTER TABLE dbo.Coupons ADD MinOrderAmount DECIMAL(18,2) NOT NULL CONSTRAINT DF_Coupons_MinOrderAmount DEFAULT 999;
+IF COL_LENGTH('dbo.Coupons', 'MaxDiscountAmount') IS NULL
+    ALTER TABLE dbo.Coupons ADD MaxDiscountAmount DECIMAL(18,2) NULL;
+IF COL_LENGTH('dbo.Coupons', 'ExpiryDate') IS NULL
+    ALTER TABLE dbo.Coupons ADD ExpiryDate DATETIME2 NULL;
+GO
+
+-- 1.11 OFFERS TABLE
+IF OBJECT_ID('dbo.Offers', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Offers (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        Title NVARCHAR(250) NOT NULL,
+        ProductId INT NOT NULL,
+        SellingPrice DECIMAL(18,2) NOT NULL DEFAULT 0,
+        Discount DECIMAL(18,2) NOT NULL DEFAULT 0,
+        DiscountType NVARCHAR(50) NOT NULL DEFAULT 'Percentage',
+        StartDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        EndDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        BannerUrl NVARCHAR(MAX) NULL,
+        Tagline NVARCHAR(250) NULL,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1,
+
+        CONSTRAINT FK_Offers_Products FOREIGN KEY (ProductId) REFERENCES dbo.Products(Id) ON DELETE CASCADE
+    );
+END;
+GO
+
+-- 1.12 COMPLAINTS TABLE
+IF OBJECT_ID('dbo.Complaints', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Complaints (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        TicketId NVARCHAR(100) NOT NULL,
+        OrderId INT NOT NULL,
+        CustomerId INT NOT NULL,
+        Issue NVARCHAR(200) NOT NULL,
+        Description NVARCHAR(MAX) NOT NULL,
+        AttachmentUrl NVARCHAR(MAX) NULL,
+        Priority NVARCHAR(50) NOT NULL DEFAULT 'High',
+        Status NVARCHAR(50) NOT NULL DEFAULT 'Open',
+        ResolutionNotes NVARCHAR(MAX) NULL,
+        ResolvedDate DATETIME2 NULL,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1,
+
+        CONSTRAINT FK_Complaints_Orders FOREIGN KEY (OrderId) REFERENCES dbo.Orders(Id),
+        CONSTRAINT FK_Complaints_Users FOREIGN KEY (CustomerId) REFERENCES dbo.Users(Id)
+    );
+END;
+GO
+
+-- 1.13 REVIEWS TABLE
+IF OBJECT_ID('dbo.Reviews', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Reviews (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        CustomerId INT NOT NULL,
+        ProductId INT NULL,
+        ShopId INT NOT NULL DEFAULT 0,
+        OrderId INT NULL,
+        Rating INT NOT NULL DEFAULT 5,
+        Comment NVARCHAR(MAX) NULL,
+        IsHidden BIT NOT NULL DEFAULT 0,
+        ModerationReason NVARCHAR(MAX) NULL,
+        CustomerName NVARCHAR(200) NULL,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1,
+
+        CONSTRAINT FK_Reviews_Users FOREIGN KEY (CustomerId) REFERENCES dbo.Users(Id)
+    );
+END;
+GO
+
+-- 1.14 RIDERS TABLE
+IF OBJECT_ID('dbo.Riders', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Riders (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        RiderName NVARCHAR(200) NOT NULL,
+        PhoneNumber NVARCHAR(50) NOT NULL,
+        Email NVARCHAR(200) NULL,
+        VehicleNumber NVARCHAR(50) NULL,
+        Password NVARCHAR(MAX) NULL,
+        IsAvailable BIT NOT NULL DEFAULT 1,
+        CurrentLatitude DECIMAL(18,6) NULL,
+        CurrentLongitude DECIMAL(18,6) NULL,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
+IF COL_LENGTH('dbo.Riders', 'Password') IS NULL
+    ALTER TABLE dbo.Riders ADD Password NVARCHAR(MAX) NULL;
+GO
+
+-- 1.15 NOTIFICATIONS TABLE
+IF OBJECT_ID('dbo.Notifications', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Notifications (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        CustomerId INT NOT NULL,
+        RecipientRole NVARCHAR(50) NOT NULL DEFAULT 'Customer',
+        ShopId INT NULL,
+        Title NVARCHAR(250) NOT NULL,
+        Message NVARCHAR(MAX) NOT NULL,
+        Type NVARCHAR(50) NOT NULL DEFAULT 'Order',
+        LinkUrl NVARCHAR(MAX) NULL,
+        IsRead BIT NOT NULL DEFAULT 0,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1,
+
+        CONSTRAINT FK_Notifications_Users FOREIGN KEY (CustomerId) REFERENCES dbo.Users(Id) ON DELETE CASCADE
+    );
+END;
+GO
+
+-- 1.16 WISHLISTS TABLE
+IF OBJECT_ID('dbo.Wishlists', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Wishlists (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        CustomerId INT NOT NULL,
+        ProductId INT NOT NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+
+        CONSTRAINT FK_Wishlists_Users FOREIGN KEY (CustomerId) REFERENCES dbo.Users(Id) ON DELETE CASCADE,
+        CONSTRAINT FK_Wishlists_Products FOREIGN KEY (ProductId) REFERENCES dbo.Products(Id) ON DELETE CASCADE
+    );
+END;
+GO
+
+-- 1.17 AUDITLOGS TABLE
+IF OBJECT_ID('dbo.AuditLogs', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.AuditLogs (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        Action NVARCHAR(200) NOT NULL,
+        EntityName NVARCHAR(100) NULL,
+        EntityId INT NULL,
+        Details NVARCHAR(MAX) NULL,
+        UserId INT NULL,
+        UserName NVARCHAR(200) NULL,
+        UserRole NVARCHAR(50) NULL,
+        IpAddress NVARCHAR(100) NULL,
+        Timestamp DATETIME2 NOT NULL DEFAULT GETDATE()
+    );
+END;
+GO
+
+-- 1.18 ORDEREVIDENCES TABLE
+IF OBJECT_ID('dbo.OrderEvidences', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.OrderEvidences (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        OrderId INT NOT NULL,
+        EvidenceType NVARCHAR(100) NOT NULL,
+        PhotoUrl NVARCHAR(MAX) NOT NULL,
+        Title NVARCHAR(250) NOT NULL,
+        Description NVARCHAR(MAX) NULL,
+        UploadedByRole NVARCHAR(50) NOT NULL,
+        UploadedByName NVARCHAR(200) NULL,
+        UploadedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        IsVerified BIT NOT NULL DEFAULT 0,
+        VerifiedBy NVARCHAR(200) NULL,
+        MetadataJson NVARCHAR(MAX) NULL,
+
+        CONSTRAINT FK_OrderEvidences_Orders FOREIGN KEY (OrderId) REFERENCES dbo.Orders(Id) ON DELETE CASCADE
+    );
+END;
+GO
+
+-- ==============================================================================
+-- 2. HIGH-PERFORMANCE INDEXES FOR ULTRA-FAST QUERIES
+-- ==============================================================================
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Products_ShopId_IsActive')
+    CREATE NONCLUSTERED INDEX IX_Products_ShopId_IsActive ON dbo.Products(ShopId, IsActive, IsDeleted) INCLUDE (ProductName, Price, Stock, ImageUrl);
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Orders_CustomerId_OrderStatus')
+    CREATE NONCLUSTERED INDEX IX_Orders_CustomerId_OrderStatus ON dbo.Orders(CustomerId, OrderStatus, CreatedDate);
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_OrderItems_OrderId')
+    CREATE NONCLUSTERED INDEX IX_OrderItems_OrderId ON dbo.OrderItems(OrderId) INCLUDE (ProductId, Quantity, UnitPrice, TotalPrice);
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Users_PhoneNumber')
+    CREATE NONCLUSTERED INDEX IX_Users_PhoneNumber ON dbo.Users(PhoneNumber, Role, IsActive);
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Shops_IsApproved_IsActive')
+    CREATE NONCLUSTERED INDEX IX_Shops_IsApproved_IsActive ON dbo.Shops(IsApproved, IsActive, IsDeleted);
+GO
+
+-- ==============================================================================
+-- 3. OPTIMIZED STORED PROCEDURES (SPs) FOR MAXIMUM SPEED
+-- ==============================================================================
+
+-- 3.1 SP: Get All Active & Approved Shops
+CREATE OR ALTER PROCEDURE dbo.sp_GetActiveShops
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT 
+        s.Id, s.ShopName, s.PhoneNumber, s.Category, s.Latitude, s.Longitude,
+        s.OwnerName, s.Email, s.Address, s.City, s.State, s.Pincode,
+        s.IsApproved, s.IsActive, s.CreatedDate
+    FROM dbo.Shops s WITH (NOLOCK)
+    WHERE s.IsDeleted = 0 AND s.IsActive = 1 AND s.IsApproved = 1
+    ORDER BY s.ShopName ASC;
+END;
+GO
+
+-- 3.2 SP: Get Products by Shop ID
+CREATE OR ALTER PROCEDURE dbo.sp_GetProductsByShop
+    @ShopId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT 
+        p.Id, p.ShopId, p.ProductName, p.Category, p.SubCategory, p.Brand,
+        p.Description, p.Price, p.Mrp, p.Discount, p.Stock, p.Sku,
+        p.StockStatus, p.ImageUrl, p.HasVariants, p.IsApproved, p.ApprovalStatus
+    FROM dbo.Products p WITH (NOLOCK)
+    WHERE p.ShopId = @ShopId 
+      AND p.IsDeleted = 0 
+      AND p.IsActive = 1 
+      AND p.IsApproved = 1
+    ORDER BY p.Id DESC;
+END;
+GO
+
+-- 3.3 SP: Get Customer Lifetime History & Metrics (Point 33 & 36)
+CREATE OR ALTER PROCEDURE dbo.sp_GetCustomerHistoryMetrics
+    @CustomerId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Aggregate KPI counts
+    SELECT 
+        u.Id AS CustomerId,
+        u.Name AS CustomerName,
+        u.Email,
+        u.PhoneNumber,
+        u.IsActive,
+        u.RiskScore,
+        u.RiskLevel,
+        u.IsCodDisabled,
+        u.IsFlaggedForReview,
+        COUNT(o.Id) AS TotalOrders,
+        SUM(CASE WHEN o.OrderStatus IN ('Delivered', 'Completed') THEN 1 ELSE 0 END) AS DeliveredOrders,
+        SUM(CASE WHEN o.OrderStatus = 'Cancelled' THEN 1 ELSE 0 END) AS CancelledOrders,
+        SUM(CASE WHEN o.OrderStatus IN ('Returned', 'Return_Requested', 'Approved') OR o.ReturnStatus IN ('Returned', 'Approved', 'Product_Swapped_Fraud') THEN 1 ELSE 0 END) AS ReturnedOrders,
+        SUM(CASE WHEN o.PaymentStatus = 'Refunded' OR o.ReturnStatus = 'Approved' THEN 1 ELSE 0 END) AS RefundedOrders,
+        ISNULL(SUM(CASE WHEN o.OrderStatus <> 'Cancelled' THEN o.TotalAmount ELSE 0 END), 0) AS TotalAmount
+    FROM dbo.Users u WITH (NOLOCK)
+    LEFT JOIN dbo.Orders o WITH (NOLOCK) ON o.CustomerId = u.Id AND o.IsDeleted = 0
+    WHERE u.Id = @CustomerId
+    GROUP BY u.Id, u.Name, u.Email, u.PhoneNumber, u.IsActive, u.RiskScore, u.RiskLevel, u.IsCodDisabled, u.IsFlaggedForReview;
+
+    -- Recent Orders List
+    SELECT TOP 20
+        o.Id AS OrderId,
+        o.TotalAmount,
+        o.OrderStatus,
+        o.PaymentMode,
+        o.CreatedDate,
+        o.Remark,
+        s.ShopName,
+        (SELECT COUNT(*) FROM dbo.OrderItems oi WITH (NOLOCK) WHERE oi.OrderId = o.Id) AS ItemCount
+    FROM dbo.Orders o WITH (NOLOCK)
+    LEFT JOIN dbo.Shops s WITH (NOLOCK) ON s.Id = o.ShopId
+    WHERE o.CustomerId = @CustomerId AND o.IsDeleted = 0
+    ORDER BY o.CreatedDate DESC;
+END;
+GO
+
+-- 3.4 SP: Get Admin Platform Dashboard KPIs
+CREATE OR ALTER PROCEDURE dbo.sp_GetAdminDashboardKPIs
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @TotalCustomers INT = (SELECT COUNT(*) FROM dbo.Users WITH (NOLOCK) WHERE Role = 'Customer' AND IsDeleted = 0);
+    DECLARE @TotalSellers INT = (SELECT COUNT(*) FROM dbo.Shops WITH (NOLOCK) WHERE IsDeleted = 0);
+    DECLARE @TotalProducts INT = (SELECT COUNT(*) FROM dbo.Products WITH (NOLOCK) WHERE IsDeleted = 0);
+    DECLARE @TotalOrders INT = (SELECT COUNT(*) FROM dbo.Orders WITH (NOLOCK) WHERE IsDeleted = 0);
+    DECLARE @PendingSellers INT = (SELECT COUNT(*) FROM dbo.Shops WITH (NOLOCK) WHERE IsApproved = 0 AND IsDeleted = 0);
+    DECLARE @PendingProducts INT = (SELECT COUNT(*) FROM dbo.Products WITH (NOLOCK) WHERE IsApproved = 0 AND IsDeleted = 0);
+    DECLARE @TodaySales DECIMAL(18,2) = ISNULL((SELECT SUM(TotalAmount) FROM dbo.Orders WITH (NOLOCK) WHERE CAST(CreatedDate AS DATE) = CAST(GETDATE() AS DATE) AND OrderStatus <> 'Cancelled'), 0);
+
+    SELECT 
+        @TotalCustomers AS TotalCustomers,
+        @TotalSellers AS TotalSellers,
+        @TotalProducts AS TotalProducts,
+        @TotalOrders AS TotalOrders,
+        @PendingSellers AS PendingSellers,
+        @PendingProducts AS PendingProducts,
+        @TodaySales AS TodaySales;
+END;
+GO
+
+-- 3.5 SP: High Return Area / Pincode Analytics (Point 38)
+CREATE OR ALTER PROCEDURE dbo.sp_GetHighReturnAreas
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        ISNULL(ca.Pincode, '800001') AS Pincode,
+        ISNULL(ca.City, 'Patna') AS AreaName,
+        COUNT(o.Id) AS TotalOrders,
+        SUM(CASE WHEN o.OrderStatus IN ('Delivered', 'Completed') THEN 1 ELSE 0 END) AS DeliveredOrders,
+        SUM(CASE WHEN o.OrderStatus IN ('Returned', 'Return_Requested', 'Approved') OR o.ReturnStatus IN ('Returned', 'Approved', 'Product_Swapped_Fraud') THEN 1 ELSE 0 END) AS ReturnOrders,
+        CASE 
+            WHEN COUNT(o.Id) > 0 THEN ROUND((CAST(SUM(CASE WHEN o.OrderStatus IN ('Returned', 'Return_Requested', 'Approved') OR o.ReturnStatus IN ('Returned', 'Approved', 'Product_Swapped_Fraud') THEN 1 ELSE 0 END) AS DECIMAL(18,2)) / COUNT(o.Id)) * 100.0, 1)
+            ELSE 0 
+        END AS ReturnRate
+    FROM dbo.Orders o WITH (NOLOCK)
+    LEFT JOIN dbo.CustomerAddresses ca WITH (NOLOCK) ON ca.CustomerId = o.CustomerId
+    WHERE o.IsDeleted = 0
+    GROUP BY ca.Pincode, ca.City
+    ORDER BY ReturnRate DESC;
+END;
+GO
+
+-- ==============================================================================
+-- 4. MASTER SEED DATA (POPULATES REAL TABLES DIRECTLY IN SQL SERVER)
+-- ==============================================================================
+
+-- 4.1 Categories
+IF NOT EXISTS (SELECT 1 FROM dbo.Categories)
+BEGIN
+    INSERT INTO dbo.Categories (Name, Icon, Description, DisplayOrder, CreatedDate, IsActive, IsDeleted)
+    VALUES 
+    ('Electronics', 'fa-solid fa-tv', 'Smart TVs, Home Audio, Cameras & Appliances', 1, DATEADD(day, -60, GETDATE()), 1, 0),
+    ('Fashion', 'fa-solid fa-shirt', 'Men, Women, Kids Apparel, Footwear & Accessories', 2, DATEADD(day, -60, GETDATE()), 1, 0),
+    ('Grocery', 'fa-solid fa-basket-shopping', 'Daily Staples, Dal, Rice, Spices, Dairy & Snacks', 3, DATEADD(day, -60, GETDATE()), 1, 0),
+    ('Mobiles', 'fa-solid fa-mobile-screen-button', '5G Smartphones, Tablets, Earphones & Covers', 4, DATEADD(day, -60, GETDATE()), 1, 0),
+    ('Computers', 'fa-solid fa-laptop', 'Laptops, Desktops, Monitors, Keyboards & Gaming', 5, DATEADD(day, -60, GETDATE()), 1, 0);
+END;
+GO
+
+-- 4.2 Brands
+IF NOT EXISTS (SELECT 1 FROM dbo.Brands)
+BEGIN
+    INSERT INTO dbo.Brands (Name, Category, Description, LogoUrl, Rating, CreatedDate, IsActive, IsDeleted)
+    VALUES 
+    ('Samsung', 'Electronics', 'Global leader in smartphones, smart TVs, soundbars & home appliances.', 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=100', 4.8, DATEADD(day, -60, GETDATE()), 1, 0),
+    ('Apple', 'Mobiles', 'Premium iPhones, MacBooks, iPads, AirPods and digital ecosystem.', 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=100', 4.9, DATEADD(day, -60, GETDATE()), 1, 0),
+    ('Nike', 'Fashion', 'World-renowned athletic footwear, sports apparel, and lifestyle sneakers.', 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100', 4.8, DATEADD(day, -50, GETDATE()), 1, 0),
+    ('Adidas', 'Fashion', 'Iconic three-stripes performance sportswear, running shoes and gear.', 'https://images.unsplash.com/photo-1518002171953-a080ee817e1f?w=100', 4.7, DATEADD(day, -50, GETDATE()), 1, 0),
+    ('HP', 'Computers', 'High performance laptops, gaming rigs, workstations, and printers.', 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=100', 4.6, DATEADD(day, -45, GETDATE()), 1, 0),
+    ('Dell', 'Computers', 'Enterprise grade computers, XPS ultrabooks, monitors and IT hardware.', 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=100', 4.7, DATEADD(day, -40, GETDATE()), 1, 0),
+    ('Lenovo', 'Computers', 'ThinkPad business laptops, Legion gaming desktops, and Yoga convertibles.', 'https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=100', 4.6, DATEADD(day, -35, GETDATE()), 1, 0);
+END;
+GO
+
+-- 4.3 Users & Customers
+IF NOT EXISTS (SELECT 1 FROM dbo.Users WHERE Role = 'Admin')
+BEGIN
+    INSERT INTO dbo.Users (Name, PhoneNumber, Email, Password, Role, RiskScore, RiskLevel, IsCodDisabled, IsFlaggedForReview, CreatedDate, IsActive, IsDeleted)
+    VALUES ('Super Admin', '9999999999', 'admin@shopnext.com', 'Admin@123', 'Admin', 0, 'Low', 0, 0, DATEADD(day, -100, GETDATE()), 1, 0);
+END;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Users WHERE Role = 'Customer')
+BEGIN
+    INSERT INTO dbo.Users (Name, PhoneNumber, Email, Password, Role, RiskScore, RiskLevel, IsCodDisabled, IsFlaggedForReview, Remark, CreatedDate, IsActive, IsDeleted)
+    VALUES 
+    ('Pooja Sharma', '9999988888', 'pooja@example.com', 'pass123', 'Customer', 15, 'Low', 0, 0, 'Verified Customer', DATEADD(month, -8, GETDATE()), 1, 0),
+    ('Rahul Verma', '9811223344', 'rahul.v@example.com', '123456', 'Customer', 20, 'Low', 0, 0, 'Verified Customer', DATEADD(month, -7, GETDATE()), 1, 0),
+    ('Priya Patel', '9822334455', 'priya.p@example.com', '123456', 'Customer', 10, 'Low', 0, 0, 'Verified Customer', DATEADD(month, -6, GETDATE()), 1, 0),
+    ('Amit Kumar', '9833445566', 'amit.k@example.com', '123456', 'Customer', 45, 'Medium', 0, 0, 'Regular Shopper', DATEADD(month, -5, GETDATE()), 1, 0),
+    ('Sneha Singh', '9844556677', 'sneha.s@example.com', '123456', 'Customer', 25, 'Low', 0, 0, 'Verified Customer', DATEADD(month, -4, GETDATE()), 1, 0),
+    ('Vikram Aditya', '9855667788', 'vikram.a@example.com', '123456', 'Customer', 85, 'High', 1, 1, 'Blocked: High return rate on COD', DATEADD(month, -3, GETDATE()), 0, 0);
+END;
+GO
+
+-- 4.4 Customer Addresses
+IF NOT EXISTS (SELECT 1 FROM dbo.CustomerAddresses)
+BEGIN
+    DECLARE @CustPooja INT = (SELECT TOP 1 Id FROM dbo.Users WHERE Email = 'pooja@example.com');
+    DECLARE @CustRahul INT = (SELECT TOP 1 Id FROM dbo.Users WHERE Email = 'rahul.v@example.com');
+    DECLARE @CustPriya INT = (SELECT TOP 1 Id FROM dbo.Users WHERE Email = 'priya.p@example.com');
+
+    IF @CustPooja IS NOT NULL
+        INSERT INTO dbo.CustomerAddresses (CustomerId, RecipientName, PhoneNumber, AddressLine, City, State, Pincode, AddressType, IsDefault, IsActive, IsDeleted, CreatedDate)
+        VALUES (@CustPooja, 'Pooja Sharma', '9876543210', 'Flat 302, Maurya Vihar, Boring Road', 'Patna', 'Bihar', '800001', 'Home', 1, 1, 0, GETDATE());
+
+    IF @CustRahul IS NOT NULL
+        INSERT INTO dbo.CustomerAddresses (CustomerId, RecipientName, PhoneNumber, AddressLine, City, State, Pincode, AddressType, IsDefault, IsActive, IsDeleted, CreatedDate)
+        VALUES (@CustRahul, 'Rahul Verma', '9811223344', 'House #45, Kankarbagh Main Road', 'Patna', 'Bihar', '800020', 'Home', 1, 1, 0, GETDATE());
+
+    IF @CustPriya IS NOT NULL
+        INSERT INTO dbo.CustomerAddresses (CustomerId, RecipientName, PhoneNumber, AddressLine, City, State, Pincode, AddressType, IsDefault, IsActive, IsDeleted, CreatedDate)
+        VALUES (@CustPriya, 'Priya Patel', '9822334455', 'Sector 4, Ashiana Nagar', 'Patna', 'Bihar', '800025', 'Office', 1, 1, 0, GETDATE());
+END;
+GO
+
+-- 4.5 Shops & Sellers
+IF NOT EXISTS (SELECT 1 FROM dbo.Shops)
+BEGIN
+    INSERT INTO dbo.Shops (ShopName, OwnerName, Email, PhoneNumber, Category, Address, City, State, Pincode, Latitude, Longitude, IsApproved, IsActive, IsDeleted, Remark, CreatedDate)
+    VALUES 
+    ('ABC Electronics', 'Rajesh Kumar', 'abc.electronics@shopnext.com', '9876511223', 'Electronics', 'Boring Road', 'Patna', 'Bihar', '800001', 25.6093, 85.1376, 1, 1, 0, 'Approved by Admin', DATEADD(month, -8, GETDATE())),
+    ('Ramesh Kirana & General', 'Ramesh Gupta', 'ramesh.kirana@shopnext.com', '9811233445', 'Grocery', 'Kankarbagh Main Road', 'Patna', 'Bihar', '800020', 25.5941, 85.1584, 1, 1, 0, 'Approved by Admin', DATEADD(month, -7, GETDATE())),
+    ('Patna Tech & Mobiles', 'Sunil Verma', 'patna.tech@shopnext.com', '9822344556', 'Mobiles', 'Dak Bungalow Road', 'Patna', 'Bihar', '800001', 25.6120, 85.1390, 1, 1, 0, 'Approved by Admin', DATEADD(month, -6, GETDATE())),
+    ('Style Hub Men & Women', 'Deepak Singh', 'style.hub@shopnext.com', '9833455667', 'Fashion', 'Maurya Lok Complex', 'Patna', 'Bihar', '800001', 25.6110, 85.1350, 1, 1, 0, 'Approved by Admin', DATEADD(month, -5, GETDATE())),
+    ('Super Computers & IT Solutions', 'Manoj Sinha', 'super.comp@shopnext.com', '9844566778', 'Computers', 'Exhibition Road', 'Patna', 'Bihar', '800001', 25.6080, 85.1420, 1, 1, 0, 'Approved by Admin', DATEADD(month, -4, GETDATE())),
+    ('New Bihar Footwear', 'Vikas Rai', 'bihar.footwear@shopnext.com', '9855677889', 'Fashion', 'Ashiana Mor, Bailey Road', 'Patna', 'Bihar', '800014', 25.6180, 85.0870, 0, 1, 0, 'Pending verification', DATEADD(day, -3, GETDATE()));
+END;
+GO
+
+-- 4.6 Products
+IF NOT EXISTS (SELECT 1 FROM dbo.Products)
+BEGIN
+    DECLARE @ShopElec INT = (SELECT TOP 1 Id FROM dbo.Shops WHERE ShopName LIKE '%ABC Electronics%');
+    DECLARE @ShopGroc INT = (SELECT TOP 1 Id FROM dbo.Shops WHERE ShopName LIKE '%Ramesh Kirana%');
+    DECLARE @ShopMob INT = (SELECT TOP 1 Id FROM dbo.Shops WHERE ShopName LIKE '%Patna Tech%');
+    DECLARE @ShopFash INT = (SELECT TOP 1 Id FROM dbo.Shops WHERE ShopName LIKE '%Style Hub%');
+    DECLARE @ShopComp INT = (SELECT TOP 1 Id FROM dbo.Shops WHERE ShopName LIKE '%Super Computers%');
+
+    IF @ShopElec IS NULL SET @ShopElec = (SELECT TOP 1 Id FROM dbo.Shops);
+    IF @ShopGroc IS NULL SET @ShopGroc = @ShopElec;
+    IF @ShopMob IS NULL SET @ShopMob = @ShopElec;
+    IF @ShopFash IS NULL SET @ShopFash = @ShopElec;
+    IF @ShopComp IS NULL SET @ShopComp = @ShopElec;
+
+    INSERT INTO dbo.Products (ShopId, ProductName, Category, SubCategory, Brand, Description, Price, Mrp, Discount, Stock, Sku, StockStatus, ImageUrl, HasVariants, IsApproved, ApprovalStatus, CreatedDate, IsActive, IsDeleted)
+    VALUES 
+    (@ShopMob, 'Samsung Galaxy S24 Ultra 5G (Titanium Black, 256GB)', 'Mobiles', 'Smartphones', 'Samsung', 'Flagship AI smartphone with Snapdragon 8 Gen 3, 200MP camera and built-in S-Pen.', 119999.00, 134999.00, 11.00, 15, 'SAMS24U-BLK', 'InStock', 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=500', 1, 1, 'Approved', DATEADD(month, -6, GETDATE()), 1, 0),
+    (@ShopMob, 'Apple iPhone 15 Pro (128 GB) - Natural Titanium', 'Mobiles', 'Smartphones', 'Apple', 'Forged in titanium with A17 Pro chip, customizable Action button, and versatile 48MP camera.', 127990.00, 134900.00, 5.00, 12, 'APL15P-NAT', 'InStock', 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500', 1, 1, 'Approved', DATEADD(month, -5, GETDATE()), 1, 0),
+    (@ShopFash, 'Nike Air Max 270 Men Running Shoes (Triple Black)', 'Fashion', 'Footwear', 'Nike', 'Max Air 270 unit delivers unrivaled, all-day comfort. Woven and synthetic fabric on upper.', 8495.00, 11995.00, 29.00, 40, 'NIKE-AM270-01', 'InStock', 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500', 1, 1, 'Approved', DATEADD(month, -5, GETDATE()), 1, 0),
+    (@ShopComp, 'HP Pavilion 15 (13th Gen Intel Core i5, 16GB, 512GB SSD)', 'Computers', 'Laptops', 'HP', 'FHD micro-edge display, Intel Iris Xe graphics, backlit keyboard, Windows 11 + MSO 2021.', 62990.00, 74990.00, 16.00, 20, 'HP-PAV15-I5', 'InStock', 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500', 0, 1, 'Approved', DATEADD(month, -4, GETDATE()), 1, 0),
+    (@ShopComp, 'Dell XPS 15 9530 Laptop (13th Gen i7, 32GB RAM, 1TB SSD)', 'Computers', 'Laptops', 'Dell', 'Stunning 3.5K OLED touch display, NVIDIA RTX 4060, CNC machined aluminum chassis.', 189990.00, 219990.00, 13.00, 8, 'DELL-XPS15-OLED', 'InStock', 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=500', 0, 1, 'Approved', DATEADD(month, -4, GETDATE()), 1, 0),
+    (@ShopGroc, 'Fortune Premium Kachi Ghani Pure Mustard Oil 1L Pouch', 'Grocery', 'Edible Oils', 'Fortune', 'Traditional cold pressed mustard oil rich in Omega 3 and natural antioxidants.', 145.00, 175.00, 17.00, 200, 'FORT-OIL-1L', 'InStock', 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500', 0, 1, 'Approved', DATEADD(month, -3, GETDATE()), 1, 0),
+    (@ShopGroc, 'Tata Sampann Unpolished Toor Dal / Arhar Dal 1kg', 'Grocery', 'Staples & Pulses', 'Tata', 'Protein rich unpolished toor dal without artificial color or polish coating.', 175.00, 210.00, 16.00, 150, 'TATA-DAL-1KG', 'InStock', 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500', 0, 1, 'Approved', DATEADD(month, -3, GETDATE()), 1, 0),
+    (@ShopElec, 'Sony Bravia 55 Inch 4K Ultra HD Smart LED Google TV', 'Electronics', 'Smart TVs', 'Sony', '4K Processor X1, Dolby Vision & Atmos, Google Assistant, Motionflow XR 200.', 57990.00, 79990.00, 27.00, 10, 'SONY-TV-55-4K', 'InStock', 'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=500', 0, 1, 'Approved', DATEADD(month, -2, GETDATE()), 1, 0);
+END;
+GO
+
+-- 4.7 Riders
+IF NOT EXISTS (SELECT 1 FROM dbo.Riders)
+BEGIN
+    INSERT INTO dbo.Riders (RiderName, PhoneNumber, Email, VehicleNumber, CurrentLatitude, CurrentLongitude, IsAvailable, CreatedDate, IsActive, IsDeleted)
+    VALUES 
+    ('Amit Kumar (Rider #101)', '9876599881', 'rider.amit@shopnext.com', 'BR-01-AB-1234', 25.6093, 85.1376, 1, GETDATE(), 1, 0),
+    ('Ramesh Yadav (Rider #102)', '9876599882', 'rider.ramesh@shopnext.com', 'BR-01-CD-5678', 25.5941, 85.1584, 1, GETDATE(), 1, 0),
+    ('Suresh Paswan (Rider #103)', '9876599883', 'rider.suresh@shopnext.com', 'BR-01-EF-9012', 25.6120, 85.1390, 1, GETDATE(), 1, 0);
+END;
+GO
+
+-- 4.9 Data integrity reconciliation
+-- Keep inventory status derived from quantity so checkout and dashboards agree.
+UPDATE dbo.Products
+SET StockStatus = CASE
+    WHEN Stock <= 0 THEN 'OutOfStock'
+    WHEN Stock < 5 THEN 'LowStock'
+    ELSE 'InStock'
+END
+WHERE IsDeleted = 0;
+GO
+
+-- Repair legacy demo orders that were created without a line item.
+-- This is idempotent and only fills an order whose shop has an active product.
+IF EXISTS (
+    SELECT 1
+    FROM dbo.Orders o
+    WHERE o.IsDeleted = 0
+      AND NOT EXISTS (SELECT 1 FROM dbo.OrderItems oi WHERE oi.OrderId = o.Id)
+)
+BEGIN
+    DECLARE @RepairOrderId INT;
+    DECLARE @RepairProductId INT;
+    DECLARE @RepairPrice DECIMAL(18,2);
+
+    SELECT TOP 1
+        @RepairOrderId = o.Id,
+        @RepairProductId = p.Id,
+        @RepairPrice = p.Price
+    FROM dbo.Orders o
+    INNER JOIN dbo.Products p ON p.ShopId = o.ShopId
+    WHERE o.IsDeleted = 0
+      AND p.IsDeleted = 0
+      AND p.IsActive = 1
+    ORDER BY o.Id, p.Id;
+
+    IF @RepairOrderId IS NOT NULL AND @RepairProductId IS NOT NULL
+    BEGIN
+        INSERT INTO dbo.OrderItems
+            (OrderId, ProductId, Quantity, UnitPrice, TotalPrice, Sku, CreatedDate, IsActive, IsDeleted)
+        VALUES
+            (@RepairOrderId, @RepairProductId, 1, @RepairPrice, @RepairPrice,
+             (SELECT Sku FROM dbo.Products WHERE Id = @RepairProductId), GETDATE(), 1, 0);
+
+        UPDATE dbo.Orders
+        SET TotalAmount = @RepairPrice
+        WHERE Id = @RepairOrderId;
+    END;
+END;
+GO
+
+-- 4.8 Coupons
+IF NOT EXISTS (SELECT 1 FROM dbo.Coupons)
+BEGIN
+    INSERT INTO dbo.Coupons (Code, Description, DiscountType, DiscountValue, MinOrderAmount, MaxDiscountAmount, StartDate, ExpiryDate, UsageLimit, UsedCount, IsActive, IsDeleted)
+    VALUES 
+    ('WELCOME100', 'Flat ₹100 Off on your first order above ₹499', 'Flat', 100.00, 499.00, 100.00, GETDATE(), DATEADD(month, 3, GETDATE()), 1000, 245, 1, 0),
+    ('FESTIVE20', '20% Mega Festival Discount up to ₹1,000', 'Percent', 20.00, 999.00, 1000.00, GETDATE(), DATEADD(month, 2, GETDATE()), 500, 120, 1, 0),
+    ('FREEDEL', 'Free Delivery on all orders above ₹299', 'Flat', 49.00, 299.00, 49.00, GETDATE(), DATEADD(month, 6, GETDATE()), 2000, 680, 1, 0);
+END;
+GO
+
+PRINT 'ShopNext SQL Server Master Schema, Stored Procedures & Seed Data Successfully Deployed!';
+GO
+

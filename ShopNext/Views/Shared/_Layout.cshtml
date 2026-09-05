@@ -1,0 +1,348 @@
+@using Microsoft.AspNetCore.Http
+@{
+    bool isShopLoggedIn = Context.Request.Cookies.TryGetValue("ShopId", out string? shopIdCookie) && !string.IsNullOrEmpty(shopIdCookie);
+    string shopName = isShopLoggedIn && Context.Request.Cookies.TryGetValue("ShopName", out string? sName) ? sName : "Shop Owner";
+
+    bool isRiderLoggedIn = Context.Request.Cookies.TryGetValue("RiderId", out string? riderIdCookie) && !string.IsNullOrEmpty(riderIdCookie);
+    string riderName = isRiderLoggedIn && Context.Request.Cookies.TryGetValue("RiderName", out string? rName) ? rName : "Rider";
+
+    bool isAdminLoggedIn = Context.Request.Cookies.TryGetValue("AdminAuth", out string? adminAuth) && adminAuth == "true";
+
+    bool isCustLoggedIn = Context.Request.Cookies.TryGetValue("CustomerId", out string? custIdCookie) && !string.IsNullOrEmpty(custIdCookie);
+    string customerName = isCustLoggedIn && Context.Request.Cookies.TryGetValue("CustomerName", out string? cName) ? cName : "Customer";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ShopNext</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/ShopNext.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark main-navbar mb-4 sticky-top">
+            <div class="container-fluid px-3 px-md-5">
+                <a class="navbar-brand d-flex align-items-center" asp-area="" asp-controller="Home" asp-action="Index">
+                    <img src="/assest/gemini-svg.svg" alt="ShopNext Logo" style="height: 32px; margin-right: 10px;" />
+                    <span class="fw-extrabold fs-4" style="background: linear-gradient(135deg, #60a5fa 0%, #93c5fd 50%, #ffffff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">ShopNext</span>
+                </a>
+                <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">
+                                <i class="fa-solid fa-house me-1 text-primary"></i> Home
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Products">
+                                <i class="fa-solid fa-basket-shopping me-1 text-info"></i> Marketplace
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index" asp-fragment="shopsGrid">
+                                <i class="fa-solid fa-store me-1 text-warning"></i> Explore Shops
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link position-relative" asp-area="" asp-controller="Home" asp-action="Cart" id="layoutCartLink">
+                                <i class="fa-solid fa-cart-shopping me-1 text-success"></i> Cart 
+                                <span class="badge bg-danger rounded-pill ms-1" id="navCartCount" style="display: none;">0</span>
+                            </a>
+                        </li>
+
+                        @* Customer Portal Links *@
+                        @if (isCustLoggedIn)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Customer" asp-action="MyOrders">
+                                    <i class="fa-solid fa-bag-shopping me-1 text-info"></i> My Orders
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Customer" asp-action="Account" asp-route-tab="wishlist">
+                                    <i class="fa-solid fa-heart me-1 text-danger"></i> Wishlist
+                                </a>
+                            </li>
+                        }
+                        
+                        @* Admin Portal Links *@
+                        @if (isAdminLoggedIn)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-warning fw-semibold" asp-controller="Admin" asp-action="Dashboard">
+                                    <i class="fa-solid fa-sliders me-1"></i> Admin Console
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-controller="DatabaseSetup" asp-action="Index">
+                                    <i class="fa-solid fa-database me-1 text-info"></i> SQL Hub
+                                </a>
+                            </li>
+                        }
+
+                        @* Seller Portal Links *@
+                        @if (isShopLoggedIn)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-info" asp-controller="Vendor" asp-action="Products">
+                                    <i class="fa-solid fa-boxes-stacked me-1"></i> My Products
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-success" asp-controller="Vendor" asp-action="Orders">
+                                    <i class="fa-solid fa-clipboard-list me-1"></i> Shop Orders
+                                </a>
+                            </li>
+                        }
+
+                        @* Rider Portal Links *@
+                        @if (isRiderLoggedIn)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-success" asp-controller="Rider" asp-action="Dashboard">
+                                    <i class="fa-solid fa-motorcycle me-1"></i> Delivery Dashboard
+                                </a>
+                            </li>
+                        }
+                    </ul>
+
+                    <ul class="navbar-nav ms-auto align-items-lg-center">
+                        @if (!isShopLoggedIn && !isAdminLoggedIn)
+                        {
+                            <li class="nav-item me-lg-2 my-1 my-lg-0">
+                                <a class="btn btn-warning btn-sm px-3 py-2 fw-bold text-dark rounded-pill d-inline-flex align-items-center shadow-sm" asp-controller="Vendor" asp-action="Register" id="navBecomeSellerBtn">
+                                    <i class="fa-solid fa-store me-1 text-primary"></i> Become a Seller
+                                </a>
+                            </li>
+                        }
+
+                        @if (isCustLoggedIn)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle user-badge d-flex align-items-center px-3 rounded-pill text-white" href="#" id="customerDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fa-solid fa-circle-user me-2 text-info fs-5"></i> @customerName
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end unified-dropdown" aria-labelledby="customerDropdown">
+                                    <li><span class="dropdown-header">Customer Account</span></li>
+                                    <li><a class="dropdown-item" asp-controller="Customer" asp-action="Account" asp-route-tab="profile"><i class="fa-solid fa-id-card text-primary"></i>My Profile</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Customer" asp-action="Account" asp-route-tab="orders"><i class="fa-solid fa-box text-info"></i>My Orders</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Customer" asp-action="Account" asp-route-tab="wishlist"><i class="fa-solid fa-heart text-danger"></i>Wishlist</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Customer" asp-action="Account" asp-route-tab="addresses"><i class="fa-solid fa-location-dot text-success"></i>My Addresses</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Customer" asp-action="Account" asp-route-tab="coupons"><i class="fa-solid fa-ticket text-warning"></i>Coupons & Offers</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Home" asp-action="Cart"><i class="fa-solid fa-cart-shopping text-warning"></i>My Cart</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" asp-controller="Customer" asp-action="Logout"><i class="fa-solid fa-arrow-right-from-bracket"></i>Logout Account</a></li>
+                                </ul>
+                            </li>
+                        }
+                        else if (isAdminLoggedIn)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle user-badge d-flex align-items-center px-3 rounded-pill" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fa-solid fa-user-shield me-2 text-warning fs-5"></i> Admin Control
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end unified-dropdown" aria-labelledby="adminDropdown">
+                                    <li><span class="dropdown-header">Administrator Active</span></li>
+                                    <li><a class="dropdown-item" asp-controller="Admin" asp-action="Dashboard"><i class="fa-solid fa-sliders text-primary"></i>Management Console</a></li>
+                                    <li><a class="dropdown-item" asp-controller="DatabaseSetup" asp-action="Index"><i class="fa-solid fa-database text-info"></i>SQL Explorer</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" asp-controller="Admin" asp-action="Logout"><i class="fa-solid fa-arrow-right-from-bracket"></i>Logout Admin</a></li>
+                                </ul>
+                            </li>
+                        }
+                        else if (isShopLoggedIn)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle user-badge d-flex align-items-center px-3 rounded-pill" href="#" id="vendorDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fa-solid fa-shop me-2 text-primary fs-5"></i> @shopName
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end unified-dropdown" aria-labelledby="vendorDropdown">
+                                    <li><span class="dropdown-header">Shop Owner Portal</span></li>
+                                    <li><a class="dropdown-item" asp-controller="Vendor" asp-action="Products"><i class="fa-solid fa-boxes-stacked text-primary"></i>Manage Products</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Vendor" asp-action="Orders"><i class="fa-solid fa-receipt text-success"></i>Customer Orders</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" asp-controller="Vendor" asp-action="Logout"><i class="fa-solid fa-arrow-right-from-bracket"></i>Logout Shop</a></li>
+                                </ul>
+                            </li>
+                        }
+                        else if (isRiderLoggedIn)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle user-badge d-flex align-items-center px-3 rounded-pill" href="#" id="riderDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fa-solid fa-motorcycle me-2 text-success fs-5"></i> @riderName
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end unified-dropdown" aria-labelledby="riderDropdown">
+                                    <li><span class="dropdown-header">Delivery Partner</span></li>
+                                    <li><a class="dropdown-item" asp-controller="Rider" asp-action="Dashboard"><i class="fa-solid fa-route text-success"></i>Active Trips</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" asp-controller="Rider" asp-action="Logout"><i class="fa-solid fa-arrow-right-from-bracket"></i>Logout Rider</a></li>
+                                </ul>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link fw-semibold text-white d-flex align-items-center bg-primary bg-opacity-25 px-3 rounded-pill" asp-controller="Account" asp-action="Login">
+                                    <i class="fa-solid fa-right-to-bracket me-2 text-info"></i> Login
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content Body -->
+    <div class="container-fluid px-3 px-md-5">
+        <main role="main" class="pb-4">
+            @RenderBody()
+        </main>
+    </div>
+
+    <!-- Mobile Bottom Navigation Bar (Sticky < 768px) -->
+    <nav class="mobile-bottom-nav">
+        <a asp-controller="Home" asp-action="Index" class="nav-item-btn">
+            <i class="fa-solid fa-house"></i>
+            <span>Home</span>
+        </a>
+        <a asp-controller="Home" asp-action="Products" class="nav-item-btn">
+            <i class="fa-solid fa-basket-shopping"></i>
+            <span>Shop</span>
+        </a>
+        <a asp-controller="Home" asp-action="Cart" class="nav-item-btn position-relative">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span>Cart</span>
+            <span class="badge bg-danger rounded-pill position-absolute top-0 end-0 translate-middle-y" id="mobileNavCartCount" style="display: none; font-size: 0.65rem;">0</span>
+        </a>
+        @if (isCustLoggedIn)
+        {
+            <a asp-controller="Customer" asp-action="MyOrders" class="nav-item-btn">
+                <i class="fa-solid fa-bag-shopping"></i>
+                <span>Orders</span>
+            </a>
+            <a asp-controller="Customer" asp-action="Account" class="nav-item-btn">
+                <i class="fa-solid fa-circle-user"></i>
+                <span>Profile</span>
+            </a>
+        }
+        else if (isShopLoggedIn)
+        {
+            <a asp-controller="Vendor" asp-action="Orders" class="nav-item-btn">
+                <i class="fa-solid fa-clipboard-list"></i>
+                <span>Orders</span>
+            </a>
+            <a asp-controller="Vendor" asp-action="Products" class="nav-item-btn">
+                <i class="fa-solid fa-shop"></i>
+                <span>Seller</span>
+            </a>
+        }
+        else if (isAdminLoggedIn)
+        {
+            <a asp-controller="Admin" asp-action="Dashboard" class="nav-item-btn">
+                <i class="fa-solid fa-sliders"></i>
+                <span>Admin</span>
+            </a>
+        }
+        else
+        {
+            <a asp-controller="Account" asp-action="Login" class="nav-item-btn">
+                <i class="fa-solid fa-circle-user"></i>
+                <span>Login</span>
+            </a>
+        }
+    </nav>
+
+    <!-- Global Universal Confirmation Modal -->
+    <div class="modal fade" id="globalConfirmationModal" tabindex="-1" aria-labelledby="globalConfirmTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+                <div class="modal-body text-center p-4">
+                    <i id="globalConfirmIcon" class="fa-solid fa-triangle-exclamation text-warning fa-2x mb-3"></i>
+                    <h5 class="fw-bold mb-2" id="globalConfirmTitle">Confirmation Required</h5>
+                    <p class="text-muted mb-4" id="globalConfirmMessage">Are you sure you want to proceed with this action?</p>
+                    <div class="d-flex justify-content-center gap-2">
+                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger px-4" id="globalConfirmSubmitBtn">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Toast Container -->
+    <div id="globalToastContainer"></div>
+
+    <!-- Global Loading Spinner Overlay -->
+    <div id="globalSpinnerOverlay">
+        <div class="spinner-pulse-ring mb-3"></div>
+        <div id="globalSpinnerText" class="text-white fw-bold fs-6">Loading, please wait...</div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="container-fluid px-3 px-md-5 d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+            <div>
+                <span class="fw-semibold text-light">&copy; 2026 ShopNext</span> - Professional Hyperlocal E-Commerce Platform
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <a asp-area="" asp-controller="Home" asp-action="Privacy"><i class="fa-solid fa-shield-halved me-1"></i>Privacy</a>
+                <span class="text-muted">|</span>
+                <a asp-area="" asp-controller="Home" asp-action="Products"><i class="fa-solid fa-basket-shopping me-1"></i>Marketplace</a>
+                <span class="text-muted">|</span>
+                <a asp-area="" asp-controller="Home" asp-action="Index"><i class="fa-solid fa-compass me-1"></i>Nearby Shops</a>
+                <span class="text-muted">|</span>
+                <a asp-controller="Vendor" asp-action="Register" class="text-warning fw-bold"><i class="fa-solid fa-store me-1"></i>Become a Seller</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+    <script>
+        function updateLayoutCartBadge(count) {
+            const badge = document.getElementById("navCartCount");
+            const mobileBadge = document.getElementById("mobileNavCartCount");
+            if (badge) {
+                if (count > 0) {
+                    badge.innerText = count;
+                    badge.style.display = "inline-block";
+                } else {
+                    badge.style.display = "none";
+                }
+            }
+            if (mobileBadge) {
+                if (count > 0) {
+                    mobileBadge.innerText = count;
+                    mobileBadge.style.display = "inline-block";
+                } else {
+                    mobileBadge.style.display = "none";
+                }
+            }
+        }
+        window.updateLayoutCartBadge = updateLayoutCartBadge;
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const cart = JSON.parse(localStorage.getItem("shop_cart"));
+            if (cart && cart.items && cart.items.length > 0) {
+                let totalQty = 0;
+                cart.items.forEach(item => totalQty += item.quantity);
+                updateLayoutCartBadge(totalQty);
+            } else {
+                updateLayoutCartBadge(0);
+            }
+        });
+    </script>
+</body>
+</html>

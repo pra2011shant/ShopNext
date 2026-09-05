@@ -1,0 +1,293 @@
+@* Views/Vendor/PendingApproval.cshtml *@
+@model ShopNext.Models.Shop
+@{
+    ViewData["Title"] = "Pending Admin Approval - ShopNext Seller";
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+        --card-bg: rgba(30, 41, 59, 0.75);
+        --glass-border: rgba(255, 255, 255, 0.08);
+        --text-muted: #64748b;
+        --text-light: #1e293b;
+    }
+
+    body {
+        background: transparent;
+        color: var(--text-light);
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .approval-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 85vh;
+        padding: 3rem 1rem;
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .glass-status-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--glass-border);
+        border-radius: 28px;
+        padding: 3.5rem 3rem;
+        width: 100%;
+        max-width: 680px;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .status-icon-wrapper {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        background: rgba(245, 158, 11, 0.15);
+        border: 2px solid rgba(245, 158, 11, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        box-shadow: 0 0 30px rgba(245, 158, 11, 0.25);
+    }
+
+    .status-icon-wrapper i {
+        font-size: 2.75rem;
+        color: #f59e0b;
+        animation: pulse 2s infinite ease-in-out;
+    }
+
+    @@keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.08); }
+        100% { transform: scale(1); }
+    }
+
+    .status-title {
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.02em;
+    }
+
+    .status-badge {
+        display: inline-block;
+        background: rgba(245, 158, 11, 0.2);
+        color: #fbbf24;
+        border: 1px solid rgba(245, 158, 11, 0.4);
+        padding: 0.4rem 1.25rem;
+        border-radius: 50px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 1.5rem;
+    }
+
+    .restriction-box {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: 16px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 2rem;
+        text-align: left;
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        color: #fca5a5;
+    }
+
+    .restriction-box i {
+        font-size: 1.5rem;
+        color: #ef4444;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .restriction-box strong {
+        color: #f87171;
+        font-size: 1.05rem;
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .details-grid {
+        background: rgba(15, 23, 42, 0.55);
+        border: 1px solid var(--glass-border);
+        border-radius: 18px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        text-align: left;
+    }
+
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.65rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        font-size: 0.92rem;
+    }
+
+    .detail-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .detail-label {
+        color: var(--text-muted);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .detail-val {
+        color: #cbd5e1;
+        font-weight: 600;
+        text-align: right;
+    }
+
+    .btn-actions-group {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-panel {
+        background: rgba(255, 255, 255, 0.08);
+        color: #e2e8f0;
+        border: 1px solid var(--glass-border);
+        padding: 0.85rem 1.5rem;
+        border-radius: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-panel:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .btn-admin-demo {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        padding: 0.85rem 1.5rem;
+        border-radius: 14px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 6px 20px rgba(168, 85, 247, 0.35);
+    }
+
+    .btn-admin-demo:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(168, 85, 247, 0.5);
+        color: white;
+    }
+
+    @@media (max-width: 600px) {
+        .glass-status-card {
+            padding: 2.5rem 1.5rem;
+        }
+        .btn-actions-group {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<div class="approval-container">
+    <div class="glass-status-card">
+        <!-- Status Icon -->
+        <div class="status-icon-wrapper">
+            <i class="fa-solid fa-hourglass-half"></i>
+        </div>
+
+        <h1 class="status-title">Registration Submitted!</h1>
+        <div>
+            <span class="status-badge" id="pendingApprovalBadge">
+                <i class="fa-solid fa-clock-rotate-left me-1"></i> Pending Admin Approval
+            </span>
+        </div>
+
+        <!-- Strict Requirement Callout: Seller immediately product sell nahi kar sakega -->
+        <div class="restriction-box" id="restrictionNotice">
+            <i class="fa-solid fa-lock"></i>
+            <div>
+                <strong>Seller immediately product sell nahi kar sakega.</strong>
+                <div>Aapka registration form successfully submit ho chuka hai. Security aur quality standards ke tehat, ShopNext Admin ki verification ke baad hi aapka seller account activate hoga aur aap products add/sell kar sakenge.</div>
+            </div>
+        </div>
+
+        <!-- Submitted Details Summary -->
+        @if (Model != null)
+        {
+            <div class="details-grid" id="sellerSubmittedDetails">
+                <div class="detail-item">
+                    <span class="detail-label"><i class="fa-solid fa-shop text-primary"></i> Shop Name</span>
+                    <span class="detail-val" id="valShopName">@Model.ShopName</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label"><i class="fa-solid fa-user text-primary"></i> Owner Name</span>
+                    <span class="detail-val" id="valOwnerName">@Model.OwnerName</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label"><i class="fa-solid fa-envelope text-primary"></i> Email</span>
+                    <span class="detail-val" id="valEmail">@Model.Email</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label"><i class="fa-solid fa-mobile-screen-button text-primary"></i> Mobile</span>
+                    <span class="detail-val" id="valMobile">@Model.PhoneNumber</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label"><i class="fa-solid fa-location-dot text-primary"></i> Shop Address</span>
+                    <span class="detail-val" id="valAddress">@Model.Address</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label"><i class="fa-solid fa-city text-primary"></i> Location</span>
+                    <span class="detail-val" id="valCityState">@Model.City, @Model.State - @Model.Pincode</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label"><i class="fa-solid fa-shield-halved text-warning"></i> Verification Status</span>
+                    <span class="detail-val text-warning fw-bold">
+                        <i class="fa-solid fa-circle-dot me-1"></i> Awaiting Admin Approval
+                    </span>
+                </div>
+            </div>
+        }
+
+        <!-- Actions -->
+        <div class="btn-actions-group">
+            <a asp-controller="Vendor" asp-action="Products" class="btn-panel" id="viewDashboardBtn">
+                <i class="fa-solid fa-table-columns"></i> View Seller Dashboard (Locked State)
+            </a>
+            <a asp-controller="Admin" asp-action="Dashboard" class="btn-admin-demo" id="adminApproveDemoBtn" target="_blank">
+                <i class="fa-solid fa-user-shield"></i> Open Admin Panel to Approve Store
+            </a>
+        </div>
+    </div>
+</div>

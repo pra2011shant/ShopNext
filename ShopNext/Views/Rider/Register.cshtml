@@ -1,0 +1,309 @@
+@* Views/Rider/Register.cshtml *@
+@{
+    ViewData["Title"] = "Rider Registration - ShopNext";
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+        --card-bg: rgba(30, 41, 59, 0.75);
+        --glass-border: rgba(255, 255, 255, 0.08);
+        --text-muted: #64748b;
+        --text-light: #1e293b;
+    }
+
+    body {
+        background: transparent;
+        color: var(--text-light);
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .register-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 85vh;
+        padding: 2rem 0;
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .glass-register-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        padding: 3rem;
+        width: 100%;
+        max-width: 550px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .glass-register-card:hover {
+        border-color: rgba(99, 102, 241, 0.3);
+        box-shadow: 0 25px 55px rgba(99, 102, 241, 0.15);
+    }
+
+    .card-header-icon {
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 3.5rem;
+        display: block;
+        margin: 0 auto 1.5rem;
+        text-align: center;
+    }
+
+    .register-title {
+        font-weight: 800;
+        font-size: 2.2rem;
+        text-align: center;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.02em;
+    }
+
+    .register-subtitle {
+        color: var(--text-muted);
+        text-align: center;
+        font-size: 0.95rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .form-group {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .form-row .form-group {
+        flex: 1;
+    }
+
+    .form-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+        display: block;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .form-control-custom {
+        width: 100%;
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 0.85rem 1rem 0.85rem 2.75rem;
+        color: white;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control-custom:focus {
+        outline: none;
+        border-color: #a855f7;
+        box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
+        background: rgba(15, 23, 42, 0.8);
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 1rem;
+        top: 2.5rem;
+        color: var(--text-muted);
+        font-size: 1.1rem;
+    }
+
+    .geo-btn {
+        background: rgba(99, 102, 241, 0.15);
+        color: #a5b4fc;
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        border-radius: 12px;
+        padding: 0.85rem 1.25rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+    }
+
+    .geo-btn:hover {
+        background: var(--primary-gradient);
+        color: white;
+        border-color: transparent;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4);
+    }
+
+    .geo-status-container {
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        color: var(--text-muted);
+    }
+
+    .btn-register {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 0.85rem;
+        width: 100%;
+        font-weight: 700;
+        font-size: 1.05rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 1.5rem;
+        box-shadow: 0 8px 20px rgba(168, 85, 247, 0.3);
+    }
+
+    .btn-register:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 25px rgba(168, 85, 247, 0.45);
+    }
+
+    .login-link-container {
+        text-align: center;
+        margin-top: 1.5rem;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+    }
+
+    .login-link {
+        color: #a5b4fc;
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.2s ease;
+    }
+
+    .login-link:hover {
+        color: #ec4899;
+        text-decoration: underline;
+    }
+
+    .alert-danger-custom {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.25);
+        color: #fca5a5;
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+</style>
+
+<div class="register-container">
+    <div class="glass-register-card">
+        <span class="card-header-icon"><i class="fa-solid fa-motorcycle"></i></span>
+        <h1 class="register-title" id="riderRegisterHeader">Rider Registration</h1>
+        <p class="register-subtitle">Sign up as a delivery rider on ShopNext to start delivering orders.</p>
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert-danger-custom" id="riderRegisterErrorMessage">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span>@ViewBag.Error</span>
+            </div>
+        }
+
+        <form asp-controller="Rider" asp-action="Register" method="post" id="riderRegisterForm">
+            @Html.AntiForgeryToken()
+            
+            <div class="form-group">
+                <label for="riderName" class="form-label">Rider ka Naam (Full Name)</label>
+                <i class="fa-solid fa-user-ninja input-icon"></i>
+                <input type="text" id="riderName" name="riderName" class="form-control-custom" placeholder="e.g. Ajay Kumar" required />
+            </div>
+
+            <div class="form-group">
+                <label for="phoneNumber" class="form-label">Phone Number</label>
+                <i class="fa-solid fa-phone input-icon"></i>
+                <input type="tel" id="phoneNumber" name="phoneNumber" class="form-control-custom" placeholder="e.g. 7777777777" pattern="[6-9][0-9]{9}" title="Enter a valid 10-digit mobile number starting with 6, 7, 8, or 9" required />
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <i class="fa-solid fa-lock input-icon"></i>
+                <input type="password" id="password" name="password" class="form-control-custom" minlength="6" placeholder="Create a password" required />
+            </div>
+
+            <label class="form-label">Aapki Location</label>
+            <div class="d-flex gap-2 align-items-start mb-2">
+                <button type="button" class="geo-btn" onclick="getGeolocation()" id="geolocationBtn">
+                    <i class="fa-solid fa-location-crosshairs"></i> Get Current Location
+                </button>
+                <div id="geoStatus" class="geo-status-container pt-2">Coordinates will auto-fill or enter manually.</div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="latitude" class="form-label">Latitude</label>
+                    <i class="fa-solid fa-map-location-dot input-icon"></i>
+                    <input type="number" step="0.000001" id="latitude" name="latitude" class="form-control-custom" placeholder="e.g. 28.6139" required />
+                </div>
+                
+                <div class="form-group">
+                    <label for="longitude" class="form-label">Longitude</label>
+                    <i class="fa-solid fa-map-location-dot input-icon"></i>
+                    <input type="number" step="0.000001" id="longitude" name="longitude" class="form-control-custom" placeholder="e.g. 77.2090" required />
+                </div>
+            </div>
+
+            <button type="submit" class="btn-register" id="riderRegisterSubmitBtn">
+                Register & Open Rider Panel
+            </button>
+        </form>
+
+        <div class="login-link-container">
+            Registered hain? 
+            <a asp-controller="Rider" asp-action="Login" class="login-link" id="loginRedirectLink">Yahan se Login karen</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    function getGeolocation() {
+        const geoStatus = document.getElementById("geoStatus");
+        if (navigator.geolocation) {
+            geoStatus.innerHTML = "<i class='fa-solid fa-spinner fa-spin me-1'></i> Accessing GPS...";
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    document.getElementById("latitude").value = position.coords.latitude.toFixed(6);
+                    document.getElementById("longitude").value = position.coords.longitude.toFixed(6);
+                    geoStatus.innerHTML = "<span class='text-success'><i class='fa-solid fa-circle-check me-1'></i> Coordinates fetched!</span>";
+                },
+                (error) => {
+                    geoStatus.innerHTML = "<span class='text-warning'><i class='fa-solid fa-circle-xmark me-1'></i> Location permission denied. Please type coordinates.</span>";
+                    // Fallback to Delhi coordinates if empty
+                    if (!document.getElementById("latitude").value) {
+                        document.getElementById("latitude").value = "28.613900";
+                        document.getElementById("longitude").value = "77.209000";
+                    }
+                },
+                { enableHighAccuracy: true, timeout: 5000 }
+            );
+        } else {
+            geoStatus.innerHTML = "<span class='text-danger'>Geolocation not supported.</span>";
+        }
+    }
+</script>

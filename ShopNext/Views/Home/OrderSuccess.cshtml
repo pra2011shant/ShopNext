@@ -1,0 +1,1187 @@
+@* Views/Home/OrderSuccess.cshtml *@
+@model ShopNext.Models.Order
+@{
+    ViewData["Title"] = $"Track Order #ORD{Model.Id} - ShopNext";
+    var shopName = ViewBag.ShopName as string ?? (Model.Shop?.ShopName ?? "Store");
+
+    // Timeline calculation
+    int currentStageIndex = 1;
+    string status = Model.OrderStatus ?? "Pending";
+
+    bool isRefundFlow = status == "ReturnRequested" || 
+                         status == "ReturnApproved" || 
+                         status == "ProductPickup" || 
+                         status == "ProductReceived" || 
+                         status == "RefundInitiated" || 
+                         status == "RefundCompleted" ||
+                         status == "Returned";
+
+    int refundStageIndex = 0;
+    if (status == "ReturnRequested") refundStageIndex = 0;
+    else if (status == "ReturnApproved") refundStageIndex = 1;
+    else if (status == "ProductPickup") refundStageIndex = 2;
+    else if (status == "ProductReceived") refundStageIndex = 3;
+    else if (status == "RefundInitiated") refundStageIndex = 4;
+    else if (status == "RefundCompleted" || status == "Returned") refundStageIndex = 5;
+
+    if (status == "Pending" || status == "Placed" || status == "New") currentStageIndex = 1;
+    else if (status == "Accepted") currentStageIndex = 2;
+    else if (status == "Processing") currentStageIndex = 3;
+    else if (status == "Packed") currentStageIndex = 4;
+    else if (status == "Shipped" || status == "Dispatched") currentStageIndex = 5;
+    else if (status == "OutForDelivery") currentStageIndex = 6;
+    else if (status == "Completed" || status == "Delivered") currentStageIndex = 7;
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+        --card-bg: rgba(30, 41, 59, 0.78);
+        --glass-border: rgba(255, 255, 255, 0.08);
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+    }
+
+    body {
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .tracking-page-container {
+        padding: 2rem 0 4rem 0;
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(16px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .glass-panel {
+        background: var(--card-bg);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        padding: 2rem;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+        margin-bottom: 1.5rem;
+    }
+
+    .order-id-pill {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.05rem;
+        font-weight: 700;
+        background: rgba(99, 102, 241, 0.18);
+        color: #818cf8;
+        border: 1px solid rgba(99, 102, 241, 0.35);
+        padding: 0.35rem 1rem;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* ========================================== */
+    /* CLEAR TIMELINE COMPONENT                   */
+    /* ========================================== */
+    .timeline-card {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 2rem 1.75rem;
+    }
+
+    .timeline-wrapper {
+        position: relative;
+        padding-left: 10px;
+    }
+
+    .timeline-step {
+        position: relative;
+        padding-left: 58px;
+        padding-bottom: 30px;
+        transition: all 0.3s ease;
+    }
+
+    .timeline-step:last-child {
+        padding-bottom: 0;
+    }
+
+    /* Connecting Line */
+    .timeline-step::before {
+        content: '';
+        position: absolute;
+        left: 20px;
+        top: 36px;
+        bottom: -6px;
+        width: 3px;
+        background: rgba(255, 255, 255, 0.1);
+        z-index: 1;
+        transition: all 0.4s ease;
+    }
+
+    .timeline-step.completed::before {
+        background: #10b981;
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+    }
+
+    .timeline-step.current::before {
+        background: linear-gradient(180deg, #10b981 0%, rgba(99, 102, 241, 0.4) 100%);
+    }
+
+    .timeline-step:last-child::before {
+        display: none;
+    }
+
+    /* Down Arrow (↓) between steps */
+    .step-down-arrow {
+        position: absolute;
+        left: 14px;
+        bottom: 4px;
+        color: rgba(255, 255, 255, 0.25);
+        font-size: 0.85rem;
+        z-index: 2;
+        transition: all 0.3s ease;
+    }
+
+    .timeline-step.completed .step-down-arrow {
+        color: #10b981;
+    }
+
+    .timeline-step.current .step-down-arrow {
+        color: #818cf8;
+        animation: bounceArrow 1.5s infinite;
+    }
+
+    .timeline-step:last-child .step-down-arrow {
+        display: none;
+    }
+
+    @@keyframes bounceArrow {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(3px); }
+    }
+
+    /* Circle Indicator (✓, ●, ○) */
+    .step-icon-circle {
+        position: absolute;
+        left: 1px;
+        top: 0;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 3;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    /* ✓ Completed */
+    .timeline-step.completed .step-icon-circle {
+        background: rgba(16, 185, 129, 0.2);
+        border: 2px solid #10b981;
+        color: #10b981;
+        box-shadow: 0 0 16px rgba(16, 185, 129, 0.45);
+    }
+
+    /* ● Current / In Progress */
+    .timeline-step.current .step-icon-circle {
+        background: rgba(99, 102, 241, 0.25);
+        border: 2px solid #818cf8;
+        color: #818cf8;
+        box-shadow: 0 0 20px rgba(99, 102, 241, 0.6);
+        animation: pulseRadar 2s infinite;
+    }
+
+    /* ○ Upcoming */
+    .timeline-step.upcoming .step-icon-circle {
+        background: rgba(15, 23, 42, 0.8);
+        border: 2px solid rgba(255, 255, 255, 0.18);
+        color: rgba(255, 255, 255, 0.35);
+    }
+
+    @@keyframes pulseRadar {
+        0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7); }
+        70% { box-shadow: 0 0 0 12px rgba(99, 102, 241, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+    }
+
+    .step-title {
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: white;
+        margin-bottom: 2px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .timeline-step.upcoming .step-title {
+        color: #94a3b8;
+    }
+
+    .step-desc {
+        font-size: 0.85rem;
+        color: #94a3b8;
+        margin-bottom: 0;
+    }
+
+    /* Map Box */
+    #liveTrackingMap {
+        height: 280px;
+        border-radius: 18px;
+        border: 1px solid var(--glass-border);
+        background: #0f172a;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    }
+
+    .badge-status-lg {
+        padding: 0.45rem 1.15rem;
+        border-radius: 50rem;
+        font-weight: 700;
+        font-size: 0.85rem;
+    }
+</style>
+
+<div class="container tracking-page-container">
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none text-muted">Home</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Customer" asp-action="MyOrders" class="text-decoration-none text-muted">My Orders</a></li>
+            <li class="breadcrumb-item active text-primary" aria-current="page">Track Order #ORD@(Model.Id)</li>
+        </ol>
+    </nav>
+
+    <!-- Top Status Banner -->
+    <div class="glass-panel">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <div class="d-flex align-items-center gap-3 mb-1">
+                    <span class="order-id-pill">
+                        <i class="fa-solid fa-receipt"></i> #ORD@(Model.Id)
+                    </span>
+                    <span id="headerStatusBadge">
+                        @if (status == "Completed" || status == "Delivered")
+                        {
+                            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 badge-status-lg">
+                                <i class="fa-solid fa-circle-check me-1"></i> Delivered
+                            </span>
+                        }
+                        else if (status == "ReturnRequested")
+                        {
+                            <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50 badge-status-lg">
+                                <i class="fa-solid fa-rotate-left me-1"></i> Return Requested
+                            </span>
+                        }
+                        else if (status == "ReturnApproved")
+                        {
+                            <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-50 badge-status-lg">
+                                <i class="fa-solid fa-thumbs-up me-1"></i> Return Approved
+                            </span>
+                        }
+                        else if (status == "ProductPickup")
+                        {
+                            <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50 badge-status-lg">
+                                <i class="fa-solid fa-truck-ramp-box me-1 fa-bounce"></i> Product Pickup
+                            </span>
+                        }
+                        else if (status == "ProductReceived")
+                        {
+                            <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-50 badge-status-lg">
+                                <i class="fa-solid fa-warehouse me-1"></i> Product Received
+                            </span>
+                        }
+                        else if (status == "RefundInitiated")
+                        {
+                            <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50 badge-status-lg">
+                                <i class="fa-solid fa-money-bill-transfer me-1 fa-fade"></i> Refund Initiated
+                            </span>
+                        }
+                        else if (status == "RefundCompleted" || status == "Returned")
+                        {
+                            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 badge-status-lg">
+                                <i class="fa-solid fa-circle-check me-1"></i> Refund Completed
+                            </span>
+                        }
+                        else if (status == "OutForDelivery")
+                        {
+                            <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50 badge-status-lg">
+                                <i class="fa-solid fa-motorcycle fa-bounce me-1"></i> Out for Delivery
+                            </span>
+                        }
+                        else if (status == "Processing")
+                        {
+                            <span class="badge bg-purple bg-opacity-25 text-purple border border-purple border-opacity-50 badge-status-lg" style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4);">
+                                <i class="fa-solid fa-gears fa-spin me-1"></i> Processing
+                            </span>
+                        }
+                        else if (status == "Accepted")
+                        {
+                            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 badge-status-lg">
+                                <i class="fa-solid fa-circle-check me-1"></i> Order Accepted
+                            </span>
+                        }
+                        else if (status == "Shipped")
+                        {
+                            <span class="badge bg-primary bg-opacity-25 text-info border border-info border-opacity-50 badge-status-lg">
+                                <i class="fa-solid fa-truck-fast me-1"></i> Shipped
+                            </span>
+                        }
+                        else if (status == "Dispatched" || status == "Packed")
+                        {
+                            <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-50 badge-status-lg">
+                                <i class="fa-solid fa-box me-1"></i> @status
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50 badge-status-lg">
+                                <i class="fa-solid fa-clock me-1"></i> @status
+                            </span>
+                        }
+                    </span>
+                </div>
+                <h3 class="text-white fw-bold mb-0">
+                    @(isRefundFlow ? "Return & Refund Tracking Status" : "Order Tracking & Live Delivery Telemetry")
+                </h3>
+                <p class="text-muted small mb-0 mt-1">
+                    Ordered from <strong class="text-light">@shopName</strong> &bull; Placed on @Model.CreatedDate.ToString("dd MMMM yyyy, hh:mm tt")
+                </p>
+            </div>
+
+            <div class="d-flex gap-2 align-items-center flex-wrap" id="trackingActionButtons">
+                @if (isRefundFlow)
+                {
+                    <div class="dropdown d-inline-block">
+                        <button class="btn btn-warning btn-sm dropdown-toggle rounded-pill px-3 fw-bold" type="button" id="refundSimDrop" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa-solid fa-bolt me-1"></i> Demo: Refund Step
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow" aria-labelledby="refundSimDrop">
+                            <li><span class="dropdown-header">Set Refund Stage (Customer View)</span></li>
+                            <li><a class="dropdown-item @(status == "ReturnApproved" ? "active" : "")" href="javascript:void(0)" onclick="simulateRefundStep('ReturnApproved')"><i class="fa-solid fa-thumbs-up me-2 text-info"></i>1. Return Approved</a></li>
+                            <li><a class="dropdown-item @(status == "ProductPickup" ? "active" : "")" href="javascript:void(0)" onclick="simulateRefundStep('ProductPickup')"><i class="fa-solid fa-truck-ramp-box me-2 text-warning"></i>2. Product Pickup</a></li>
+                            <li><a class="dropdown-item @(status == "ProductReceived" ? "active" : "")" href="javascript:void(0)" onclick="simulateRefundStep('ProductReceived')"><i class="fa-solid fa-warehouse me-2 text-info"></i>3. Product Received</a></li>
+                            <li><a class="dropdown-item @(status == "RefundInitiated" ? "active" : "")" href="javascript:void(0)" onclick="simulateRefundStep('RefundInitiated')"><i class="fa-solid fa-money-bill-transfer me-2 text-primary"></i>4. Refund Initiated</a></li>
+                            <li><a class="dropdown-item @(status == "RefundCompleted" ? "active" : "")" href="javascript:void(0)" onclick="simulateRefundStep('RefundCompleted')"><i class="fa-solid fa-circle-check me-2 text-success"></i>5. Refund Completed</a></li>
+                        </ul>
+                    </div>
+                }
+
+                <!-- Cancellation Rules: Placed, Confirmed, Packed → Cancel; Shipped → Not allowed; Delivered → Return -->
+                @if (status == "Pending" || status == "Accepted" || status == "Packed")
+                {
+                    <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="openCancelModalTracking()">
+                        <i class="fa-solid fa-ban me-1"></i> Cancel Order
+                    </button>
+                }
+                else if (status == "Dispatched" || status == "OutForDelivery")
+                {
+                    <span class="badge bg-secondary bg-opacity-25 text-warning border border-warning border-opacity-25 px-3 py-2 rounded-pill small" title="Order has been shipped and is with delivery partner. Cancellation is not allowed.">
+                        <i class="fa-solid fa-truck-fast me-1"></i> Shipped (Cannot Cancel)
+                    </span>
+                }
+                else if (status == "Completed" || status == "Delivered")
+                {
+                    <button type="button" class="btn btn-outline-warning btn-sm rounded-pill px-3" onclick="openReturnModalTracking()">
+                        <i class="fa-solid fa-rotate-left me-1"></i> Return Product
+                    </button>
+                }
+
+                <a asp-controller="Customer" asp-action="MyOrders" class="btn btn-outline-light btn-sm rounded-pill px-3">
+                    <i class="fa-solid fa-bag-shopping me-1"></i> My Orders
+                </a>
+                <a asp-controller="Home" asp-action="Products" class="btn btn-primary btn-sm rounded-pill px-3">
+                    <i class="fa-solid fa-cart-plus me-1"></i> Order More
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- ============================================== -->
+        <!-- LEFT COLUMN: CLEAR ORDER TRACKING TIMELINE     -->
+        <!-- ============================================== -->
+        <div class="col-lg-6">
+            <div class="glass-panel h-100 mb-0">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="text-white fw-bold mb-0">
+                        @if (isRefundFlow)
+                        {
+                            <span><i class="fa-solid fa-rotate-left me-2 text-warning"></i> Return & Refund Timeline</span>
+                        }
+                        else
+                        {
+                            <span><i class="fa-solid fa-route me-2 text-primary"></i> Order Tracking Timeline</span>
+                        }
+                    </h5>
+                    <span class="badge @(isRefundFlow ? "bg-warning bg-opacity-25 text-warning" : "bg-secondary bg-opacity-25 text-light") small px-2 py-1 rounded">
+                        @(isRefundFlow ? "Reverse Logistics" : "Live Auto-Sync")
+                    </span>
+                </div>
+
+                @if (isRefundFlow)
+                {
+                    <div class="timeline-card border border-warning border-opacity-25 mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                            <span class="text-warning fw-bold small">
+                                <i class="fa-solid fa-money-bill-wave me-1"></i> REFUND LIFECYCLE (5 STAGES)
+                            </span>
+                            <span class="badge bg-success bg-opacity-25 text-success small">
+                                Refund: ₹@Model.TotalAmount.ToString("N0")
+                            </span>
+                        </div>
+
+                        @if (refundStageIndex == 0)
+                        {
+                            <div class="alert alert-warning bg-opacity-10 border-warning border-opacity-25 py-2 px-3 small mb-3">
+                                <i class="fa-solid fa-clock me-1"></i> Return request submitted (Reason: <strong>@(Model.ReturnReason ?? "Return")</strong>). Waiting for merchant approval.
+                            </div>
+                        }
+
+                        <div class="timeline-wrapper" id="refundTimelineWrapper">
+                            <!-- ========================================== -->
+                            <!-- STAGE 1: RETURN APPROVED                  -->
+                            <!-- ========================================== -->
+                            <div class="timeline-step @(refundStageIndex > 1 ? "completed" : (refundStageIndex == 1 ? "current" : "upcoming"))">
+                                <div class="step-icon-circle">
+                                    @if (refundStageIndex >= 1) { <i class="fa-solid fa-check"></i> }
+                                    else { <i class="fa-regular fa-circle"></i> }
+                                </div>
+                                <div class="step-down-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+                                <div>
+                                    <div class="step-title">
+                                        <span>Return Approved</span>
+                                        @if (refundStageIndex >= 1) {
+                                            <span class="badge bg-success bg-opacity-25 text-success small py-0 px-2 fw-semibold">✓ Done</span>
+                                        }
+                                    </div>
+                                    <p class="step-desc">Seller accepted return request. Reverse pickup rider assigned.</p>
+                                </div>
+                            </div>
+
+                            <!-- ========================================== -->
+                            <!-- STAGE 2: PRODUCT PICKUP                   -->
+                            <!-- ========================================== -->
+                            <div class="timeline-step @(refundStageIndex > 2 ? "completed" : (refundStageIndex == 2 ? "current" : "upcoming"))">
+                                <div class="step-icon-circle">
+                                    @if (refundStageIndex > 2) { <i class="fa-solid fa-check"></i> }
+                                    else if (refundStageIndex == 2) { <i class="fa-solid fa-circle-dot"></i> }
+                                    else { <i class="fa-regular fa-circle"></i> }
+                                </div>
+                                <div class="step-down-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+                                <div>
+                                    <div class="step-title">
+                                        <span>Product Pickup</span>
+                                        @if (refundStageIndex == 2) {
+                                            <span class="badge bg-warning bg-opacity-25 text-warning small py-0 px-2 fw-semibold animate__animated animate__pulse animate__infinite">● Pickup In Progress</span>
+                                        } else if (refundStageIndex > 2) {
+                                            <span class="badge bg-success bg-opacity-25 text-success small py-0 px-2 fw-semibold">✓ Done</span>
+                                        }
+                                    </div>
+                                    <p class="step-desc">Hyperlocal rider is collecting the item from your registered address.</p>
+                                </div>
+                            </div>
+
+                            <!-- ========================================== -->
+                            <!-- STAGE 3: PRODUCT RECEIVED                 -->
+                            <!-- ========================================== -->
+                            <div class="timeline-step @(refundStageIndex > 3 ? "completed" : (refundStageIndex == 3 ? "current" : "upcoming"))">
+                                <div class="step-icon-circle">
+                                    @if (refundStageIndex > 3) { <i class="fa-solid fa-check"></i> }
+                                    else if (refundStageIndex == 3) { <i class="fa-solid fa-circle-dot"></i> }
+                                    else { <i class="fa-regular fa-circle"></i> }
+                                </div>
+                                <div class="step-down-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+                                <div>
+                                    <div class="step-title">
+                                        <span>Product Received</span>
+                                        @if (refundStageIndex >= 3) {
+                                            <span class="badge bg-success bg-opacity-25 text-success small py-0 px-2 fw-semibold">✓ Done</span>
+                                        }
+                                    </div>
+                                    <p class="step-desc">Package received at seller hub and verified with quality inspection.</p>
+                                </div>
+                            </div>
+
+                            <!-- ========================================== -->
+                            <!-- STAGE 4: REFUND INITIATED                 -->
+                            <!-- ========================================== -->
+                            <div class="timeline-step @(refundStageIndex > 4 ? "completed" : (refundStageIndex == 4 ? "current" : "upcoming"))">
+                                <div class="step-icon-circle">
+                                    @if (refundStageIndex > 4) { <i class="fa-solid fa-check"></i> }
+                                    else if (refundStageIndex == 4) { <i class="fa-solid fa-circle-dot"></i> }
+                                    else { <i class="fa-regular fa-circle"></i> }
+                                </div>
+                                <div class="step-down-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+                                <div>
+                                    <div class="step-title">
+                                        <span>Refund Initiated</span>
+                                        @if (refundStageIndex == 4) {
+                                            <span class="badge bg-warning bg-opacity-25 text-warning small py-0 px-2 fw-semibold animate__animated animate__pulse animate__infinite">● Processing</span>
+                                        } else if (refundStageIndex > 4) {
+                                            <span class="badge bg-success bg-opacity-25 text-success small py-0 px-2 fw-semibold">✓ Done</span>
+                                        }
+                                    </div>
+                                    <p class="step-desc">₹@Model.TotalAmount.ToString("N0") refund transfer initiated to your @Model.PaymentMode / UPI account.</p>
+                                </div>
+                            </div>
+
+                            <!-- ========================================== -->
+                            <!-- STAGE 5: REFUND COMPLETED                 -->
+                            <!-- ========================================== -->
+                            <div class="timeline-step @(refundStageIndex == 5 ? "completed" : "upcoming")">
+                                <div class="step-icon-circle">
+                                    @if (refundStageIndex == 5) { <i class="fa-solid fa-check"></i> }
+                                    else { <i class="fa-regular fa-circle"></i> }
+                                </div>
+                                <div>
+                                    <div class="step-title">
+                                        <span>Refund Completed</span>
+                                        @if (refundStageIndex == 5) {
+                                            <span class="badge bg-success bg-opacity-25 text-success small py-0 px-2 fw-semibold">✓ Credited</span>
+                                        }
+                                    </div>
+                                    <p class="step-desc">Refund amount successfully credited to source account. Transaction complete.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="timeline-card">
+                        <div class="timeline-wrapper" id="trackingTimelineWrapper">
+                        
+                        <!-- ========================================== -->
+                        <!-- STAGE 1: ORDER PLACED                     -->
+                        <!-- ========================================== -->
+                        <div class="timeline-step @(currentStageIndex > 1 ? "completed" : (currentStageIndex == 1 ? "current" : "upcoming"))" id="stageStep1">
+                            <div class="step-icon-circle">
+                                @if (currentStageIndex > 1) { <i class="fa-solid fa-check"></i> }
+                                else if (currentStageIndex == 1) { <i class="fa-solid fa-circle-dot"></i> }
+                                else { <i class="fa-regular fa-circle"></i> }
+                            </div>
+                            <div class="step-down-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+                            <div>
+                                <div class="step-title">
+                                    <span>Order Placed</span>
+                                    @if (currentStageIndex >= 1) {
+                                        <span class="badge bg-success bg-opacity-25 text-success small py-0 px-2 fw-semibold">✓ Done</span>
+                                    }
+                                </div>
+                                <p class="step-desc">Order details received and registered in system.</p>
+                                <small class="text-muted d-block mt-0.5">@Model.CreatedDate.ToString("hh:mm tt, dd MMM yyyy")</small>
+                            </div>
+                        </div>
+
+                        <!-- ========================================== -->
+                        <!-- STAGE 2: ACCEPTED                         -->
+                        <!-- ========================================== -->
+                        <div class="timeline-step @(currentStageIndex > 2 ? "completed" : (currentStageIndex == 2 ? "current" : "upcoming"))" id="stageStep2">
+                            <div class="step-icon-circle">
+                                @if (currentStageIndex > 2) { <i class="fa-solid fa-check"></i> }
+                                else if (currentStageIndex == 2) { <i class="fa-solid fa-circle-dot"></i> }
+                                else { <i class="fa-regular fa-circle"></i> }
+                            </div>
+                            <div class="step-down-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+                            <div>
+                                <div class="step-title">
+                                    <span>Order Accepted</span>
+                                    @if (currentStageIndex >= 2) {
+                                        <span class="badge bg-success bg-opacity-25 text-success small py-0 px-2 fw-semibold">✓ Done</span>
+                                    }
+                                </div>
+                                <p class="step-desc">Seller confirmed order and accepted fulfillment.</p>
+                                <small class="text-muted d-block mt-0.5">@shopName</small>
+                            </div>
+                        </div>
+
+                        <!-- ========================================== -->
+                        <!-- STAGE 3: PROCESSING                       -->
+                        <!-- ========================================== -->
+                        <div class="timeline-step @(currentStageIndex > 3 ? "completed" : (currentStageIndex == 3 ? "current" : "upcoming"))" id="stageStep3">
+                            <div class="step-icon-circle">
+                                @if (currentStageIndex > 3) { <i class="fa-solid fa-check"></i> }
+                                else if (currentStageIndex == 3) { <i class="fa-solid fa-gears fa-spin" style="color: #c084fc;"></i> }
+                                else { <i class="fa-regular fa-circle"></i> }
+                            </div>
+                            <div class="step-down-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+                            <div>
+                                <div class="step-title">
+                                    <span>Processing</span>
+                                    @if (currentStageIndex == 3) {
+                                        <span class="badge bg-purple bg-opacity-25 text-purple small py-0 px-2 fw-semibold animate__animated animate__pulse animate__infinite" style="background: rgba(168,85,247,0.2); color: #c084fc; border: 1px solid rgba(168,85,247,0.4);">● Processing</span>
+                                    } else if (currentStageIndex > 3) {
+                                        <span class="badge bg-success bg-opacity-25 text-success small py-0 px-2 fw-semibold">✓ Done</span>
+                                    }
+                                </div>
+                                <p class="step-desc">Items being prepared, picked, and quality-inspected by merchant.</p>
+                            </div>
+                        </div>
+
+                        <!-- ========================================== -->
+                        <!-- STAGE 4: PACKED                           -->
+                        <!-- ========================================== -->
+                        <div class="timeline-step @(currentStageIndex > 4 ? "completed" : (currentStageIndex == 4 ? "current" : "upcoming"))" id="stageStep4">
+                            <div class="step-icon-circle">
+                                @if (currentStageIndex > 4) { <i class="fa-solid fa-check"></i> }
+                                else if (currentStageIndex == 4) { <i class="fa-solid fa-box-open text-info"></i> }
+                                else { <i class="fa-regular fa-circle"></i> }
+                            </div>
+                            <div class="step-down-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+                            <div>
+                                <div class="step-title">
+                                    <span>Packed</span>
+                                    @if (currentStageIndex >= 4) {
+                                        <span class="badge bg-success bg-opacity-25 text-success small py-0 px-2 fw-semibold">✓ Done</span>
+                                    }
+                                </div>
+                                <p class="step-desc">Items sealed in tamper-proof security package, awaiting courier pickup.</p>
+                            </div>
+                        </div>
+
+                        <!-- ========================================== -->
+                        <!-- STAGE 5: SHIPPED                          -->
+                        <!-- ========================================== -->
+                        <div class="timeline-step @(currentStageIndex > 5 ? "completed" : (currentStageIndex == 5 ? "current" : "upcoming"))" id="stageStep5">
+                            <div class="step-icon-circle">
+                                @if (currentStageIndex > 5) { <i class="fa-solid fa-check"></i> }
+                                else if (currentStageIndex == 5) { <i class="fa-solid fa-truck-fast text-primary"></i> }
+                                else { <i class="fa-regular fa-circle"></i> }
+                            </div>
+                            <div class="step-down-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+                            <div>
+                                <div class="step-title">
+                                    <span>Shipped</span>
+                                    @if (currentStageIndex >= 5) {
+                                        <span class="badge bg-success bg-opacity-25 text-success small py-0 px-2 fw-semibold">✓ Done</span>
+                                    }
+                                </div>
+                                <p class="step-desc">Handed over to priority hyperlocal courier partner for dispatch.</p>
+                            </div>
+                        </div>
+
+                        <!-- ========================================== -->
+                        <!-- STAGE 6: OUT FOR DELIVERY                 -->
+                        <!-- ========================================== -->
+                        <div class="timeline-step @(currentStageIndex > 6 ? "completed" : (currentStageIndex == 6 ? "current" : "upcoming"))" id="stageStep6">
+                            <div class="step-icon-circle">
+                                @if (currentStageIndex > 6) { <i class="fa-solid fa-check"></i> }
+                                else if (currentStageIndex == 6) { <i class="fa-solid fa-motorcycle text-warning"></i> }
+                                else { <i class="fa-regular fa-circle"></i> }
+                            </div>
+                            <div class="step-down-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+                            <div>
+                                <div class="step-title">
+                                    <span>Out for Delivery</span>
+                                    @if (currentStageIndex == 6) {
+                                        <span class="badge bg-warning bg-opacity-25 text-warning small py-0 px-2 fw-semibold animate__animated animate__pulse animate__infinite">● On the way</span>
+                                    } else if (currentStageIndex > 6) {
+                                        <span class="badge bg-success bg-opacity-25 text-success small py-0 px-2 fw-semibold">✓ Done</span>
+                                    }
+                                </div>
+                                <p class="step-desc">Rider has left the hub and is navigating to your address.</p>
+                                <div id="riderInfoSnippet" class="mt-1" style="display: @(currentStageIndex >= 6 ? "block" : "none");">
+                                    <span class="badge bg-info bg-opacity-25 text-info small">
+                                        <i class="fa-solid fa-motorcycle me-1"></i> Rider Assigned
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ========================================== -->
+                        <!-- STAGE 7: DELIVERED                        -->
+                        <!-- ========================================== -->
+                        <div class="timeline-step @(currentStageIndex == 7 ? "completed" : "upcoming")" id="stageStep7">
+                            <div class="step-icon-circle">
+                                @if (currentStageIndex == 7) { <i class="fa-solid fa-check"></i> }
+                                else { <i class="fa-regular fa-circle"></i> }
+                            </div>
+                            <div>
+                                <div class="step-title">
+                                    <span>Delivered</span>
+                                    @if (currentStageIndex == 7) {
+                                        <span class="badge bg-success bg-opacity-25 text-success small py-0 px-2 fw-semibold">✓ Delivered</span>
+                                    }
+                                </div>
+                                <p class="step-desc">Package handed over safely at your doorstep.</p>
+                                @if (Model.DeliveredDate.HasValue)
+                                {
+                                    <small class="text-success d-block mt-0.5 fw-semibold">Delivered at @Model.DeliveredDate.Value.ToString("hh:mm tt, dd MMM yyyy")</small>
+                                }
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                }
+
+                <!-- Delivery Destination & Remarks Card -->
+                <div class="p-3 bg-dark rounded-4 border border-secondary mt-3">
+                    <div class="d-flex align-items-start gap-2">
+                        <i class="fa-solid fa-location-dot text-danger mt-1"></i>
+                        <div>
+                            <span class="text-muted small d-block">Destination Address:</span>
+                            <strong class="text-white small">@Model.Remark</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- RIGHT COLUMN: LIVE GPS MAP & ORDER SUMMARY     -->
+        <!-- ============================================== -->
+        <div class="col-lg-6">
+            <!-- GPS Telemetry Map -->
+            <div class="glass-panel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="text-white fw-bold mb-0">
+                        <i class="fa-solid fa-map-location-dot text-primary me-2"></i> Live Rider Telemetry
+                    </h5>
+                    <span id="mapLiveBadge" class="badge bg-success bg-opacity-25 text-success">
+                        <i class="fa-solid fa-tower-broadcast fa-fade me-1"></i> Live GPS
+                    </span>
+                </div>
+
+                <div id="trackingInfoBox" class="p-2.5 bg-dark rounded-3 border border-secondary small text-muted mb-3">
+                    <i class="fa-solid fa-circle-notch fa-spin me-1 text-primary"></i> Streaming delivery coordinates...
+                </div>
+
+                <div id="liveTrackingMap"></div>
+            </div>
+
+            <!-- Itemized Receipt & Pricing -->
+            <div class="glass-panel mb-0">
+                <h5 class="text-white fw-bold mb-3">
+                    <i class="fa-solid fa-file-invoice me-2 text-primary"></i> Order Items & Bill Summary
+                </h5>
+
+                <div class="table-responsive mb-3">
+                    <table class="table table-dark table-borderless align-middle mb-0 small">
+                        <thead>
+                            <tr class="border-bottom border-secondary text-muted">
+                                <th>Item</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-end">Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.OrderItems)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            @if (!string.IsNullOrEmpty(item.Product?.ImageUrl))
+                                            {
+                                                <img src="@item.Product.ImageUrl" alt="@item.Product.ProductName" style="width: 36px; height: 36px; border-radius: 8px; object-fit: cover;" />
+                                            }
+                                            <span class="text-light fw-semibold">@(item.Product?.ProductName ?? "Product Item")</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-center text-muted">&times;@item.Quantity</td>
+                                    <td class="text-end text-white fw-bold">&#8377;@((item.Quantity * item.UnitPrice).ToString("N0"))</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="p-3 bg-dark rounded-3 border border-secondary">
+                    <div class="d-flex justify-content-between text-muted small mb-1">
+                        <span>Payment Mode:</span>
+                        <strong class="text-white">@Model.PaymentMode (@Model.PaymentStatus)</strong>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small mb-2">
+                        <span>Delivery Speed:</span>
+                        <span class="text-success fw-semibold">Standard Delivery (FREE)</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary fs-5 fw-bold text-white">
+                        <span>Total Paid:</span>
+                        <span class="text-success">&#8377;@Model.TotalAmount.ToString("N0")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leaflet JS Map Requirements -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const rawShopLat = parseFloat('@(Model.Shop?.Latitude ?? 28.6139m)');
+        const rawShopLng = parseFloat('@(Model.Shop?.Longitude ?? 77.2090m)');
+        const shopLat = isNaN(rawShopLat) || rawShopLat === 0 ? 28.6139 : rawShopLat;
+        const shopLng = isNaN(rawShopLng) || rawShopLng === 0 ? 77.2090 : rawShopLng;
+        const custLat = shopLat + 0.012;
+        const custLng = shopLng + 0.012;
+
+        // Initialize Map
+        const map = L.map('liveTrackingMap').setView([shopLat, shopLng], 14);
+
+        // Dark Mode Map theme
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+        }).addTo(map);
+
+        // Custom Icons
+        const shopIcon = L.divIcon({
+            html: '<div style="background: rgba(168, 85, 247, 0.25); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #c084fc; border: 2px solid #a855f7; box-shadow: 0 4px 10px rgba(0,0,0,0.4)"><i class="fa-solid fa-store"></i></div>',
+            className: 'custom-map-icon',
+            iconSize: [34, 34],
+            iconAnchor: [17, 17]
+        });
+
+        const custIcon = L.divIcon({
+            html: '<div style="background: rgba(99, 102, 241, 0.25); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #818cf8; border: 2px solid #6366f1; box-shadow: 0 4px 10px rgba(0,0,0,0.4)"><i class="fa-solid fa-house"></i></div>',
+            className: 'custom-map-icon',
+            iconSize: [34, 34],
+            iconAnchor: [17, 17]
+        });
+
+        const riderIcon = L.divIcon({
+            html: '<div style="background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; border: 2px solid white; box-shadow: 0 6px 15px rgba(168, 85, 247, 0.5)"><i class="fa-solid fa-motorcycle"></i></div>',
+            className: 'custom-map-icon',
+            iconSize: [36, 36],
+            iconAnchor: [18, 18]
+        });
+
+        const shopMarker = L.marker([shopLat, shopLng], { icon: shopIcon }).addTo(map).bindPopup('<b>Store: @shopName</b>');
+        const customerMarker = L.marker([custLat, custLng], { icon: custIcon }).addTo(map).bindPopup('<b>Your Delivery Address</b>');
+
+        L.polyline([[shopLat, shopLng], [custLat, custLng]], {
+            color: '#6366f1',
+            weight: 3,
+            opacity: 0.45,
+            dashArray: '5, 10'
+        }).addTo(map);
+
+        const boundsGroup = new L.featureGroup([shopMarker, customerMarker]);
+        map.fitBounds(boundsGroup.getBounds().pad(0.2));
+
+        let riderMarker = null;
+        let pollInterval = null;
+
+        let lastSeenStatus = '@status';
+
+        // Dynamic Timeline Stage Updater (1 to 7 stages)
+        function updateTimelineStage(stageIndex) {
+            for (let i = 1; i <= 7; i++) {
+                const el = document.getElementById(`stageStep${i}`);
+                if (!el) continue;
+
+                const circle = el.querySelector(".step-icon-circle");
+                el.classList.remove("completed", "current", "upcoming");
+
+                if (i < stageIndex) {
+                    el.classList.add("completed");
+                    if (circle) circle.innerHTML = '<i class="fa-solid fa-check"></i>';
+                } else if (i === stageIndex && stageIndex < 7) {
+                    el.classList.add("current");
+                    if (circle) {
+                        if (i === 2) circle.innerHTML = '<i class="fa-solid fa-circle-dot"></i>';
+                        else if (i === 3) circle.innerHTML = '<i class="fa-solid fa-gears fa-spin" style="color: #c084fc;"></i>';
+                        else if (i === 4) circle.innerHTML = '<i class="fa-solid fa-box-open text-info"></i>';
+                        else if (i === 5) circle.innerHTML = '<i class="fa-solid fa-truck-fast text-primary"></i>';
+                        else if (i === 6) circle.innerHTML = '<i class="fa-solid fa-motorcycle text-warning"></i>';
+                        else circle.innerHTML = '<i class="fa-solid fa-circle-dot"></i>';
+                    }
+                } else if (i === 7 && stageIndex === 7) {
+                    el.classList.add("completed");
+                    if (circle) circle.innerHTML = '<i class="fa-solid fa-check"></i>';
+                } else {
+                    el.classList.add("upcoming");
+                    if (circle) circle.innerHTML = '<i class="fa-regular fa-circle"></i>';
+                }
+            }
+        }
+
+        function checkRiderLocation() {
+            $.ajax({
+                url: '@Url.Action("GetOrderRiderLocation", "Home")',
+                type: 'GET',
+                data: { orderId: '@Model.Id' },
+                success: function (res) {
+                    if (res.success && res.orderStatus) {
+                        const infoBox = document.getElementById("trackingInfoBox");
+                        const statusBadge = document.getElementById("headerStatusBadge");
+                        const newStatus = res.orderStatus;
+
+                        // Automatic notification alert if status changed while viewing
+                        if (lastSeenStatus && newStatus !== lastSeenStatus) {
+                            showCustomerLiveStatusToast(newStatus);
+                            lastSeenStatus = newStatus;
+                        }
+
+                        let stage = 1;
+                        if (newStatus === "Accepted") stage = 2;
+                        else if (newStatus === "Processing") stage = 3;
+                        else if (newStatus === "Packed") stage = 4;
+                        else if (newStatus === "Shipped" || newStatus === "Dispatched") stage = 5;
+                        else if (newStatus === "OutForDelivery") stage = 6;
+                        else if (newStatus === "Completed" || newStatus === "Delivered") stage = 7;
+
+                        updateTimelineStage(stage);
+
+                        if (newStatus === "Completed" || newStatus === "Delivered") {
+                            if (infoBox) infoBox.innerHTML = '<span class="text-success fw-bold"><i class="fa-solid fa-circle-check me-1"></i> Order Delivered Successfully! Thank you for shopping with ShopNext.</span>';
+                            if (statusBadge) {
+                                statusBadge.innerHTML = '<span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 badge-status-lg"><i class="fa-solid fa-circle-check me-1"></i> Delivered</span>';
+                            }
+                            if (riderMarker) {
+                                riderMarker.setLatLng([custLat, custLng]);
+                                riderMarker.bindPopup('<b>Delivered!</b>').openPopup();
+                            }
+                            clearInterval(pollInterval);
+                            return;
+                        }
+
+                        if (res.latitude && res.longitude && (newStatus === "Dispatched" || newStatus === "OutForDelivery" || newStatus === "Shipped")) {
+                            if (infoBox) infoBox.innerHTML = `<span class="text-info fw-bold"><i class="fa-solid fa-motorcycle me-1"></i> Partner En Route: ${res.riderName || 'Express Delivery Partner'} (${res.phoneNumber || 'Priority Rider'})</span><br><span class="text-muted small">Live telemetry tracking connected. ETA: ~10-15 mins.</span>`;
+
+                            if (statusBadge) {
+                                statusBadge.innerHTML = '<span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50 badge-status-lg"><i class="fa-solid fa-motorcycle fa-bounce me-1"></i> Out for Delivery</span>';
+                            }
+
+                            if (!riderMarker) {
+                                riderMarker = L.marker([res.latitude, res.longitude], { icon: riderIcon }).addTo(map);
+                                riderMarker.bindPopup(`<b>Rider: ${res.riderName}</b>`).openPopup();
+                            } else {
+                                riderMarker.setLatLng([res.latitude, res.longitude]);
+                            }
+
+                            if (!map.getBounds().contains(riderMarker.getLatLng())) {
+                                map.panTo(riderMarker.getLatLng());
+                            }
+                        } else {
+                            if (newStatus === "Processing") {
+                                if (infoBox) infoBox.innerHTML = '<i class="fa-solid fa-gears fa-spin me-1" style="color: #c084fc;"></i> Order is currently being prepared and quality-inspected by merchant.';
+                                if (statusBadge) {
+                                    statusBadge.innerHTML = '<span class="badge bg-purple bg-opacity-25 text-purple border border-purple border-opacity-50 badge-status-lg" style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4);"><i class="fa-solid fa-gears fa-spin me-1"></i> Processing</span>';
+                                }
+                            } else if (newStatus === "Packed") {
+                                if (infoBox) infoBox.innerHTML = '<i class="fa-solid fa-box-open text-warning me-1"></i> Order is packed and sealed. Awaiting courier pickup.';
+                                if (statusBadge) {
+                                    statusBadge.innerHTML = '<span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-50 badge-status-lg"><i class="fa-solid fa-box me-1"></i> Packed</span>';
+                                }
+                            } else if (newStatus === "Shipped") {
+                                if (infoBox) infoBox.innerHTML = '<i class="fa-solid fa-truck-fast text-primary me-1"></i> Order has been dispatched with delivery courier.';
+                                if (statusBadge) {
+                                    statusBadge.innerHTML = '<span class="badge bg-primary bg-opacity-25 text-info border border-info border-opacity-50 badge-status-lg"><i class="fa-solid fa-truck-fast me-1"></i> Shipped</span>';
+                                }
+                            } else if (newStatus === "Accepted") {
+                                if (infoBox) infoBox.innerHTML = '<i class="fa-solid fa-circle-check text-success me-1"></i> Order confirmed by merchant. Starting preparation...';
+                                if (statusBadge) {
+                                    statusBadge.innerHTML = '<span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 badge-status-lg"><i class="fa-solid fa-circle-check me-1"></i> Order Accepted</span>';
+                                }
+                            } else {
+                                if (infoBox) infoBox.innerHTML = '<i class="fa-solid fa-clock text-info me-1"></i> Order placed successfully. Pending merchant confirmation...';
+                            }
+                        }
+                    }
+                },
+                error: function (err) {
+                    console.error("Tracking poll failed: ", err);
+                }
+            });
+        }
+
+        checkRiderLocation();
+        pollInterval = setInterval(checkRiderLocation, 3000);
+    });
+
+    function showCustomerLiveStatusToast(newStatus) {
+        let toastEl = document.getElementById("customerLiveStatusToast");
+        if (!toastEl) return;
+        const msgEl = document.getElementById("customerLiveStatusMsg");
+        if (msgEl) {
+            msgEl.innerHTML = `Order status updated to: <strong>${newStatus}</strong>`;
+        }
+        $(toastEl).fadeIn(300);
+        setTimeout(() => { $(toastEl).fadeOut(400); }, 4500);
+    }
+
+    function getToken() {
+        return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+    }
+
+    function openCancelModalTracking() {
+        new bootstrap.Modal(document.getElementById('trackingCancelModal')).show();
+    }
+
+    async function submitCancelOrderTracking() {
+        const sel = document.getElementById("trackCancelReasonSelect").value;
+        const comments = document.getElementById("trackCancelReasonText").value.trim();
+        const reason = comments ? `${sel} - ${comments}` : sel;
+
+        const form = new FormData();
+        form.append("orderId", "@Model.Id");
+        form.append("cancelReason", reason);
+
+        try {
+            const resp = await fetch('/Customer/CancelOrder', {
+                method: 'POST',
+                headers: { 'RequestVerificationToken': getToken() },
+                body: form
+            });
+            const data = await resp.json();
+            alert(data.message);
+            if (data.success) {
+                window.location.reload();
+            }
+        } catch (e) {
+            alert("Error: " + e.message);
+        }
+    }
+
+    function openReturnModalTracking() {
+        new bootstrap.Modal(document.getElementById('trackingReturnModal')).show();
+    }
+
+    async function submitReturnOrderTracking() {
+        const sel = document.getElementById("trackReturnReasonSelect").value;
+        const comments = document.getElementById("trackReturnReasonText").value.trim();
+        const reason = comments ? `${sel} - ${comments}` : sel;
+
+        const form = new FormData();
+        form.append("orderId", "@Model.Id");
+        form.append("returnReason", reason);
+
+        try {
+            const resp = await fetch('/Customer/ReturnOrder', {
+                method: 'POST',
+                headers: { 'RequestVerificationToken': getToken() },
+                body: form
+            });
+            const data = await resp.json();
+            alert(data.message);
+            if (data.success) {
+                window.location.reload();
+            }
+        } catch (e) {
+            alert("Error: " + e.message);
+        }
+    }
+
+    async function simulateRefundStep(nextStatus) {
+        const form = new FormData();
+        form.append("orderId", "@Model.Id");
+        form.append("nextStatus", nextStatus);
+
+        try {
+            const resp = await fetch('/Customer/UpdateRefundStatus', {
+                method: 'POST',
+                headers: { 'RequestVerificationToken': getToken() },
+                body: form
+            });
+            const data = await resp.json();
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.message || "Failed to update refund status.");
+            }
+        } catch (e) {
+            alert("Error: " + e.message);
+        }
+    }
+</script>
+
+@Html.AntiForgeryToken()
+
+<!-- Modal: Cancel Order with 5 Exact Reasons -->
+<div class="modal fade" id="trackingCancelModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border border-secondary" style="border-radius: 20px;">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold text-danger">
+                    <i class="fa-solid fa-ban me-2"></i> Cancel Order #ORD@(Model.Id)
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3 p-2.5 bg-danger bg-opacity-10 rounded-3 border border-danger border-opacity-25 small text-light">
+                    <i class="fa-solid fa-circle-exclamation text-danger me-1"></i>
+                    Cancellation is permitted while the order is <strong>Placed</strong>, <strong>Confirmed</strong>, or <strong>Packed</strong>.
+                </div>
+
+                <label class="form-label small fw-semibold">Select Reason for Cancellation *</label>
+                <select id="trackCancelReasonSelect" class="form-select bg-dark text-white border-secondary mb-3">
+                    <option value="Wrong Product">Wrong Product</option>
+                    <option value="Changed Mind">Changed Mind</option>
+                    <option value="Ordered by Mistake">Ordered by Mistake</option>
+                    <option value="Found Cheaper">Found Cheaper</option>
+                    <option value="Other">Other</option>
+                </select>
+
+                <label class="form-label small fw-semibold">Additional Comments (Optional):</label>
+                <textarea id="trackCancelReasonText" class="form-control bg-dark text-white border-secondary" placeholder="Help us understand the issue..." rows="2"></textarea>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold" onclick="submitCancelOrderTracking()">
+                    <i class="fa-solid fa-ban me-1"></i> Confirm Cancellation
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Return Order -->
+<div class="modal fade" id="trackingReturnModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border border-secondary" style="border-radius: 20px;">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold text-warning">
+                    <i class="fa-solid fa-rotate-left me-2"></i> Request Return for #ORD@(Model.Id)
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <label class="form-label small fw-semibold">Select Return Reason *</label>
+                <select id="trackReturnReasonSelect" class="form-select bg-dark text-white border-secondary mb-3">
+                    <option value="Damaged">Damaged</option>
+                    <option value="Wrong Product">Wrong Product</option>
+                    <option value="Defective">Defective</option>
+                    <option value="Missing Item">Missing Item</option>
+                    <option value="Not as Described">Not as Described</option>
+                </select>
+
+                <label class="form-label small fw-semibold">Comments:</label>
+                <textarea id="trackReturnReasonText" class="form-control bg-dark text-white border-secondary" placeholder="Describe the issue..." rows="2"></textarea>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning rounded-pill px-4 fw-bold" onclick="submitReturnOrderTracking()">
+                    <i class="fa-solid fa-check me-1"></i> Submit Return
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 25. Order Processing: Customer Live Automatic Status Toast Alert -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+    <div id="customerLiveStatusToast" class="toast align-items-center text-white border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true" style="background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); border: 1px solid #818cf8 !important; border-radius: 16px; min-width: 320px; display: none;">
+        <div class="d-flex p-3 align-items-center">
+            <div class="rounded-circle p-2.5 me-3 d-flex align-items-center justify-content-center" style="background: rgba(99, 102, 241, 0.2); width: 44px; height: 44px;">
+                <i class="fa-solid fa-bell text-warning fs-5 fa-shake"></i>
+            </div>
+            <div class="flex-grow-1">
+                <div class="fw-bold text-white small" style="letter-spacing: 0.5px;">LIVE ORDER TRACKING UPDATE</div>
+                <div id="customerLiveStatusMsg" class="small text-light mt-0.5">Order status updated</div>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-1 m-auto" onclick="$('#customerLiveStatusToast').fadeOut()"></button>
+        </div>
+    </div>
+</div>

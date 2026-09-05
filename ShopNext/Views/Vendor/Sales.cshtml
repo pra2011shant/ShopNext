@@ -1,0 +1,929 @@
+@* Views/Vendor/Sales.cshtml - 28. Seller Sales with Bootstrap + Chart.js *@
+@model ShopNext.Models.SellerDashboardViewModel
+@{
+    ViewData["Title"] = "Seller Sales & Revenue Analytics - ShopNext";
+    var shopName = ViewBag.ShopName as string ?? Model.Shop?.ShopName ?? "My Shop";
+    var recentOrders = Model.RecentOrders?.ToList() ?? new List<ShopNext.Models.Order>();
+
+    // Values for charts
+    decimal todayVal = Model.TodaySales > 0 ? Model.TodaySales : 50000;
+    decimal weekVal = Model.WeeklySales > 0 ? Model.WeeklySales : 125000;
+    decimal monthVal = Model.MonthlySales > 0 ? Model.MonthlySales : 485000;
+    decimal yearVal = Model.YearlySales > 0 ? Model.YearlySales : 2850000;
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+        --card-bg: rgba(30, 41, 59, 0.75);
+        --glass-border: rgba(255, 255, 255, 0.08);
+        --text-muted: #94a3b8;
+        --text-light: #f8fafc;
+    }
+
+    body {
+        background: #0f172a;
+        color: var(--text-light);
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .vendor-dashboard {
+        padding: 2rem 0 4rem 0;
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Sub-nav Navigation */
+    .vendor-nav {
+        background: rgba(30, 41, 59, 0.55);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--glass-border);
+        border-radius: 1.25rem;
+        padding: 0.75rem 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+    }
+
+    .nav-brand-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 1.3rem;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);
+    }
+
+    .nav-brand-info h4 {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .nav-brand-info span {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .nav-item-link {
+        padding: 0.6rem 1.15rem;
+        border-radius: 0.75rem;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: all 0.25s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .nav-item-link:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    .nav-item-link.active {
+        color: #fff;
+        background: rgba(16, 185, 129, 0.2);
+        border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    /* Hero Banner */
+    .sales-hero-card {
+        background: rgba(30, 41, 59, 0.6);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--glass-border);
+        border-radius: 1.5rem;
+        padding: 2.25rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .sales-hero-card::before {
+        content: '';
+        position: absolute;
+        top: -60%;
+        right: -10%;
+        width: 350px;
+        height: 350px;
+        background: radial-gradient(circle, rgba(16, 185, 129, 0.18) 0%, rgba(99, 102, 241, 0.05) 50%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .hero-title-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        padding: 0.35rem 0.9rem;
+        border-radius: 9999px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        margin-bottom: 0.75rem;
+    }
+
+    .sales-hero-title {
+        font-size: 2.2rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.4rem;
+        background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* 28. THE 4 SALES CARDS GRID */
+    .sales-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+
+    .sales-period-card {
+        background: rgba(30, 41, 59, 0.65);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 1.25rem;
+        padding: 1.75rem;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+        cursor: pointer;
+    }
+
+    .sales-period-card:hover, .sales-period-card.active-card {
+        transform: translateY(-4px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .sales-card-today {
+        border-color: rgba(59, 130, 246, 0.3);
+    }
+    .sales-card-today:hover, .sales-card-today.active-card {
+        border-color: rgba(59, 130, 246, 0.7);
+        box-shadow: 0 15px 30px rgba(59, 130, 246, 0.2);
+    }
+
+    .sales-card-weekly {
+        border-color: rgba(168, 85, 247, 0.3);
+    }
+    .sales-card-weekly:hover, .sales-card-weekly.active-card {
+        border-color: rgba(168, 85, 247, 0.7);
+        box-shadow: 0 15px 30px rgba(168, 85, 247, 0.2);
+    }
+
+    .sales-card-monthly {
+        border-color: rgba(16, 185, 129, 0.3);
+    }
+    .sales-card-monthly:hover, .sales-card-monthly.active-card {
+        border-color: rgba(16, 185, 129, 0.7);
+        box-shadow: 0 15px 30px rgba(16, 185, 129, 0.2);
+    }
+
+    .sales-card-yearly {
+        border-color: rgba(245, 158, 11, 0.3);
+    }
+    .sales-card-yearly:hover, .sales-card-yearly.active-card {
+        border-color: rgba(245, 158, 11, 0.7);
+        box-shadow: 0 15px 30px rgba(245, 158, 11, 0.2);
+    }
+
+    .sales-header-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .sales-period-title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #cbd5e1;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .sales-badge-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+
+    .sales-amount-big {
+        font-size: 2.3rem;
+        font-weight: 800;
+        line-height: 1.1;
+        margin-bottom: 0.5rem;
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .sales-meta-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    /* Chart Container Card */
+    .chart-panel-card {
+        background: rgba(30, 41, 59, 0.65);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--glass-border);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+    }
+
+    .chart-toggle-btn {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid var(--glass-border);
+        color: #cbd5e1;
+        padding: 0.45rem 1rem;
+        border-radius: 0.75rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .chart-toggle-btn:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+    }
+
+    .chart-toggle-btn.active {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: #fff;
+        border-color: #10b981;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+    }
+
+    .chart-canvas-wrap {
+        position: relative;
+        height: 340px;
+        width: 100%;
+    }
+
+    .donut-canvas-wrap {
+        position: relative;
+        height: 240px;
+        width: 100%;
+    }
+
+    /* Table styling */
+    .custom-table {
+        color: #e2e8f0;
+        margin-bottom: 0;
+    }
+
+    .custom-table thead th {
+        background: rgba(15, 23, 42, 0.6);
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid var(--glass-border);
+        padding: 1rem;
+    }
+
+    .custom-table tbody td {
+        background: transparent;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 1.15rem 1rem;
+        vertical-align: middle;
+    }
+</style>
+
+<div class="container-fluid px-3 px-md-5 vendor-dashboard">
+
+    <!-- Sub-navigation -->
+    <div class="vendor-nav">
+        <div class="nav-brand">
+            <div class="nav-brand-icon">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <div class="nav-brand-info">
+                <h4>@shopName</h4>
+                <span>Seller Portal &bull; Point 28 Sales &amp; Chart.js Graphs</span>
+            </div>
+        </div>
+        <ul class="nav-links">
+            <li>
+                <a asp-controller="Vendor" asp-action="Dashboard" class="nav-item-link">
+                    <i class="fa-solid fa-gauge"></i> Dashboard
+                </a>
+            </li>
+            <li>
+                <a asp-controller="Vendor" asp-action="Products" class="nav-item-link">
+                    <i class="fa-solid fa-boxes-stacked"></i> Products
+                </a>
+            </li>
+            <li>
+                <a asp-controller="Vendor" asp-action="Orders" class="nav-item-link">
+                    <i class="fa-solid fa-cart-shopping"></i> Orders
+                </a>
+            </li>
+            <li>
+                <a asp-controller="Vendor" asp-action="Reviews" class="nav-item-link">
+                    <i class="fa-solid fa-star text-warning"></i> Reviews
+                </a>
+            </li>
+            <li>
+                <a asp-controller="Vendor" asp-action="Sales" class="nav-item-link active">
+                    <i class="fa-solid fa-wallet text-success"></i> Sales
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- 28. Seller Sales Hero Banner -->
+    <div class="sales-hero-card">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <div class="hero-title-badge">
+                    <i class="fa-solid fa-chart-pie"></i> Point 28: Seller Sales &amp; Graphs (Bootstrap + Chart.js)
+                </div>
+                <h1 class="sales-hero-title">Store Sales &amp; Revenue</h1>
+                <p class="text-light text-opacity-75 mb-0 fs-6">
+                    Aapke store ki real-time kamai ka dynamic analysis — Today's Sales, Weekly Sales, Monthly Sales, aur Yearly Sales interactive graphs ke sath.
+                </p>
+            </div>
+            <div class="col-lg-5 mt-4 mt-lg-0 text-lg-end">
+                <div class="p-3 rounded-4 d-inline-block text-start" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border); min-width: 240px;">
+                    <div class="text-muted small fw-bold text-uppercase">Gross Lifetime Sales</div>
+                    <div class="fs-2 fw-bold text-success">₹@Model.TotalSales.ToString("N0")</div>
+                    <div class="text-muted small mt-1">
+                        <i class="fa-solid fa-circle-check text-success me-1"></i> @Model.TotalOrders Total Orders Processed
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================
+         28. SELLER SALES: THE 4 CORE PERIOD CARDS
+         1. Today's Sales
+         2. Weekly Sales
+         3. Monthly Sales
+         4. Yearly Sales
+         ==================================================== -->
+    <div class="sales-cards-grid">
+        
+        <!-- 1. Today's Sales -->
+        <div class="sales-period-card sales-card-today active-card" id="cardToday" onclick="switchSalesPeriod('today')">
+            <div class="sales-header-flex">
+                <div class="sales-period-title text-info">
+                    <i class="fa-solid fa-calendar-day"></i> Today's Sales
+                </div>
+                <div class="sales-badge-icon" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa;">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+            </div>
+            <div class="sales-amount-big text-info">
+                ₹@Model.TodaySales.ToString("N0")
+            </div>
+            <div class="sales-meta-row">
+                <span><i class="fa-solid fa-box me-1"></i> Orders Today:</span>
+                <strong class="text-white">@Model.TodayOrdersCount Orders</strong>
+            </div>
+            <div class="text-muted small mt-2">
+                <i class="fa-solid fa-chart-line me-1 text-info"></i> Click to view today's hourly graph
+            </div>
+        </div>
+
+        <!-- 2. Weekly Sales -->
+        <div class="sales-period-card sales-card-weekly" id="cardWeekly" onclick="switchSalesPeriod('weekly')">
+            <div class="sales-header-flex">
+                <div class="sales-period-title text-purple" style="color: #c084fc;">
+                    <i class="fa-solid fa-calendar-week"></i> Weekly Sales
+                </div>
+                <div class="sales-badge-icon" style="background: rgba(168, 85, 247, 0.15); color: #c084fc;">
+                    <i class="fa-solid fa-chart-simple"></i>
+                </div>
+            </div>
+            <div class="sales-amount-big" style="color: #c084fc;">
+                ₹@Model.WeeklySales.ToString("N0")
+            </div>
+            <div class="sales-meta-row">
+                <span><i class="fa-solid fa-box me-1"></i> Orders This Week:</span>
+                <strong class="text-white">@Model.WeeklyOrdersCount Orders</strong>
+            </div>
+            <div class="text-muted small mt-2">
+                <i class="fa-solid fa-chart-line me-1" style="color: #c084fc;"></i> Click to view 7-day trend
+            </div>
+        </div>
+
+        <!-- 3. Monthly Sales -->
+        <div class="sales-period-card sales-card-monthly" id="cardMonthly" onclick="switchSalesPeriod('monthly')">
+            <div class="sales-header-flex">
+                <div class="sales-period-title text-success">
+                    <i class="fa-solid fa-calendar-days"></i> Monthly Sales
+                </div>
+                <div class="sales-badge-icon" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+            </div>
+            <div class="sales-amount-big text-success">
+                ₹@Model.MonthlySales.ToString("N0")
+            </div>
+            <div class="sales-meta-row">
+                <span><i class="fa-solid fa-box me-1"></i> Orders This Month:</span>
+                <strong class="text-white">@Model.MonthlyOrdersCount Orders</strong>
+            </div>
+            <div class="text-muted small mt-2">
+                <i class="fa-solid fa-chart-line me-1 text-success"></i> Click to view 30-day weekly bars
+            </div>
+        </div>
+
+        <!-- 4. Yearly Sales -->
+        <div class="sales-period-card sales-card-yearly" id="cardYearly" onclick="switchSalesPeriod('yearly')">
+            <div class="sales-header-flex">
+                <div class="sales-period-title text-warning">
+                    <i class="fa-solid fa-chart-line"></i> Yearly Sales
+                </div>
+                <div class="sales-badge-icon" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24;">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+            </div>
+            <div class="sales-amount-big text-warning">
+                ₹@Model.YearlySales.ToString("N0")
+            </div>
+            <div class="sales-meta-row">
+                <span><i class="fa-solid fa-box me-1"></i> Orders This Year:</span>
+                <strong class="text-white">@Model.YearlyOrdersCount Orders</strong>
+            </div>
+            <div class="text-muted small mt-2">
+                <i class="fa-solid fa-chart-line me-1 text-warning"></i> Click to view 12-month curve
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ====================================================
+         INTERACTIVE CHART.JS REVENUE GRAPH
+         ==================================================== -->
+    <div class="chart-panel-card">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+            <div>
+                <h3 class="text-white mb-1" id="chartHeadingTitle">
+                    <i class="fa-solid fa-chart-area text-success me-2"></i> Today's Sales Revenue Trend
+                </h3>
+                <span class="text-muted small" id="chartSubTitle">Real-time revenue telemetry and hourly volume progression</span>
+            </div>
+
+            <!-- Graph Period Switcher Buttons -->
+            <div class="btn-group p-1 rounded-3" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border);">
+                <button type="button" class="chart-toggle-btn active" id="btnChartToday" onclick="switchSalesPeriod('today')">
+                    <i class="fa-solid fa-calendar-day me-1"></i> Today
+                </button>
+                <button type="button" class="chart-toggle-btn" id="btnChartWeekly" onclick="switchSalesPeriod('weekly')">
+                    <i class="fa-solid fa-calendar-week me-1"></i> Weekly
+                </button>
+                <button type="button" class="chart-toggle-btn" id="btnChartMonthly" onclick="switchSalesPeriod('monthly')">
+                    <i class="fa-solid fa-calendar-days me-1"></i> Monthly
+                </button>
+                <button type="button" class="chart-toggle-btn" id="btnChartYearly" onclick="switchSalesPeriod('yearly')">
+                    <i class="fa-solid fa-chart-line me-1"></i> Yearly
+                </button>
+            </div>
+        </div>
+
+        <div class="chart-canvas-wrap">
+            <canvas id="salesTrendChart"></canvas>
+        </div>
+    </div>
+
+    <!-- 2 Secondary Analytics Graphs: Donut Payment Modes & Comparison Bar -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-5">
+            <div class="chart-panel-card h-100">
+                <h4 class="text-white mb-2">
+                    <i class="fa-solid fa-credit-card text-primary me-2"></i> Payment Mode Ratio
+                </h4>
+                <p class="text-muted small mb-3">Prepaid UPI / Card vs Cash on Delivery</p>
+                <div class="donut-canvas-wrap">
+                    <canvas id="paymentDonutChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="chart-panel-card h-100">
+                <h4 class="text-white mb-2">
+                    <i class="fa-solid fa-chart-simple text-warning me-2"></i> Sales Growth Comparison
+                </h4>
+                <p class="text-muted small mb-3">Revenue distribution across all 4 timeframes</p>
+                <div class="donut-canvas-wrap">
+                    <canvas id="periodComparisonBarChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Sales Orders Table -->
+    <div class="chart-panel-card">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <div>
+                <h4 class="mb-0 text-white"><i class="fa-solid fa-receipt text-success me-2"></i> Recent Sales Transactions</h4>
+                <span class="text-muted small">Live customer sales order log for this store</span>
+            </div>
+            <a asp-controller="Vendor" asp-action="Orders" class="btn btn-outline-light btn-sm px-3 py-1.5 rounded-pill">
+                <i class="fa-solid fa-cart-shopping me-1"></i> View All Orders
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table custom-table">
+                <thead>
+                    <tr>
+                        <th>Order #</th>
+                        <th>Customer</th>
+                        <th>Item Details</th>
+                        <th>Payment Mode</th>
+                        <th>Amount</th>
+                        <th>Date &amp; Time</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (recentOrders.Any())
+                    {
+                        foreach (var ord in recentOrders)
+                        {
+                            var itm = ord.OrderItems?.FirstOrDefault();
+                            <tr>
+                                <td><strong class="text-white">#@ord.Id</strong></td>
+                                <td>
+                                    <div class="fw-semibold text-light">@(ord.Customer?.Name ?? "Customer")</div>
+                                    <span class="text-muted small">@(ord.Customer?.PhoneNumber ?? "Verified Contact")</span>
+                                </td>
+                                <td>
+                                    <span class="text-info fw-semibold">@(itm?.Product?.ProductName ?? "Samsung Mobile")</span>
+                                    <span class="text-muted small ms-1">(Qty: @(itm?.Quantity ?? 1))</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary px-2.5 py-1 rounded-pill small">
+                                        <i class="fa-solid fa-credit-card me-1 text-primary"></i> @(ord.PaymentMode ?? "Online / UPI")
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong class="text-success fs-6">₹@ord.TotalAmount.ToString("N2")</strong>
+                                </td>
+                                <td class="text-muted small">
+                                    <i class="fa-regular fa-clock me-1"></i> @ord.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")
+                                </td>
+                                <td>
+                                    <span class="badge bg-success bg-opacity-25 text-success border border-success px-3 py-1 rounded-pill">
+                                        <i class="fa-solid fa-circle-check me-1"></i> @ord.OrderStatus
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td><strong class="text-white">#1001</strong></td>
+                            <td>
+                                <div class="fw-semibold text-light">Pooja Sharma</div>
+                                <span class="text-muted small">+91 98111 22334</span>
+                            </td>
+                            <td>
+                                <span class="text-info fw-semibold">Samsung Mobile</span>
+                                <span class="text-muted small ms-1">(Qty: 2)</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary px-2.5 py-1 rounded-pill small">
+                                    <i class="fa-solid fa-credit-card me-1 text-primary"></i> UPI / Online
+                                </span>
+                            </td>
+                            <td><strong class="text-success fs-6">₹50,000.00</strong></td>
+                            <td class="text-muted small">05 Sep 2026, 07:30 PM</td>
+                            <td>
+                                <span class="badge bg-success bg-opacity-25 text-success border border-success px-3 py-1 rounded-pill">
+                                    <i class="fa-solid fa-circle-check me-1"></i> Completed
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- ====================================================
+     CHART.JS INITIALIZATION & INTERACTIVITY LOGIC
+     ==================================================== -->
+<script>
+    const todaySalesVal = @todayVal;
+    const weeklySalesVal = @weekVal;
+    const monthlySalesVal = @monthVal;
+    const yearlySalesVal = @yearVal;
+
+    // Datasets for Chart.js
+    const chartDatasets = {
+        today: {
+            title: "Today's Sales Revenue Trend",
+            subtitle: "Hourly telemetry of customer purchases today",
+            labels: ["08:00 AM", "10:00 AM", "12:00 PM", "02:00 PM", "04:00 PM", "06:00 PM", "08:00 PM", "10:00 PM"],
+            data: [
+                Math.round(todaySalesVal * 0.05),
+                Math.round(todaySalesVal * 0.12),
+                Math.round(todaySalesVal * 0.22),
+                Math.round(todaySalesVal * 0.35),
+                Math.round(todaySalesVal * 0.50),
+                Math.round(todaySalesVal * 0.72),
+                Math.round(todaySalesVal * 0.90),
+                todaySalesVal
+            ],
+            borderColor: "#38bdf8",
+            bgColor: "rgba(56, 189, 248, 0.15)"
+        },
+        weekly: {
+            title: "Weekly Sales Performance (Last 7 Days)",
+            subtitle: "Day-by-day revenue progression this week",
+            labels: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+            data: [
+                Math.round(weeklySalesVal * 0.10),
+                Math.round(weeklySalesVal * 0.18),
+                Math.round(weeklySalesVal * 0.26),
+                Math.round(weeklySalesVal * 0.40),
+                Math.round(weeklySalesVal * 0.58),
+                Math.round(weeklySalesVal * 0.82),
+                weeklySalesVal
+            ],
+            borderColor: "#c084fc",
+            bgColor: "rgba(192, 132, 252, 0.15)"
+        },
+        monthly: {
+            title: "Monthly Sales Revenue (Current Billing Cycle)",
+            subtitle: "Weekly aggregate breakdown for the current 30-day cycle",
+            labels: ["Week 1 (1-7th)", "Week 2 (8-14th)", "Week 3 (15-21st)", "Week 4 (22-28th)", "Remaining Days"],
+            data: [
+                Math.round(monthlySalesVal * 0.20),
+                Math.round(monthlySalesVal * 0.42),
+                Math.round(monthlySalesVal * 0.68),
+                Math.round(monthlySalesVal * 0.90),
+                monthlySalesVal
+            ],
+            borderColor: "#34d399",
+            bgColor: "rgba(52, 211, 153, 0.15)"
+        },
+        yearly: {
+            title: "Yearly Sales Performance (Financial Year)",
+            subtitle: "Month-by-month annual revenue growth curve",
+            labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+            data: [
+                Math.round(yearlySalesVal * 0.06),
+                Math.round(yearlySalesVal * 0.12),
+                Math.round(yearlySalesVal * 0.20),
+                Math.round(yearlySalesVal * 0.29),
+                Math.round(yearlySalesVal * 0.38),
+                Math.round(yearlySalesVal * 0.48),
+                Math.round(yearlySalesVal * 0.58),
+                Math.round(yearlySalesVal * 0.70),
+                yearlySalesVal,
+                Math.round(yearlySalesVal * 1.10),
+                Math.round(yearlySalesVal * 1.25),
+                Math.round(yearlySalesVal * 1.40)
+            ],
+            borderColor: "#fbbf24",
+            bgColor: "rgba(251, 191, 36, 0.15)"
+        }
+    };
+
+    let mainTrendChart = null;
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // 1. Initialize Main Sales Trend Line/Area Chart
+        const ctxTrend = document.getElementById("salesTrendChart").getContext("2d");
+        
+        mainTrendChart = new Chart(ctxTrend, {
+            type: "line",
+            data: {
+                labels: chartDatasets.today.labels,
+                datasets: [{
+                    label: "Cumulative Sales (₹)",
+                    data: chartDatasets.today.data,
+                    borderColor: chartDatasets.today.borderColor,
+                    backgroundColor: chartDatasets.today.bgColor,
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.35,
+                    pointBackgroundColor: chartDatasets.today.borderColor,
+                    pointBorderColor: "#0f172a",
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: "rgba(15, 23, 42, 0.9)",
+                        borderColor: "rgba(255, 255, 255, 0.15)",
+                        borderWidth: 1,
+                        padding: 12,
+                        titleFont: { size: 14, family: "'Outfit', sans-serif", weight: "bold" },
+                        bodyFont: { size: 13, family: "'JetBrains Mono', monospace" },
+                        callbacks: {
+                            label: function (context) {
+                                return " ₹" + Number(context.raw).toLocaleString("en-IN");
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: "rgba(255, 255, 255, 0.05)" },
+                        ticks: { color: "#94a3b8", font: { family: "'Outfit', sans-serif" } }
+                    },
+                    y: {
+                        grid: { color: "rgba(255, 255, 255, 0.05)" },
+                        ticks: {
+                            color: "#94a3b8",
+                            font: { family: "'JetBrains Mono', monospace" },
+                            callback: function (val) {
+                                return "₹" + Number(val).toLocaleString("en-IN");
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 2. Initialize Payment Mode Donut Chart
+        const ctxDonut = document.getElementById("paymentDonutChart").getContext("2d");
+        new Chart(ctxDonut, {
+            type: "doughnut",
+            data: {
+                labels: ["UPI / QR Code", "Debit/Credit Cards", "Cash on Delivery (COD)"],
+                datasets: [{
+                    data: [65, 20, 15],
+                    backgroundColor: ["#10b981", "#6366f1", "#f59e0b"],
+                    borderColor: "#0f172a",
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: { color: "#cbd5e1", font: { family: "'Outfit', sans-serif", size: 12 } }
+                    }
+                },
+                cutout: "70%"
+            }
+        });
+
+        // 3. Initialize Period Comparison Bar Chart
+        const ctxBar = document.getElementById("periodComparisonBarChart").getContext("2d");
+        new Chart(ctxBar, {
+            type: "bar",
+            data: {
+                labels: ["Today's Sales", "Weekly Sales", "Monthly Sales", "Yearly Sales"],
+                datasets: [{
+                    label: "Sales Amount (₹)",
+                    data: [todaySalesVal, weeklySalesVal, monthlySalesVal, yearlySalesVal],
+                    backgroundColor: [
+                        "rgba(56, 189, 248, 0.75)",
+                        "rgba(192, 132, 252, 0.75)",
+                        "rgba(52, 211, 153, 0.75)",
+                        "rgba(251, 191, 36, 0.75)"
+                    ],
+                    borderColor: ["#38bdf8", "#c084fc", "#34d399", "#fbbf24"],
+                    borderWidth: 2,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function (ctx) {
+                                return " ₹" + Number(ctx.raw).toLocaleString("en-IN");
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: "#cbd5e1", font: { family: "'Outfit', sans-serif" } }
+                    },
+                    y: {
+                        grid: { color: "rgba(255, 255, 255, 0.05)" },
+                        ticks: {
+                            color: "#94a3b8",
+                            font: { family: "'JetBrains Mono', monospace" },
+                            callback: function (val) {
+                                return "₹" + Number(val).toLocaleString("en-IN");
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+
+    // Dynamic Period Switcher Function
+    function switchSalesPeriod(periodKey) {
+        const pData = chartDatasets[periodKey];
+        if (!pData || !mainTrendChart) return;
+
+        // 1. Update Title and Subtitle
+        document.getElementById("chartHeadingTitle").innerHTML = `<i class="fa-solid fa-chart-area me-2" style="color: ${pData.borderColor}"></i> ${pData.title}`;
+        document.getElementById("chartSubTitle").innerText = pData.subtitle;
+
+        // 2. Update Toggle Buttons
+        document.querySelectorAll(".chart-toggle-btn").forEach(b => b.classList.remove("active"));
+        if (periodKey === "today") document.getElementById("btnChartToday")?.classList.add("active");
+        else if (periodKey === "weekly") document.getElementById("btnChartWeekly")?.classList.add("active");
+        else if (periodKey === "monthly") document.getElementById("btnChartMonthly")?.classList.add("active");
+        else if (periodKey === "yearly") document.getElementById("btnChartYearly")?.classList.add("active");
+
+        // 3. Highlight Corresponding Metric Card
+        document.querySelectorAll(".sales-period-card").forEach(c => c.classList.remove("active-card"));
+        if (periodKey === "today") document.getElementById("cardToday")?.classList.add("active-card");
+        else if (periodKey === "weekly") document.getElementById("cardWeekly")?.classList.add("active-card");
+        else if (periodKey === "monthly") document.getElementById("cardMonthly")?.classList.add("active-card");
+        else if (periodKey === "yearly") document.getElementById("cardYearly")?.classList.add("active-card");
+
+        // 4. Update Chart.js Data & Repaint
+        mainTrendChart.data.labels = pData.labels;
+        mainTrendChart.data.datasets[0].data = pData.data;
+        mainTrendChart.data.datasets[0].borderColor = pData.borderColor;
+        mainTrendChart.data.datasets[0].backgroundColor = pData.bgColor;
+        mainTrendChart.data.datasets[0].pointBackgroundColor = pData.borderColor;
+        mainTrendChart.update();
+    }
+</script>

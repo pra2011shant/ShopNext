@@ -1,0 +1,339 @@
+@* Views/Vendor/Register.cshtml *@
+@{
+    ViewData["Title"] = "Seller Registration - ShopNext";
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+        --card-bg: rgba(30, 41, 59, 0.75);
+        --glass-border: rgba(255, 255, 255, 0.08);
+        --text-muted: #64748b;
+        --text-light: #1e293b;
+    }
+
+    body {
+        background: transparent;
+        color: var(--text-light);
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .register-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 90vh;
+        padding: 2.5rem 1rem;
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .glass-register-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        padding: 3rem 2.5rem;
+        width: 100%;
+        max-width: 680px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .glass-register-card:hover {
+        border-color: rgba(99, 102, 241, 0.3);
+        box-shadow: 0 25px 55px rgba(99, 102, 241, 0.15);
+    }
+
+    .card-header-icon {
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 3rem;
+        display: block;
+        margin: 0 auto 1rem;
+        text-align: center;
+    }
+
+    .register-title {
+        font-weight: 800;
+        font-size: 2.2rem;
+        text-align: center;
+        margin-bottom: 0.35rem;
+        letter-spacing: -0.02em;
+    }
+
+    .register-subtitle {
+        color: var(--text-muted);
+        text-align: center;
+        font-size: 0.95rem;
+        margin-bottom: 1.75rem;
+    }
+
+    .approval-notice {
+        background: rgba(245, 158, 11, 0.12);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        border-radius: 14px;
+        padding: 0.9rem 1.25rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #fde68a;
+        font-size: 0.9rem;
+    }
+
+    .approval-notice i {
+        font-size: 1.3rem;
+        color: #f59e0b;
+        flex-shrink: 0;
+    }
+
+    .form-group {
+        position: relative;
+        margin-bottom: 1.35rem;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .form-row .form-group {
+        flex: 1;
+    }
+
+    .form-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-bottom: 0.45rem;
+        display: block;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .form-control-custom {
+        width: 100%;
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 0.85rem 1rem 0.85rem 2.75rem;
+        color: white;
+        font-size: 0.98rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control-custom:focus {
+        outline: none;
+        border-color: #a855f7;
+        box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
+        background: rgba(15, 23, 42, 0.8);
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 1rem;
+        top: 2.45rem;
+        color: var(--text-muted);
+        font-size: 1rem;
+    }
+
+    .btn-register {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        border-radius: 14px;
+        padding: 0.95rem;
+        width: 100%;
+        font-weight: 700;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 1.25rem;
+        box-shadow: 0 8px 20px rgba(168, 85, 247, 0.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .btn-register:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 25px rgba(168, 85, 247, 0.5);
+    }
+
+    .btn-register:active {
+        transform: translateY(0);
+    }
+
+    .login-link-container {
+        text-align: center;
+        margin-top: 1.75rem;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+    }
+
+    .login-link {
+        color: #a5b4fc;
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.2s ease;
+    }
+
+    .login-link:hover {
+        color: #ec4899;
+        text-decoration: underline;
+    }
+
+    .alert-danger-custom {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.25);
+        color: #fca5a5;
+        padding: 0.85rem 1.2rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .form-text-helper {
+        font-size: 0.78rem;
+        color: #94a3b8;
+        margin-top: 5px;
+        line-height: 1.3;
+        display: block;
+    }
+
+    @@media (max-width: 600px) {
+        .form-row {
+            flex-direction: column;
+            gap: 0;
+        }
+        .glass-register-card {
+            padding: 2rem 1.5rem;
+        }
+    }
+</style>
+
+<div class="register-container">
+    <div class="glass-register-card">
+        <div class="text-center mb-2">
+            <span class="badge bg-warning text-dark fw-bold px-3 py-1 rounded-pill mb-2">
+                <i class="fa-solid fa-store me-1"></i> SELLER REGISTRATION &bull; 16
+            </span>
+        </div>
+        <span class="card-header-icon"><i class="fa-solid fa-store"></i></span>
+        <h1 class="register-title" id="sellerRegisterHeader">Seller Registration</h1>
+        <p class="register-subtitle">Apni dukaan register karein aur online business shuru karein.</p>
+
+        <!-- Pending Admin Approval Notice -->
+        <div class="approval-notice">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <div>
+                <strong class="d-block text-warning mb-1">Submit: Pending Admin Approval</strong>
+                <span>Registration ke baad seller immediately product sell nahi kar sakega. Admin approval ke baad aapka shop active hoga.</span>
+            </div>
+        </div>
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert-danger-custom" id="registerErrorMessage">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span>@ViewBag.Error</span>
+            </div>
+        }
+
+        <form asp-controller="Vendor" asp-action="Register" method="post" id="sellerRegistrationForm">
+            @Html.AntiForgeryToken()
+
+            <!-- 1. Owner Name & 2. Shop Name -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="ownerName" class="form-label">Owner Name</label>
+                    <i class="fa-solid fa-user input-icon"></i>
+                    <input type="text" id="ownerName" name="ownerName" class="form-control-custom" placeholder="e.g. Ramesh Kumar" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="shopName" class="form-label">Shop Name</label>
+                    <i class="fa-solid fa-shop input-icon"></i>
+                    <input type="text" id="shopName" name="shopName" class="form-control-custom" placeholder="e.g. Ramesh Kirana Store" required />
+                </div>
+            </div>
+
+            <!-- 3. Email & 4. Mobile -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="email" class="form-label">Email</label>
+                    <i class="fa-solid fa-envelope input-icon"></i>
+                    <input type="email" id="email" name="email" class="form-control-custom" placeholder="e.g. ramesh@example.com" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="mobile" class="form-label">Mobile</label>
+                    <i class="fa-solid fa-mobile-screen-button input-icon"></i>
+                    <input type="tel" id="mobile" name="mobile" class="form-control-custom" placeholder="e.g. 9876543210" pattern="[6-9][0-9]{9}" title="Enter a valid 10-digit mobile number starting with 6, 7, 8, or 9" required />
+                </div>
+            </div>
+
+            <!-- 5. Password -->
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <i class="fa-solid fa-lock input-icon"></i>
+                <input type="password" id="password" name="password" class="form-control-custom" placeholder="Enter secure password (min 6 characters)" required />
+                <span class="form-text-helper"><i class="fa-solid fa-shield-halved me-1"></i> Seller login ke liye password yaad rakhein.</span>
+            </div>
+
+            <!-- 6. Shop Address -->
+            <div class="form-group">
+                <label for="shopAddress" class="form-label">Shop Address</label>
+                <i class="fa-solid fa-location-dot input-icon"></i>
+                <input type="text" id="shopAddress" name="shopAddress" class="form-control-custom" placeholder="e.g. Shop No. 14, Main Market, Near Clock Tower" required />
+            </div>
+
+            <!-- 7. City, 8. State, 9. Pincode -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="city" class="form-label">City</label>
+                    <i class="fa-solid fa-city input-icon"></i>
+                    <input type="text" id="city" name="city" class="form-control-custom" placeholder="e.g. New Delhi" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="state" class="form-label">State</label>
+                    <i class="fa-solid fa-map input-icon"></i>
+                    <input type="text" id="state" name="state" class="form-control-custom" placeholder="e.g. Delhi" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="pincode" class="form-label">Pincode</label>
+                    <i class="fa-solid fa-envelopes-bulk input-icon"></i>
+                    <input type="text" id="pincode" name="pincode" class="form-control-custom" placeholder="e.g. 110001" pattern="^[0-9]{6}$" title="Enter a valid 6-digit Indian pincode" required />
+                </div>
+            </div>
+
+            <!-- Submit Button with Pending Admin Approval Flow -->
+            <button type="submit" class="btn-register" id="sellerSubmitBtn">
+                <i class="fa-solid fa-paper-plane"></i> Submit (Pending Admin Approval)
+            </button>
+        </form>
+
+        <div class="login-link-container">
+            Already registered? 
+            <a asp-controller="Vendor" asp-action="Login" class="login-link" id="loginRedirectLink">Login to Seller Hub</a>
+        </div>
+    </div>
+</div>

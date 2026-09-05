@@ -1,0 +1,1163 @@
+@* Views/Vendor/Products.cshtml *@
+@model IEnumerable<ShopNext.Models.Product>
+@{
+    ViewData["Title"] = "Product Management - ShopNext";
+    var shopName = ViewBag.ShopName as string ?? "My Shop";
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+        --card-bg: rgba(30, 41, 59, 0.75);
+        --glass-border: rgba(255, 255, 255, 0.08);
+        --text-muted: #64748b;
+        --text-light: #1e293b;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+    }
+
+    body {
+        background: transparent;
+        color: var(--text-light);
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .vendor-dashboard {
+        padding: 2rem 0;
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Sub-nav Styling */
+    .vendor-nav {
+        background: rgba(30, 41, 59, 0.45);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .vendor-brand {
+        font-weight: 800;
+        font-size: 1.4rem;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .vendor-links {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .v-link {
+        color: var(--text-muted);
+        text-decoration: none;
+        padding: 0.5rem 1.25rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .v-link:hover {
+        color: white;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .v-link.active {
+        color: white;
+        background: rgba(99, 102, 241, 0.2);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .v-logout {
+        color: #fca5a5;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        background: rgba(239, 68, 68, 0.05);
+    }
+
+    .v-logout:hover {
+        color: white;
+        background: var(--danger-color);
+        border-color: transparent;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+    }
+
+    /* Card styling */
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .dashboard-title {
+        font-weight: 800;
+        font-size: 2rem;
+        letter-spacing: -0.02em;
+        margin: 0;
+    }
+
+    .btn-action-primary {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 8px 20px rgba(168, 85, 247, 0.3);
+    }
+
+    .btn-action-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 25px rgba(168, 85, 247, 0.45);
+    }
+
+    .btn-action-primary:active {
+        transform: translateY(0);
+    }
+
+    .alert-custom {
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .alert-success-custom {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        color: #a7f3d0;
+    }
+
+    .alert-danger-custom {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        color: #fca5a5;
+    }
+
+    /* Product Grid */
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .product-card {
+        background: var(--card-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        position: relative;
+    }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(99, 102, 241, 0.3);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .product-image-container {
+        height: 200px;
+        overflow: hidden;
+        background: #0f172a;
+        position: relative;
+    }
+
+    .product-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .product-card:hover .product-img {
+        transform: scale(1.05);
+    }
+
+    .stock-badge {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        padding: 0.35rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+
+    .stock-in {
+        background: rgba(16, 185, 129, 0.25);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .stock-out {
+        background: rgba(239, 68, 68, 0.25);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+
+    .product-details {
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+    }
+
+    .product-name {
+        font-weight: 600;
+        font-size: 1.15rem;
+        margin-bottom: 0.5rem;
+        color: white;
+    }
+
+    .product-price {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: #a5b4fc;
+        margin-top: auto;
+    }
+
+    /* Modal Glassmorphism */
+    .modal-content-glass {
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        color: var(--text-light);
+        box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    }
+
+    .modal-header-glass {
+        border-bottom: 1px solid var(--glass-border);
+        padding: 1.5rem;
+    }
+
+    .modal-title-custom {
+        font-weight: 800;
+        font-size: 1.5rem;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .modal-body-glass {
+        padding: 1.5rem;
+    }
+
+    .modal-footer-glass {
+        border-top: 1px solid var(--glass-border);
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+    }
+
+    .btn-glass-secondary {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-muted);
+        border: 1px solid var(--glass-border);
+        padding: 0.6rem 1.25rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+    .btn-glass-secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+
+    .form-group-modal {
+        margin-bottom: 1.25rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        background: var(--card-bg);
+        border: 1px dashed var(--glass-border);
+        border-radius: 24px;
+        grid-column: 1 / -1;
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1.5rem;
+    }
+</style>
+
+<div class="container vendor-dashboard">
+    <!-- Vendor Sub-Navbar -->
+    <nav class="vendor-nav">
+        <div class="vendor-brand">
+            <i class="fa-solid fa-shop"></i> @shopName
+        </div>
+        <div class="vendor-links">
+            <a asp-controller="Vendor" asp-action="Dashboard" class="v-link" id="navDashboardLink">
+                <i class="fa-solid fa-chart-pie"></i> Dashboard
+            </a>
+            <a asp-controller="Vendor" asp-action="Products" class="v-link active" id="navProductsLink">
+                <i class="fa-solid fa-box"></i> Products
+            </a>
+            <a asp-controller="Vendor" asp-action="Orders" class="v-link" id="navOrdersLink">
+                <i class="fa-solid fa-receipt"></i> Orders
+            </a>
+            <a asp-controller="Vendor" asp-action="Reviews" class="v-link" id="navReviewsLink">
+                <i class="fa-solid fa-star text-warning"></i> Reviews
+            </a>
+            <a asp-controller="Vendor" asp-action="Sales" class="v-link" id="navSalesLink">
+                <i class="fa-solid fa-wallet text-success"></i> Sales
+            </a>
+            <a asp-controller="Vendor" asp-action="Logout" class="v-link v-logout" id="navLogoutBtn">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+            </a>
+        </div>
+    </nav>
+
+    <!-- Pending Admin Approval Warning Banner -->
+    @if (ViewBag.IsApproved == false)
+    {
+        <div class="alert alert-warning d-flex align-items-center p-3 mb-4 rounded-4 shadow-sm border border-warning" id="pendingApprovalLockBanner" style="background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.4) !important;">
+            <i class="fa-solid fa-triangle-exclamation fs-2 me-3 text-warning"></i>
+            <div class="flex-grow-1 text-light">
+                <div class="fw-bold mb-1 d-flex align-items-center gap-2">
+                    <span class="badge bg-warning text-dark px-2 py-1">Pending Admin Approval</span>
+                    <span class="text-warning">Selling is Locked!</span>
+                </div>
+                <div class="text-white-50 small">
+                    Aapka account abhi Admin verification ke liye pending hai. <strong>Seller immediately product sell nahi kar sakega.</strong> Admin ke approve karte hi selling enable ho jayegi.
+                </div>
+            </div>
+            <a asp-controller="Admin" asp-action="Dashboard" target="_blank" class="btn btn-warning btn-sm fw-bold px-3 py-2 rounded-3 text-dark ms-3 text-nowrap" id="openAdminFromVendorBanner">
+                <i class="fa-solid fa-user-shield me-1"></i> Admin Hub
+            </a>
+        </div>
+    }
+
+    <!-- Success & Error Alerts -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert-custom alert-success-custom" id="successAlert">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>@TempData["Success"]</span>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert-custom alert-danger-custom" id="errorAlert">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span>@TempData["Error"]</span>
+        </div>
+    }
+
+    <!-- Dashboard Content Header with View Switcher -->
+    <div class="dashboard-header flex-wrap gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-primary bg-opacity-25 text-primary border border-primary px-2 py-1 rounded-pill small">Feature 23</span>
+                <h2 class="dashboard-title mb-0">Product Catalog &amp; Inventory</h2>
+            </div>
+            <p class="text-muted mb-0">Manage items, stock counts, and threshold alerts for your store.</p>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            <!-- View Mode Switcher -->
+            <div class="btn-group p-1 rounded-3" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border);">
+                <button type="button" class="btn btn-sm btn-dark active" id="btnViewGrid" onclick="setProductCatalogView('grid')">
+                    <i class="fa-solid fa-grip me-1"></i> Grid
+                </button>
+                <button type="button" class="btn btn-sm btn-dark" id="btnViewTable" onclick="setProductCatalogView('table')">
+                    <i class="fa-solid fa-table-list me-1"></i> 23. Inventory Table
+                </button>
+            </div>
+
+            @if (ViewBag.IsApproved == false)
+            {
+                <button type="button" class="btn btn-secondary disabled px-4 py-2 rounded-3" title="Pending Admin Approval - Selling Locked" disabled id="disabledAddProductBtn" style="background: rgba(255, 255, 255, 0.1); border: 1px solid var(--glass-border); color: #94a3b8; cursor: not-allowed;">
+                    <i class="fa-solid fa-lock me-2 text-warning"></i> Selling Locked (Pending Approval)
+                </button>
+            }
+            else
+            {
+                <button type="button" class="btn-action-primary" data-bs-toggle="modal" data-bs-target="#addProductModal" id="openAddProductModalBtn">
+                    <i class="fa-solid fa-plus"></i> Naya Product Add Karen
+                </button>
+            }
+        </div>
+    </div>
+
+    <!-- 23. Specification Rule Banner -->
+    <div class="alert alert-warning d-flex align-items-center p-3 rounded-4 mb-4 border border-warning" style="background: rgba(245, 158, 11, 0.12);">
+        <i class="fa-solid fa-triangle-exclamation fs-2 text-warning me-3 flex-shrink-0"></i>
+        <div class="flex-grow-1">
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <strong class="text-warning" style="font-size: 1.05rem;">
+                    <i class="fa-solid fa-bell me-1"></i> Stock 5 se kam: ⚠ Low Stock
+                </strong>
+                <span class="badge bg-warning text-dark px-2 py-0.5 rounded-pill small fw-bold">Live Inventory Rule</span>
+            </div>
+            <div class="text-white-50 small">
+                Har product ka real-time stock track kiya jata hai. Yadi stock <strong>5 se kam</strong> (1 se 4) ho to <strong>⚠ Low Stock</strong> status trigger hota hai. Stock <strong>0</strong> hone par <strong>Out of Stock</strong> aur <strong>5 ya usse zyada</strong> hone par <strong>Available</strong> dikhta hai.
+            </div>
+        </div>
+    </div>
+
+    <!-- 1. Products Grid View -->
+    <div class="products-grid" id="productsGridView">
+        @if (Model == null || !Model.Any())
+        {
+            <div class="empty-state" id="emptyStatePanel">
+                <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
+                <h3>Dukaan par koi product nahi hai</h3>
+                <p class="text-muted">Apne grahako ke liye products add karna shuru karne ke liye upar diye gaye button par click karen.</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var product in Model)
+            {
+                string prodApproval = string.IsNullOrWhiteSpace(product.ApprovalStatus) ? (product.IsApproved ? "Approved" : "Pending") : product.ApprovalStatus;
+                <div class="product-card">
+                    <div class="product-image-container">
+                        @if (prodApproval == "Approved")
+                        {
+                            <span class="stock-badge" style="left: 12px; right: auto; background: rgba(16, 185, 129, 0.25); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4);"><i class="fa-solid fa-circle-check me-1"></i> Live</span>
+                        }
+                        else if (prodApproval == "Rejected")
+                        {
+                            <span class="stock-badge" style="left: 12px; right: auto; background: rgba(239, 68, 68, 0.25); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4);" title="@product.RejectionReason"><i class="fa-solid fa-ban me-1"></i> Rejected</span>
+                        }
+                        else
+                        {
+                            <span class="stock-badge" style="left: 12px; right: auto; background: rgba(245, 158, 11, 0.25); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4);"><i class="fa-solid fa-clock me-1"></i> Under Review</span>
+                        }
+
+                        @if (product.Stock <= 0)
+                        {
+                            <span class="stock-badge stock-out"><i class="fa-solid fa-circle-xmark"></i> Out of Stock</span>
+                        }
+                        else if (product.Stock < 5)
+                        {
+                            <span class="stock-badge" style="background: rgba(245, 158, 11, 0.25); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4);"><i class="fa-solid fa-triangle-exclamation"></i> ⚠ Low Stock (@product.Stock left)</span>
+                        }
+                        else
+                        {
+                            <span class="stock-badge stock-in"><i class="fa-solid fa-check-double"></i> @product.Stock units</span>
+                        }
+                        <img src="@product.ImageUrl" alt="@product.ProductName" class="product-img" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60';" />
+                    </div>
+                    <div class="product-details">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <h4 class="product-name mb-0">@product.ProductName</h4>
+                        </div>
+                        <div class="text-muted small mb-2">Category: @(string.IsNullOrEmpty(product.Category) ? "General" : product.Category) &bull; SKU: @(string.IsNullOrEmpty(product.Sku) ? $"PRD-{product.Id}" : product.Sku)</div>
+                        
+                        @if (prodApproval == "Rejected" && !string.IsNullOrWhiteSpace(product.RejectionReason))
+                        {
+                            <div class="alert alert-danger bg-danger bg-opacity-10 border-danger border-opacity-25 text-danger py-1 px-2 rounded-2 small mb-2" style="font-size: 0.78rem;">
+                                <i class="fa-solid fa-circle-exclamation me-1"></i> Reason: @product.RejectionReason
+                            </div>
+                        }
+
+                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                            <div class="product-price mb-0">₹@product.Price.ToString("F2")</div>
+                            <span class="badge bg-dark border border-secondary text-light px-2 py-1 small">Stock: @product.Stock</span>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- 2. 23. Inventory Table View (Product | Stock | Status | Approval) -->
+    <div class="card bg-transparent border-0" id="productsTableView" style="display: none;">
+        <div class="table-responsive rounded-4 border border-secondary border-opacity-25" style="background: var(--card-bg); backdrop-filter: blur(16px);">
+            <table class="table custom-table mb-0">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--glass-border);">
+                        <th style="min-width: 250px; padding: 1.1rem 1.25rem;"><i class="fa-solid fa-box text-primary me-1"></i> Product</th>
+                        <th style="min-width: 140px; padding: 1.1rem;" class="text-center"><i class="fa-solid fa-cubes text-info me-1"></i> Stock</th>
+                        <th style="min-width: 150px; padding: 1.1rem;" class="text-center"><i class="fa-solid fa-signal text-warning me-1"></i> Inventory Status</th>
+                        <th style="min-width: 160px; padding: 1.1rem;" class="text-center"><i class="fa-solid fa-shield-halved text-cyan me-1" style="color: #22d3ee;"></i> 37. Approval</th>
+                        <th style="min-width: 130px; padding: 1.1rem 1.25rem;" class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var p in Model)
+                        {
+                            int curStock = p.Stock;
+                            string statusBadgeClass;
+                            string statusLabel;
+                            string statusIcon;
+
+                            if (curStock <= 0)
+                            {
+                                statusBadgeClass = "bg-danger bg-opacity-25 text-danger border border-danger";
+                                statusLabel = "Out of Stock";
+                                statusIcon = "fa-circle-xmark";
+                            }
+                            else if (curStock < 5)
+                            {
+                                statusBadgeClass = "bg-warning bg-opacity-25 text-warning border border-warning";
+                                statusLabel = "⚠ Low Stock";
+                                statusIcon = "fa-triangle-exclamation";
+                            }
+                            else
+                            {
+                                statusBadgeClass = "bg-success bg-opacity-25 text-success border border-success";
+                                statusLabel = "Available";
+                                statusIcon = "fa-circle-check";
+                            }
+
+                            string pApproval = string.IsNullOrWhiteSpace(p.ApprovalStatus) ? (p.IsApproved ? "Approved" : "Pending") : p.ApprovalStatus;
+
+                            <tr>
+                                <!-- Column 1: Product -->
+                                <td style="padding: 1rem 1.25rem;">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <img src="@p.ImageUrl" alt="@p.ProductName" style="width: 44px; height: 44px; border-radius: 10px; object-fit: cover; background: #0f172a; border: 1px solid var(--glass-border);" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&auto=format&fit=crop&q=60';" />
+                                        <div>
+                                            <strong class="text-white">@p.ProductName</strong>
+                                            <div class="text-muted small">Category: @(string.IsNullOrEmpty(p.Category) ? "General" : p.Category) &bull; SKU: @(string.IsNullOrEmpty(p.Sku) ? $"PRD-{p.Id}" : p.Sku)</div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- Column 2: Stock -->
+                                <td class="text-center align-middle" style="padding: 1rem;">
+                                    <div class="d-inline-flex align-items-center gap-1">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" onclick="stepTableStock(@p.Id, -1)">-</button>
+                                        <input type="number" min="0" class="form-control form-control-sm text-center fw-bold" id="tableStockInput_@p.Id" value="@curStock" style="width: 70px; background: rgba(15,23,42,0.8); color: white; border: 1px solid var(--glass-border);" onchange="onTableStockChange(@p.Id)" />
+                                        <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" onclick="stepTableStock(@p.Id, 1)">+</button>
+                                    </div>
+                                    <div class="text-muted small mt-1" id="tableUnitsLabel_@p.Id">@curStock units</div>
+                                </td>
+
+                                <!-- Column 3: Inventory Status -->
+                                <td class="text-center align-middle" style="padding: 1rem;">
+                                    <span class="badge @statusBadgeClass px-3 py-2 rounded-pill fw-bold" id="tableStatusBadge_@p.Id">
+                                        <i class="fa-solid @statusIcon me-1"></i> @statusLabel
+                                    </span>
+                                </td>
+
+                                <!-- Column 4: Approval Status (Point 37) -->
+                                <td class="text-center align-middle" style="padding: 1rem;">
+                                    @if (pApproval == "Approved")
+                                    {
+                                        <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-3 py-2 rounded-pill fw-bold">
+                                            <i class="fa-solid fa-circle-check me-1"></i> Approved &amp; Live
+                                        </span>
+                                    }
+                                    else if (pApproval == "Rejected")
+                                    {
+                                        <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-3 py-2 rounded-pill fw-bold" title="@p.RejectionReason">
+                                            <i class="fa-solid fa-circle-xmark me-1"></i> Rejected
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-30 px-3 py-2 rounded-pill fw-bold">
+                                            <i class="fa-solid fa-clock me-1"></i> Pending Review
+                                        </span>
+                                    }
+                                </td>
+
+                                <!-- Action -->
+                                <td class="text-end align-middle" style="padding: 1rem 1.25rem;">
+                                    <button type="button" class="btn btn-sm btn-outline-light rounded-pill px-3" id="tableSaveStockBtn_@p.Id" onclick="submitTableStockUpdate(@p.Id)">
+                                        <i class="fa-solid fa-floppy-disk me-1"></i> Update
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <!-- Example rows matching Step 23 Spec: Mobile 20 Available, Laptop 3 Low Stock, Headphone 0 Out of Stock -->
+                        <tr>
+                            <td style="padding: 1rem 1.25rem;">
+                                <strong class="text-white">Mobile</strong>
+                                <div class="text-muted small">Category: Electronics &bull; SKU: SKU-MOB-020</div>
+                            </td>
+                            <td class="text-center align-middle"><strong class="text-white">20</strong> <span class="text-muted small">units</span></td>
+                            <td class="text-center align-middle"><span class="badge bg-success bg-opacity-25 text-success border border-success px-3 py-2 rounded-pill fw-bold"><i class="fa-solid fa-circle-check me-1"></i> Available</span></td>
+                            <td class="text-center align-middle"><span class="badge bg-success bg-opacity-25 text-success border border-success px-3 py-2 rounded-pill fw-bold"><i class="fa-solid fa-circle-check me-1"></i> Approved</span></td>
+                            <td class="text-end align-middle"><span class="text-muted small">Default Demo</span></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 1rem 1.25rem;">
+                                <strong class="text-white">Laptop</strong>
+                                <div class="text-muted small">Category: Electronics &bull; SKU: SKU-LAP-003</div>
+                            </td>
+                            <td class="text-center align-middle"><strong class="text-warning">3</strong> <span class="text-muted small">units</span></td>
+                            <td class="text-center align-middle"><span class="badge bg-warning bg-opacity-25 text-warning border border-warning px-3 py-2 rounded-pill fw-bold"><i class="fa-solid fa-triangle-exclamation me-1"></i> ⚠ Low Stock</span></td>
+                            <td class="text-center align-middle"><span class="badge bg-warning bg-opacity-25 text-warning border border-warning px-3 py-2 rounded-pill fw-bold"><i class="fa-solid fa-clock me-1"></i> Pending</span></td>
+                            <td class="text-end align-middle"><span class="text-muted small">Default Demo</span></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 1rem 1.25rem;">
+                                <strong class="text-white">Headphone</strong>
+                                <div class="text-muted small">Category: Electronics &bull; SKU: SKU-HDP-000</div>
+                            </td>
+                            <td class="text-center align-middle"><strong class="text-danger">0</strong> <span class="text-muted small">units</span></td>
+                            <td class="text-center align-middle"><span class="badge bg-danger bg-opacity-25 text-danger border border-danger px-3 py-2 rounded-pill fw-bold"><i class="fa-solid fa-circle-xmark me-1"></i> Out of Stock</span></td>
+                            <td class="text-center align-middle"><span class="badge bg-danger bg-opacity-25 text-danger border border-danger px-3 py-2 rounded-pill fw-bold"><i class="fa-solid fa-circle-xmark me-1"></i> Rejected</span></td>
+                            <td class="text-end align-middle"><span class="text-muted small">Default Demo</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Product Modal (20. Add Product & 37. Product Approval) -->
+<div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content modal-content-glass">
+            <div class="modal-header modal-header-glass">
+                <h5 class="modal-title modal-title-custom" id="addProductModalLabel"><i class="fa-solid fa-cart-plus me-2 text-primary"></i> 20. Add Product &bull; Multi-Vendor Submission</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-controller="Vendor" asp-action="AddProduct" method="post" enctype="multipart/form-data" id="addProductForm">
+                @Html.AntiForgeryToken()
+                <div class="modal-body modal-body-glass">
+                    
+                    <!-- 37. Product Approval Policy Notice -->
+                    <div class="alert alert-info d-flex align-items-center p-3 rounded-3 mb-3 border border-info border-opacity-30" style="background: rgba(6, 182, 212, 0.12);">
+                        <i class="fa-solid fa-shield-halved text-cyan fs-3 me-3 flex-shrink-0" style="color: #22d3ee;"></i>
+                        <div class="small">
+                            <strong class="text-info d-block mb-0.5">37. Marketplace Product Approval Pipeline</strong>
+                            <span class="text-light">Aapke dwara add kiya gaya product Admin Review ke liye submit hoga. Admin approval ke baad yeh catalog me live ho jayega aur customers ko visible hoga.</span>
+                        </div>
+                    </div>
+
+                    <!-- 1. Product Name -->
+                    <div class="form-group-modal mb-3">
+                        <label for="productName" class="form-label">Product Name *</label>
+                        <input type="text" id="productName" name="productName" class="form-control-custom" placeholder="e.g. Samsung Galaxy S24 Ultra 5G" style="padding-left: 1rem;" required />
+                    </div>
+
+                    <!-- 2. Category, 3. Sub Category, 4. Brand -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4">
+                            <label for="categoryModal" class="form-label">Category *</label>
+                            <select id="categoryModal" name="category" class="form-control-custom" style="padding-left: 1rem;" required>
+                                <option value="Electronics" selected>Electronics</option>
+                                <option value="Grocery">Grocery / Kirana</option>
+                                <option value="Fashion">Fashion & Apparel</option>
+                                <option value="Dairy & Bakery">Dairy & Bakery</option>
+                                <option value="Pharmacy">Pharmacy & Healthcare</option>
+                                <option value="Home & Kitchen">Home & Kitchen</option>
+                                <option value="Others">Others</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="subCategoryModal" class="form-label">Sub Category</label>
+                            <input type="text" id="subCategoryModal" name="subCategory" class="form-control-custom" placeholder="e.g. Flagship Smartphones" style="padding-left: 1rem;" />
+                        </div>
+                        <div class="col-md-4">
+                            <label for="brandModal" class="form-label">Brand</label>
+                            <input type="text" id="brandModal" name="brand" class="form-control-custom" placeholder="e.g. Samsung" style="padding-left: 1rem;" />
+                        </div>
+                    </div>
+
+                    <!-- 5. Description -->
+                    <div class="form-group-modal mb-3">
+                        <label for="descriptionModal" class="form-label">Description</label>
+                        <textarea id="descriptionModal" name="description" rows="2" class="form-control-custom" placeholder="Describe product details, specs, and box contents..." style="padding-left: 1rem;"></textarea>
+                    </div>
+
+                    <!-- 6. MRP, 7. Selling Price, 8. Discount -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4">
+                            <label for="mrpModal" class="form-label">MRP (₹) *</label>
+                            <input type="number" step="0.01" min="0" id="mrpModal" name="mrp" class="form-control-custom" placeholder="e.g. 129999.00" oninput="calculateDiscountModal()" style="padding-left: 1rem;" required />
+                        </div>
+                        <div class="col-md-4">
+                            <label for="sellingPriceModal" class="form-label">Selling Price (₹) *</label>
+                            <input type="number" step="0.01" min="0.01" id="sellingPriceModal" name="sellingPrice" class="form-control-custom" placeholder="e.g. 119999.00" oninput="calculateDiscountModal()" style="padding-left: 1rem;" required />
+                        </div>
+                        <div class="col-md-4">
+                            <label for="discountModal" class="form-label">Discount (%)</label>
+                            <input type="number" step="0.1" min="0" max="100" id="discountModal" name="discount" class="form-control-custom" placeholder="e.g. 7.7%" style="padding-left: 1rem; color: #34d399; font-weight: bold;" />
+                        </div>
+                    </div>
+
+                    <!-- 9. Stock, 10. SKU -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label for="stockModal" class="form-label">Stock (Quantity) *</label>
+                            <input type="number" min="0" id="stockModal" name="stock" class="form-control-custom" placeholder="e.g. 50" value="25" style="padding-left: 1rem;" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="skuModal" class="form-label">SKU (Stock Keeping Unit)</label>
+                            <input type="text" id="skuModal" name="sku" class="form-control-custom" placeholder="e.g. SKU-SAM-S24U-256" style="padding-left: 1rem;" />
+                        </div>
+                    </div>
+
+                    <!-- 11. Product Images (21. Multiple Images: Main Image, Front, Back, Side, Packaging) -->
+                    <div class="form-group-modal mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label mb-0"><i class="fa-solid fa-images text-primary me-1"></i> 21. Product Images (Multiple Angles) *</label>
+                            <span class="badge bg-primary bg-opacity-25 text-info small">5 Image Angles</span>
+                        </div>
+                        <div class="row g-2">
+                            <!-- 1. Main Image -->
+                            <div class="col-12 col-md-4">
+                                <div class="p-2 rounded-3 h-100" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(99, 102, 241, 0.4);">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="small fw-bold text-light"><i class="fa-solid fa-star text-warning me-1"></i> Main Image *</span>
+                                        <span class="badge bg-primary small">Cover</span>
+                                    </div>
+                                    <input type="file" name="mainImageFile" accept="image/*" class="form-control form-control-sm mb-1" onchange="previewImgModal(this, 'previewMainModal')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                    <input type="url" name="mainImageUrl" class="form-control form-control-sm" placeholder="Or URL..." oninput="previewUrlModal(this.value, 'previewMainModal')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                    <div class="mt-1 text-center" id="previewMainModal" style="display: none;">
+                                        <img src="" class="rounded border" style="max-height: 55px; object-fit: cover;" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2. Front View -->
+                            <div class="col-6 col-md-4">
+                                <div class="p-2 rounded-3 h-100" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="small fw-bold text-light"><i class="fa-solid fa-camera text-info me-1"></i> Front</span>
+                                        <span class="badge bg-secondary small">Front</span>
+                                    </div>
+                                    <input type="file" name="frontImageFile" accept="image/*" class="form-control form-control-sm mb-1" onchange="previewImgModal(this, 'previewFrontModal')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                    <input type="url" name="frontImageUrl" class="form-control form-control-sm" placeholder="Or Front URL..." oninput="previewUrlModal(this.value, 'previewFrontModal')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                    <div class="mt-1 text-center" id="previewFrontModal" style="display: none;">
+                                        <img src="" class="rounded border" style="max-height: 55px; object-fit: cover;" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3. Back View -->
+                            <div class="col-6 col-md-4">
+                                <div class="p-2 rounded-3 h-100" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="small fw-bold text-light"><i class="fa-solid fa-rotate text-info me-1"></i> Back</span>
+                                        <span class="badge bg-secondary small">Back</span>
+                                    </div>
+                                    <input type="file" name="backImageFile" accept="image/*" class="form-control form-control-sm mb-1" onchange="previewImgModal(this, 'previewBackModal')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                    <input type="url" name="backImageUrl" class="form-control form-control-sm" placeholder="Or Back URL..." oninput="previewUrlModal(this.value, 'previewBackModal')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                    <div class="mt-1 text-center" id="previewBackModal" style="display: none;">
+                                        <img src="" class="rounded border" style="max-height: 55px; object-fit: cover;" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 4. Side View -->
+                            <div class="col-6 col-md-6">
+                                <div class="p-2 rounded-3 h-100" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="small fw-bold text-light"><i class="fa-solid fa-cube text-info me-1"></i> Side</span>
+                                        <span class="badge bg-secondary small">Side Profile</span>
+                                    </div>
+                                    <input type="file" name="sideImageFile" accept="image/*" class="form-control form-control-sm mb-1" onchange="previewImgModal(this, 'previewSideModal')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                    <input type="url" name="sideImageUrl" class="form-control form-control-sm" placeholder="Or Side URL..." oninput="previewUrlModal(this.value, 'previewSideModal')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                    <div class="mt-1 text-center" id="previewSideModal" style="display: none;">
+                                        <img src="" class="rounded border" style="max-height: 55px; object-fit: cover;" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 5. Packaging View -->
+                            <div class="col-6 col-md-6">
+                                <div class="p-2 rounded-3 h-100" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="small fw-bold text-light"><i class="fa-solid fa-box-open text-info me-1"></i> Packaging</span>
+                                        <span class="badge bg-secondary small">Box / Packaging</span>
+                                    </div>
+                                    <input type="file" name="packagingImageFile" accept="image/*" class="form-control form-control-sm mb-1" onchange="previewImgModal(this, 'previewPackagingModal')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                    <input type="url" name="packagingImageUrl" class="form-control form-control-sm" placeholder="Or Packaging URL..." oninput="previewUrlModal(this.value, 'previewPackagingModal')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                    <div class="mt-1 text-center" id="previewPackagingModal" style="display: none;">
+                                        <img src="" class="rounded border" style="max-height: 55px; object-fit: cover;" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 22. Product Variants (Professional Feature: Size, Color, Price, Stock, SKU) -->
+                    <div class="mb-3 p-3 rounded-3" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(129, 140, 248, 0.35);">
+                        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                            <div>
+                                <span class="fw-bold text-white fs-6"><i class="fa-solid fa-layer-group text-primary me-2"></i>22. Product Variants (Size, Color, Price, Stock, SKU)</span>
+                                <div class="text-muted small">T-Shirt (S, M, L, XL / Black, White, Blue). Har variant ka Price, Stock &amp; SKU alag ho sakta hai.</div>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="hasVariantsToggleModal" onchange="toggleVariantsSection('variantsContainerModal', this.checked)" style="cursor: pointer; width: 44px; height: 22px;">
+                                <label class="form-check-label text-light small fw-semibold ms-1" for="hasVariantsToggleModal">Enable Variants</label>
+                            </div>
+                        </div>
+
+                        <!-- Hidden Input for Form Submission -->
+                        <input type="hidden" name="productVariantsJson" id="productVariantsJsonModal" value="" />
+
+                        <!-- Collapsible Variants Matrix Container -->
+                        <div id="variantsContainerModal" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed rgba(255,255,255,0.15);">
+                            <!-- Quick Matrix Generator Row -->
+                            <div class="row g-2 mb-3 align-items-end">
+                                <div class="col-md-5">
+                                    <label class="form-label text-muted small fw-bold mb-1">Sizes (e.g. S, M, L, XL)</label>
+                                    <input type="text" id="quickSizesModal" class="form-control form-control-sm" placeholder="S, M, L, XL" value="S, M, L, XL" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label text-muted small fw-bold mb-1">Colors (e.g. Black, White, Blue)</label>
+                                    <input type="text" id="quickColorsModal" class="form-control form-control-sm" placeholder="Black, White, Blue" value="Black, White, Blue" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-primary btn-sm w-100 fw-semibold" onclick="generateMatrix('Modal')">
+                                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Variants Table -->
+                            <div class="table-responsive rounded-3 border border-secondary border-opacity-25 mb-2">
+                                <table class="table table-dark table-sm mb-0 align-middle small text-center" id="variantsTableModal">
+                                    <thead style="background: rgba(30, 41, 59, 0.9);">
+                                        <tr>
+                                            <th style="width: 15%;">Size</th>
+                                            <th style="width: 20%;">Color</th>
+                                            <th style="width: 20%;">Price (₹) *</th>
+                                            <th style="width: 15%;">Stock *</th>
+                                            <th style="width: 20%;">SKU *</th>
+                                            <th style="width: 10%;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="variantsTbodyModal">
+                                        <!-- Dynamic rows injected here -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <button type="button" class="btn btn-outline-light btn-sm" onclick="addCustomVariantRow('Modal')">
+                                    <i class="fa-solid fa-plus me-1"></i> Add Custom Row
+                                </button>
+                                <span class="text-info small" id="variantCountNoticeModal">0 variants configured</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- 12. [Add Product] -->
+                <div class="modal-footer modal-footer-glass">
+                    <button type="button" class="btn-glass-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-action-primary px-4 fw-bold" id="btnModalAddProduct" onclick="syncVariantsJsonBeforeSubmit('Modal')">
+                        <i class="fa-solid fa-plus-circle me-1"></i> Add Product
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function calculateDiscountModal() {
+        const mrp = parseFloat(document.getElementById('mrpModal')?.value || 0);
+        const sellingPrice = parseFloat(document.getElementById('sellingPriceModal')?.value || 0);
+        const discountInput = document.getElementById('discountModal');
+        if (mrp > 0 && sellingPrice > 0 && mrp >= sellingPrice) {
+            const disc = ((mrp - sellingPrice) / mrp) * 100;
+            if (discountInput) discountInput.value = disc.toFixed(1);
+        }
+    }
+
+    function previewImgModal(input, previewId) {
+        const previewContainer = document.getElementById(previewId);
+        if (!previewContainer) return;
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = previewContainer.querySelector('img');
+                if (img) img.src = e.target.result;
+                previewContainer.style.display = 'block';
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function previewUrlModal(url, previewId) {
+        const previewContainer = document.getElementById(previewId);
+        if (!previewContainer) return;
+        if (url && url.trim().length > 5) {
+            const img = previewContainer.querySelector('img');
+            if (img) img.src = url.trim();
+            previewContainer.style.display = 'block';
+        } else {
+            previewContainer.style.display = 'none';
+        }
+    }
+
+    // ==========================================
+    // 22. PRODUCT VARIANTS MANAGEMENT SCRIPTS
+    // ==========================================
+    function toggleVariantsSection(containerId, isChecked) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.style.display = isChecked ? 'block' : 'none';
+        if (isChecked) {
+            const suffix = containerId.replace('variantsContainer', '');
+            const tbody = document.getElementById('variantsTbody' + suffix);
+            if (tbody && tbody.children.length === 0) {
+                generateMatrix(suffix);
+            }
+        }
+    }
+
+    function generateMatrix(suffix) {
+        const sizesInput = document.getElementById('quickSizes' + suffix)?.value || '';
+        const colorsInput = document.getElementById('quickColors' + suffix)?.value || '';
+        const basePrice = parseFloat(document.getElementById('sellingPrice' + suffix)?.value || 499);
+        const baseSku = document.getElementById('sku' + suffix)?.value.trim() || 'SN-PROD';
+
+        const sizes = sizesInput.split(',').map(s => s.trim()).filter(s => s.length > 0);
+        const colors = colorsInput.split(',').map(c => c.trim()).filter(c => c.length > 0);
+
+        const tbody = document.getElementById('variantsTbody' + suffix);
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        if (sizes.length === 0 && colors.length === 0) {
+            addCustomVariantRow(suffix, 'Standard', 'Default', basePrice, 10, baseSku + '-STD');
+            updateVariantCountNotice(suffix);
+            return;
+        }
+
+        const effectiveSizes = sizes.length > 0 ? sizes : ['OneSize'];
+        const effectiveColors = colors.length > 0 ? colors : ['Standard'];
+
+        effectiveSizes.forEach(sz => {
+            effectiveColors.forEach(clr => {
+                const skuCode = `${baseSku}-${sz.substring(0, 3).toUpperCase()}-${clr.substring(0, 3).toUpperCase()}`;
+                addCustomVariantRow(suffix, sz, clr, basePrice, 15, skuCode);
+            });
+        });
+
+        updateVariantCountNotice(suffix);
+    }
+
+    function addCustomVariantRow(suffix, size = '', color = '', price = 0, stock = 10, sku = '') {
+        const tbody = document.getElementById('variantsTbody' + suffix);
+        if (!tbody) return;
+
+        const defaultPrice = price > 0 ? price : (parseFloat(document.getElementById('sellingPrice' + suffix)?.value || 499));
+        const defaultSku = sku || `VAR-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+
+        const tr = document.createElement('tr');
+        tr.className = 'variant-row';
+        tr.innerHTML = `
+            <td><input type="text" class="form-control form-control-sm text-center var-size" value="${size}" placeholder="e.g. M" style="background: rgba(15,23,42,0.8); color: white; border: 1px solid var(--glass-border);" /></td>
+            <td><input type="text" class="form-control form-control-sm text-center var-color" value="${color}" placeholder="e.g. Black" style="background: rgba(15,23,42,0.8); color: white; border: 1px solid var(--glass-border);" /></td>
+            <td><input type="number" step="0.01" min="0" class="form-control form-control-sm text-center var-price" value="${defaultPrice}" style="background: rgba(15,23,42,0.8); color: #34d399; font-weight: bold; border: 1px solid var(--glass-border);" /></td>
+            <td><input type="number" min="0" class="form-control form-control-sm text-center var-stock" value="${stock}" style="background: rgba(15,23,42,0.8); color: white; border: 1px solid var(--glass-border);" /></td>
+            <td><input type="text" class="form-control form-control-sm text-center var-sku" value="${defaultSku}" style="background: rgba(15,23,42,0.8); color: #93c5fd; border: 1px solid var(--glass-border);" /></td>
+            <td><button type="button" class="btn btn-outline-danger btn-sm py-0 px-2" onclick="removeVariantRow(this, '${suffix}')"><i class="fa-solid fa-trash"></i></button></td>
+        `;
+        tbody.appendChild(tr);
+        updateVariantCountNotice(suffix);
+    }
+
+    function removeVariantRow(btn, suffix) {
+        btn.closest('tr')?.remove();
+        updateVariantCountNotice(suffix);
+    }
+
+    function updateVariantCountNotice(suffix) {
+        const tbody = document.getElementById('variantsTbody' + suffix);
+        const notice = document.getElementById('variantCountNotice' + suffix);
+        if (tbody && notice) {
+            notice.textContent = `${tbody.children.length} variants configured`;
+        }
+    }
+
+    function syncVariantsJsonBeforeSubmit(suffix) {
+        const toggle = document.getElementById('hasVariantsToggle' + suffix);
+        const jsonInput = document.getElementById('productVariantsJson' + suffix);
+        if (!jsonInput) return;
+
+        if (!toggle || !toggle.checked) {
+            jsonInput.value = '';
+            return;
+        }
+
+        const tbody = document.getElementById('variantsTbody' + suffix);
+        if (!tbody) return;
+
+        const rows = tbody.querySelectorAll('.variant-row');
+        const variants = [];
+
+        rows.forEach(r => {
+            const sz = r.querySelector('.var-size')?.value.trim() || '';
+            const clr = r.querySelector('.var-color')?.value.trim() || '';
+            const pr = parseFloat(r.querySelector('.var-price')?.value || 0);
+            const stk = parseInt(r.querySelector('.var-stock')?.value || 0);
+            const sk = r.querySelector('.var-sku')?.value.trim() || '';
+
+            if (sz || clr) {
+                variants.push({
+                    size: sz,
+                    color: clr,
+                    price: pr,
+                    stock: stk,
+                    sku: sk
+                });
+            }
+        });
+
+        jsonInput.value = JSON.stringify(variants);
+    }
+
+    // ==========================================
+    // 23. INVENTORY MANAGEMENT VIEW TOGGLE & ACTIONS
+    // ==========================================
+    function setProductCatalogView(viewMode) {
+        const gridEl = document.getElementById('productsGridView');
+        const tableEl = document.getElementById('productsTableView');
+        const btnGrid = document.getElementById('btnViewGrid');
+        const btnTable = document.getElementById('btnViewTable');
+
+        if (viewMode === 'grid') {
+            if (gridEl) gridEl.style.display = 'grid';
+            if (tableEl) tableEl.style.display = 'none';
+            if (btnGrid) btnGrid.classList.add('active');
+            if (btnTable) btnTable.classList.remove('active');
+        } else {
+            if (gridEl) gridEl.style.display = 'none';
+            if (tableEl) tableEl.style.display = 'block';
+            if (btnGrid) btnGrid.classList.remove('active');
+            if (btnTable) btnTable.classList.add('active');
+        }
+    }
+
+    function stepTableStock(productId, delta) {
+        const input = document.getElementById('tableStockInput_' + productId);
+        if (!input) return;
+        let current = parseInt(input.value) || 0;
+        let next = Math.max(0, current + delta);
+        input.value = next;
+        onTableStockChange(productId);
+    }
+
+    function onTableStockChange(productId) {
+        const input = document.getElementById('tableStockInput_' + productId);
+        const label = document.getElementById('tableUnitsLabel_' + productId);
+        const badge = document.getElementById('tableStatusBadge_' + productId);
+        if (!input) return;
+
+        let val = parseInt(input.value) || 0;
+        if (val < 0) { val = 0; input.value = 0; }
+        if (label) label.textContent = `${val} units`;
+
+        // 23. Inventory Rules: Stock 5 se kam: ⚠ Low Stock
+        if (val === 0) {
+            if (badge) {
+                badge.className = 'badge bg-danger bg-opacity-25 text-danger border border-danger px-3 py-2 rounded-pill fw-bold';
+                badge.innerHTML = '<i class="fa-solid fa-circle-xmark me-1"></i> Out of Stock';
+            }
+        } else if (val < 5) {
+            if (badge) {
+                badge.className = 'badge bg-warning bg-opacity-25 text-warning border border-warning px-3 py-2 rounded-pill fw-bold';
+                badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i> ⚠ Low Stock';
+            }
+        } else {
+            if (badge) {
+                badge.className = 'badge bg-success bg-opacity-25 text-success border border-success px-3 py-2 rounded-pill fw-bold';
+                badge.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> Available';
+            }
+        }
+    }
+
+    async function submitTableStockUpdate(productId) {
+        const input = document.getElementById('tableStockInput_' + productId);
+        const btn = document.getElementById('tableSaveStockBtn_' + productId);
+        if (!input || !btn) return;
+
+        const originalBtnHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Saving...';
+
+        const newStock = parseInt(input.value) || 0;
+
+        try {
+            const formData = new FormData();
+            formData.append('productId', productId);
+            formData.append('stock', newStock);
+
+            const resp = await fetch('/Vendor/UpdateStock', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await resp.json();
+            if (data.success) {
+                btn.className = 'btn btn-sm btn-success rounded-pill px-3';
+                btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> Saved!';
+                onTableStockChange(productId);
+                setTimeout(() => {
+                    btn.className = 'btn btn-sm btn-outline-light rounded-pill px-3';
+                    btn.innerHTML = originalBtnHtml;
+                    btn.disabled = false;
+                }, 2000);
+            } else {
+                alert(data.message || 'Error updating stock');
+                btn.innerHTML = originalBtnHtml;
+                btn.disabled = false;
+            }
+        } catch (err) {
+            alert('Failed to connect to server: ' + err.message);
+            btn.innerHTML = originalBtnHtml;
+            btn.disabled = false;
+        }
+    }
+</script>

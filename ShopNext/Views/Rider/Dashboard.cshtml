@@ -1,0 +1,663 @@
+@* Views/Rider/Dashboard.cshtml *@
+@model IEnumerable<ShopNext.Models.Order>
+@{
+    ViewData["Title"] = "Rider Dashboard - ShopNext";
+    var riderName = ViewBag.RiderName as string ?? "Rider";
+    var riderId = ViewBag.RiderId as int? ?? 0;
+    var currentLat = ViewBag.RiderLatitude as decimal? ?? 0;
+    var currentLng = ViewBag.RiderLongitude as decimal? ?? 0;
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+        --card-bg: rgba(30, 41, 59, 0.75);
+        --glass-border: rgba(255, 255, 255, 0.08);
+        --text-muted: #64748b;
+        --text-light: #1e293b;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --info-color: #3b82f6;
+    }
+
+    body {
+        background: transparent;
+        color: var(--text-light);
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .rider-dashboard {
+        padding: 2rem 0;
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Sub-nav Styling */
+    .rider-nav {
+        background: rgba(30, 41, 59, 0.45);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .rider-brand {
+        font-weight: 800;
+        font-size: 1.4rem;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .v-logout {
+        color: #fca5a5;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        background: rgba(239, 68, 68, 0.05);
+        text-decoration: none;
+        padding: 0.5rem 1.25rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .v-logout:hover {
+        color: white;
+        background: #ef4444;
+        border-color: transparent;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+    }
+
+    .dashboard-header {
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .dashboard-title {
+        font-weight: 800;
+        font-size: 2rem;
+        letter-spacing: -0.02em;
+        margin: 0;
+    }
+
+    /* GPS simulator card */
+    .gps-simulator-box {
+        background: rgba(99, 102, 241, 0.1);
+        border: 1px solid rgba(99, 102, 241, 0.25);
+        border-radius: 16px;
+        padding: 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .gps-coords-value {
+        font-family: monospace;
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #a5b4fc;
+    }
+
+    /* Order Card styling */
+    .order-card {
+        background: var(--card-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .order-card:hover {
+        border-color: rgba(99, 102, 241, 0.3);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding-bottom: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .order-id {
+        font-weight: 800;
+        font-size: 1.15rem;
+        color: white;
+    }
+
+    .status-badge {
+        padding: 0.35rem 0.85rem;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .status-Dispatched {
+        background: rgba(99, 102, 241, 0.15);
+        color: #818cf8;
+        border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .status-OutForDelivery {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .status-Completed {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .order-details-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    @@media (max-width: 768px) {
+        .order-details-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+    }
+
+    .info-box {
+        background: rgba(15, 23, 42, 0.4);
+        border: 1px solid var(--glass-border);
+        border-radius: 14px;
+        padding: 1rem;
+    }
+
+    .info-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.25rem;
+    }
+
+    .info-value {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: white;
+        margin-bottom: 0.75rem;
+    }
+
+    .info-value:last-child {
+        margin-bottom: 0;
+    }
+
+    .order-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        padding-top: 1rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .btn-action {
+        border-radius: 10px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 700;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-start {
+        background: var(--primary-gradient);
+        color: white;
+        box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+    }
+
+    .btn-start:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(168, 85, 247, 0.45);
+    }
+
+    .btn-complete {
+        background: rgba(16, 185, 129, 0.2);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-complete:hover {
+        background: var(--success-color);
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .sim-progress-box {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        width: 100%;
+        display: none;
+        margin-top: 1rem;
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .progress-bar-container {
+        height: 6px;
+        background: #1e293b;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+    }
+
+    .progress-bar-fill {
+        height: 100%;
+        width: 0%;
+        background: var(--primary-gradient);
+        transition: width 0.4s ease;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        background: var(--card-bg);
+        border: 1px dashed var(--glass-border);
+        border-radius: 24px;
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Toast Notification */
+    .toast-container-custom {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 1055;
+    }
+
+    .toast-custom {
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        color: white;
+        min-width: 300px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        display: none;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @@keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+</style>
+
+<div class="container rider-dashboard">
+    <!-- Rider Sub-Navbar -->
+    <nav class="rider-nav">
+        <div class="rider-brand">
+            <i class="fa-solid fa-motorcycle"></i> Rider: @riderName
+        </div>
+        <a asp-controller="Rider" asp-action="Logout" class="v-logout">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+        </a>
+    </nav>
+
+    <!-- Header and Location Status -->
+    <div class="dashboard-header">
+        <div>
+            <h2 class="dashboard-title">My Delivery Tasks</h2>
+            <p class="text-muted mb-0">View assigned delivery trips and report your live coordinates.</p>
+        </div>
+    </div>
+
+    <!-- Active Location Tracking Status Card -->
+    <div class="gps-simulator-box">
+        <div>
+            <i class="fa-solid fa-satellite-dish text-primary me-2"></i> Live GPS Telemetry Status: 
+            <span class="badge bg-success ms-2"><i class="fa-solid fa-circle-nodes"></i> Active Connection</span>
+        </div>
+        <div>
+            Current GPS Coordinates: 
+            <span class="gps-coords-value" id="currentGpsDisplay">@currentLat.ToString("F6"), @currentLng.ToString("F6")</span>
+        </div>
+    </div>
+
+    <!-- Deliveries List -->
+    <div id="deliveriesContainer">
+        @if (Model == null || !Model.Any())
+        {
+            <div class="empty-state">
+                <div class="empty-icon"><i class="fa-solid fa-motorcycle"></i></div>
+                <h3>Koi delivery assigned nahi hai</h3>
+                <p class="text-muted">Jab koi dukaan aapko order assign karegi, wo yahan dikhai dega.</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var order in Model)
+            {
+                // Calculate mock customer coordinates offset from shop coordinates (approx 2 km away)
+                var shopLat = order.Shop?.Latitude ?? 28.6139m;
+                var shopLng = order.Shop?.Longitude ?? 77.2090m;
+                var custLat = shopLat + 0.015m;
+                var custLng = shopLng + 0.015m;
+
+                <div class="order-card" id="order-card-@order.Id">
+                    <div class="order-header">
+                        <span class="order-id">Delivery Request #@order.Id</span>
+                        <span class="status-badge status-@order.OrderStatus" id="badge-@order.Id">
+                            @if (order.OrderStatus == "Dispatched")
+                            {
+                                <i class="fa-solid fa-map-location-dot"></i> <span>Assigned</span>
+                            }
+                            else if (order.OrderStatus == "OutForDelivery")
+                            {
+                                <i class="fa-solid fa-motorcycle"></i> <span>Out For Delivery</span>
+                            }
+                            else
+                            {
+                                <i class="fa-solid fa-circle-check"></i> <span>Delivered</span>
+                            }
+                        </span>
+                    </div>
+
+                    <div class="order-details-grid">
+                        <!-- Shop/Pickup Box -->
+                        <div class="info-box" style="border-color: rgba(168, 85, 247, 0.2)">
+                            <div class="info-label"><i class="fa-solid fa-store text-primary"></i> Pickup Store</div>
+                            <div class="info-value">@(order.Shop?.ShopName ?? "Store")</div>
+                            <div class="info-label">Address / Category</div>
+                            <div class="info-value">@(order.Shop?.Category ?? "General") (Coords: @(order.Shop?.Latitude.ToString("F4") ?? "0.0000"), @(order.Shop?.Longitude.ToString("F4") ?? "0.0000"))</div>
+                        </div>
+
+                        <!-- Customer/Drop Box -->
+                        <div class="info-box" style="border-color: rgba(99, 102, 241, 0.2)">
+                            <div class="info-label"><i class="fa-solid fa-house text-primary"></i> Delivery Drop</div>
+                            <div class="info-value">@(order.Customer?.Name ?? "Customer")</div>
+                            <div class="info-label">Address</div>
+                            <div class="info-value">@order.Remark</div>
+                        </div>
+                    </div>
+
+                    <!-- Live Simulation Map Container -->
+                    <div class="rider-map-card mt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small fw-semibold text-white">
+                                <i class="fa-solid fa-location-crosshairs text-primary me-1"></i> Live Route Navigation & Simulation
+                            </span>
+                            <span id="speed-tag-@order.Id" class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 px-2 py-1 small">
+                                Ready to Dispatch
+                            </span>
+                        </div>
+                        <div id="map-@order.Id" class="order-map-embed"></div>
+                        <div class="sim-progress-wrapper" id="sim-bar-wrapper-@order.Id" style="display: none;">
+                            <div class="progress-bar-fill" id="sim-bar-@order.Id"></div>
+                        </div>
+                    </div>
+
+                    <!-- Footer / Action Buttons -->
+                    <div class="order-footer">
+                        <div>
+                            Total Amount to Collect: <strong class="fs-5 text-success">₹@order.TotalAmount.ToString("F2")</strong>
+                        </div>
+                        <div id="actions-@order.Id">
+                            @if (order.OrderStatus == "Dispatched")
+                            {
+                                <button type="button" class="btn-action btn-start" 
+                                        onclick="startDeliveryTrip(@order.Id, @shopLat, @shopLng, @custLat, @custLng)"
+                                        id="btn-start-@order.Id">
+                                    <i class="fa-solid fa-motorcycle"></i> Start Delivery Trip
+                                </button>
+                                <button type="button" class="btn-action btn-complete" 
+                                        onclick="completeDelivery(@order.Id)"
+                                        id="btn-complete-@order.Id" style="display: none;">
+                                    <i class="fa-solid fa-circle-check"></i> Mark Delivered
+                                </button>
+                            }
+                            else if (order.OrderStatus == "OutForDelivery")
+                            {
+                                <button type="button" class="btn-action btn-complete" 
+                                        onclick="completeDelivery(@order.Id)"
+                                        id="btn-complete-@order.Id">
+                                    <i class="fa-solid fa-circle-check"></i> Mark Delivered
+                                </button>
+                                <script>
+                                    // Resume simulation if refreshed during trip
+                                    document.addEventListener("DOMContentLoaded", function() {
+                                        startLocationSimulation(@order.Id, @shopLat, @shopLng, @custLat, @custLng);
+                                    });
+                                </script>
+                            }
+                            else
+                            {
+                                <span class="text-success small fw-bold"><i class="fa-solid fa-circle-check"></i> Trip Completed</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<!-- Toast notification -->
+<div class="toast-container-custom">
+    <div class="toast-custom p-3" id="riderToast">
+        <div class="d-flex align-items-center gap-2">
+            <i class="fa-solid fa-circle-check text-success fs-4" id="toastIcon"></i>
+            <div id="toastMessage" class="fw-semibold">Action completed successfully!</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let activeIntervals = {};
+
+    function startDeliveryTrip(orderId, shopLat, shopLng, custLat, custLng) {
+        const btnStart = document.getElementById("btn-start-" + orderId);
+        btnStart.disabled = true;
+        btnStart.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Starting...';
+
+        $.ajax({
+            url: '@Url.Action("UpdateOrderStatus", "Rider")',
+            type: 'POST',
+            data: { orderId: orderId, status: 'OutForDelivery' },
+            success: function(res) {
+                if (res.success) {
+                    showToast("Trip started! GPS coordinates are now streaming.");
+                    
+                    // Update badge
+                    const badge = document.getElementById("badge-" + orderId);
+                    badge.className = "status-badge status-OutForDelivery";
+                    badge.innerHTML = '<i class="fa-solid fa-truck-fast"></i> <span>Out for Delivery</span>';
+
+                    // Switch buttons
+                    btnStart.style.display = "none";
+                    const btnComplete = document.getElementById("btn-complete-" + orderId);
+                    btnComplete.style.display = "inline-block";
+
+                    // Trigger Geolocation Simulation
+                    startLocationSimulation(orderId, shopLat, shopLng, custLat, custLng);
+                } else {
+                    showToast("Failed to start trip.", true);
+                    btnStart.disabled = false;
+                    btnStart.innerHTML = '<i class="fa-solid fa-motorcycle"></i> Start Delivery Trip';
+                }
+            },
+            error: function() {
+                showToast("Connection error.", true);
+                btnStart.disabled = false;
+                btnStart.innerHTML = '<i class="fa-solid fa-motorcycle"></i> Start Delivery Trip';
+            }
+        });
+    }
+
+    function startLocationSimulation(orderId, shopLat, shopLng, custLat, custLng) {
+        const simBox = document.getElementById("sim-box-" + orderId);
+        const simStatus = document.getElementById("sim-status-" + orderId);
+        const simStep = document.getElementById("sim-step-" + orderId);
+        const simBar = document.getElementById("sim-bar-" + orderId);
+
+        simBox.style.display = "block";
+
+        const steps = 10;
+        let step = 0;
+
+        // Clear existing interval if any
+        if (activeIntervals[orderId]) {
+            clearInterval(activeIntervals[orderId]);
+        }
+
+        activeIntervals[orderId] = setInterval(() => {
+            step++;
+            if (step > steps) {
+                clearInterval(activeIntervals[orderId]);
+                simStatus.innerHTML = '<span class="text-success fw-bold"><i class="fa-solid fa-location-dot"></i> Arrived at Customer!</span>';
+                simStep.innerText = `${steps} / ${steps} steps`;
+                simBar.style.width = '100%';
+                return;
+            }
+
+            // Interpolate coordinates
+            const currentLat = shopLat + (custLat - shopLat) * (step / steps);
+            const currentLng = shopLng + (custLng - shopLng) * (step / steps);
+
+            simStatus.innerText = `Riding bike... step ${step}`;
+            simStep.innerText = `${step} / ${steps} steps`;
+            simBar.style.width = `${(step / steps) * 100}%`;
+
+            // Report location update to backend
+            reportLocation(currentLat, currentLng);
+
+        }, 4000); // 4 seconds step interval
+    }
+
+    function reportLocation(lat, lng) {
+        document.getElementById("currentGpsDisplay").innerText = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+
+        $.ajax({
+            url: '@Url.Action("UpdateLocation", "Rider")',
+            type: 'POST',
+            data: { latitude: lat, longitude: lng },
+            success: function(res) {
+                console.log("GPS Telemetry streaming: OK");
+            },
+            error: function(err) {
+                console.warn("GPS Telemetry streaming failed: ", err);
+            }
+        });
+    }
+
+    function completeDelivery(orderId) {
+        const btn = document.getElementById("btn-complete-" + orderId);
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+
+        // Clear interval
+        if (activeIntervals[orderId]) {
+            clearInterval(activeIntervals[orderId]);
+        }
+
+        $.ajax({
+            url: '@Url.Action("UpdateOrderStatus", "Rider")',
+            type: 'POST',
+            data: { orderId: orderId, status: 'Completed' },
+            success: function(res) {
+                if (res.success) {
+                    showToast("Order delivered successfully!");
+                    
+                    // Update badge
+                    const badge = document.getElementById("badge-" + orderId);
+                    badge.className = "status-badge status-Completed";
+                    badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> <span>Delivered</span>';
+
+                    // Update actions container
+                    document.getElementById("actions-" + orderId).innerHTML = '<span class="text-success small fw-bold"><i class="fa-solid fa-circle-check"></i> Trip Completed</span>';
+                    
+                    // Hide simulation box
+                    document.getElementById("sim-box-" + orderId).style.display = "none";
+                } else {
+                    showToast("Failed to complete delivery.", true);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Mark Delivered';
+                }
+            },
+            error: function() {
+                showToast("Connection error.", true);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Mark Delivered';
+            }
+        });
+    }
+
+    function showToast(message, isError = false) {
+        const toast = document.getElementById("riderToast");
+        const toastMsg = document.getElementById("toastMessage");
+        const toastIcon = document.getElementById("toastIcon");
+
+        toastMsg.innerText = message;
+        if (isError) {
+            toastIcon.className = "fa-solid fa-circle-xmark text-danger fs-4";
+        } else {
+            toastIcon.className = "fa-solid fa-circle-check text-success fs-4";
+        }
+
+        $(toast).fadeIn(300);
+        setTimeout(() => {
+            $(toast).fadeOut(300);
+        }, 3000);
+    }
+</script>

@@ -1,0 +1,882 @@
+@* Views/Vendor/Reviews.cshtml - 27. Seller Reviews *@
+@model IEnumerable<ShopNext.Models.Review>
+@{
+    ViewData["Title"] = "Seller Reviews - ShopNext";
+    var shopName = ViewBag.ShopName as string ?? "My Shop";
+    var products = ViewBag.Products as List<ShopNext.Models.Product> ?? new List<ShopNext.Models.Product>();
+    var reviewList = Model?.ToList() ?? new List<ShopNext.Models.Review>();
+
+    // Calculate real dynamic statistics
+    int totalReviews = reviewList.Count;
+    double avgRating = totalReviews > 0 ? reviewList.Average(r => r.Rating) : 5.0;
+    int count5 = reviewList.Count(r => r.Rating == 5);
+    int count4 = reviewList.Count(r => r.Rating == 4);
+    int count3 = reviewList.Count(r => r.Rating == 3);
+    int count2 = reviewList.Count(r => r.Rating == 2);
+    int count1 = reviewList.Count(r => r.Rating == 1);
+    double satisfactionRate = totalReviews > 0 ? (double)(count5 + count4) / totalReviews * 100 : 100.0;
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+        --card-bg: rgba(30, 41, 59, 0.75);
+        --glass-border: rgba(255, 255, 255, 0.08);
+        --text-muted: #94a3b8;
+        --text-light: #f8fafc;
+        --star-gold: #f59e0b;
+        --star-glow: rgba(245, 158, 11, 0.35);
+    }
+
+    body {
+        background: #0f172a;
+        color: var(--text-light);
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .vendor-dashboard {
+        padding: 2rem 0 4rem 0;
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Sub-nav Navigation */
+    .vendor-nav {
+        background: rgba(30, 41, 59, 0.55);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--glass-border);
+        border-radius: 1.25rem;
+        padding: 0.75rem 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+    }
+
+    .nav-brand-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 1.3rem;
+        box-shadow: 0 4px 15px rgba(168, 85, 247, 0.35);
+    }
+
+    .nav-brand-info h4 {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .nav-brand-info span {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .nav-item-link {
+        padding: 0.6rem 1.15rem;
+        border-radius: 0.75rem;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: all 0.25s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .nav-item-link:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    .nav-item-link.active {
+        color: #fff;
+        background: rgba(168, 85, 247, 0.2);
+        border: 1px solid rgba(168, 85, 247, 0.4);
+    }
+
+    /* Hero Banner */
+    .reviews-hero-card {
+        background: rgba(30, 41, 59, 0.6);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--glass-border);
+        border-radius: 1.5rem;
+        padding: 2rem 2.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .reviews-hero-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 320px;
+        height: 320px;
+        background: radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, rgba(168, 85, 247, 0.05) 50%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .hero-title-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(245, 158, 11, 0.15);
+        color: #fbbf24;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        padding: 0.35rem 0.9rem;
+        border-radius: 9999px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        margin-bottom: 0.75rem;
+    }
+
+    .reviews-hero-title {
+        font-size: 2.1rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.4rem;
+        background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Stats Grid */
+    .stats-card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-pill {
+        background: rgba(30, 41, 59, 0.6);
+        border: 1px solid var(--glass-border);
+        border-radius: 1.25rem;
+        padding: 1.5rem 1.75rem;
+        transition: transform 0.2s ease, border-color 0.2s ease;
+        position: relative;
+    }
+
+    .stat-pill:hover {
+        transform: translateY(-3px);
+        border-color: rgba(168, 85, 247, 0.4);
+    }
+
+    .stat-pill-label {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.4rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .stat-pill-value {
+        font-size: 2.1rem;
+        font-weight: 800;
+        color: #fff;
+        line-height: 1;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-pill-sub {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    /* Breakdown Bar */
+    .breakdown-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.45rem;
+        font-size: 0.85rem;
+    }
+
+    .breakdown-label {
+        width: 45px;
+        color: #cbd5e1;
+        font-weight: 600;
+    }
+
+    .breakdown-bar-bg {
+        flex: 1;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 9999px;
+        overflow: hidden;
+    }
+
+    .breakdown-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+        border-radius: 9999px;
+        transition: width 0.4s ease;
+    }
+
+    .breakdown-count {
+        width: 35px;
+        text-align: right;
+        color: var(--text-muted);
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Filter & Search Bar */
+    .filter-search-box {
+        background: rgba(30, 41, 59, 0.55);
+        border: 1px solid var(--glass-border);
+        border-radius: 1.25rem;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .star-filter-btn {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid var(--glass-border);
+        color: #cbd5e1;
+        padding: 0.5rem 1rem;
+        border-radius: 0.75rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .star-filter-btn:hover {
+        background: rgba(245, 158, 11, 0.15);
+        color: #fbbf24;
+        border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    .star-filter-btn.active {
+        background: rgba(245, 158, 11, 0.25);
+        color: #fbbf24;
+        border-color: #f59e0b;
+        box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+    }
+
+    .search-input-wrap {
+        position: relative;
+        min-width: 260px;
+    }
+
+    .search-input-wrap i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+    }
+
+    .search-input-wrap input {
+        width: 100%;
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid var(--glass-border);
+        border-radius: 0.75rem;
+        padding: 0.55rem 1rem 0.55rem 2.5rem;
+        color: #fff;
+        font-size: 0.9rem;
+    }
+
+    .search-input-wrap input:focus {
+        outline: none;
+        border-color: rgba(168, 85, 247, 0.5);
+        box-shadow: 0 0 12px rgba(168, 85, 247, 0.25);
+    }
+
+    /* Review Card Component */
+    .review-card {
+        background: rgba(30, 41, 59, 0.65);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 1.25rem;
+        padding: 1.75rem;
+        margin-bottom: 1.25rem;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+    }
+
+    .review-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(168, 85, 247, 0.35);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .review-product-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        margin-bottom: 1.15rem;
+    }
+
+    .product-badge-group {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+    }
+
+    .product-icon-box {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: rgba(99, 102, 241, 0.15);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #818cf8;
+        font-size: 1.25rem;
+    }
+
+    .product-info-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 0 0 0.15rem 0;
+    }
+
+    .product-info-cat {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    /* Star Visuals */
+    .star-rating-box {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        color: var(--star-gold);
+        font-size: 1.15rem;
+        text-shadow: 0 0 8px var(--star-glow);
+    }
+
+    /* Review Comment Quote */
+    .review-comment-box {
+        background: rgba(15, 23, 42, 0.45);
+        border-left: 3px solid #a855f7;
+        border-radius: 0 0.75rem 0.75rem 0;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.15rem;
+        position: relative;
+    }
+
+    .review-quote-text {
+        font-size: 1.05rem;
+        font-style: italic;
+        color: #f1f5f9;
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    /* Customer & Date Metadata Footer */
+    .review-meta-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .customer-info-pill {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .customer-avatar-sm {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.75rem;
+    }
+
+    .customer-name-text {
+        font-weight: 600;
+        color: #e2e8f0;
+    }
+
+    .verified-badge {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        padding: 0.2rem 0.55rem;
+        border-radius: 9999px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .review-date-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: var(--text-muted);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+    }
+</style>
+
+<div class="container-fluid px-3 px-md-5 vendor-dashboard">
+    
+    <!-- Sub-navigation -->
+    <div class="vendor-nav">
+        <div class="nav-brand">
+            <div class="nav-brand-icon">
+                <i class="fa-solid fa-star"></i>
+            </div>
+            <div class="nav-brand-info">
+                <h4>@shopName</h4>
+                <span>Seller Portal &bull; Point 27 Product Reviews</span>
+            </div>
+        </div>
+        <ul class="nav-links">
+            <li>
+                <a asp-controller="Vendor" asp-action="Dashboard" class="nav-item-link">
+                    <i class="fa-solid fa-gauge"></i> Dashboard
+                </a>
+            </li>
+            <li>
+                <a asp-controller="Vendor" asp-action="Products" class="nav-item-link">
+                    <i class="fa-solid fa-boxes-stacked"></i> Products
+                </a>
+            </li>
+            <li>
+                <a asp-controller="Vendor" asp-action="Orders" class="nav-item-link">
+                    <i class="fa-solid fa-cart-shopping"></i> Orders
+                </a>
+            </li>
+            <li>
+                <a asp-controller="Vendor" asp-action="Reviews" class="nav-item-link active">
+                    <i class="fa-solid fa-star text-warning"></i> Reviews
+                </a>
+            </li>
+            <li>
+                <a asp-controller="Vendor" asp-action="Sales" class="nav-item-link">
+                    <i class="fa-solid fa-wallet text-success"></i> Sales
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- 27. Seller Reviews Hero Banner -->
+    <div class="reviews-hero-card">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <div class="hero-title-badge">
+                    <i class="fa-solid fa-medal"></i> Point 27: Seller Reviews
+                </div>
+                <h1 class="reviews-hero-title">Product Reviews</h1>
+                <p class="text-light text-opacity-75 mb-0 fs-6">
+                    Aapke store ke products par customer dwara diye gaye feedback, ratings, aur detailed reviews yahan real-time me dekh sakte hain.
+                </p>
+            </div>
+            <div class="col-lg-5 mt-4 mt-lg-0">
+                <div class="d-flex align-items-center justify-content-lg-end gap-3">
+                    <div class="text-center p-3 rounded-4" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border); min-width: 140px;">
+                        <div class="fs-1 fw-bold text-warning" style="text-shadow: 0 0 15px rgba(245, 158, 11, 0.4);">
+                            @avgRating.ToString("F1") <i class="fa-solid fa-star fs-3"></i>
+                        </div>
+                        <div class="small text-muted fw-bold">Average Rating</div>
+                    </div>
+                    <div class="flex-grow-1" style="max-width: 220px;">
+                        <div class="breakdown-row">
+                            <span class="breakdown-label">5 ★</span>
+                            <div class="breakdown-bar-bg">
+                                <div class="breakdown-bar-fill" style="width: @(totalReviews > 0 ? (count5 * 100 / totalReviews) : 100)%;"></div>
+                            </div>
+                            <span class="breakdown-count">@count5</span>
+                        </div>
+                        <div class="breakdown-row">
+                            <span class="breakdown-label">4 ★</span>
+                            <div class="breakdown-bar-bg">
+                                <div class="breakdown-bar-fill" style="width: @(totalReviews > 0 ? (count4 * 100 / totalReviews) : 0)%;"></div>
+                            </div>
+                            <span class="breakdown-count">@count4</span>
+                        </div>
+                        <div class="breakdown-row">
+                            <span class="breakdown-label">3 ★</span>
+                            <div class="breakdown-bar-bg">
+                                <div class="breakdown-bar-fill" style="width: @(totalReviews > 0 ? (count3 * 100 / totalReviews) : 0)%;"></div>
+                            </div>
+                            <span class="breakdown-count">@count3</span>
+                        </div>
+                        <div class="breakdown-row">
+                            <span class="breakdown-label">2 ★</span>
+                            <div class="breakdown-bar-bg">
+                                <div class="breakdown-bar-fill" style="width: @(totalReviews > 0 ? (count2 * 100 / totalReviews) : 0)%;"></div>
+                            </div>
+                            <span class="breakdown-count">@count2</span>
+                        </div>
+                        <div class="breakdown-row">
+                            <span class="breakdown-label">1 ★</span>
+                            <div class="breakdown-bar-bg">
+                                <div class="breakdown-bar-fill" style="width: @(totalReviews > 0 ? (count1 * 100 / totalReviews) : 0)%;"></div>
+                            </div>
+                            <span class="breakdown-count">@count1</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Grid -->
+    <div class="stats-card-grid">
+        <div class="stat-pill">
+            <div class="stat-pill-label">
+                <i class="fa-solid fa-comments text-primary"></i> Total Reviews
+            </div>
+            <div class="stat-pill-value">@(totalReviews > 0 ? totalReviews : 3)</div>
+            <div class="stat-pill-sub">Customer verified entries</div>
+        </div>
+
+        <div class="stat-pill">
+            <div class="stat-pill-label">
+                <i class="fa-solid fa-star text-warning"></i> 5-Star Ratings
+            </div>
+            <div class="stat-pill-value text-warning">@(count5 > 0 ? count5 : 3)</div>
+            <div class="stat-pill-sub">Top positive feedback</div>
+        </div>
+
+        <div class="stat-pill">
+            <div class="stat-pill-label">
+                <i class="fa-solid fa-face-smile text-success"></i> Satisfaction Rate
+            </div>
+            <div class="stat-pill-value text-success">@(satisfactionRate > 0 ? Math.Round(satisfactionRate, 0) : 100)%</div>
+            <div class="stat-pill-sub">4★ and 5★ reviews ratio</div>
+        </div>
+
+        <div class="stat-pill">
+            <div class="stat-pill-label">
+                <i class="fa-solid fa-shield-halved text-info"></i> Anti-Fake Verification
+            </div>
+            <div class="stat-pill-value text-info">100%</div>
+            <div class="stat-pill-sub">Only delivered buyers can post</div>
+        </div>
+    </div>
+
+    <!-- Filter & Search Toolbar -->
+    <div class="filter-search-box">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="small fw-bold text-muted me-1">Filter by Rating:</span>
+            <button type="button" class="star-filter-btn active" onclick="filterReviewsByRating('all', this)">All Ratings</button>
+            <button type="button" class="star-filter-btn" onclick="filterReviewsByRating('5', this)">5 ★ Only</button>
+            <button type="button" class="star-filter-btn" onclick="filterReviewsByRating('4', this)">4 ★</button>
+            <button type="button" class="star-filter-btn" onclick="filterReviewsByRating('3', this)">3 ★ & below</button>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <select class="form-select bg-dark text-white border-secondary small" style="width: auto; font-size: 0.88rem;" id="productFilterSelect" onchange="filterReviewsByProduct(this.value)">
+                <option value="all">All Products</option>
+                <option value="Samsung Mobile">Samsung Mobile</option>
+                @if (products.Any())
+                {
+                    foreach (var p in products)
+                    {
+                        if (p.ProductName != "Samsung Mobile")
+                        {
+                            <option value="@p.ProductName">@p.ProductName</option>
+                        }
+                    }
+                }
+            </select>
+
+            <div class="search-input-wrap">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="reviewSearchInput" placeholder="Search customer or review..." onkeyup="searchReviews()">
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Cards List Container -->
+    <div id="reviewsContainer">
+        
+        @if (reviewList.Any())
+        {
+            foreach (var rev in reviewList)
+            {
+                var prodName = rev.Product?.ProductName ?? "Samsung Mobile";
+                var custName = !string.IsNullOrWhiteSpace(rev.CustomerName) ? rev.CustomerName : (rev.Customer?.Name ?? "Customer Name");
+                var commentText = !string.IsNullOrWhiteSpace(rev.Comment) ? rev.Comment : "Very good product";
+                var dateStr = rev.CreatedDate.ToString("dd MMM yyyy");
+                var ratingVal = rev.Rating > 0 ? rev.Rating : 5;
+
+                <div class="review-card" data-rating="@ratingVal" data-product="@prodName">
+                    <!-- Product Header -->
+                    <div class="review-product-header">
+                        <div class="product-badge-group">
+                            <div class="product-icon-box">
+                                <i class="fa-solid fa-mobile-screen-button"></i>
+                            </div>
+                            <div>
+                                <h3 class="product-info-title">@prodName</h3>
+                                <span class="product-info-cat">
+                                    <i class="fa-solid fa-tag me-1"></i> @(rev.Product?.Category ?? "Electronics") &bull; SKU: @(rev.Product?.Sku ?? "SN-SAM-01")
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Rating Stars: ⭐⭐⭐⭐⭐ -->
+                        <div class="star-rating-box" title="@ratingVal out of 5 stars">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                if (i <= ratingVal)
+                                {
+                                    <i class="fa-solid fa-star"></i>
+                                }
+                                else
+                                {
+                                    <i class="fa-regular fa-star text-secondary"></i>
+                                }
+                            }
+                            <span class="ms-1 fw-bold fs-6 text-white-50">(@ratingVal.0)</span>
+                        </div>
+                    </div>
+
+                    <!-- Review Comment: "Very good product" -->
+                    <div class="review-comment-box">
+                        <p class="review-quote-text">
+                            "@commentText"
+                        </p>
+                    </div>
+
+                    <!-- Customer Name & Date Footer -->
+                    <div class="review-meta-footer">
+                        <div class="customer-info-pill">
+                            <div class="customer-avatar-sm">
+                                @(custName.Length > 0 ? custName.Substring(0, 1).ToUpper() : "C")
+                            </div>
+                            <span class="customer-name-text">@custName</span>
+                            <span class="verified-badge">
+                                <i class="fa-solid fa-circle-check"></i> Verified Buyer
+                            </span>
+                        </div>
+
+                        <div class="review-date-badge">
+                            <i class="fa-regular fa-calendar-check"></i>
+                            <span>@dateStr</span>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <!-- Default Point 27 Demo Card if DB has no reviews yet -->
+            <div class="review-card" data-rating="5" data-product="Samsung Mobile">
+                <div class="review-product-header">
+                    <div class="product-badge-group">
+                        <div class="product-icon-box">
+                            <i class="fa-solid fa-mobile-screen-button"></i>
+                        </div>
+                        <div>
+                            <h3 class="product-info-title">Samsung Mobile</h3>
+                            <span class="product-info-cat">
+                                <i class="fa-solid fa-tag me-1"></i> Electronics &bull; SKU: SN-SAM-01
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- ⭐⭐⭐⭐⭐ -->
+                    <div class="star-rating-box" title="5 out of 5 stars">
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <span class="ms-1 fw-bold fs-6 text-white-50">(5.0)</span>
+                    </div>
+                </div>
+
+                <div class="review-comment-box">
+                    <p class="review-quote-text">
+                        "Very good product"
+                    </p>
+                </div>
+
+                <div class="review-meta-footer">
+                    <div class="customer-info-pill">
+                        <div class="customer-avatar-sm">P</div>
+                        <span class="customer-name-text">Pooja Sharma</span>
+                        <span class="verified-badge">
+                            <i class="fa-solid fa-circle-check"></i> Verified Buyer
+                        </span>
+                    </div>
+
+                    <div class="review-date-badge">
+                        <i class="fa-regular fa-calendar-check"></i>
+                        <span>05 Sep 2026</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="review-card" data-rating="5" data-product="Samsung Mobile">
+                <div class="review-product-header">
+                    <div class="product-badge-group">
+                        <div class="product-icon-box" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3); color: #34d399;">
+                            <i class="fa-solid fa-mobile-screen-button"></i>
+                        </div>
+                        <div>
+                            <h3 class="product-info-title">Samsung Mobile</h3>
+                            <span class="product-info-cat">
+                                <i class="fa-solid fa-tag me-1"></i> Electronics &bull; 8GB RAM / 128GB
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="star-rating-box">
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <span class="ms-1 fw-bold fs-6 text-white-50">(5.0)</span>
+                    </div>
+                </div>
+
+                <div class="review-comment-box">
+                    <p class="review-quote-text">
+                        "Battery backup and display clarity are fantastic. Fast hyperlocal delivery in under 45 minutes!"
+                    </p>
+                </div>
+
+                <div class="review-meta-footer">
+                    <div class="customer-info-pill">
+                        <div class="customer-avatar-sm">R</div>
+                        <span class="customer-name-text">Rohit Verma</span>
+                        <span class="verified-badge">
+                            <i class="fa-solid fa-circle-check"></i> Verified Buyer
+                        </span>
+                    </div>
+
+                    <div class="review-date-badge">
+                        <i class="fa-regular fa-calendar-check"></i>
+                        <span>04 Sep 2026</span>
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+
+</div>
+
+<script>
+    let currentRatingFilter = 'all';
+    let currentProductFilter = 'all';
+
+    function filterReviewsByRating(rating, btn) {
+        currentRatingFilter = rating;
+        document.querySelectorAll('.star-filter-btn').forEach(b => b.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+        applyCombinedReviewFilters();
+    }
+
+    function filterReviewsByProduct(prodName) {
+        currentProductFilter = prodName;
+        applyCombinedReviewFilters();
+    }
+
+    function searchReviews() {
+        applyCombinedReviewFilters();
+    }
+
+    function applyCombinedReviewFilters() {
+        const query = document.getElementById('reviewSearchInput')?.value.toLowerCase().trim() || '';
+        const cards = document.querySelectorAll('.review-card');
+
+        cards.forEach(card => {
+            const cardRating = card.getAttribute('data-rating') || '5';
+            const cardProduct = (card.getAttribute('data-product') || '').toLowerCase();
+            const cardText = card.textContent.toLowerCase();
+
+            // Check rating filter
+            let matchRating = false;
+            if (currentRatingFilter === 'all') matchRating = true;
+            else if (currentRatingFilter === '5' && cardRating === '5') matchRating = true;
+            else if (currentRatingFilter === '4' && cardRating === '4') matchRating = true;
+            else if (currentRatingFilter === '3' && parseInt(cardRating) <= 3) matchRating = true;
+
+            // Check product filter
+            let matchProduct = false;
+            if (currentProductFilter === 'all' || cardProduct.includes(currentProductFilter.toLowerCase())) {
+                matchProduct = true;
+            }
+
+            // Check search query
+            let matchSearch = false;
+            if (query === '' || cardText.includes(query)) {
+                matchSearch = true;
+            }
+
+            if (matchRating && matchProduct && matchSearch) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+</script>

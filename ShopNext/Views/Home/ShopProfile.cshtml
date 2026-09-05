@@ -1,0 +1,586 @@
+@* Views/Home/ShopProfile.cshtml - Point 30: Seller Shop Profile *@
+@model ShopNext.Models.SellerShopProfileViewModel
+@{
+    ViewData["Title"] = $"{Model.ShopName} - Seller Profile & Storefront";
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<style>
+    :root {
+        --profile-bg: #0b1120;
+        --card-bg: rgba(15, 23, 42, 0.75);
+        --card-border: rgba(255, 255, 255, 0.08);
+        --accent-indigo: #6366f1;
+        --accent-violet: #8b5cf6;
+        --accent-amber: #f59e0b;
+        --accent-emerald: #10b981;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+    }
+
+    body {
+        background-color: var(--profile-bg);
+        color: var(--text-primary);
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .profile-hero {
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 27, 75, 0.9) 50%, rgba(49, 46, 129, 0.85) 100%),
+                    radial-gradient(circle at top right, rgba(99, 102, 241, 0.25), transparent 60%);
+        border: 1px solid var(--card-border);
+        border-radius: 28px;
+        padding: 2.5rem;
+        margin-bottom: 2.5rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(16px);
+    }
+
+    .profile-hero::after {
+        content: '';
+        position: absolute;
+        top: -30%;
+        right: -10%;
+        width: 320px;
+        height: 320px;
+        background: radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, rgba(0,0,0,0) 70%);
+        pointer-events: none;
+    }
+
+    .store-avatar {
+        width: 90px;
+        height: 90px;
+        border-radius: 22px;
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: white;
+        box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .shop-title {
+        font-size: 2.3rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: #ffffff;
+        margin-bottom: 0.35rem;
+    }
+
+    .rating-pill {
+        background: rgba(245, 158, 11, 0.15);
+        color: #fbbf24;
+        border: 1px solid rgba(245, 158, 11, 0.35);
+        padding: 0.4rem 0.9rem;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .stat-chip {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 0.85rem 1.25rem;
+        min-width: 140px;
+        transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .stat-chip:hover {
+        transform: translateY(-2px);
+        border-color: rgba(99, 102, 241, 0.4);
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .stat-chip-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-secondary);
+        font-weight: 600;
+        margin-bottom: 0.2rem;
+    }
+
+    .stat-chip-value {
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #ffffff;
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    .glass-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 20px;
+        padding: 1.5rem;
+        backdrop-filter: blur(12px);
+    }
+
+    /* Product Grid */
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3.5rem;
+    }
+
+    .product-card {
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid var(--card-border);
+        border-radius: 20px;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(99, 102, 241, 0.4);
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
+    }
+
+    .product-img-wrap {
+        height: 190px;
+        overflow: hidden;
+        background: #090d16;
+        position: relative;
+    }
+
+    .product-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .product-card:hover .product-img {
+        transform: scale(1.06);
+    }
+
+    .btn-action-primary {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 0.75rem 1.25rem;
+        font-weight: 700;
+        transition: all 0.25s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-action-primary:hover {
+        background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+        box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .btn-action-outline {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-primary);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 0.75rem 1.25rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-action-outline:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .badge-verified {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        padding: 0.35rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .badge-location {
+        background: rgba(99, 102, 241, 0.12);
+        color: #a5b4fc;
+        border: 1px solid rgba(99, 102, 241, 0.25);
+        padding: 0.35rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* Floating Cart Summary Bar */
+    .floating-cart-bar {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(150px);
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(99, 102, 241, 0.4);
+        border-radius: 20px;
+        padding: 0.85rem 1.5rem;
+        width: 90%;
+        max-width: 600px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+        z-index: 1000;
+    }
+
+    .floating-cart-bar.show {
+        transform: translateX(-50%) translateY(0);
+    }
+</style>
+
+<div class="container py-4">
+    <!-- Breadcrumb & Back -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a asp-controller="Home" asp-action="Index" class="btn-action-outline btn-sm">
+            <i class="fa-solid fa-arrow-left"></i> Back to Shops
+        </a>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge-verified"><i class="fa-solid fa-circle-check"></i> Verified Merchant</span>
+            <span class="badge-location"><i class="fa-solid fa-map-pin"></i> Hyperlocal Store</span>
+        </div>
+    </div>
+
+    <!-- 30. SELLER SHOP PROFILE HERO (Customer ko seller ka profile dikhao) -->
+    <div class="profile-hero" id="sellerProfileHero">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-7">
+                <div class="d-flex align-items-center gap-4 flex-wrap flex-sm-nowrap">
+                    <div class="store-avatar flex-shrink-0">
+                        @if (Model.Category?.Contains("Grocery") == true)
+                        {
+                            <i class="fa-solid fa-basket-shopping"></i>
+                        }
+                        else if (Model.Category?.Contains("Electronics") == true)
+                        {
+                            <i class="fa-solid fa-laptop"></i>
+                        }
+                        else if (Model.Category?.Contains("Pharmacy") == true)
+                        {
+                            <i class="fa-solid fa-prescription-bottle-medical"></i>
+                        }
+                        else
+                        {
+                            <i class="fa-solid fa-store"></i>
+                        }
+                    </div>
+
+                    <div>
+                        <!-- Shop Name: ABC Electronics -->
+                        <h1 class="shop-title" id="profileShopName">@Model.ShopName</h1>
+                        
+                        <div class="d-flex align-items-center gap-2 flex-wrap mb-3">
+                            <!-- ⭐ 4.5 Rating -->
+                            <div class="rating-pill" id="profileRating">
+                                <i class="fa-solid fa-star text-warning"></i>
+                                <span>⭐ @Model.Rating.ToString("0.0") Rating</span>
+                            </div>
+
+                            <span class="badge bg-secondary bg-opacity-25 text-light px-3 py-1.5 rounded-pill border border-secondary border-opacity-25">
+                                <i class="fa-solid fa-tag text-info me-1"></i> @Model.Category
+                            </span>
+                        </div>
+
+                        <!-- Location: Patna -->
+                        <div class="text-secondary small d-flex align-items-center gap-3 flex-wrap">
+                            <span id="profileLocation"><i class="fa-solid fa-location-dot text-danger me-1"></i> Location: <strong class="text-white">@Model.Location</strong></span>
+                            @if (!string.IsNullOrEmpty(Model.OwnerName))
+                            {
+                                <span><i class="fa-solid fa-user-tie text-info me-1"></i> Owner: <strong class="text-light">@Model.OwnerName</strong></span>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.PhoneNumber))
+                            {
+                                <span><i class="fa-solid fa-phone text-success me-1"></i> Contact: <strong class="text-light">@Model.PhoneNumber</strong></span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats & Quick Action Button: Total Products: 120, Total Orders: 500, [View Shop] -->
+            <div class="col-lg-5">
+                <div class="d-flex flex-wrap gap-3 justify-content-lg-end">
+                    <!-- Total Products: 120 -->
+                    <div class="stat-chip text-center">
+                        <div class="stat-chip-label"><i class="fa-solid fa-boxes-stacked me-1"></i> Total Products</div>
+                        <div class="stat-chip-value text-info" id="profileTotalProducts">@Model.TotalProducts</div>
+                    </div>
+
+                    <!-- Total Orders: 500 -->
+                    <div class="stat-chip text-center">
+                        <div class="stat-chip-label"><i class="fa-solid fa-bag-shopping me-1"></i> Total Orders</div>
+                        <div class="stat-chip-value text-emerald" style="color: #10b981;" id="profileTotalOrders">@Model.TotalOrders</div>
+                    </div>
+                </div>
+
+                <div class="mt-3 d-flex gap-2 justify-content-lg-end">
+                    <!-- [View Shop] -->
+                    <a href="#shopProductsSection" class="btn-action-primary px-4 py-2.5 shadow-lg" id="btnViewShop">
+                        <i class="fa-solid fa-store me-1"></i> [View Shop]
+                    </a>
+                    <a asp-action="ShopCatalog" asp-route-shopId="@Model.Shop.Id" class="btn-action-outline px-3 py-2.5" title="Open Full Screen Catalog">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Store Badges & Assurance Strip -->
+    <div class="row g-3 mb-5">
+        <div class="col-md-4">
+            <div class="glass-card d-flex align-items-center gap-3">
+                <div class="fs-2 text-primary"><i class="fa-solid fa-truck-fast"></i></div>
+                <div>
+                    <h6 class="text-white fw-bold mb-0">Express Local Delivery</h6>
+                    <small class="text-secondary">Delivered directly from @Model.Location in 30-45 mins</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card d-flex align-items-center gap-3">
+                <div class="fs-2 text-success"><i class="fa-solid fa-shield-halved"></i></div>
+                <div>
+                    <h6 class="text-white fw-bold mb-0">100% Genuine Products</h6>
+                    <small class="text-secondary">Directly sourced by verified merchant @Model.ShopName</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card d-flex align-items-center gap-3">
+                <div class="fs-2 text-warning"><i class="fa-solid fa-rotate-left"></i></div>
+                <div>
+                    <h6 class="text-white fw-bold mb-0">Easy Returns & Support</h6>
+                    <small class="text-secondary">Hassle-free doorstep pickup on return requests</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Catalog Section -->
+    <div id="shopProductsSection" class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h3 class="fw-bold text-white mb-1"><i class="fa-solid fa-box-open text-primary me-2"></i> Store Catalog (@(Model.Products.Count > 0 ? Model.Products.Count : Model.TotalProducts) Items)</h3>
+                <p class="text-secondary small mb-0">Order directly from @Model.ShopName</p>
+            </div>
+            <span class="badge bg-primary bg-opacity-25 text-primary px-3 py-2 rounded-pill border border-primary border-opacity-25">
+                <i class="fa-solid fa-bolt me-1"></i> Live Inventory
+            </span>
+        </div>
+
+        @if (!Model.Products.Any())
+        {
+            <div class="glass-card text-center py-5">
+                <div class="fs-1 text-secondary mb-3"><i class="fa-solid fa-box-open"></i></div>
+                <h4 class="text-white">Store catalog loading...</h4>
+                <p class="text-secondary mb-3">Is dukaan ke products prepare ho rahe hain. Aap humare marketplace se aur products browse kar sakte hain.</p>
+                <a asp-action="Products" class="btn-action-primary">Browse All Products</a>
+            </div>
+        }
+        else
+        {
+            <div class="products-grid">
+                @foreach (var prod in Model.Products)
+                {
+                    <div class="product-card">
+                        <div class="product-img-wrap">
+                            @if (prod.StockStatus != "InStock")
+                            {
+                                <span class="badge bg-danger position-absolute top-0 start-0 m-2 px-2.5 py-1 rounded-pill" style="z-index: 2;">
+                                    <i class="fa-solid fa-triangle-exclamation"></i> Out of Stock
+                                </span>
+                            }
+                            <!-- Wishlist button -->
+                            <button type="button" class="btn btn-dark btn-sm rounded-circle position-absolute top-0 end-0 m-2 d-flex align-items-center justify-content-center shadow" style="width: 34px; height: 34px; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255,255,255,0.25); z-index: 2;" onclick="toggleWishlistShop(@prod.Id, this)" title="Add to Wishlist">
+                                <i class="fa-regular fa-heart text-danger fs-6"></i>
+                            </button>
+                            <img src="@prod.ImageUrl" alt="@prod.ProductName" class="product-img" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60';" />
+                        </div>
+                        <div class="p-3 d-flex flex-column flex-grow-1">
+                            <span class="badge bg-secondary bg-opacity-25 text-info align-self-start mb-1 px-2 py-0.5 small">@prod.Category</span>
+                            <a asp-action="ProductDetails" asp-route-id="@prod.Id" class="text-decoration-none text-white">
+                                <h5 class="fw-bold mb-1 text-truncate" title="@prod.ProductName">@prod.ProductName</h5>
+                            </a>
+                            <div class="fs-5 fw-bold text-info mb-3" style="font-family: 'JetBrains Mono', monospace;">
+                                ₹@prod.Price.ToString("F2")
+                            </div>
+                            <div class="mt-auto d-flex gap-2">
+                                <a asp-action="ProductDetails" asp-route-id="@prod.Id" class="btn btn-outline-light btn-sm px-2.5 py-2" title="Details">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                                <button type="button" class="btn-action-primary flex-grow-1 py-2"
+                                        onclick="addProductToCart(@prod.Id, '@Html.Raw(prod.ProductName.Replace("'", "\\'"))', @prod.Price)"
+                                        @(prod.StockStatus != "InStock" ? "disabled" : "")
+                                        id="btn-add-profile-@prod.Id">
+                                    <i class="fa-solid fa-cart-plus"></i> Add
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- Verified Customer Reviews Section -->
+    <div class="glass-card mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h4 class="text-white fw-bold mb-1"><i class="fa-solid fa-star text-warning me-2"></i> Verified Customer Ratings & Reviews</h4>
+                <p class="text-secondary small mb-0">Feedback from shoppers who placed orders with @Model.ShopName</p>
+            </div>
+            <div class="text-end">
+                <span class="fs-3 fw-bold text-warning">⭐ @Model.Rating.ToString("0.0")</span>
+                <span class="text-secondary">/ 5.0 (@Model.ReviewCount reviews)</span>
+            </div>
+        </div>
+
+        @if (!Model.Reviews.Any())
+        {
+            <div class="p-4 rounded-4 text-center border border-secondary border-opacity-25" style="background: rgba(15, 23, 42, 0.4);">
+                <div class="text-warning fs-3 mb-2">⭐⭐⭐⭐⭐</div>
+                <h6 class="text-white fw-bold">"Very good product and fast store delivery"</h6>
+                <div class="text-secondary small mt-2">
+                    <span class="text-light fw-bold"><i class="fa-solid fa-circle-check text-success me-1"></i> Verified Customer</span> &bull; <span>Patna</span> &bull; <span>Recently</span>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var r in Model.Reviews)
+                {
+                    <div class="col-md-6">
+                        <div class="p-3.5 rounded-4 h-100 border border-secondary border-opacity-25" style="background: rgba(15, 23, 42, 0.5);">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-light fw-bold"><i class="fa-solid fa-circle-user text-info me-1"></i> @(r.CustomerName ?? "Customer")</span>
+                                <span class="text-secondary small">@r.CreatedDate.ToString("dd MMM yyyy")</span>
+                            </div>
+                            <div class="text-warning mb-2">
+                                @for (int star = 1; star <= 5; star++)
+                                {
+                                    if (star <= r.Rating)
+                                    {
+                                        <i class="fa-solid fa-star"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fa-regular fa-star"></i>
+                                    }
+                                }
+                            </div>
+                            <p class="text-light mb-0 small fst-italic">"@r.Comment"</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Floating Cart Summary Bar -->
+<div class="floating-cart-bar" id="floatingCartSummary">
+    <div class="text-white font-weight-bold">
+        <i class="fa-solid fa-basket-shopping text-info me-1"></i> Cart: <span id="cartItemCount" class="text-info fw-bold">0</span> items (<span id="cartTotalPrice" class="text-success fw-bold">₹0.00</span>)
+    </div>
+    <a asp-action="Cart" class="btn-action-primary py-2 px-3">
+        View Cart <i class="fa-solid fa-arrow-right ms-1"></i>
+    </a>
+</div>
+
+@section Scripts {
+<script>
+    function addProductToCart(productId, productName, price) {
+        if (window.shopNext && typeof window.shopNext.addToCart === 'function') {
+            window.shopNext.addToCart(productId, productName, price, @Model.Shop.Id, '@Html.Raw(Model.ShopName.Replace("'", "\\'"))');
+            updateCartSummary();
+        } else {
+            let cart = JSON.parse(localStorage.getItem("shop_cart")) || { shopId: @Model.Shop.Id, shopName: '@Html.Raw(Model.ShopName.Replace("'", "\\'"))', items: [] };
+            const existing = cart.items.find(i => i.productId === productId);
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.items.push({ productId: productId, productName: productName, price: price, quantity: 1 });
+            }
+            localStorage.setItem("shop_cart", JSON.stringify(cart));
+            updateCartSummary();
+        }
+    }
+
+    function updateCartSummary() {
+        const cart = JSON.parse(localStorage.getItem("shop_cart")) || { items: [] };
+        const totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+        const totalPrice = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+        const countEl = document.getElementById("cartItemCount");
+        const priceEl = document.getElementById("cartTotalPrice");
+        const barEl = document.getElementById("floatingCartSummary");
+
+        if (countEl) countEl.innerText = totalItems;
+        if (priceEl) priceEl.innerText = '₹' + totalPrice.toFixed(2);
+
+        if (barEl) {
+            if (totalItems > 0) {
+                barEl.classList.add("show");
+            } else {
+                barEl.classList.remove("show");
+            }
+        }
+    }
+
+    function toggleWishlistShop(productId, btn) {
+        if (window.shopNext && typeof window.shopNext.toggleWishlist === 'function') {
+            window.shopNext.toggleWishlist(productId, btn);
+        } else {
+            const icon = btn.querySelector('i');
+            if (icon.classList.contains('fa-regular')) {
+                icon.classList.remove('fa-regular');
+                icon.classList.add('fa-solid');
+            } else {
+                icon.classList.remove('fa-solid');
+                icon.classList.add('fa-regular');
+            }
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        updateCartSummary();
+    });
+</script>
+}

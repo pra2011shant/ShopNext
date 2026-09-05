@@ -1,0 +1,2794 @@
+@* Views/Vendor/Dashboard.cshtml *@
+@model ShopNext.Models.SellerDashboardViewModel
+@{
+    ViewData["Title"] = "Seller Sidebar Dashboard - ShopNext";
+    var shopName = ViewBag.ShopName as string ?? Model.Shop?.ShopName ?? "My Store";
+    var ownerName = Model.Shop?.OwnerName ?? "Rahul";
+    var email = Model.Shop?.Email ?? "merchant@shopnext.local";
+    var phone = Model.Shop?.PhoneNumber ?? "9876543210";
+    var address = Model.Shop?.Address ?? "Main Market";
+    var location = $"{Model.Shop?.City}, {Model.Shop?.State} - {Model.Shop?.Pincode}".Trim(' ', ',', '-');
+    if (string.IsNullOrWhiteSpace(location)) { location = "New Delhi, Delhi - 110001"; }
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+        --card-bg: rgba(30, 41, 59, 0.78);
+        --sidebar-bg: rgba(15, 23, 42, 0.88);
+        --glass-border: rgba(255, 255, 255, 0.08);
+        --text-muted: #64748b;
+        --text-light: #1e293b;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --info-color: #3b82f6;
+    }
+
+    body {
+        background: transparent;
+        color: var(--text-light);
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .seller-layout-wrapper {
+        display: flex;
+        gap: 1.75rem;
+        padding: 1.5rem 0 3rem;
+        animation: fadeIn 0.6s ease-out;
+        min-height: 88vh;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* =========================================
+       19. SELLER SIDEBAR
+       ========================================= */
+    .seller-sidebar {
+        width: 290px;
+        flex-shrink: 0;
+        background: var(--sidebar-bg);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        padding: 1.5rem 1.1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+        height: fit-content;
+        position: sticky;
+        top: 20px;
+    }
+
+    .sidebar-store-card {
+        background: rgba(30, 41, 59, 0.6);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 1.15rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 0.5rem;
+    }
+
+    .store-avatar {
+        width: 46px;
+        height: 46px;
+        border-radius: 12px;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+    }
+
+    .store-meta {
+        overflow: hidden;
+    }
+
+    .store-meta-name {
+        font-weight: 700;
+        font-size: 1.02rem;
+        color: white;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.2;
+    }
+
+    .store-meta-badge {
+        font-size: 0.74rem;
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        padding: 0.15rem 0.55rem;
+        border-radius: 50px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 4px;
+    }
+
+    .sidebar-nav-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .sidebar-item {
+        position: relative;
+    }
+
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #94a3b8;
+        text-decoration: none;
+        padding: 0.7rem 1rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.93rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .sidebar-link-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .sidebar-link i.nav-icon {
+        width: 18px;
+        font-size: 1rem;
+        text-align: center;
+        color: #64748b;
+        transition: color 0.2s ease;
+    }
+
+    .sidebar-link:hover {
+        color: white;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .sidebar-link:hover i.nav-icon {
+        color: #a855f7;
+    }
+
+    .sidebar-link.active {
+        color: white;
+        background: rgba(99, 102, 241, 0.22);
+        border: 1px solid rgba(99, 102, 241, 0.4);
+    }
+
+    .sidebar-link.active i.nav-icon {
+        color: #a855f7;
+    }
+
+    .sidebar-badge {
+        font-size: 0.72rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 50px;
+        font-weight: 700;
+    }
+
+    /* Submenu / Tree styling */
+    .sidebar-tree-toggle i.chevron-icon {
+        font-size: 0.75rem;
+        transition: transform 0.3s ease;
+    }
+
+    .sidebar-tree-toggle.open i.chevron-icon {
+        transform: rotate(90deg);
+    }
+
+    .sidebar-submenu {
+        list-style: none;
+        padding: 0.3rem 0 0.3rem 1.6rem;
+        margin: 0;
+        display: none;
+        flex-direction: column;
+        gap: 3px;
+        position: relative;
+    }
+
+    .sidebar-submenu::before {
+        content: '';
+        position: absolute;
+        left: 24px;
+        top: 6px;
+        bottom: 6px;
+        width: 2px;
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .sidebar-submenu.show {
+        display: flex;
+    }
+
+    .submenu-link {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #94a3b8;
+        text-decoration: none;
+        padding: 0.48rem 0.8rem;
+        border-radius: 9px;
+        font-size: 0.87rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+
+    .submenu-tree-symbol {
+        color: #64748b;
+        font-family: monospace;
+        font-size: 0.95rem;
+        flex-shrink: 0;
+    }
+
+    .submenu-link:hover {
+        color: white;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .submenu-link.active {
+        color: #c084fc;
+        background: rgba(168, 85, 247, 0.15);
+        font-weight: 600;
+    }
+
+    .sidebar-divider {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.06);
+        margin: 0.5rem 0;
+    }
+
+    .sidebar-logout-link {
+        color: #fca5a5 !important;
+        border: 1px solid rgba(239, 68, 68, 0.22);
+        background: rgba(239, 68, 68, 0.06);
+        margin-top: 0.4rem;
+    }
+
+    .sidebar-logout-link:hover {
+        background: var(--danger-color) !important;
+        color: white !important;
+        border-color: transparent !important;
+    }
+
+    .sidebar-logout-link:hover i.nav-icon {
+        color: white !important;
+    }
+
+    /* =========================================
+       MAIN CONTENT CONTAINER
+       ========================================= */
+    .seller-main-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .tab-panel {
+        display: none;
+        animation: fadeIn 0.4s ease-out;
+    }
+
+    .tab-panel.active {
+        display: block;
+    }
+
+    /* Dashboard Header Banner */
+    .dashboard-hero {
+        background: var(--card-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 22px;
+        padding: 1.75rem 2rem;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    }
+
+    .hero-text-block h1 {
+        font-size: 1.9rem;
+        font-weight: 800;
+        margin-bottom: 0.35rem;
+        letter-spacing: -0.02em;
+        color: white;
+    }
+
+    .btn-quick-primary {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        padding: 0.7rem 1.4rem;
+        border-radius: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 6px 16px rgba(168, 85, 247, 0.3);
+    }
+
+    .btn-quick-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 22px rgba(168, 85, 247, 0.45);
+        color: white;
+    }
+
+    /* Metric Grid (6 Key Cards from step 18) */
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+
+    .metric-card {
+        background: var(--card-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 1.4rem 1.6rem;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .metric-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(99, 102, 241, 0.35);
+        box-shadow: 0 16px 35px rgba(0, 0, 0, 0.25);
+    }
+
+    .metric-icon-wrap {
+        width: 48px;
+        height: 48px;
+        border-radius: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+        margin-bottom: 1rem;
+    }
+
+    .metric-title {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-bottom: 0.3rem;
+    }
+
+    .metric-val {
+        font-size: 2rem;
+        font-weight: 800;
+        color: white;
+        letter-spacing: -0.02em;
+        line-height: 1.1;
+    }
+
+    .metric-subtitle {
+        font-size: 0.78rem;
+        margin-top: 0.45rem;
+        color: #94a3b8;
+    }
+
+    .metric-products .metric-icon-wrap { background: rgba(99, 102, 241, 0.18); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.35); }
+    .metric-orders .metric-icon-wrap { background: rgba(59, 130, 246, 0.18); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.35); }
+    .metric-pending .metric-icon-wrap { background: rgba(245, 158, 11, 0.18); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); }
+    .metric-sales .metric-icon-wrap { background: rgba(16, 185, 129, 0.18); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }
+    .metric-returns .metric-icon-wrap { background: rgba(249, 115, 22, 0.18); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.35); }
+    .metric-lowstock .metric-icon-wrap { background: rgba(239, 68, 68, 0.18); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); }
+
+    /* Glass Panels */
+    .glass-panel {
+        background: var(--card-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 22px;
+        padding: 1.75rem 2rem;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        margin-bottom: 2rem;
+    }
+
+    .panel-header-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding-bottom: 1rem;
+    }
+
+    .panel-header-flex h3 {
+        font-size: 1.35rem;
+        font-weight: 700;
+        margin-bottom: 0;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* Orders & Products Tables */
+    .custom-table {
+        width: 100%;
+        color: var(--text-light);
+        margin-bottom: 0;
+    }
+
+    .custom-table th {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding-bottom: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+    }
+
+    .custom-table td {
+        padding: 1rem 0.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        font-size: 0.93rem;
+        vertical-align: middle;
+        color: #e2e8f0;
+    }
+
+    .custom-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .badge-status {
+        padding: 0.28rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.76rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .status-delivered { background: rgba(16, 185, 129, 0.18); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }
+    .status-pending { background: rgba(245, 158, 11, 0.18); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); }
+    .status-shipped { background: rgba(59, 130, 246, 0.18); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.35); }
+    .status-return { background: rgba(249, 115, 22, 0.18); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.35); }
+    .status-cancelled { background: rgba(239, 68, 68, 0.18); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); }
+
+    @@media (max-width: 992px) {
+        .seller-layout-wrapper {
+            flex-direction: column;
+        }
+        .seller-sidebar {
+            width: 100%;
+            position: static;
+        }
+    }
+</style>
+
+<div class="container-fluid px-lg-4">
+    <div class="seller-layout-wrapper">
+        
+        <!-- ====================================================
+             19. SELLER SIDEBAR DASHBOARD NAVIGATION
+             ========================================= -->
+        <aside class="seller-sidebar" id="sellerSidebar">
+            <!-- Merchant Brand Card -->
+            <div class="sidebar-store-card">
+                <div class="store-avatar">
+                    <i class="fa-solid fa-store"></i>
+                </div>
+                <div class="store-meta">
+                    <div class="store-meta-name" title="@shopName">@shopName</div>
+                    <span class="store-meta-badge">
+                        <i class="fa-solid fa-circle-check"></i> Active Seller
+                    </span>
+                </div>
+            </div>
+
+            <!-- Navigation Links according to Step 19 Spec -->
+            <ul class="sidebar-nav-list" id="sellerSidebarNav">
+                <!-- Dashboard Home -->
+                <li class="sidebar-item">
+                    <a class="sidebar-link active" onclick="switchSellerTab('tab-dashboard')" id="nav-dashboard">
+                        <span class="sidebar-link-content">
+                            <i class="fa-solid fa-chart-pie nav-icon"></i>
+                            <span>Dashboard</span>
+                        </span>
+                    </a>
+                </li>
+
+                <!-- Products (Collapsible Tree) -->
+                <li class="sidebar-item">
+                    <a class="sidebar-link sidebar-tree-toggle open" onclick="toggleSubmenu('submenu-products', this)" id="nav-products-parent">
+                        <span class="sidebar-link-content">
+                            <i class="fa-solid fa-box-open nav-icon"></i>
+                            <span>Products</span>
+                        </span>
+                        <i class="fa-solid fa-chevron-right chevron-icon"></i>
+                    </a>
+                    <ul class="sidebar-submenu show" id="submenu-products">
+                        <li>
+                            <a class="submenu-link" onclick="switchSellerTab('tab-all-products')" id="subnav-all-products">
+                                <span class="submenu-tree-symbol">├──</span> All Products
+                            </a>
+                        </li>
+                        <li>
+                            <a class="submenu-link" onclick="switchSellerTab('tab-add-product')" id="subnav-add-product">
+                                <span class="submenu-tree-symbol">├──</span> Add Product
+                            </a>
+                        </li>
+                        <li>
+                            <a class="submenu-link" onclick="switchSellerTab('tab-categories')" id="subnav-categories">
+                                <span class="submenu-tree-symbol">├──</span> Categories
+                            </a>
+                        </li>
+                        <li>
+                            <a class="submenu-link" onclick="switchSellerTab('tab-stock')" id="subnav-stock">
+                                <span class="submenu-tree-symbol">└──</span> Stock
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- Orders (Collapsible Tree) -->
+                <li class="sidebar-item">
+                    <a class="sidebar-link sidebar-tree-toggle open" onclick="toggleSubmenu('submenu-orders', this)" id="nav-orders-parent">
+                        <span class="sidebar-link-content">
+                            <i class="fa-solid fa-receipt nav-icon"></i>
+                            <span>Orders</span>
+                        </span>
+                        <i class="fa-solid fa-chevron-right chevron-icon"></i>
+                    </a>
+                    <ul class="sidebar-submenu show" id="submenu-orders">
+                        <li>
+                            <a class="submenu-link" onclick="switchSellerTab('tab-all-orders')" id="subnav-all-orders">
+                                <span class="submenu-tree-symbol">├──</span> All Orders
+                            </a>
+                        </li>
+                        <li>
+                            <a class="submenu-link" onclick="switchSellerTab('tab-new-orders')" id="subnav-new-orders">
+                                <span class="submenu-tree-symbol">├──</span> New Orders
+                            </a>
+                        </li>
+                        <li>
+                            <a class="submenu-link" onclick="switchSellerTab('tab-processing')" id="subnav-processing">
+                                <span class="submenu-tree-symbol">├──</span> Processing
+                            </a>
+                        </li>
+                        <li>
+                            <a class="submenu-link" onclick="switchSellerTab('tab-shipped')" id="subnav-shipped">
+                                <span class="submenu-tree-symbol">├──</span> Shipped
+                            </a>
+                        </li>
+                        <li>
+                            <a class="submenu-link" onclick="switchSellerTab('tab-delivered')" id="subnav-delivered">
+                                <span class="submenu-tree-symbol">└──</span> Delivered
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- Returns -->
+                <li class="sidebar-item">
+                    <a class="sidebar-link" onclick="switchSellerTab('tab-returns')" id="nav-returns">
+                        <span class="sidebar-link-content">
+                            <i class="fa-solid fa-rotate-left nav-icon text-warning"></i>
+                            <span>Returns</span>
+                        </span>
+                        <span class="sidebar-badge bg-warning text-dark">@Model.PendingReturns</span>
+                    </a>
+                </li>
+
+                <!-- Reviews -->
+                <li class="sidebar-item">
+                    <a class="sidebar-link" onclick="switchSellerTab('tab-reviews')" id="nav-reviews">
+                        <span class="sidebar-link-content">
+                            <i class="fa-solid fa-star nav-icon text-warning"></i>
+                            <span>Reviews</span>
+                        </span>
+                        <span class="sidebar-badge bg-dark border border-secondary text-light">4.9 ★</span>
+                    </a>
+                </li>
+
+                <!-- Sales & Earnings -->
+                <li class="sidebar-item">
+                    <a class="sidebar-link" onclick="switchSellerTab('tab-earnings')" id="nav-earnings">
+                        <span class="sidebar-link-content">
+                            <i class="fa-solid fa-wallet nav-icon text-success"></i>
+                            <span>Sales & Earnings</span>
+                        </span>
+                    </a>
+                </li>
+
+                <!-- Coupons -->
+                <li class="sidebar-item">
+                    <a class="sidebar-link" onclick="switchSellerTab('tab-coupons')" id="nav-coupons">
+                        <span class="sidebar-link-content">
+                            <i class="fa-solid fa-ticket nav-icon text-info"></i>
+                            <span>Coupons</span>
+                        </span>
+                    </a>
+                </li>
+
+                <div class="sidebar-divider"></div>
+
+                <!-- Shop Profile -->
+                <li class="sidebar-item">
+                    <a class="sidebar-link" onclick="switchSellerTab('tab-profile')" id="nav-profile">
+                        <span class="sidebar-link-content">
+                            <i class="fa-solid fa-id-card nav-icon"></i>
+                            <span>Shop Profile</span>
+                        </span>
+                    </a>
+                </li>
+
+                <!-- Notifications -->
+                <li class="sidebar-item">
+                    <a class="sidebar-link" onclick="switchSellerTab('tab-notifications')" id="nav-notifications">
+                        <span class="sidebar-link-content">
+                            <i class="fa-solid fa-bell nav-icon"></i>
+                            <span>Notifications</span>
+                        </span>
+                        <span class="sidebar-badge bg-primary text-white">3</span>
+                    </a>
+                </li>
+
+                <!-- Settings -->
+                <li class="sidebar-item">
+                    <a class="sidebar-link" onclick="switchSellerTab('tab-settings')" id="nav-settings">
+                        <span class="sidebar-link-content">
+                            <i class="fa-solid fa-gear nav-icon"></i>
+                            <span>Settings</span>
+                        </span>
+                    </a>
+                </li>
+
+                <!-- Logout -->
+                <li class="sidebar-item">
+                    <a asp-controller="Vendor" asp-action="Logout" class="sidebar-link sidebar-logout-link" id="nav-logout">
+                        <span class="sidebar-link-content">
+                            <i class="fa-solid fa-arrow-right-from-bracket nav-icon"></i>
+                            <span>Logout</span>
+                        </span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- ====================================================
+             MAIN CONTENT PANELS
+             ========================================= -->
+        <main class="seller-main-content">
+            
+            <!-- 1. TAB: DASHBOARD (Overview with 6 key metrics & Recent Orders) -->
+            <div class="tab-panel active" id="tab-dashboard">
+                <!-- Header Banner -->
+                <div class="dashboard-hero">
+                    <div class="hero-text-block">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <span class="badge bg-success bg-opacity-25 text-success border border-success px-3 py-1 rounded-pill">
+                                <i class="fa-solid fa-circle-check me-1"></i> Verified Merchant
+                            </span>
+                            <span class="text-muted small">
+                                <i class="fa-solid fa-user me-1 text-primary"></i> Owner: <strong class="text-light">@ownerName</strong>
+                            </span>
+                        </div>
+                        <h1>SELLER DASHBOARD</h1>
+                        <p class="text-muted mb-0">Overview of your store performance, orders, and sales metrics.</p>
+                    </div>
+                    <div>
+                        <button type="button" class="btn-quick-primary" onclick="switchSellerTab('tab-add-product')">
+                            <i class="fa-solid fa-plus-circle"></i> Add Product
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 18. Seller Dashboard - The 6 Metric Cards -->
+                <div class="metrics-grid">
+                    <div class="metric-card metric-products" onclick="switchSellerTab('tab-all-products')" style="cursor: pointer;">
+                        <div class="metric-icon-wrap"><i class="fa-solid fa-boxes-stacked"></i></div>
+                        <div class="metric-title">Total Products</div>
+                        <div class="metric-val">@Model.TotalProducts</div>
+                        <div class="metric-subtitle"><i class="fa-solid fa-circle-check text-success me-1"></i> Active in catalog</div>
+                    </div>
+
+                    <div class="metric-card metric-orders" onclick="switchSellerTab('tab-all-orders')" style="cursor: pointer;">
+                        <div class="metric-icon-wrap"><i class="fa-solid fa-cart-shopping"></i></div>
+                        <div class="metric-title">Total Orders</div>
+                        <div class="metric-val">@Model.TotalOrders</div>
+                        <div class="metric-subtitle"><i class="fa-solid fa-arrow-trend-up text-primary me-1"></i> Lifetime transactions</div>
+                    </div>
+
+                    <div class="metric-card metric-pending" onclick="switchSellerTab('tab-new-orders')" style="cursor: pointer;">
+                        <div class="metric-icon-wrap"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                        <div class="metric-title">Pending Orders</div>
+                        <div class="metric-val text-warning">@Model.PendingOrders</div>
+                        <div class="metric-subtitle"><i class="fa-solid fa-bolt text-warning me-1"></i> Requires packing/dispatch</div>
+                    </div>
+
+                    <div class="metric-card metric-sales" onclick="switchSellerTab('tab-earnings')" style="cursor: pointer;">
+                        <div class="metric-icon-wrap"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                        <div class="metric-title">Total Sales</div>
+                        <div class="metric-val text-success">₹@Model.TotalSales.ToString("N0")</div>
+                        <div class="metric-subtitle"><i class="fa-solid fa-wallet text-success me-1"></i> Gross merchant revenue</div>
+                    </div>
+
+                    <div class="metric-card metric-returns" onclick="switchSellerTab('tab-returns')" style="cursor: pointer;">
+                        <div class="metric-icon-wrap"><i class="fa-solid fa-rotate-left"></i></div>
+                        <div class="metric-title">Pending Returns</div>
+                        <div class="metric-val" style="color: #fb923c;">@Model.PendingReturns</div>
+                        <div class="metric-subtitle"><i class="fa-solid fa-triangle-exclamation text-warning me-1"></i> Awaiting pickup/refund</div>
+                    </div>
+
+                    <div class="metric-card metric-lowstock" onclick="switchSellerTab('tab-stock')" style="cursor: pointer;">
+                        <div class="metric-icon-wrap"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div class="metric-title">Low Stock</div>
+                        <div class="metric-val text-danger">@Model.LowStock</div>
+                        <div class="metric-subtitle"><i class="fa-solid fa-cubes-stacked text-danger me-1"></i> Items need restocking</div>
+                    </div>
+                </div>
+
+                <!-- Recent Orders Section -->
+                <div class="glass-panel">
+                    <div class="panel-header-flex">
+                        <div>
+                            <h3><i class="fa-solid fa-receipt text-primary"></i> Recent Orders</h3>
+                            <span class="text-muted small">Latest incoming customer orders for your store</span>
+                        </div>
+                        <button type="button" class="btn btn-outline-light btn-sm px-3 py-1 rounded-pill" onclick="switchSellerTab('tab-all-orders')">
+                            View All <i class="fa-solid fa-chevron-right ms-1"></i>
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Customer</th>
+                                    <th>Items Summary</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.RecentOrders != null && Model.RecentOrders.Any())
+                                {
+                                    foreach (var order in Model.RecentOrders.Take(5))
+                                    {
+                                        var statusClass = order.OrderStatus switch
+                                        {
+                                            "Delivered" or "Completed" => "status-delivered",
+                                            "Placed" or "Confirmed" or "Packed" or "Pending" => "status-pending",
+                                            "Shipped" or "Dispatched" or "OutForDelivery" => "status-shipped",
+                                            "Return Requested" or "Return Approved" => "status-return",
+                                            _ => "status-pending"
+                                        };
+                                        var itemsText = order.OrderItems.Any() 
+                                            ? string.Join(", ", order.OrderItems.Select(i => $"{i.Product?.ProductName ?? "Item"} (x{i.Quantity})")) 
+                                            : "Standard Items";
+
+                                        <tr>
+                                            <td><strong class="text-white">#ORD@(order.Id + 1000)</strong></td>
+                                            <td>
+                                                <div>@(order.Customer?.Name ?? "Customer")</div>
+                                                <div class="text-muted small">@(order.Customer?.PhoneNumber ?? "98XXXXXXXX")</div>
+                                            </td>
+                                            <td><span class="text-truncate d-inline-block" style="max-width: 220px;">@itemsText</span></td>
+                                            <td><strong class="text-white">₹@order.TotalAmount.ToString("N2")</strong></td>
+                                            <td><span class="badge-status @statusClass">@order.OrderStatus</span></td>
+                                            <td class="text-muted small">@order.CreatedDate.ToString("dd MMM yyyy")</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-4">No orders found for this shop.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. TAB: ALL PRODUCTS (Products ├── All Products) -->
+            <div class="tab-panel" id="tab-all-products">
+                <div class="glass-panel">
+                    <div class="panel-header-flex">
+                        <div>
+                            <h3><i class="fa-solid fa-boxes-stacked text-primary"></i> All Products</h3>
+                            <span class="text-muted small">Catalog items published under @shopName</span>
+                        </div>
+                        <button type="button" class="btn-quick-primary" onclick="switchSellerTab('tab-add-product')">
+                            <i class="fa-solid fa-plus"></i> Add Product
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Stock Status</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.Products != null && Model.Products.Any())
+                                {
+                                    foreach (var p in Model.Products)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center gap-3">
+                                                    <img src="@p.ImageUrl" alt="@p.ProductName" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; background: #0f172a;" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&auto=format&fit=crop&q=60';" />
+                                                    <div>
+                                                        <strong class="text-white">@p.ProductName</strong>
+                                                        <div class="text-muted small">ID: #PRD-@p.Id</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>@(string.IsNullOrEmpty(p.Category) ? "General" : p.Category)</td>
+                                            <td><strong class="text-white">₹@p.Price.ToString("N2")</strong></td>
+                                            <td>
+                                                @if (p.StockStatus == "InStock")
+                                                {
+                                                    <span class="badge bg-success bg-opacity-25 text-success border border-success px-2 py-1 rounded-pill">In Stock</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger bg-opacity-25 text-danger border border-danger px-2 py-1 rounded-pill">Out of Stock</span>
+                                                }
+                                            </td>
+                                            <td class="text-muted small">@p.CreatedDate.ToString("dd MMM yyyy")</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-3">
+                                                <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover;" />
+                                                <div><strong class="text-white">Sample Premium Wireless Earbuds</strong><div class="text-muted small">#PRD-101</div></div>
+                                            </div>
+                                        </td>
+                                        <td>Electronics</td>
+                                        <td><strong class="text-white">₹2,499.00</strong></td>
+                                        <td><span class="badge bg-success bg-opacity-25 text-success border border-success px-2 py-1 rounded-pill">In Stock</span></td>
+                                        <td class="text-muted small">05 Sep 2026</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-3">
+                                                <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover;" />
+                                                <div><strong class="text-white">Smart Fitness Watch AMOLED</strong><div class="text-muted small">#PRD-102</div></div>
+                                            </div>
+                                        </td>
+                                        <td>Electronics</td>
+                                        <td><strong class="text-white">₹3,999.00</strong></td>
+                                        <td><span class="badge bg-success bg-opacity-25 text-success border border-success px-2 py-1 rounded-pill">In Stock</span></td>
+                                        <td class="text-muted small">04 Sep 2026</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. TAB: ADD PRODUCT (20. Add Product: Products ├── Add Product) -->
+            <div class="tab-panel" id="tab-add-product">
+                <div class="glass-panel" style="max-width: 780px; margin: 0 auto;">
+                    <div class="panel-header-flex">
+                        <div>
+                            <h3><i class="fa-solid fa-cart-plus text-primary"></i> 20. Add Product</h3>
+                            <span class="text-muted small">Seller Product Management &bull; List a new product with full specifications</span>
+                        </div>
+                    </div>
+
+                    <form asp-controller="Vendor" asp-action="AddProduct" method="post" enctype="multipart/form-data" id="addProductDashboardForm">
+                        @Html.AntiForgeryToken()
+
+                        <!-- 1. Product Name -->
+                        <div class="mb-3">
+                            <label for="productNameDash" class="form-label text-muted small fw-bold">Product Name *</label>
+                            <input type="text" id="productNameDash" name="productName" class="form-control" placeholder="e.g. Samsung Galaxy S24 Ultra 5G (256GB)" required style="background: rgba(15, 23, 42, 0.6); color: white; border: 1px solid var(--glass-border); padding: 0.75rem;" />
+                        </div>
+
+                        <!-- 2. Category, 3. Sub Category, 4. Brand -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label for="categoryDash" class="form-label text-muted small fw-bold">Category *</label>
+                                <select id="categoryDash" name="category" class="form-select" required style="background: rgba(15, 23, 42, 0.6); color: white; border: 1px solid var(--glass-border); padding: 0.75rem;">
+                                    <option value="Electronics" selected>Electronics</option>
+                                    <option value="Grocery">Grocery / Kirana</option>
+                                    <option value="Fashion">Fashion & Apparel</option>
+                                    <option value="Dairy & Bakery">Dairy & Bakery</option>
+                                    <option value="Pharmacy">Pharmacy & Healthcare</option>
+                                    <option value="Home & Kitchen">Home & Kitchen</option>
+                                    <option value="Others">Others</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="subCategoryDash" class="form-label text-muted small fw-bold">Sub Category</label>
+                                <input type="text" id="subCategoryDash" name="subCategory" class="form-control" placeholder="e.g. Flagship Smartphones" style="background: rgba(15, 23, 42, 0.6); color: white; border: 1px solid var(--glass-border); padding: 0.75rem;" />
+                            </div>
+                            <div class="col-md-4">
+                                <label for="brandDash" class="form-label text-muted small fw-bold">Brand</label>
+                                <input type="text" id="brandDash" name="brand" class="form-control" placeholder="e.g. Samsung" style="background: rgba(15, 23, 42, 0.6); color: white; border: 1px solid var(--glass-border); padding: 0.75rem;" />
+                            </div>
+                        </div>
+
+                        <!-- 5. Description -->
+                        <div class="mb-3">
+                            <label for="descriptionDash" class="form-label text-muted small fw-bold">Description</label>
+                            <textarea id="descriptionDash" name="description" rows="3" class="form-control" placeholder="Describe key product features, box contents, specs, and brand warranty..." style="background: rgba(15, 23, 42, 0.6); color: white; border: 1px solid var(--glass-border); padding: 0.75rem;"></textarea>
+                        </div>
+
+                        <!-- 6. MRP, 7. Selling Price, 8. Discount -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label for="mrpDash" class="form-label text-muted small fw-bold">MRP (₹) *</label>
+                                <input type="number" step="0.01" min="0" id="mrpDash" name="mrp" class="form-control" placeholder="e.g. 129999.00" oninput="calculateDiscountDash()" required style="background: rgba(15, 23, 42, 0.6); color: white; border: 1px solid var(--glass-border); padding: 0.75rem;" />
+                            </div>
+                            <div class="col-md-4">
+                                <label for="sellingPriceDash" class="form-label text-muted small fw-bold">Selling Price (₹) *</label>
+                                <input type="number" step="0.01" min="0.01" id="sellingPriceDash" name="sellingPrice" class="form-control" placeholder="e.g. 119999.00" oninput="calculateDiscountDash()" required style="background: rgba(15, 23, 42, 0.6); color: white; border: 1px solid var(--glass-border); padding: 0.75rem;" />
+                            </div>
+                            <div class="col-md-4">
+                                <label for="discountDash" class="form-label text-muted small fw-bold">Discount (%)</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.1" min="0" max="100" id="discountDash" name="discount" class="form-control" placeholder="e.g. 7.7" style="background: rgba(15, 23, 42, 0.6); color: #34d399; font-weight: bold; border: 1px solid var(--glass-border); padding: 0.75rem;" />
+                                    <span class="input-group-text text-success bg-dark border-secondary">% OFF</span>
+                                </div>
+                                <span class="text-muted" style="font-size: 0.75rem;">Auto-calculated from MRP & Selling Price</span>
+                            </div>
+                        </div>
+
+                        <!-- 9. Stock, 10. SKU -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="stockDash" class="form-label text-muted small fw-bold">Stock (Available Quantity) *</label>
+                                <input type="number" min="0" id="stockDash" name="stock" class="form-control" placeholder="e.g. 50" value="25" required style="background: rgba(15, 23, 42, 0.6); color: white; border: 1px solid var(--glass-border); padding: 0.75rem;" />
+                            </div>
+                            <div class="col-md-6">
+                                <label for="skuDash" class="form-label text-muted small fw-bold">SKU (Stock Keeping Unit)</label>
+                                <input type="text" id="skuDash" name="sku" class="form-control" placeholder="e.g. SKU-SAM-S24U-256" style="background: rgba(15, 23, 42, 0.6); color: white; border: 1px solid var(--glass-border); padding: 0.75rem;" />
+                            </div>
+                        </div>
+
+                        <!-- 11. Product Images (21. Multiple Images: Main Image, Front, Back, Side, Packaging) -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label text-muted small fw-bold mb-0">
+                                    <i class="fa-solid fa-images text-primary me-1"></i> 21. Product Images (Multiple Angles) *
+                                </label>
+                                <span class="badge bg-primary bg-opacity-25 text-info small">5 Image Angles</span>
+                            </div>
+
+                            <div class="row g-3">
+                                <!-- 1. Main Image -->
+                                <div class="col-12 col-md-4">
+                                    <div class="p-3 rounded-3 h-100" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(99, 102, 241, 0.4);">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="small fw-bold text-light"><i class="fa-solid fa-star text-warning me-1"></i> Main Image *</span>
+                                            <span class="badge bg-primary small">Cover Photo</span>
+                                        </div>
+                                        <input type="file" name="mainImageFile" accept="image/*" class="form-control form-control-sm mb-2" onchange="previewImg(this, 'previewMainDash')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                        <input type="url" name="mainImageUrl" class="form-control form-control-sm" placeholder="Or Main photo URL..." oninput="previewUrl(this.value, 'previewMainDash')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                        <div class="mt-2 text-center" id="previewMainDash" style="display: none;">
+                                            <img src="" class="rounded border" style="max-height: 70px; object-fit: cover;" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 2. Front View -->
+                                <div class="col-6 col-md-4">
+                                    <div class="p-3 rounded-3 h-100" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="small fw-bold text-light"><i class="fa-solid fa-camera text-info me-1"></i> Front</span>
+                                            <span class="badge bg-secondary small">Front View</span>
+                                        </div>
+                                        <input type="file" name="frontImageFile" accept="image/*" class="form-control form-control-sm mb-2" onchange="previewImg(this, 'previewFrontDash')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                        <input type="url" name="frontImageUrl" class="form-control form-control-sm" placeholder="Or Front URL..." oninput="previewUrl(this.value, 'previewFrontDash')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                        <div class="mt-2 text-center" id="previewFrontDash" style="display: none;">
+                                            <img src="" class="rounded border" style="max-height: 70px; object-fit: cover;" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 3. Back View -->
+                                <div class="col-6 col-md-4">
+                                    <div class="p-3 rounded-3 h-100" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="small fw-bold text-light"><i class="fa-solid fa-rotate text-info me-1"></i> Back</span>
+                                            <span class="badge bg-secondary small">Back View</span>
+                                        </div>
+                                        <input type="file" name="backImageFile" accept="image/*" class="form-control form-control-sm mb-2" onchange="previewImg(this, 'previewBackDash')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                        <input type="url" name="backImageUrl" class="form-control form-control-sm" placeholder="Or Back URL..." oninput="previewUrl(this.value, 'previewBackDash')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                        <div class="mt-2 text-center" id="previewBackDash" style="display: none;">
+                                            <img src="" class="rounded border" style="max-height: 70px; object-fit: cover;" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 4. Side View -->
+                                <div class="col-6 col-md-6">
+                                    <div class="p-3 rounded-3 h-100" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="small fw-bold text-light"><i class="fa-solid fa-cube text-info me-1"></i> Side</span>
+                                            <span class="badge bg-secondary small">Side View</span>
+                                        </div>
+                                        <input type="file" name="sideImageFile" accept="image/*" class="form-control form-control-sm mb-2" onchange="previewImg(this, 'previewSideDash')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                        <input type="url" name="sideImageUrl" class="form-control form-control-sm" placeholder="Or Side URL..." oninput="previewUrl(this.value, 'previewSideDash')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                        <div class="mt-2 text-center" id="previewSideDash" style="display: none;">
+                                            <img src="" class="rounded border" style="max-height: 70px; object-fit: cover;" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 5. Packaging View -->
+                                <div class="col-6 col-md-6">
+                                    <div class="p-3 rounded-3 h-100" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="small fw-bold text-light"><i class="fa-solid fa-box-open text-info me-1"></i> Packaging</span>
+                                            <span class="badge bg-secondary small">Box / Packaging</span>
+                                        </div>
+                                        <input type="file" name="packagingImageFile" accept="image/*" class="form-control form-control-sm mb-2" onchange="previewImg(this, 'previewPackagingDash')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                        <input type="url" name="packagingImageUrl" class="form-control form-control-sm" placeholder="Or Packaging URL..." oninput="previewUrl(this.value, 'previewPackagingDash')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                        <div class="mt-2 text-center" id="previewPackagingDash" style="display: none;">
+                                            <img src="" class="rounded border" style="max-height: 70px; object-fit: cover;" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 22. Product Variants (Professional Feature: Size, Color, Price, Stock, SKU) -->
+                        <div class="mb-4 p-3 rounded-3" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(129, 140, 248, 0.35);">
+                            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                                <div>
+                                    <span class="fw-bold text-white fs-6"><i class="fa-solid fa-layer-group text-primary me-2"></i>22. Product Variants (Professional Feature)</span>
+                                    <div class="text-muted small">Example: T-Shirt with Size (S, M, L, XL) &amp; Color (Black, White, Blue). Har variant ka Price, Stock &amp; SKU alag ho sakta hai.</div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="hasVariantsToggleDash" onchange="toggleVariantsSection('variantsContainerDash', this.checked)" style="cursor: pointer; width: 44px; height: 22px;">
+                                    <label class="form-check-label text-light small fw-semibold ms-1" for="hasVariantsToggleDash">Enable Variants</label>
+                                </div>
+                            </div>
+
+                            <!-- Hidden Input for Form Submission -->
+                            <input type="hidden" name="productVariantsJson" id="productVariantsJsonDash" value="" />
+
+                            <!-- Collapsible Variants Matrix Container -->
+                            <div id="variantsContainerDash" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed rgba(255,255,255,0.15);">
+                                <!-- Quick Matrix Generator Row -->
+                                <div class="row g-2 mb-3 align-items-end">
+                                    <div class="col-md-5">
+                                        <label class="form-label text-muted small fw-bold mb-1">Sizes (e.g. S, M, L, XL)</label>
+                                        <input type="text" id="quickSizesDash" class="form-control form-control-sm" placeholder="S, M, L, XL" value="S, M, L, XL" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label text-muted small fw-bold mb-1">Colors (e.g. Black, White, Blue)</label>
+                                        <input type="text" id="quickColorsDash" class="form-control form-control-sm" placeholder="Black, White, Blue" value="Black, White, Blue" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-primary btn-sm w-100 fw-semibold" onclick="generateMatrix('Dash')">
+                                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Variants Table -->
+                                <div class="table-responsive rounded-3 border border-secondary border-opacity-25 mb-2">
+                                    <table class="table table-dark table-sm mb-0 align-middle small text-center" id="variantsTableDash">
+                                        <thead style="background: rgba(30, 41, 59, 0.9);">
+                                            <tr>
+                                                <th style="width: 15%;">Size</th>
+                                                <th style="width: 20%;">Color</th>
+                                                <th style="width: 20%;">Price (₹) *</th>
+                                                <th style="width: 15%;">Stock *</th>
+                                                <th style="width: 20%;">SKU *</th>
+                                                <th style="width: 10%;">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="variantsTbodyDash">
+                                            <!-- Dynamic rows injected here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <button type="button" class="btn btn-outline-light btn-sm" onclick="addCustomVariantRow('Dash')">
+                                        <i class="fa-solid fa-plus me-1"></i> Add Custom Row
+                                    </button>
+                                    <span class="text-info small" id="variantCountNoticeDash">0 variants configured</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 12. [Add Product] Submit Button -->
+                        <button type="submit" class="btn-quick-primary w-100 py-3 justify-content-center fs-6 fw-bold" id="btnAddProductDashboardSubmit" onclick="syncVariantsJsonBeforeSubmit('Dash')">
+                            <i class="fa-solid fa-plus-circle me-2"></i> Add Product
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 4. TAB: CATEGORIES (Products ├── Categories) -->
+            <div class="tab-panel" id="tab-categories">
+                <div class="glass-panel">
+                    <div class="panel-header-flex">
+                        <div>
+                            <h3><i class="fa-solid fa-tags text-primary"></i> Product Categories</h3>
+                            <span class="text-muted small">Manage product lines and classifications</span>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        @foreach (var cat in new[] { "Electronics", "Groceries & Daily Essentials", "Fresh Dairy & Bakery", "Apparel & Fashion", "Personal Care & Pharmacy", "Household & Utilities" })
+                        {
+                            <div class="col-md-4">
+                                <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <strong class="text-white">@cat</strong>
+                                        <span class="badge bg-primary bg-opacity-25 text-primary border border-primary px-2 py-1 rounded-pill">Active</span>
+                                    </div>
+                                    <div class="text-muted small"><i class="fa-solid fa-box me-1"></i> Multi-item mapping enabled</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. TAB: STOCK (23. Inventory: Products └── Stock) -->
+            <div class="tab-panel" id="tab-stock">
+                <div class="glass-panel">
+                    <!-- Panel Header -->
+                    <div class="panel-header-flex mb-4">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="badge bg-primary bg-opacity-25 text-primary border border-primary px-2 py-1 rounded-pill small">Feature 23</span>
+                                <h3 class="mb-0 text-white"><i class="fa-solid fa-boxes-stacked text-warning me-2"></i> 23. Inventory</h3>
+                            </div>
+                            <span class="text-muted small">Real-time inventory levels, stock status, and low-inventory threshold triggers.</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="btn btn-outline-light btn-sm px-3 py-2 rounded-pill" onclick="switchSellerTab('tab-add-product')">
+                                <i class="fa-solid fa-plus me-1"></i> Add Product
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 23. Specification Alert Banner -->
+                    <div class="alert alert-warning d-flex align-items-center p-3 rounded-4 mb-4 border border-warning" style="background: rgba(245, 158, 11, 0.12);">
+                        <i class="fa-solid fa-triangle-exclamation fs-2 text-warning me-3 flex-shrink-0"></i>
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <strong class="text-warning" style="font-size: 1.05rem;">
+                                    <i class="fa-solid fa-bell me-1"></i> Rule: Stock 5 se kam &rarr; ⚠ Low Stock
+                                </strong>
+                                <span class="badge bg-warning text-dark px-2 py-0.5 rounded-pill small fw-bold">Active Threshold</span>
+                            </div>
+                            <div class="text-white-50 small">
+                                Jab kisi product ka stock <strong>5 se kam</strong> (1 se 4) bachta hai, to system use <strong>⚠ Low Stock</strong> alert ke sath highlight karta hai. 
+                                Stock <strong>0</strong> hone par <strong>Out of Stock</strong> aur <strong>5 ya usse zyada</strong> hone par <strong>Available</strong> dikhta hai.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Inventory Summary 4 Metric Cards -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 rounded-4 h-100" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border);">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-muted small fw-bold">Total Tracked</span>
+                                    <i class="fa-solid fa-box text-primary"></i>
+                                </div>
+                                <div class="fs-4 fw-bold text-white" id="invCountTotal">@(Model.Products?.Count ?? 3)</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">Catalog items</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 rounded-4 h-100" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3);">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-success small fw-bold">Available (Stock &ge; 5)</span>
+                                    <i class="fa-solid fa-circle-check text-success"></i>
+                                </div>
+                                <div class="fs-4 fw-bold text-success" id="invCountAvail">@(Model.AvailableStock > 0 ? Model.AvailableStock : (Model.Products?.Count(p => p.Stock >= 5) ?? 1))</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">Sufficient inventory</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 rounded-4 h-100" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.4);">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-warning small fw-bold">⚠ Low Stock (&lt; 5)</span>
+                                    <i class="fa-solid fa-triangle-exclamation text-warning"></i>
+                                </div>
+                                <div class="fs-4 fw-bold text-warning" id="invCountLow">@(Model.LowStock > 0 ? Model.LowStock : (Model.Products?.Count(p => p.Stock < 5 && p.Stock > 0) ?? 1))</div>
+                                <div class="text-warning small" style="font-size: 0.75rem;">Requires restock</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 rounded-4 h-100" style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3);">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-danger small fw-bold">Out of Stock (0)</span>
+                                    <i class="fa-solid fa-circle-xmark text-danger"></i>
+                                </div>
+                                <div class="fs-4 fw-bold text-danger" id="invCountOut">@(Model.OutOfStock > 0 ? Model.OutOfStock : (Model.Products?.Count(p => p.Stock <= 0) ?? 1))</div>
+                                <div class="text-danger small" style="font-size: 0.75rem;">Sales disabled</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filter & Search Controls -->
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button type="button" class="btn btn-sm btn-dark px-3 py-1.5 rounded-pill border border-secondary active" id="filterBtnAll" onclick="filterInvTable('all', this)">
+                                All Products
+                            </button>
+                            <button type="button" class="btn btn-sm btn-dark px-3 py-1.5 rounded-pill border border-secondary" id="filterBtnAvail" onclick="filterInvTable('available', this)">
+                                <i class="fa-solid fa-circle-check text-success me-1"></i> Available
+                            </button>
+                            <button type="button" class="btn btn-sm btn-dark px-3 py-1.5 rounded-pill border border-warning text-warning" id="filterBtnLow" onclick="filterInvTable('low', this)">
+                                <i class="fa-solid fa-triangle-exclamation text-warning me-1"></i> ⚠ Low Stock (&lt; 5)
+                            </button>
+                            <button type="button" class="btn btn-sm btn-dark px-3 py-1.5 rounded-pill border border-danger text-danger" id="filterBtnOut" onclick="filterInvTable('out', this)">
+                                <i class="fa-solid fa-circle-xmark text-danger me-1"></i> Out of Stock (0)
+                            </button>
+                        </div>
+                        <div style="min-width: 260px;">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-dark border-secondary text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                <input type="text" id="invSearchInput" class="form-control bg-dark border-secondary text-white" placeholder="Search product name or SKU..." onkeyup="searchInvTable()" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 23. INVENTORY TABLE (Product | Stock | Status) -->
+                    <div class="table-responsive rounded-4 border border-secondary border-opacity-25">
+                        <table class="table custom-table mb-0" id="inventoryMasterTable">
+                            <thead>
+                                <tr>
+                                    <th style="min-width: 250px;"><i class="fa-solid fa-box text-primary me-1"></i> Product</th>
+                                    <th style="min-width: 140px;" class="text-center"><i class="fa-solid fa-cubes text-info me-1"></i> Stock</th>
+                                    <th style="min-width: 160px;" class="text-center"><i class="fa-solid fa-signal text-warning me-1"></i> Status</th>
+                                    <th style="min-width: 160px;" class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.Products != null && Model.Products.Any())
+                                {
+                                    foreach (var p in Model.Products)
+                                    {
+                                        int curStock = p.Stock;
+                                        string statusBadgeClass;
+                                        string statusLabel;
+                                        string statusIcon;
+                                        string rowFilterType;
+
+                                        if (curStock <= 0)
+                                        {
+                                            statusBadgeClass = "bg-danger bg-opacity-25 text-danger border border-danger";
+                                            statusLabel = "Out of Stock";
+                                            statusIcon = "fa-circle-xmark";
+                                            rowFilterType = "out";
+                                        }
+                                        else if (curStock < 5)
+                                        {
+                                            statusBadgeClass = "bg-warning bg-opacity-25 text-warning border border-warning";
+                                            statusLabel = "⚠ Low Stock";
+                                            statusIcon = "fa-triangle-exclamation";
+                                            rowFilterType = "low";
+                                        }
+                                        else
+                                        {
+                                            statusBadgeClass = "bg-success bg-opacity-25 text-success border border-success";
+                                            statusLabel = "Available";
+                                            statusIcon = "fa-circle-check";
+                                            rowFilterType = "available";
+                                        }
+
+                                        <tr class="inv-row" data-filter="@rowFilterType" id="invRow_@p.Id">
+                                            <!-- Column 1: Product -->
+                                            <td>
+                                                <div class="d-flex align-items-center gap-3">
+                                                    <img src="@p.ImageUrl" alt="@p.ProductName" style="width: 46px; height: 46px; border-radius: 10px; object-fit: cover; background: #0f172a; border: 1px solid var(--glass-border);" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&auto=format&fit=crop&q=60';" />
+                                                    <div>
+                                                        <strong class="text-white inv-prod-title">@p.ProductName</strong>
+                                                        <div class="text-muted small d-flex align-items-center gap-2">
+                                                            <span>Category: @(string.IsNullOrEmpty(p.Category) ? "General" : p.Category)</span>
+                                                            &bull;
+                                                            <span class="inv-prod-sku">SKU: @(string.IsNullOrEmpty(p.Sku) ? $"PRD-{p.Id}" : p.Sku)</span>
+                                                            @if (p.HasVariants)
+                                                            {
+                                                                <span class="badge bg-info bg-opacity-25 text-info border border-info rounded-pill" style="font-size: 0.65rem;">Variants</span>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+
+                                            <!-- Column 2: Stock -->
+                                            <td class="text-center align-middle">
+                                                <div class="d-inline-flex align-items-center gap-1">
+                                                    <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" onclick="stepStockValue(@p.Id, -1)" title="Decrease Stock">-</button>
+                                                    <input type="number" min="0" class="form-control form-control-sm text-center fw-bold inv-stock-input" id="stockInput_@p.Id" value="@curStock" style="width: 70px; background: rgba(15,23,42,0.8); color: white; border: 1px solid var(--glass-border);" onchange="onStockInputChange(@p.Id)" />
+                                                    <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" onclick="stepStockValue(@p.Id, 1)" title="Increase Stock">+</button>
+                                                </div>
+                                                <div class="text-muted small mt-1" id="stockUnitsLabel_@p.Id">@curStock units</div>
+                                            </td>
+
+                                            <!-- Column 3: Status (Available / ⚠ Low Stock / Out of Stock) -->
+                                            <td class="text-center align-middle">
+                                                <span class="badge @statusBadgeClass px-3 py-2 rounded-pill fw-bold inv-status-badge" id="statusBadge_@p.Id">
+                                                    <i class="fa-solid @statusIcon me-1"></i> @statusLabel
+                                                </span>
+                                            </td>
+
+                                            <!-- Action: Update Stock -->
+                                            <td class="text-end align-middle">
+                                                <button type="button" class="btn btn-sm btn-outline-light rounded-pill px-3" id="saveStockBtn_@p.Id" onclick="submitStockUpdate(@p.Id)">
+                                                    <i class="fa-solid fa-floppy-disk me-1"></i> Update Stock
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <!-- Default Example Products matching Step 23 Spec: Mobile 20 Available, Laptop 3 Low Stock, Headphone 0 Out of Stock -->
+                                    <tr class="inv-row" data-filter="available" id="invRow_demo1">
+                                        <td>
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="rounded-3 bg-dark d-flex align-items-center justify-content-center" style="width: 46px; height: 46px; border: 1px solid var(--glass-border); color: #38bdf8;">
+                                                    <i class="fa-solid fa-mobile-screen fs-5"></i>
+                                                </div>
+                                                <div>
+                                                    <strong class="text-white inv-prod-title">Mobile</strong>
+                                                    <div class="text-muted small">Category: Electronics &bull; <span class="inv-prod-sku">SKU: SKU-MOB-020</span></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center align-middle">
+                                            <strong class="text-white fs-6">20</strong>
+                                            <div class="text-muted small">units</div>
+                                        </td>
+                                        <td class="text-center align-middle">
+                                            <span class="badge bg-success bg-opacity-25 text-success border border-success px-3 py-2 rounded-pill fw-bold">
+                                                <i class="fa-solid fa-circle-check me-1"></i> Available
+                                            </span>
+                                        </td>
+                                        <td class="text-end align-middle">
+                                            <button class="btn btn-sm btn-outline-light rounded-pill px-3" onclick="switchSellerTab('tab-add-product')">Manage</button>
+                                        </td>
+                                    </tr>
+
+                                    <tr class="inv-row" data-filter="low" id="invRow_demo2">
+                                        <td>
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="rounded-3 bg-dark d-flex align-items-center justify-content-center" style="width: 46px; height: 46px; border: 1px solid var(--glass-border); color: #fbbf24;">
+                                                    <i class="fa-solid fa-laptop fs-5"></i>
+                                                </div>
+                                                <div>
+                                                    <strong class="text-white inv-prod-title">Laptop</strong>
+                                                    <div class="text-muted small">Category: Electronics &bull; <span class="inv-prod-sku">SKU: SKU-LAP-003</span></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center align-middle">
+                                            <strong class="text-warning fs-6">3</strong>
+                                            <div class="text-muted small">units</div>
+                                        </td>
+                                        <td class="text-center align-middle">
+                                            <span class="badge bg-warning bg-opacity-25 text-warning border border-warning px-3 py-2 rounded-pill fw-bold">
+                                                <i class="fa-solid fa-triangle-exclamation me-1"></i> ⚠ Low Stock
+                                            </span>
+                                        </td>
+                                        <td class="text-end align-middle">
+                                            <button class="btn btn-sm btn-outline-light rounded-pill px-3" onclick="switchSellerTab('tab-add-product')">Manage</button>
+                                        </td>
+                                    </tr>
+
+                                    <tr class="inv-row" data-filter="out" id="invRow_demo3">
+                                        <td>
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="rounded-3 bg-dark d-flex align-items-center justify-content-center" style="width: 46px; height: 46px; border: 1px solid var(--glass-border); color: #f87171;">
+                                                    <i class="fa-solid fa-headphones fs-5"></i>
+                                                </div>
+                                                <div>
+                                                    <strong class="text-white inv-prod-title">Headphone</strong>
+                                                    <div class="text-muted small">Category: Electronics &bull; <span class="inv-prod-sku">SKU: SKU-HDP-000</span></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center align-middle">
+                                            <strong class="text-danger fs-6">0</strong>
+                                            <div class="text-muted small">units</div>
+                                        </td>
+                                        <td class="text-center align-middle">
+                                            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger px-3 py-2 rounded-pill fw-bold">
+                                                <i class="fa-solid fa-circle-xmark me-1"></i> Out of Stock
+                                            </span>
+                                        </td>
+                                        <td class="text-end align-middle">
+                                            <button class="btn btn-sm btn-outline-light rounded-pill px-3" onclick="switchSellerTab('tab-add-product')">Manage</button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. TAB: ALL ORDERS (Orders ├── All Orders) -->
+            <div class="tab-panel" id="tab-all-orders">
+                <div class="glass-panel">
+                    <div class="panel-header-flex">
+                        <div>
+                            <h3><i class="fa-solid fa-list-check text-primary"></i> All Orders</h3>
+                            <span class="text-muted small">Complete order history for @shopName</span>
+                        </div>
+                        <a asp-controller="Vendor" asp-action="Orders" class="btn btn-outline-light btn-sm px-3 py-2 rounded-pill">
+                            Open Full Order Dispatch Hub
+                        </a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table custom-table">
+                            <thead>
+                                <tr><th>Order #</th><th>Customer</th><th>Amount</th><th>Status</th><th>Date</th></tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.RecentOrders != null && Model.RecentOrders.Any())
+                                {
+                                    foreach (var o in Model.RecentOrders)
+                                    {
+                                        <tr>
+                                            <td><strong class="text-white">#ORD@(o.Id + 1000)</strong></td>
+                                            <td>@(o.Customer?.Name ?? "Customer")</td>
+                                            <td><strong class="text-white">₹@o.TotalAmount.ToString("N2")</strong></td>
+                                            <td><span class="badge-status status-pending">@o.OrderStatus</span></td>
+                                            <td class="text-muted small">@o.CreatedDate.ToString("dd MMM yyyy")</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr><td>#ORD1045</td><td>Pooja Sharma</td><td>₹38,999.00</td><td><span class="badge-status status-pending">Placed</span></td><td>05 Sep 2026</td></tr>
+                                    <tr><td>#ORD1044</td><td>Amit Verma</td><td>₹26,490.00</td><td><span class="badge-status status-shipped">Out for Delivery</span></td><td>05 Sep 2026</td></tr>
+                                    <tr><td>#ORD1043</td><td>Vikram Singh</td><td>₹39,900.00</td><td><span class="badge-status status-delivered">Delivered</span></td><td>04 Sep 2026</td></tr>
+                                    <tr><td>#ORD1042</td><td>Neha Gupta</td><td>₹1,999.00</td><td><span class="badge-status status-return">Return Requested</span></td><td>04 Sep 2026</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. TAB: NEW ORDERS (24. Seller Orders: Orders ├── New Orders) -->
+            <div class="tab-panel" id="tab-new-orders">
+                <div class="glass-panel">
+                    <div class="panel-header-flex mb-3">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="badge bg-primary bg-opacity-25 text-primary border border-primary px-2 py-1 rounded-pill small">Feature 24</span>
+                                <h3 class="mb-0 text-white"><i class="fa-solid fa-bell text-warning me-2"></i> 24. Seller Orders</h3>
+                            </div>
+                            <span class="text-muted small">New incoming customer orders awaiting merchant acceptance and dispatch.</span>
+                        </div>
+                        <a asp-controller="Vendor" asp-action="Orders" class="btn btn-outline-light btn-sm px-3 py-2 rounded-pill">
+                            <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Open Order Hub
+                        </a>
+                    </div>
+
+                    <!-- 24. Spec Highlight Banner -->
+                    <div class="alert alert-info d-flex align-items-center p-3 rounded-4 mb-4 border border-info" style="background: rgba(59, 130, 246, 0.12);">
+                        <i class="fa-solid fa-receipt fs-2 text-info me-3 flex-shrink-0"></i>
+                        <div class="flex-grow-1">
+                            <strong class="text-info d-block mb-1">Incoming Order Acceptance Flow</strong>
+                            <div class="text-white-50 small">
+                                Seller ko customer ka order aane par <strong>Order #</strong>, <strong>Product &amp; Qty</strong>, <strong>Amount</strong>, aur <strong>Delivery Address</strong> ke sath <strong>Status: Pending</strong> dikhta hai. Click <strong>[Accept Order]</strong> to confirm and start packing!
+                            </div>
+                        </div>
+                    </div>
+
+                    @{
+                        var pendingOrders = Model.RecentOrders?.Where(o => o.OrderStatus == "Pending" || o.OrderStatus == "Placed" || o.OrderStatus == "New").ToList();
+                    }
+
+                    @if (pendingOrders != null && pendingOrders.Any())
+                    {
+                        foreach (var ord in pendingOrders)
+                        {
+                            var firstItem = ord.OrderItems?.FirstOrDefault();
+                            var prodName = firstItem?.Product?.ProductName ?? "Samsung Mobile Galaxy M34 5G";
+                            var qty = firstItem?.Quantity ?? 2;
+                            var deliveryAddr = !string.IsNullOrWhiteSpace(ord.DeliveryAddress) 
+                                ? ord.DeliveryAddress 
+                                : "Flat 402, Royal Palms, Sector 14, Connaught Place, New Delhi - 110001";
+
+                            <div class="p-4 rounded-4 mb-3" id="orderCard_@ord.Id" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border); box-shadow: 0 10px 25px rgba(0,0,0,0.25);">
+                                <!-- Order Header -->
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pb-3 mb-3" style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="fs-5 fw-bold text-white"><i class="fa-solid fa-receipt text-warning me-1"></i> Order #@ord.Id</span>
+                                        <span class="badge bg-warning bg-opacity-25 text-warning border border-warning px-3 py-1 rounded-pill fw-bold" id="orderStatusBadge_@ord.Id">
+                                            <i class="fa-solid fa-hourglass-start me-1"></i> Status: @ord.OrderStatus
+                                        </span>
+                                    </div>
+                                    <div class="text-muted small">
+                                        <i class="fa-regular fa-clock me-1"></i> @ord.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")
+                                    </div>
+                                </div>
+
+                                <!-- Order Details Grid: Product, Qty, Amount, Delivery Address -->
+                                <div class="row g-3 align-items-center">
+                                    <!-- 1. Product & Qty -->
+                                    <div class="col-md-4">
+                                        <div class="text-muted small mb-1 fw-bold text-uppercase" style="letter-spacing: 0.5px;">Product &amp; Quantity</div>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="rounded-3 bg-dark d-flex align-items-center justify-content-center flex-shrink-0" style="width: 48px; height: 48px; border: 1px solid var(--glass-border); color: #38bdf8;">
+                                                <i class="fa-solid fa-mobile-screen fs-4"></i>
+                                            </div>
+                                            <div>
+                                                <strong class="text-white d-block" style="font-size: 1.05rem;">@prodName</strong>
+                                                <span class="badge bg-primary bg-opacity-25 text-info border border-primary px-2 py-0.5 rounded-pill small mt-1">
+                                                    Qty: @qty
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 2. Amount -->
+                                    <div class="col-md-3">
+                                        <div class="text-muted small mb-1 fw-bold text-uppercase" style="letter-spacing: 0.5px;">Total Amount</div>
+                                        <div class="fs-4 fw-bold text-success">₹@ord.TotalAmount.ToString("N2")</div>
+                                        <div class="text-muted small">Payment: @(string.IsNullOrWhiteSpace(ord.PaymentMode) ? "Online / COD" : ord.PaymentMode)</div>
+                                    </div>
+
+                                    <!-- 3. Delivery Address -->
+                                    <div class="col-md-5">
+                                        <div class="text-muted small mb-1 fw-bold text-uppercase" style="letter-spacing: 0.5px;">
+                                            <i class="fa-solid fa-location-dot text-danger me-1"></i> Delivery Address
+                                        </div>
+                                        <div class="p-2.5 rounded-3 text-white-50 small" style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); line-height: 1.4;">
+                                            <strong class="text-light d-block mb-0.5">@(ord.Customer?.Name ?? "Customer") &bull; @(ord.Customer?.PhoneNumber ?? "98111 22334")</strong>
+                                            @deliveryAddr
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Action Button: [Accept Order] -->
+                                <div class="d-flex justify-content-end align-items-center gap-2 mt-3 pt-3" style="border-top: 1px solid rgba(255,255,255,0.06);">
+                                    <button type="button" class="btn btn-primary px-4 py-2 rounded-pill fw-bold shadow-sm" id="btnAccept_@ord.Id" onclick="acceptSellerOrder(@ord.Id, this)" style="background: var(--primary-gradient); border: none;">
+                                        <i class="fa-solid fa-check me-1.5"></i> Accept Order
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <!-- Default Exemplary 24. Seller Order: Order #1001, Samsung Mobile, Qty: 2, Amount: ₹50,000, Delivery Address, Status: Pending, [Accept Order] -->
+                        <div class="p-4 rounded-4 mb-3" id="orderCard_1001" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border); box-shadow: 0 10px 25px rgba(0,0,0,0.25);">
+                            <!-- Order Header -->
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pb-3 mb-3" style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="fs-5 fw-bold text-white"><i class="fa-solid fa-receipt text-warning me-1"></i> Order #1001</span>
+                                    <span class="badge bg-warning bg-opacity-25 text-warning border border-warning px-3 py-1 rounded-pill fw-bold" id="orderStatusBadge_1001">
+                                        <i class="fa-solid fa-hourglass-start me-1"></i> Status: Pending
+                                    </span>
+                                </div>
+                                <div class="text-muted small">
+                                    <i class="fa-regular fa-clock me-1"></i> Just now &bull; New Delivery Request
+                                </div>
+                            </div>
+
+                            <!-- Order Details Grid: Product, Qty, Amount, Delivery Address -->
+                            <div class="row g-3 align-items-center">
+                                <!-- 1. Product & Qty -->
+                                <div class="col-md-4">
+                                    <div class="text-muted small mb-1 fw-bold text-uppercase" style="letter-spacing: 0.5px;">Product &amp; Quantity</div>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="rounded-3 bg-dark d-flex align-items-center justify-content-center flex-shrink-0" style="width: 48px; height: 48px; border: 1px solid var(--glass-border); color: #38bdf8;">
+                                            <i class="fa-solid fa-mobile-screen fs-4"></i>
+                                        </div>
+                                        <div>
+                                            <strong class="text-white d-block" style="font-size: 1.05rem;">Samsung Mobile</strong>
+                                            <span class="badge bg-primary bg-opacity-25 text-info border border-primary px-2 py-0.5 rounded-pill small mt-1">
+                                                Qty: 2
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 2. Amount -->
+                                <div class="col-md-3">
+                                    <div class="text-muted small mb-1 fw-bold text-uppercase" style="letter-spacing: 0.5px;">Total Amount</div>
+                                    <div class="fs-4 fw-bold text-success">₹50,000</div>
+                                    <div class="text-muted small">Payment: Online Paid</div>
+                                </div>
+
+                                <!-- 3. Delivery Address -->
+                                <div class="col-md-5">
+                                    <div class="text-muted small mb-1 fw-bold text-uppercase" style="letter-spacing: 0.5px;">
+                                        <i class="fa-solid fa-location-dot text-danger me-1"></i> Delivery Address
+                                    </div>
+                                    <div class="p-2.5 rounded-3 text-white-50 small" style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); line-height: 1.4;">
+                                        <strong class="text-light d-block mb-0.5">Pooja Sharma &bull; +91 98111 22334</strong>
+                                        Flat 402, Royal Palms, Sector 14, Connaught Place, New Delhi - 110001
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Button: [Accept Order] -->
+                            <div class="d-flex justify-content-end align-items-center gap-2 mt-3 pt-3" style="border-top: 1px solid rgba(255,255,255,0.06);">
+                                <button type="button" class="btn btn-primary px-4 py-2 rounded-pill fw-bold shadow-sm" id="btnAccept_1001" onclick="acceptSellerOrder(1001, this)" style="background: var(--primary-gradient); border: none;">
+                                    <i class="fa-solid fa-check me-1.5"></i> Accept Order
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- 8. TAB: PROCESSING (Orders ├── Processing) -->
+            <div class="tab-panel" id="tab-processing">
+                <div class="glass-panel">
+                    <div class="panel-header-flex mb-3">
+                        <div>
+                            <h3><i class="fa-solid fa-boxes-packing text-info"></i> Processing &amp; Packed Orders</h3>
+                            <span class="text-muted small">Orders undergoing inspection, packaging, and dispatch preparation</span>
+                        </div>
+                        <a asp-controller="Vendor" asp-action="Orders" class="btn btn-outline-light btn-sm px-3 py-2 rounded-pill">
+                            <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Open Order Hub
+                        </a>
+                    </div>
+                    
+                    @{
+                        var processingOrders = Model.RecentOrders?.Where(o => o.OrderStatus == "Accepted" || o.OrderStatus == "Processing" || o.OrderStatus == "Packed").ToList();
+                    }
+
+                    @if (processingOrders != null && processingOrders.Any())
+                    {
+                        foreach (var pord in processingOrders)
+                        {
+                            var item = pord.OrderItems?.FirstOrDefault();
+                            <div class="p-3 rounded-4 mb-3" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border);">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                                    <div>
+                                        <strong class="text-white fs-6">Order #@pord.Id &bull; @(pord.Customer?.Name ?? "Customer")</strong>
+                                        <span class="text-muted small ms-2">@(item?.Product?.ProductName ?? "Ordered Products") (Qty: @(item?.Quantity ?? 1))</span>
+                                    </div>
+                                    <span class="badge @(pord.OrderStatus == "Processing" ? "bg-purple bg-opacity-25 text-purple" : "bg-info bg-opacity-25 text-info") border px-3 py-1 rounded-pill" id="orderStatusBadge_@pord.Id" style="@(pord.OrderStatus == "Processing" ? "background: rgba(168,85,247,0.2); color: #c084fc; border-color: rgba(168,85,247,0.4);" : "")">
+                                        <i class="fa-solid @(pord.OrderStatus == "Processing" ? "fa-gears fa-spin" : "fa-box-open") me-1"></i> Status: @pord.OrderStatus
+                                    </span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pt-2 border-top border-secondary border-opacity-25">
+                                    <span class="text-success fw-bold">₹@pord.TotalAmount.ToString("N2")</span>
+                                    <div>
+                                        @if (pord.OrderStatus == "Accepted")
+                                        {
+                                            <button type="button" class="btn px-3 py-1.5 rounded-pill fw-bold text-white btn-sm" onclick="progressOrderStage(@pord.Id, 'Processing', this)" style="background: linear-gradient(135deg, #a855f7 0%, #c084fc 100%); border: none;">
+                                                <i class="fa-solid fa-gears me-1"></i> Start Processing
+                                            </button>
+                                        }
+                                        else if (pord.OrderStatus == "Processing")
+                                        {
+                                            <button type="button" class="btn px-3 py-1.5 rounded-pill fw-bold text-white btn-sm" onclick="progressOrderStage(@pord.Id, 'Packed', this)" style="background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%); border: none;">
+                                                <i class="fa-solid fa-box me-1"></i> Mark as Packed
+                                            </button>
+                                        }
+                                        else if (pord.OrderStatus == "Packed")
+                                        {
+                                            <button type="button" class="btn px-3 py-1.5 rounded-pill fw-bold text-white btn-sm" onclick="progressOrderStage(@pord.Id, 'Shipped', this)" style="background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%); border: none;">
+                                                <i class="fa-solid fa-truck-fast me-1"></i> Ship Order
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="p-3 rounded-4 mb-2" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <strong class="text-white">#ORD1001 &bull; Samsung Mobile (Qty: 2)</strong>
+                                <span class="badge bg-purple bg-opacity-25 text-purple border px-2 py-1 rounded-pill" style="background: rgba(168,85,247,0.2); color: #c084fc; border-color: rgba(168,85,247,0.4);">Processing</span>
+                            </div>
+                            <div class="text-muted small">Pooja Sharma &bull; Undergoing quality inspection and packaging.</div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- 9. TAB: SHIPPED (Orders ├── Shipped) -->
+            <div class="tab-panel" id="tab-shipped">
+                <div class="glass-panel">
+                    <div class="panel-header-flex mb-3">
+                        <div>
+                            <h3><i class="fa-solid fa-truck-fast text-primary"></i> Dispatched &amp; Shipped</h3>
+                            <span class="text-muted small">Live orders on the road with delivery riders</span>
+                        </div>
+                        <a asp-controller="Vendor" asp-action="Orders" class="btn btn-outline-light btn-sm px-3 py-2 rounded-pill">
+                            <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Open Order Hub
+                        </a>
+                    </div>
+
+                    @{
+                        var shippedOrders = Model.RecentOrders?.Where(o => o.OrderStatus == "Shipped" || o.OrderStatus == "Dispatched" || o.OrderStatus == "OutForDelivery").ToList();
+                    }
+
+                    @if (shippedOrders != null && shippedOrders.Any())
+                    {
+                        foreach (var sord in shippedOrders)
+                        {
+                            <div class="p-3 rounded-4 mb-2" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <strong class="text-white">Order #@sord.Id &bull; @(sord.Customer?.Name ?? "Customer")</strong>
+                                    <span class="badge bg-primary bg-opacity-25 text-info border border-primary px-2 py-1 rounded-pill">@sord.OrderStatus</span>
+                                </div>
+                                <div class="text-muted small">
+                                    @(sord.Rider != null ? $"Rider: {sord.Rider.RiderName} ({sord.Rider.PhoneNumber}) • In Transit" : "In transit to delivery location.")
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="p-3 rounded-4 mb-2" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <strong class="text-white">#ORD1044 &bull; Sony WH-1000XM5</strong>
+                                <span class="badge-status status-shipped">Out for Delivery</span>
+                            </div>
+                            <div class="text-muted small">Rider: Rajesh Kumar (+91 98999 11111) &bull; Estimated delivery in 25 mins</div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- 10. TAB: DELIVERED (Orders └── Delivered) -->
+            <div class="tab-panel" id="tab-delivered">
+                <div class="glass-panel">
+                    <div class="panel-header-flex">
+                        <div>
+                            <h3><i class="fa-solid fa-circle-check text-success"></i> Delivered Orders</h3>
+                            <span class="text-muted small">Successfully completed local fulfillments</span>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table custom-table">
+                            <thead><tr><th>Order #</th><th>Customer</th><th>Total Paid</th><th>Fulfilled Date</th></tr></thead>
+                            <tbody>
+                                <tr><td>#ORD1043</td><td>Vikram Singh</td><td><strong class="text-white">₹39,900.00</strong></td><td class="text-muted small">04 Sep 2026</td></tr>
+                                <tr><td>#ORD1041</td><td>Rajesh Khanna</td><td><strong class="text-white">₹19,999.00</strong></td><td class="text-muted small">03 Sep 2026</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 11. TAB: RETURNS -->
+            <div class="tab-panel" id="tab-returns">
+                <div class="glass-panel">
+                    <div class="panel-header-flex">
+                        <div>
+                            <h3><i class="fa-solid fa-rotate-left text-warning"></i> Customer Returns</h3>
+                            <span class="text-muted small">Review return requests, pickup status, and refunds</span>
+                        </div>
+                        <span class="badge bg-warning text-dark px-3 py-1 rounded-pill">@Model.PendingReturns Pending Return</span>
+                    </div>
+                    <div class="p-4 rounded-4" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <span class="badge bg-warning text-dark me-2">Return Requested</span>
+                                <strong class="text-white">#ORD1042 &bull; Neha Gupta</strong>
+                            </div>
+                            <span class="text-white fw-bold">₹1,999.00</span>
+                        </div>
+                        <div class="text-muted small mb-2">Item: boAt Rockerz 450 Pro (x1)</div>
+                        <div class="p-2 rounded-3 mb-3 bg-dark border border-secondary text-warning small">
+                            <i class="fa-solid fa-circle-info me-1"></i> Return Reason: <strong>Defective / Audio balance issue</strong>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a asp-controller="Vendor" asp-action="Orders" class="btn btn-outline-success btn-sm px-3 rounded-pill fw-bold">
+                                <i class="fa-solid fa-check me-1"></i> Approve Return & Schedule Pickup
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 12. TAB: REVIEWS (27. Seller Reviews: Product Reviews, Rating, Comment, Customer Name, Date) -->
+            <div class="tab-panel" id="tab-reviews">
+                <div class="glass-panel">
+                    <div class="panel-header-flex mb-3">
+                        <div>
+                            <div class="d-inline-flex align-items-center gap-1.5 px-2.5 py-0.5 rounded-pill mb-1.5 small fw-bold" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3);">
+                                <i class="fa-solid fa-medal"></i> Point 27: Seller Reviews
+                            </div>
+                            <h3><i class="fa-solid fa-star text-warning"></i> Product Reviews</h3>
+                            <span class="text-muted small">Real customer ratings and reviews for products sold in your store</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="text-warning fw-bold fs-5">
+                                5.0 <i class="fa-solid fa-star"></i> <span class="text-muted small fw-normal">(@(Model.Reviews?.Count > 0 ? Model.Reviews.Count : 2) verified reviews)</span>
+                            </div>
+                            <a asp-controller="Vendor" asp-action="Reviews" class="btn btn-outline-warning btn-sm px-3 py-1.5 rounded-pill fw-bold">
+                                <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Full Reviews Hub
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column gap-3">
+                        @if (Model.Reviews != null && Model.Reviews.Any())
+                        {
+                            foreach (var rev in Model.Reviews)
+                            {
+                                var pName = rev.Product?.ProductName ?? "Samsung Mobile";
+                                var cName = !string.IsNullOrWhiteSpace(rev.CustomerName) ? rev.CustomerName : (rev.Customer?.Name ?? "Customer Name");
+                                var cText = !string.IsNullOrWhiteSpace(rev.Comment) ? rev.Comment : "Very good product";
+                                var rDate = rev.CreatedDate.ToString("dd MMM yyyy");
+                                var rVal = rev.Rating > 0 ? rev.Rating : 5;
+
+                                <div class="p-3.5 rounded-4" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border); transition: all 0.2s ease;">
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 pb-2" style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="p-2 rounded-3 text-primary" style="background: rgba(99, 102, 241, 0.15);">
+                                                <i class="fa-solid fa-mobile-screen-button"></i>
+                                            </div>
+                                            <div>
+                                                <strong class="text-white fs-6 d-block">@pName</strong>
+                                                <span class="text-muted small">Product Review</span>
+                                            </div>
+                                        </div>
+                                        <div class="text-warning fs-6" title="@rVal Stars">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                if (i <= rVal) { <i class="fa-solid fa-star"></i> }
+                                                else { <i class="fa-regular fa-star text-secondary"></i> }
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <div class="p-2.5 rounded-3 mb-2" style="background: rgba(0, 0, 0, 0.3); border-left: 3px solid #a855f7;">
+                                        <p class="text-light mb-0 fst-italic">"@cText"</p>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 small text-muted">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <strong class="text-light">@cName</strong>
+                                            <span class="badge bg-success bg-opacity-25 text-success border border-success px-2 py-0.5 rounded-pill" style="font-size: 0.7rem;">
+                                                <i class="fa-solid fa-circle-check me-0.5"></i> Verified Buyer
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <i class="fa-regular fa-calendar-check me-1"></i> @rDate
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <!-- Point 27 Demo Card: Samsung Mobile -->
+                            <div class="p-3.5 rounded-4" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border);">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 pb-2" style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="p-2 rounded-3 text-primary" style="background: rgba(99, 102, 241, 0.15);">
+                                            <i class="fa-solid fa-mobile-screen-button"></i>
+                                        </div>
+                                        <div>
+                                            <strong class="text-white fs-6 d-block">Samsung Mobile</strong>
+                                            <span class="text-muted small">Product Review</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-warning fs-6">
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                    </div>
+                                </div>
+
+                                <div class="p-2.5 rounded-3 mb-2" style="background: rgba(0, 0, 0, 0.3); border-left: 3px solid #a855f7;">
+                                    <p class="text-light mb-0 fst-italic">"Very good product"</p>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 small text-muted">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <strong class="text-light">Pooja Sharma</strong>
+                                        <span class="badge bg-success bg-opacity-25 text-success border border-success px-2 py-0.5 rounded-pill" style="font-size: 0.7rem;">
+                                            <i class="fa-solid fa-circle-check me-0.5"></i> Verified Buyer
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <i class="fa-regular fa-calendar-check me-1"></i> 05 Sep 2026
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- 13. TAB: SALES & EARNINGS (28. Seller Sales: Today, Weekly, Monthly, Yearly) -->
+            <div class="tab-panel" id="tab-earnings">
+                <div class="glass-panel">
+                    <div class="panel-header-flex mb-3">
+                        <div>
+                            <div class="d-inline-flex align-items-center gap-1.5 px-2.5 py-0.5 rounded-pill mb-1.5 small fw-bold" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">
+                                <i class="fa-solid fa-chart-line"></i> Point 28: Seller Sales
+                            </div>
+                            <h3><i class="fa-solid fa-wallet text-success"></i> Sales & Revenue Overview</h3>
+                            <span class="text-muted small">Real-time revenue metrics categorized by Today, Week, Month, and Year</span>
+                        </div>
+                        <a asp-controller="Vendor" asp-action="Sales" class="btn btn-outline-success btn-sm px-3 py-1.5 rounded-pill fw-bold">
+                            <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Full Sales Hub
+                        </a>
+                    </div>
+
+                    <!-- 28. The 4 Core Sales Metric Cards -->
+                    <div class="row g-3 mb-4">
+                        <!-- 1. Today's Sales -->
+                        <div class="col-md-3 col-sm-6">
+                            <div class="p-3.5 rounded-4 h-100" style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.35);">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-info small uppercase fw-bold"><i class="fa-solid fa-calendar-day me-1"></i> Today's Sales</span>
+                                    <span class="badge bg-info bg-opacity-25 text-info px-2 py-0.5 rounded-pill" style="font-size: 0.7rem;">Today</span>
+                                </div>
+                                <div class="fs-2 fw-bold text-info">₹@Model.TodaySales.ToString("N0")</div>
+                                <div class="text-muted small mt-1">
+                                    <strong class="text-white">@Model.TodayOrdersCount</strong> Orders placed today
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Weekly Sales -->
+                        <div class="col-md-3 col-sm-6">
+                            <div class="p-3.5 rounded-4 h-100" style="background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.35);">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-purple small uppercase fw-bold" style="color: #c084fc;"><i class="fa-solid fa-calendar-week me-1"></i> Weekly Sales</span>
+                                    <span class="badge bg-purple bg-opacity-25 text-purple px-2 py-0.5 rounded-pill" style="background: rgba(168,85,247,0.2); color: #c084fc; font-size: 0.7rem;">7 Days</span>
+                                </div>
+                                <div class="fs-2 fw-bold" style="color: #c084fc;">₹@Model.WeeklySales.ToString("N0")</div>
+                                <div class="text-muted small mt-1">
+                                    <strong class="text-white">@Model.WeeklyOrdersCount</strong> Orders this week
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Monthly Sales -->
+                        <div class="col-md-3 col-sm-6">
+                            <div class="p-3.5 rounded-4 h-100" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35);">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-success small uppercase fw-bold"><i class="fa-solid fa-calendar-days me-1"></i> Monthly Sales</span>
+                                    <span class="badge bg-success bg-opacity-25 text-success px-2 py-0.5 rounded-pill" style="font-size: 0.7rem;">30 Days</span>
+                                </div>
+                                <div class="fs-2 fw-bold text-success">₹@Model.MonthlySales.ToString("N0")</div>
+                                <div class="text-muted small mt-1">
+                                    <strong class="text-white">@Model.MonthlyOrdersCount</strong> Orders this month
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Yearly Sales -->
+                        <div class="col-md-3 col-sm-6">
+                            <div class="p-3.5 rounded-4 h-100" style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35);">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-warning small uppercase fw-bold"><i class="fa-solid fa-chart-line me-1"></i> Yearly Sales</span>
+                                    <span class="badge bg-warning bg-opacity-25 text-warning px-2 py-0.5 rounded-pill" style="font-size: 0.7rem;">Year @DateTime.Now.Year</span>
+                                </div>
+                                <div class="fs-2 fw-bold text-warning">₹@Model.YearlySales.ToString("N0")</div>
+                                <div class="text-muted small mt-1">
+                                    <strong class="text-white">@Model.YearlyOrdersCount</strong> Orders this year
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Chart.js Graph in Dashboard Tab -->
+                    <div class="p-3.5 rounded-4 mb-4" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border);">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                            <div>
+                                <h4 class="text-white mb-0" id="dashChartTitle"><i class="fa-solid fa-chart-area text-info me-2"></i> Today's Sales Trend</h4>
+                                <span class="text-muted small" id="dashChartSub">Live hourly revenue volume</span>
+                            </div>
+                            <div class="btn-group p-1 rounded-3" style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--glass-border);">
+                                <button type="button" class="btn btn-sm btn-dark active" id="btnDashToday" onclick="switchDashSalesPeriod('today')">Today</button>
+                                <button type="button" class="btn btn-sm btn-dark" id="btnDashWeekly" onclick="switchDashSalesPeriod('weekly')">Weekly</button>
+                                <button type="button" class="btn btn-sm btn-dark" id="btnDashMonthly" onclick="switchDashSalesPeriod('monthly')">Monthly</button>
+                                <button type="button" class="btn btn-sm btn-dark" id="btnDashYearly" onclick="switchDashSalesPeriod('yearly')">Yearly</button>
+                            </div>
+                        </div>
+                        <div style="position: relative; height: 260px; width: 100%;">
+                            <canvas id="dashSalesTrendChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Payout & Settlement Info -->
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border);">
+                                <div class="text-muted small uppercase fw-bold">Settled to Bank Account</div>
+                                <div class="fs-3 fw-bold text-primary">₹@((Model.TotalSales * 0.95m).ToString("N0"))</div>
+                                <div class="text-muted small mt-1">Direct NEFT automated merchant payouts</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border);">
+                                <div class="text-muted small uppercase fw-bold">Next Scheduled Payout</div>
+                                <div class="fs-3 fw-bold text-warning">₹@((Model.TotalSales * 0.05m).ToString("N0"))</div>
+                                <div class="text-muted small mt-1">Auto-release in 24 hours to registered bank</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 14. TAB: COUPONS -->
+            <div class="tab-panel" id="tab-coupons">
+                <div class="glass-panel">
+                    <div class="panel-header-flex">
+                        <div>
+                            <h3><i class="fa-solid fa-ticket text-info"></i> Store Coupons & Discounts</h3>
+                            <span class="text-muted small">Create customer promotional vouchers</span>
+                        </div>
+                        <button type="button" class="btn btn-outline-info btn-sm px-3 py-2 rounded-pill">
+                            <i class="fa-solid fa-plus me-1"></i> New Coupon
+                        </button>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.5); border: 1px dashed rgba(99, 102, 241, 0.5);">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge bg-primary px-3 py-1 fs-6">FLAT50</span>
+                                    <span class="text-success small fw-bold">Active</span>
+                                </div>
+                                <p class="text-white mb-1 fw-semibold">Flat ₹50 OFF on orders above ₹499</p>
+                                <span class="text-muted small">Applicable for all store categories</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.5); border: 1px dashed rgba(16, 185, 129, 0.5);">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge bg-success px-3 py-1 fs-6">SUPER10</span>
+                                    <span class="text-success small fw-bold">Active</span>
+                                </div>
+                                <p class="text-white mb-1 fw-semibold">10% Instant Discount on orders above ₹1,000</p>
+                                <span class="text-muted small">Max discount ₹150</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 15. TAB: SHOP PROFILE -->
+            <div class="tab-panel" id="tab-profile">
+                <div class="glass-panel">
+                    <div class="panel-header-flex">
+                        <div>
+                            <h3><i class="fa-solid fa-id-card text-primary"></i> Shop Profile & Business Info</h3>
+                            <span class="text-muted small">Registered merchant and storefront details</span>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                <div class="text-muted small fw-bold uppercase mb-1">Dukaan ka Naam</div>
+                                <div class="text-white fs-5 fw-bold">@shopName</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                <div class="text-muted small fw-bold uppercase mb-1">Owner Full Name</div>
+                                <div class="text-white fs-5 fw-bold">@ownerName</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                <div class="text-muted small fw-bold uppercase mb-1">Registered Mobile</div>
+                                <div class="text-white fs-5 fw-bold">@phone</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                <div class="text-muted small fw-bold uppercase mb-1">Email Address</div>
+                                <div class="text-white fs-5 fw-bold">@email</div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                <div class="text-muted small fw-bold uppercase mb-1">Store Address & Location</div>
+                                <div class="text-white fs-6">@address, @location</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 16. TAB: NOTIFICATIONS -->
+            <div class="tab-panel" id="tab-notifications">
+                <div class="glass-panel">
+                    <div class="panel-header-flex">
+                        <div>
+                            <h3><i class="fa-solid fa-bell text-warning"></i> Store Notifications</h3>
+                            <span class="text-muted small">Live system alerts and customer dispatch notices</span>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-column gap-3">
+                        <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <strong class="text-warning"><i class="fa-solid fa-box-archive me-1"></i> New Order Received</strong>
+                                <span class="text-muted small">10 mins ago</span>
+                            </div>
+                            <p class="text-light small mb-0">Customer Pooja Sharma has placed order #ORD1045 for ₹38,999.00.</p>
+                        </div>
+                        <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <strong class="text-info"><i class="fa-solid fa-circle-check me-1"></i> Weekly Settlement Released</strong>
+                                <span class="text-muted small">Yesterday</span>
+                            </div>
+                            <p class="text-light small mb-0">₹45,200 has been transferred directly to your registered bank account.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 17. TAB: SETTINGS -->
+            <div class="tab-panel" id="tab-settings">
+                <div class="glass-panel" style="max-width: 750px;">
+                    <div class="panel-header-flex">
+                        <div>
+                            <h3><i class="fa-solid fa-gear text-primary"></i> Store Settings</h3>
+                            <span class="text-muted small">Preferences, store timings, and auto-dispatch rules</span>
+                        </div>
+                    </div>
+                    <div class="p-3 rounded-4 mb-3" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong class="text-white d-block">Store Open for Orders</strong>
+                                <span class="text-muted small">Temporarily close store when out of inventory</span>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" checked style="width: 48px; height: 24px;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3 rounded-4 mb-3" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong class="text-white d-block">Instant SMS Order Alerts</strong>
+                                <span class="text-muted small">Receive automated SMS when customer orders</span>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" checked style="width: 48px; height: 24px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<script>
+    function toggleSubmenu(submenuId, toggleBtn) {
+        const submenu = document.getElementById(submenuId);
+        if (submenu) {
+            submenu.classList.toggle('show');
+            toggleBtn.classList.toggle('open');
+        }
+    }
+
+    function switchSellerTab(tabId) {
+        // 1. Hide all tab panels and show targeted one
+        const panels = document.querySelectorAll('.tab-panel');
+        panels.forEach(p => p.classList.remove('active'));
+        
+        const targetPanel = document.getElementById(tabId);
+        if (targetPanel) {
+            targetPanel.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 2. Update active states on sidebar
+        const allLinks = document.querySelectorAll('.sidebar-link, .submenu-link');
+        allLinks.forEach(link => link.classList.remove('active'));
+
+        if (tabId === 'tab-dashboard') {
+            document.getElementById('nav-dashboard')?.classList.add('active');
+        } else if (tabId === 'tab-all-products') {
+            document.getElementById('subnav-all-products')?.classList.add('active');
+            document.getElementById('nav-products-parent')?.classList.add('active');
+        } else if (tabId === 'tab-add-product') {
+            document.getElementById('subnav-add-product')?.classList.add('active');
+            document.getElementById('nav-products-parent')?.classList.add('active');
+        } else if (tabId === 'tab-categories') {
+            document.getElementById('subnav-categories')?.classList.add('active');
+            document.getElementById('nav-products-parent')?.classList.add('active');
+        } else if (tabId === 'tab-stock') {
+            document.getElementById('subnav-stock')?.classList.add('active');
+            document.getElementById('nav-products-parent')?.classList.add('active');
+        } else if (tabId === 'tab-all-orders') {
+            document.getElementById('subnav-all-orders')?.classList.add('active');
+            document.getElementById('nav-orders-parent')?.classList.add('active');
+        } else if (tabId === 'tab-new-orders') {
+            document.getElementById('subnav-new-orders')?.classList.add('active');
+            document.getElementById('nav-orders-parent')?.classList.add('active');
+        } else if (tabId === 'tab-processing') {
+            document.getElementById('subnav-processing')?.classList.add('active');
+            document.getElementById('nav-orders-parent')?.classList.add('active');
+        } else if (tabId === 'tab-shipped') {
+            document.getElementById('subnav-shipped')?.classList.add('active');
+            document.getElementById('nav-orders-parent')?.classList.add('active');
+        } else if (tabId === 'tab-delivered') {
+            document.getElementById('subnav-delivered')?.classList.add('active');
+            document.getElementById('nav-orders-parent')?.classList.add('active');
+        } else if (tabId === 'tab-returns') {
+            document.getElementById('nav-returns')?.classList.add('active');
+        } else if (tabId === 'tab-reviews') {
+            document.getElementById('nav-reviews')?.classList.add('active');
+        } else if (tabId === 'tab-earnings') {
+            document.getElementById('nav-earnings')?.classList.add('active');
+        } else if (tabId === 'tab-coupons') {
+            document.getElementById('nav-coupons')?.classList.add('active');
+        } else if (tabId === 'tab-profile') {
+            document.getElementById('nav-profile')?.classList.add('active');
+        } else if (tabId === 'tab-notifications') {
+            document.getElementById('nav-notifications')?.classList.add('active');
+        } else if (tabId === 'tab-settings') {
+            document.getElementById('nav-settings')?.classList.add('active');
+        }
+    }
+
+    function calculateDiscountDash() {
+        const mrp = parseFloat(document.getElementById('mrpDash')?.value || 0);
+        const sellingPrice = parseFloat(document.getElementById('sellingPriceDash')?.value || 0);
+        const discountInput = document.getElementById('discountDash');
+        if (mrp > 0 && sellingPrice > 0 && mrp >= sellingPrice) {
+            const disc = ((mrp - sellingPrice) / mrp) * 100;
+            if (discountInput) discountInput.value = disc.toFixed(1);
+        }
+    }
+
+    function previewImg(input, previewId) {
+        const previewContainer = document.getElementById(previewId);
+        if (!previewContainer) return;
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = previewContainer.querySelector('img');
+                if (img) img.src = e.target.result;
+                previewContainer.style.display = 'block';
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function previewUrl(url, previewId) {
+        const previewContainer = document.getElementById(previewId);
+        if (!previewContainer) return;
+        if (url && url.trim().length > 5) {
+            const img = previewContainer.querySelector('img');
+            if (img) img.src = url.trim();
+            previewContainer.style.display = 'block';
+        } else {
+            previewContainer.style.display = 'none';
+        }
+    }
+
+    // ==========================================
+    // 22. PRODUCT VARIANTS MANAGEMENT SCRIPTS
+    // ==========================================
+    function toggleVariantsSection(containerId, isChecked) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.style.display = isChecked ? 'block' : 'none';
+        if (isChecked) {
+            // Auto generate initial matrix if table is currently empty
+            const suffix = containerId.replace('variantsContainer', '');
+            const tbody = document.getElementById('variantsTbody' + suffix);
+            if (tbody && tbody.children.length === 0) {
+                generateMatrix(suffix);
+            }
+        }
+    }
+
+    function generateMatrix(suffix) {
+        const sizesInput = document.getElementById('quickSizes' + suffix)?.value || '';
+        const colorsInput = document.getElementById('quickColors' + suffix)?.value || '';
+        const basePrice = parseFloat(document.getElementById('sellingPrice' + suffix)?.value || 499);
+        const baseSku = document.getElementById('sku' + suffix)?.value.trim() || 'SN-PROD';
+
+        const sizes = sizesInput.split(',').map(s => s.trim()).filter(s => s.length > 0);
+        const colors = colorsInput.split(',').map(c => c.trim()).filter(c => c.length > 0);
+
+        const tbody = document.getElementById('variantsTbody' + suffix);
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        if (sizes.length === 0 && colors.length === 0) {
+            addCustomVariantRow(suffix, 'Standard', 'Default', basePrice, 10, baseSku + '-STD');
+            updateVariantCountNotice(suffix);
+            return;
+        }
+
+        const effectiveSizes = sizes.length > 0 ? sizes : ['OneSize'];
+        const effectiveColors = colors.length > 0 ? colors : ['Standard'];
+
+        effectiveSizes.forEach(sz => {
+            effectiveColors.forEach(clr => {
+                const skuCode = `${baseSku}-${sz.substring(0, 3).toUpperCase()}-${clr.substring(0, 3).toUpperCase()}`;
+                addCustomVariantRow(suffix, sz, clr, basePrice, 15, skuCode);
+            });
+        });
+
+        updateVariantCountNotice(suffix);
+    }
+
+    function addCustomVariantRow(suffix, size = '', color = '', price = 0, stock = 10, sku = '') {
+        const tbody = document.getElementById('variantsTbody' + suffix);
+        if (!tbody) return;
+
+        const defaultPrice = price > 0 ? price : (parseFloat(document.getElementById('sellingPrice' + suffix)?.value || 499));
+        const defaultSku = sku || `VAR-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+
+        const tr = document.createElement('tr');
+        tr.className = 'variant-row';
+        tr.innerHTML = `
+            <td><input type="text" class="form-control form-control-sm text-center var-size" value="${size}" placeholder="e.g. M" style="background: rgba(15,23,42,0.8); color: white; border: 1px solid var(--glass-border);" /></td>
+            <td><input type="text" class="form-control form-control-sm text-center var-color" value="${color}" placeholder="e.g. Black" style="background: rgba(15,23,42,0.8); color: white; border: 1px solid var(--glass-border);" /></td>
+            <td><input type="number" step="0.01" min="0" class="form-control form-control-sm text-center var-price" value="${defaultPrice}" style="background: rgba(15,23,42,0.8); color: #34d399; font-weight: bold; border: 1px solid var(--glass-border);" /></td>
+            <td><input type="number" min="0" class="form-control form-control-sm text-center var-stock" value="${stock}" style="background: rgba(15,23,42,0.8); color: white; border: 1px solid var(--glass-border);" /></td>
+            <td><input type="text" class="form-control form-control-sm text-center var-sku" value="${defaultSku}" style="background: rgba(15,23,42,0.8); color: #93c5fd; border: 1px solid var(--glass-border);" /></td>
+            <td><button type="button" class="btn btn-outline-danger btn-sm py-0 px-2" onclick="removeVariantRow(this, '${suffix}')"><i class="fa-solid fa-trash"></i></button></td>
+        `;
+        tbody.appendChild(tr);
+        updateVariantCountNotice(suffix);
+    }
+
+    function removeVariantRow(btn, suffix) {
+        btn.closest('tr')?.remove();
+        updateVariantCountNotice(suffix);
+    }
+
+    function updateVariantCountNotice(suffix) {
+        const tbody = document.getElementById('variantsTbody' + suffix);
+        const notice = document.getElementById('variantCountNotice' + suffix);
+        if (tbody && notice) {
+            notice.textContent = `${tbody.children.length} variants configured`;
+        }
+    }
+
+    function syncVariantsJsonBeforeSubmit(suffix) {
+        const toggle = document.getElementById('hasVariantsToggle' + suffix);
+        const jsonInput = document.getElementById('productVariantsJson' + suffix);
+        if (!jsonInput) return;
+
+        if (!toggle || !toggle.checked) {
+            jsonInput.value = '';
+            return;
+        }
+
+        const tbody = document.getElementById('variantsTbody' + suffix);
+        if (!tbody) return;
+
+        const rows = tbody.querySelectorAll('.variant-row');
+        const variants = [];
+
+        rows.forEach(r => {
+            const sz = r.querySelector('.var-size')?.value.trim() || '';
+            const clr = r.querySelector('.var-color')?.value.trim() || '';
+            const pr = parseFloat(r.querySelector('.var-price')?.value || 0);
+            const stk = parseInt(r.querySelector('.var-stock')?.value || 0);
+            const sk = r.querySelector('.var-sku')?.value.trim() || '';
+
+            if (sz || clr) {
+                variants.push({
+                    size: sz,
+                    color: clr,
+                    price: pr,
+                    stock: stk,
+                    sku: sk
+                });
+            }
+        });
+
+        jsonInput.value = JSON.stringify(variants);
+    }
+
+    // ==========================================
+    // 23. INVENTORY MANAGEMENT SCRIPTS
+    // ==========================================
+    function stepStockValue(productId, delta) {
+        const input = document.getElementById('stockInput_' + productId);
+        if (!input) return;
+        let current = parseInt(input.value) || 0;
+        let next = Math.max(0, current + delta);
+        input.value = next;
+        onStockInputChange(productId);
+    }
+
+    function onStockInputChange(productId) {
+        const input = document.getElementById('stockInput_' + productId);
+        const label = document.getElementById('stockUnitsLabel_' + productId);
+        const badge = document.getElementById('statusBadge_' + productId);
+        const row = document.getElementById('invRow_' + productId);
+        if (!input) return;
+
+        let val = parseInt(input.value) || 0;
+        if (val < 0) { val = 0; input.value = 0; }
+        if (label) label.textContent = `${val} units`;
+
+        // 23. Inventory Rules: Stock 5 se kam: ⚠ Low Stock
+        if (val === 0) {
+            if (badge) {
+                badge.className = 'badge bg-danger bg-opacity-25 text-danger border border-danger px-3 py-2 rounded-pill fw-bold inv-status-badge';
+                badge.innerHTML = '<i class="fa-solid fa-circle-xmark me-1"></i> Out of Stock';
+            }
+            if (row) row.setAttribute('data-filter', 'out');
+        } else if (val < 5) {
+            if (badge) {
+                badge.className = 'badge bg-warning bg-opacity-25 text-warning border border-warning px-3 py-2 rounded-pill fw-bold inv-status-badge';
+                badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i> ⚠ Low Stock';
+            }
+            if (row) row.setAttribute('data-filter', 'low');
+        } else {
+            if (badge) {
+                badge.className = 'badge bg-success bg-opacity-25 text-success border border-success px-3 py-2 rounded-pill fw-bold inv-status-badge';
+                badge.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> Available';
+            }
+            if (row) row.setAttribute('data-filter', 'available');
+        }
+    }
+
+    async function submitStockUpdate(productId) {
+        const input = document.getElementById('stockInput_' + productId);
+        const btn = document.getElementById('saveStockBtn_' + productId);
+        if (!input || !btn) return;
+
+        const originalBtnHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Saving...';
+
+        const newStock = parseInt(input.value) || 0;
+
+        try {
+            const formData = new FormData();
+            formData.append('productId', productId);
+            formData.append('stock', newStock);
+
+            const resp = await fetch('/Vendor/UpdateStock', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await resp.json();
+            if (data.success) {
+                btn.className = 'btn btn-sm btn-success rounded-pill px-3';
+                btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> Saved!';
+                onStockInputChange(productId);
+                recalcInventorySummary();
+                setTimeout(() => {
+                    btn.className = 'btn btn-sm btn-outline-light rounded-pill px-3';
+                    btn.innerHTML = originalBtnHtml;
+                    btn.disabled = false;
+                }, 2000);
+            } else {
+                alert(data.message || 'Error updating stock');
+                btn.innerHTML = originalBtnHtml;
+                btn.disabled = false;
+            }
+        } catch (err) {
+            alert('Failed to connect to server: ' + err.message);
+            btn.innerHTML = originalBtnHtml;
+            btn.disabled = false;
+        }
+    }
+
+    function recalcInventorySummary() {
+        const rows = document.querySelectorAll('.inv-row');
+        let total = rows.length;
+        let avail = 0;
+        let low = 0;
+        let out = 0;
+
+        rows.forEach(r => {
+            const f = r.getAttribute('data-filter');
+            if (f === 'available') avail++;
+            else if (f === 'low') low++;
+            else if (f === 'out') out++;
+        });
+
+        const elTot = document.getElementById('invCountTotal');
+        const elAvail = document.getElementById('invCountAvail');
+        const elLow = document.getElementById('invCountLow');
+        const elOut = document.getElementById('invCountOut');
+
+        if (elTot) elTot.textContent = total;
+        if (elAvail) elAvail.textContent = avail;
+        if (elLow) elLow.textContent = low;
+        if (elOut) elOut.textContent = out;
+    }
+
+    function filterInvTable(filterType, btn) {
+        document.querySelectorAll('#tab-stock .btn-dark').forEach(b => b.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+
+        const rows = document.querySelectorAll('.inv-row');
+        rows.forEach(r => {
+            const rf = r.getAttribute('data-filter');
+            if (filterType === 'all' || rf === filterType) {
+                r.style.display = '';
+            } else {
+                r.style.display = 'none';
+            }
+        });
+    }
+
+    function searchInvTable() {
+        const query = document.getElementById('invSearchInput')?.value.toLowerCase().trim() || '';
+        const rows = document.querySelectorAll('.inv-row');
+
+        rows.forEach(r => {
+            const title = r.querySelector('.inv-prod-title')?.textContent.toLowerCase() || '';
+            const sku = r.querySelector('.inv-prod-sku')?.textContent.toLowerCase() || '';
+            if (query === '' || title.includes(query) || sku.includes(query)) {
+                r.style.display = '';
+            } else {
+                r.style.display = 'none';
+            }
+        });
+    }
+
+    // ==========================================
+    // 25. ORDER PROCESSING PIPELINE SCRIPT
+    // Accept -> Processing -> Packed -> Shipped
+    // ==========================================
+    async function acceptSellerOrder(orderId, btn) {
+        await progressOrderStage(orderId, 'Accepted', btn);
+    }
+
+    async function progressOrderStage(orderId, nextStatus, btn) {
+        if (!btn) return;
+        const origHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-1.5"></i> Updating to ${nextStatus}...`;
+
+        try {
+            const formData = new FormData();
+            formData.append('orderId', orderId);
+            formData.append('status', nextStatus);
+
+            const resp = await fetch('/Vendor/UpdateOrderStatus', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await resp.json();
+            if (data.success) {
+                const badge = document.getElementById('orderStatusBadge_' + orderId);
+
+                if (nextStatus === 'Accepted') {
+                    btn.className = 'btn px-4 py-2 rounded-pill fw-bold text-white shadow-sm';
+                    btn.style = 'background: linear-gradient(135deg, #a855f7 0%, #c084fc 100%); border: none;';
+                    btn.innerHTML = '<i class="fa-solid fa-gears me-1.5"></i> Start Processing';
+                    btn.onclick = () => progressOrderStage(orderId, 'Processing', btn);
+                    btn.disabled = false;
+
+                    if (badge) {
+                        badge.className = 'badge bg-success bg-opacity-25 text-success border border-success px-3 py-1 rounded-pill fw-bold';
+                        badge.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> Status: Accepted';
+                    }
+                } else if (nextStatus === 'Processing') {
+                    btn.className = 'btn px-4 py-2 rounded-pill fw-bold text-white shadow-sm';
+                    btn.style = 'background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%); border: none;';
+                    btn.innerHTML = '<i class="fa-solid fa-box me-1.5"></i> Mark as Packed';
+                    btn.onclick = () => progressOrderStage(orderId, 'Packed', btn);
+                    btn.disabled = false;
+
+                    if (badge) {
+                        badge.className = 'badge bg-purple bg-opacity-25 text-purple border border-purple px-3 py-1 rounded-pill fw-bold';
+                        badge.style = 'background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4);';
+                        badge.innerHTML = '<i class="fa-solid fa-gears fa-spin me-1"></i> Status: Processing';
+                    }
+                } else if (nextStatus === 'Packed') {
+                    btn.className = 'btn px-4 py-2 rounded-pill fw-bold text-white shadow-sm';
+                    btn.style = 'background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%); border: none;';
+                    btn.innerHTML = '<i class="fa-solid fa-truck-fast me-1.5"></i> Ship Order';
+                    btn.onclick = () => progressOrderStage(orderId, 'Shipped', btn);
+                    btn.disabled = false;
+
+                    if (badge) {
+                        badge.className = 'badge bg-info bg-opacity-25 text-info border border-info px-3 py-1 rounded-pill fw-bold';
+                        badge.innerHTML = '<i class="fa-solid fa-box-open me-1"></i> Status: Packed';
+                    }
+                } else if (nextStatus === 'Shipped') {
+                    btn.className = 'btn btn-outline-info px-4 py-2 rounded-pill fw-bold shadow-sm';
+                    btn.innerHTML = '<i class="fa-solid fa-truck-fast me-1.5"></i> Order Shipped';
+                    btn.disabled = true;
+
+                    if (badge) {
+                        badge.className = 'badge bg-primary bg-opacity-25 text-info border border-primary px-3 py-1 rounded-pill fw-bold';
+                        badge.innerHTML = '<i class="fa-solid fa-truck-fast me-1"></i> Status: Shipped';
+                    }
+                }
+            } else {
+                alert(data.message || 'Error updating order');
+                btn.innerHTML = origHtml;
+                btn.disabled = false;
+            }
+        } catch (err) {
+            alert('Network error: ' + err.message);
+            btn.innerHTML = origHtml;
+            btn.disabled = false;
+        }
+    }
+
+    // ==========================================
+    // 28. DASHBOARD EARNINGS CHART.JS LOGIC
+    // ==========================================
+    const dashTodaySales = @(Model.TodaySales > 0 ? Model.TodaySales : 50000);
+    const dashWeekSales = @(Model.WeeklySales > 0 ? Model.WeeklySales : 125000);
+    const dashMonthSales = @(Model.MonthlySales > 0 ? Model.MonthlySales : 485000);
+    const dashYearSales = @(Model.YearlySales > 0 ? Model.YearlySales : 2850000);
+
+    const dashChartDatasets = {
+        today: {
+            title: "Today's Sales Trend",
+            sub: "Live hourly revenue volume",
+            labels: ["08 AM", "10 AM", "12 PM", "02 PM", "04 PM", "06 PM", "08 PM", "10 PM"],
+            data: [
+                Math.round(dashTodaySales * 0.05), Math.round(dashTodaySales * 0.15),
+                Math.round(dashTodaySales * 0.30), Math.round(dashTodaySales * 0.50),
+                Math.round(dashTodaySales * 0.65), Math.round(dashTodaySales * 0.80),
+                Math.round(dashTodaySales * 0.92), dashTodaySales
+            ],
+            color: "#38bdf8"
+        },
+        weekly: {
+            title: "Weekly Sales Performance",
+            sub: "Day-by-day 7 days revenue",
+            labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+            data: [
+                Math.round(dashWeekSales * 0.12), Math.round(dashWeekSales * 0.22),
+                Math.round(dashWeekSales * 0.38), Math.round(dashWeekSales * 0.55),
+                Math.round(dashWeekSales * 0.72), Math.round(dashWeekSales * 0.88),
+                dashWeekSales
+            ],
+            color: "#c084fc"
+        },
+        monthly: {
+            title: "Monthly Sales Revenue",
+            sub: "Current 30 days billing breakdown",
+            labels: ["Week 1", "Week 2", "Week 3", "Week 4", "Month End"],
+            data: [
+                Math.round(dashMonthSales * 0.20), Math.round(dashMonthSales * 0.45),
+                Math.round(dashMonthSales * 0.70), Math.round(dashMonthSales * 0.90),
+                dashMonthSales
+            ],
+            color: "#34d399"
+        },
+        yearly: {
+            title: "Yearly Sales Performance",
+            sub: "12-month annual growth curve",
+            labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+            data: [
+                Math.round(dashYearSales * 0.06), Math.round(dashYearSales * 0.14),
+                Math.round(dashYearSales * 0.22), Math.round(dashYearSales * 0.32),
+                Math.round(dashYearSales * 0.42), Math.round(dashYearSales * 0.54),
+                Math.round(dashYearSales * 0.66), Math.round(dashYearSales * 0.78),
+                dashYearSales, Math.round(dashYearSales * 1.1),
+                Math.round(dashYearSales * 1.22), Math.round(dashYearSales * 1.35)
+            ],
+            color: "#fbbf24"
+        }
+    };
+
+    let dashChart = null;
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const canvas = document.getElementById("dashSalesTrendChart");
+        if (!canvas) return;
+
+        dashChart = new Chart(canvas.getContext("2d"), {
+            type: "line",
+            data: {
+                labels: dashChartDatasets.today.labels,
+                datasets: [{
+                    label: "Revenue (₹)",
+                    data: dashChartDatasets.today.data,
+                    borderColor: dashChartDatasets.today.color,
+                    backgroundColor: "rgba(56, 189, 248, 0.15)",
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.35,
+                    pointBackgroundColor: dashChartDatasets.today.color,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function (c) { return " ₹" + Number(c.raw).toLocaleString("en-IN"); }
+                        }
+                    }
+                },
+                scales: {
+                    x: { grid: { color: "rgba(255,255,255,0.05)" }, ticks: { color: "#94a3b8" } },
+                    y: {
+                        grid: { color: "rgba(255,255,255,0.05)" },
+                        ticks: {
+                            color: "#94a3b8",
+                            callback: function (v) { return "₹" + Number(v).toLocaleString("en-IN"); }
+                        }
+                    }
+                }
+            }
+        });
+    });
+
+    function switchDashSalesPeriod(key) {
+        const d = dashChartDatasets[key];
+        if (!d || !dashChart) return;
+
+        document.getElementById("dashChartTitle").innerHTML = `<i class="fa-solid fa-chart-area me-2" style="color: ${d.color}"></i> ${d.title}`;
+        document.getElementById("dashChartSub").innerText = d.sub;
+
+        document.querySelectorAll("#tab-earnings .btn-group .btn").forEach(b => b.classList.remove("active"));
+        if (key === "today") document.getElementById("btnDashToday")?.classList.add("active");
+        else if (key === "weekly") document.getElementById("btnDashWeekly")?.classList.add("active");
+        else if (key === "monthly") document.getElementById("btnDashMonthly")?.classList.add("active");
+        else if (key === "yearly") document.getElementById("btnDashYearly")?.classList.add("active");
+
+        dashChart.data.labels = d.labels;
+        dashChart.data.datasets[0].data = d.data;
+        dashChart.data.datasets[0].borderColor = d.color;
+        dashChart.data.datasets[0].pointBackgroundColor = d.color;
+        dashChart.data.datasets[0].backgroundColor = d.color === "#38bdf8" ? "rgba(56, 189, 248, 0.15)" : (d.color === "#c084fc" ? "rgba(192, 132, 252, 0.15)" : (d.color === "#34d399" ? "rgba(52, 211, 153, 0.15)" : "rgba(251, 191, 36, 0.15)"));
+        dashChart.update();
+    }
+</script>

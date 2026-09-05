@@ -1,0 +1,24 @@
+@{
+    ViewData["Title"] = "Server Error (500)";
+}
+
+<div class="container py-5 my-md-4">
+    <div class="empty-state-card shadow-lg p-5">
+        <div class="empty-state-icon-wrapper danger mb-4">
+            <i class="fa-solid fa-triangle-exclamation fa-2x"></i>
+        </div>
+        <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill fw-bold mb-3">Error 500 &bull; Internal Server Error</span>
+        <h1 class="empty-state-title fw-extrabold mb-3">Something Went Wrong</h1>
+        <p class="empty-state-desc mb-4">
+            @(ViewBag.ErrorMessage ?? "An unexpected error occurred while processing your request. Our engineering team has been logged and alerted.")
+        </p>
+        <div class="d-flex flex-wrap justify-content-center gap-3">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-primary px-4 py-2 rounded-pill shadow-sm">
+                <i class="fa-solid fa-house me-1"></i> Return to Safety (Home)
+            </a>
+            <button onclick="window.location.reload();" class="btn btn-outline-secondary px-4 py-2 rounded-pill">
+                <i class="fa-solid fa-rotate-right me-1"></i> Try Again
+            </button>
+        </div>
+    </div>
+</div>

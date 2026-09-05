@@ -1,0 +1,383 @@
+@model IEnumerable<ShopNext.Models.Product>
+@{
+    ViewData["Title"] = "Explore Marketplace & Products - ShopNext";
+    var categories = ViewBag.Categories as List<string> ?? new List<string>();
+    string currentCategory = ViewBag.SelectedCategory as string ?? "All";
+    string currentSearch = ViewBag.Search as string ?? "";
+    string currentSort = ViewBag.Sort as string ?? "default";
+}
+
+<style>
+    .marketplace-hero {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(168, 85, 247, 0.15) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        backdrop-filter: blur(12px);
+    }
+    .search-input-group {
+        background: rgba(15, 23, 42, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 16px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    .search-input-group:focus-within {
+        border-color: #818cf8;
+        box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.25);
+    }
+    .search-input-group input {
+        background: transparent;
+        border: none;
+        color: white;
+        padding: 0.9rem 1.25rem;
+    }
+    .search-input-group input:focus {
+        background: transparent;
+        color: white;
+        box-shadow: none;
+    }
+    .category-chip {
+        display: inline-block;
+        padding: 0.5rem 1.2rem;
+        border-radius: 50rem;
+        background: rgba(30, 41, 59, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #cbd5e1;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+    .category-chip:hover {
+        background: rgba(99, 102, 241, 0.25);
+        border-color: #818cf8;
+        color: white;
+        transform: translateY(-1px);
+    }
+    .category-chip.active {
+        background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+        border-color: transparent;
+        color: white;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+    }
+    .product-card {
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    .product-card:hover {
+        transform: translateY(-6px);
+        border-color: rgba(129, 140, 248, 0.4);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+    }
+    .product-img-wrapper {
+        position: relative;
+        height: 180px;
+        overflow: hidden;
+        background: #0f172a;
+    }
+    .product-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.4s ease;
+    }
+    .product-card:hover .product-img {
+        transform: scale(1.06);
+    }
+    .product-card-body {
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        justify-content: space-between;
+    }
+</style>
+
+<div class="container py-4">
+    <!-- Marketplace Hero & Search -->
+    <div class="marketplace-hero">
+        <div class="row align-items-center g-3">
+            <div class="col-lg-7">
+                <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                    <span class="badge bg-primary bg-opacity-25 text-primary px-3 py-2 rounded-pill">
+                        <i class="fa-solid fa-store me-1"></i> Hyperlocal Marketplace
+                    </span>
+                    <a asp-controller="Vendor" asp-action="Register" class="btn btn-warning btn-sm fw-bold rounded-pill px-3 py-1 shadow-sm d-inline-flex align-items-center gap-1">
+                        <i class="fa-solid fa-store"></i> Become a Seller
+                    </a>
+                </div>
+                <h2 class="text-white fw-bold mb-2">Explore All Products & Stores</h2>
+                <p class="text-light opacity-75 mb-0">Browse fresh groceries, bakery goods, electronics, and daily essentials delivered directly from verified neighborhood stores.</p>
+            </div>
+            <div class="col-lg-5">
+                <form method="get" asp-action="Products">
+                    <input type="hidden" name="category" value="@currentCategory" />
+                    <input type="hidden" name="sort" value="@currentSort" />
+                    <div class="input-group search-input-group">
+                        <input type="text" name="search" class="form-control" placeholder="Search products, brands, or shops..." value="@currentSearch" />
+                        <button class="btn btn-primary px-4" type="submit">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Category Filter Chips -->
+        <div class="d-flex align-items-center gap-2 mt-4 flex-wrap">
+            <span class="text-muted small me-2"><i class="fa-solid fa-filter me-1"></i> Categories:</span>
+            <a asp-action="Products" asp-route-category="All" asp-route-search="@currentSearch" asp-route-sort="@currentSort" class="category-chip @(currentCategory == "All" ? "active" : "")">
+                All Products
+            </a>
+            @foreach (var cat in categories)
+            {
+                <a asp-action="Products" asp-route-category="@cat" asp-route-search="@currentSearch" asp-route-sort="@currentSort" class="category-chip @(currentCategory == cat ? "active" : "")">
+                    @cat
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- Active Filters & Sorting Bar -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div class="text-muted small">
+            Found <strong class="text-white">@Model.Count()</strong> products
+            @if (!string.IsNullOrEmpty(currentSearch))
+            {
+                <span>for "<span class="text-info">@currentSearch</span>"</span>
+            }
+            @if (currentCategory != "All")
+            {
+                <span>in <span class="badge bg-secondary">@currentCategory</span></span>
+            }
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <label class="text-muted small">Sort By:</label>
+            <select class="form-select form-select-sm bg-dark text-white border-secondary" style="width: auto;" onchange="applySort(this.value)">
+                <option value="default" selected="@(currentSort == "default")">Recommended</option>
+                <option value="price_asc" selected="@(currentSort == "price_asc")">Price: Low to High</option>
+                <option value="price_desc" selected="@(currentSort == "price_desc")">Price: High to Low</option>
+                <option value="name" selected="@(currentSort == "name")">Name (A-Z)</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Product Grid -->
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5" style="background: rgba(30, 41, 59, 0.4); border-radius: 20px;">
+            <i class="fa-solid fa-box-open fa-3x text-muted mb-3"></i>
+            <h4 class="text-white fw-bold">No Products Found</h4>
+            <p class="text-muted mb-3">Try adjusting your search query or select another category filter.</p>
+            <a asp-action="Products" class="btn btn-outline-primary btn-sm">Reset All Filters</a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var p in Model)
+            {
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                    <div class="product-card">
+                        <div class="product-img-wrapper">
+                            @if (!string.IsNullOrEmpty(p.ImageUrl))
+                            {
+                                <img src="@p.ImageUrl" alt="@p.ProductName" class="product-img" loading="lazy" />
+                            }
+                            else
+                            {
+                                <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted">
+                                    <i class="fa-solid fa-basket-shopping fa-3x opacity-50"></i>
+                                </div>
+                            }
+                            <span class="badge bg-dark bg-opacity-75 text-light position-absolute top-0 start-0 m-2 px-2 py-1 rounded">
+                                @p.Category
+                            </span>
+                            <!-- ♡ Add to Wishlist button -->
+                            <button type="button" class="btn btn-dark btn-sm rounded-circle position-absolute top-0 end-0 m-2 d-flex align-items-center justify-content-center shadow" style="width: 34px; height: 34px; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255,255,255,0.25); z-index: 2;" onclick="toggleWishlistProduct(@p.Id, this)" title="Add to Wishlist">
+                                <i class="fa-regular fa-heart text-danger fs-6"></i>
+                            </button>
+
+                            @if (p.StockStatus == "InStock")
+                            {
+                                <span class="badge bg-success position-absolute bottom-0 start-0 m-2 px-2 py-1 rounded">
+                                    In Stock
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger position-absolute bottom-0 start-0 m-2 px-2 py-1 rounded">
+                                    Out of Stock
+                                </span>
+                            }
+                        </div>
+                        <div class="product-card-body">
+                            <div>
+                                <a asp-action="ProductDetails" asp-route-id="@p.Id" class="text-decoration-none text-white">
+                                    <h6 class="fw-bold mb-1 text-truncate" title="@p.ProductName">@p.ProductName</h6>
+                                </a>
+                                @if (p.Shop != null)
+                                {
+                                    <a asp-action="ShopCatalog" asp-route-shopId="@p.ShopId" class="text-decoration-none small text-info d-block mb-2 text-truncate">
+                                        <i class="fa-solid fa-store me-1"></i> @p.Shop.ShopName
+                                    </a>
+                                }
+                            </div>
+                            <div class="mt-2 pt-2 border-top border-secondary">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="fs-5 fw-bold text-success">
+                                        &#8377;@p.Price.ToString("0.00")
+                                    </div>
+                                    <a asp-action="ProductDetails" asp-route-id="@p.Id" class="btn btn-outline-light btn-sm px-2 py-1" title="View Details">
+                                        <i class="fa-solid fa-eye me-1"></i> Details
+                                    </a>
+                                </div>
+                                <button class="btn btn-primary w-100 btn-sm" onclick="addToCart(@p.Id, '@p.ProductName.Replace("'", "\\'")', @p.Price, @p.ShopId, '@(p.Shop?.ShopName.Replace("'", "\\'") ?? "Shop")')">
+                                    <i class="fa-solid fa-cart-plus me-1"></i> Add to Cart
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Recently Viewed Products Section -->
+    <div id="mktRecentlyViewedSection" class="mt-5 pt-4 border-top border-secondary" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <div>
+                <h4 class="text-white fw-bold mb-1">
+                    <i class="fa-solid fa-clock-rotate-left text-warning me-2"></i> Recently Viewed Products
+                </h4>
+                <p class="text-muted small mb-0">Jump back to items you recently explored</p>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary" onclick="ShopNextRecentlyViewed.clear('mktRecentlyViewedContainer', 'mktRecentlyViewedSection')">
+                <i class="fa-solid fa-trash-can me-1"></i> Clear History
+            </button>
+        </div>
+        <div class="row g-3" id="mktRecentlyViewedContainer">
+            <!-- Dynamically populated from localStorage -->
+        </div>
+    </div>
+</div>
+
+<script>
+    function applySort(val) {
+        const url = new URL(window.location);
+        url.searchParams.set('sort', val);
+        window.location = url.toString();
+    }
+
+    function addToCart(productId, productName, price, shopId, shopName) {
+        let cart = JSON.parse(localStorage.getItem("shop_cart")) || { shopId: null, shopName: null, items: [] };
+
+        if (cart.shopId && cart.shopId !== shopId && cart.items.length > 0) {
+            const ok = confirm(`Your cart already contains items from "${cart.shopName}". Would you like to clear your cart and start an order from "${shopName}"?`);
+            if (!ok) return;
+            cart = { shopId: shopId, shopName: shopName, items: [] };
+        }
+
+        cart.shopId = shopId;
+        cart.shopName = shopName;
+
+        const existingItem = cart.items.find(i => i.productId === productId);
+        if (existingItem) {
+            existingItem.quantity += 1;
+        } else {
+            cart.items.push({
+                productId: productId,
+                productName: productName,
+                price: price,
+                quantity: 1
+            });
+        }
+
+        localStorage.setItem("shop_cart", JSON.stringify(cart));
+
+        let totalQty = 0;
+        cart.items.forEach(i => totalQty += i.quantity);
+        if (window.updateLayoutCartBadge) {
+            window.updateLayoutCartBadge(totalQty);
+        }
+
+        // Animated toast alert
+        showToast(`${productName} added to cart!`);
+    }
+
+    function showToast(msg) {
+        let toast = document.getElementById("marketplaceToast");
+        if (!toast) {
+            toast = document.createElement("div");
+            toast.id = "marketplaceToast";
+            toast.style.position = "fixed";
+            toast.style.bottom = "24px";
+            toast.style.right = "24px";
+            toast.style.zIndex = "9999";
+            toast.style.background = "linear-gradient(135deg, #6366f1, #a855f7)";
+            toast.style.color = "white";
+            toast.style.padding = "12px 20px";
+            toast.style.borderRadius = "12px";
+            toast.style.boxShadow = "0 10px 25px rgba(0,0,0,0.4)";
+            toast.style.fontWeight = "600";
+            toast.style.transition = "all 0.3s ease";
+            document.body.appendChild(toast);
+        }
+        toast.innerHTML = `<i class="fa-solid fa-circle-check me-2"></i> ${msg}`;
+        toast.style.opacity = "1";
+        toast.style.transform = "translateY(0)";
+        setTimeout(() => {
+            toast.style.opacity = "0";
+            toast.style.transform = "translateY(10px)";
+        }, 2500);
+    }
+
+    async function toggleWishlistProduct(productId, btn) {
+        const form = new FormData();
+        form.append("productId", productId);
+
+        try {
+            const resp = await fetch('/Customer/ToggleWishlist', {
+                method: 'POST',
+                body: form
+            });
+            const data = await resp.json();
+            if (data.success) {
+                const icon = btn.querySelector('i');
+                if (data.isAdded) {
+                    icon.classList.remove('fa-regular');
+                    icon.classList.add('fa-solid');
+                    btn.title = "In Wishlist";
+                } else {
+                    icon.classList.remove('fa-solid');
+                    icon.classList.add('fa-regular');
+                    btn.title = "Add to Wishlist";
+                }
+                showToast(data.message);
+            } else {
+                alert(data.message || "Please login to manage wishlist.");
+                if (data.message && data.message.includes("login")) {
+                    window.location.href = '/Customer/Login';
+                }
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        if (window.ShopNextRecentlyViewed) {
+            ShopNextRecentlyViewed.render('mktRecentlyViewedContainer', 'mktRecentlyViewedSection');
+        }
+    });
+</script>

@@ -1,0 +1,643 @@
+@model ShopNext.Models.Product
+@{
+    ViewData["Title"] = $"{Model.ProductName} - ShopNext";
+    var reviews = ViewBag.Reviews as IEnumerable<ShopNext.Models.Review> ?? Enumerable.Empty<ShopNext.Models.Review>();
+    double avgRating = ViewBag.AverageRating ?? 0;
+    int reviewCount = ViewBag.ReviewCount ?? 0;
+    var related = ViewBag.RelatedProducts as IEnumerable<ShopNext.Models.Product> ?? Enumerable.Empty<ShopNext.Models.Product>();
+}
+
+<style>
+    .details-card {
+        background: rgba(30, 41, 59, 0.75);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 2.5rem;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    }
+    .product-main-img {
+        width: 100%;
+        max-height: 420px;
+        object-fit: cover;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: #0f172a;
+    }
+    .shop-badge-box {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 1rem 1.25rem;
+    }
+    .qty-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(15, 23, 42, 0.8);
+        color: white;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .qty-btn:hover {
+        background: #6366f1;
+        border-color: #6366f1;
+    }
+    .review-item {
+        background: rgba(15, 23, 42, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 1.2rem;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Index" class="text-muted text-decoration-none"><i class="fa-solid fa-house me-1"></i>Home</a></li>
+            <li class="breadcrumb-item"><a asp-action="Products" class="text-muted text-decoration-none">Marketplace</a></li>
+            @if (Model.Shop != null)
+            {
+                <li class="breadcrumb-item"><a asp-action="ShopCatalog" asp-route-shopId="@Model.ShopId" class="text-muted text-decoration-none">@Model.Shop.ShopName</a></li>
+            }
+            <li class="breadcrumb-item active text-white" aria-current="page">@Model.ProductName</li>
+        </ol>
+    </nav>
+
+    <!-- Main Product Details Card -->
+    <div class="details-card mb-5">
+        <div class="row g-4 align-items-center">
+            <!-- Product Image & 21. Multiple Angle Thumbnails -->
+            <div class="col-lg-5 text-center">
+                <div class="position-relative">
+                    @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                    {
+                        <img id="mainProductViewImg" src="@Model.ImageUrl" alt="@Model.ProductName" class="product-main-img shadow" />
+                    }
+                    else
+                    {
+                        <div class="product-main-img d-flex align-items-center justify-content-center text-muted" style="height: 380px;">
+                            <i class="fa-solid fa-basket-shopping fa-5x opacity-50"></i>
+                        </div>
+                    }
+                    <span id="activeAngleBadge" class="badge bg-dark bg-opacity-75 text-light position-absolute bottom-0 start-50 translate-middle-x mb-3 px-3 py-1 rounded-pill border border-secondary border-opacity-50">
+                        <i class="fa-solid fa-star text-warning me-1"></i> Main Image
+                    </span>
+                </div>
+
+                <!-- Multi-Angle Thumbnails (Main, Front, Back, Side, Packaging) -->
+                <div class="d-flex justify-content-center gap-2 mt-3 flex-wrap">
+                    @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                    {
+                        <div class="angle-thumb p-1 rounded-3 border border-primary" title="Main Image" style="cursor: pointer; width: 60px; height: 60px; background: rgba(15, 23, 42, 0.8);" onclick="switchProductAngle('@Model.ImageUrl', '<i class=\'fa-solid fa-star text-warning me-1\'></i> Main Image', this)">
+                            <img src="@Model.ImageUrl" class="w-100 h-100 rounded" style="object-fit: cover;" alt="Main" />
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.ImageFront))
+                    {
+                        <div class="angle-thumb p-1 rounded-3 border border-secondary" title="Front View" style="cursor: pointer; width: 60px; height: 60px; background: rgba(15, 23, 42, 0.8);" onclick="switchProductAngle('@Model.ImageFront', '<i class=\'fa-solid fa-camera text-info me-1\'></i> Front View', this)">
+                            <img src="@Model.ImageFront" class="w-100 h-100 rounded" style="object-fit: cover;" alt="Front" />
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.ImageBack))
+                    {
+                        <div class="angle-thumb p-1 rounded-3 border border-secondary" title="Back View" style="cursor: pointer; width: 60px; height: 60px; background: rgba(15, 23, 42, 0.8);" onclick="switchProductAngle('@Model.ImageBack', '<i class=\'fa-solid fa-rotate text-info me-1\'></i> Back View', this)">
+                            <img src="@Model.ImageBack" class="w-100 h-100 rounded" style="object-fit: cover;" alt="Back" />
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.ImageSide))
+                    {
+                        <div class="angle-thumb p-1 rounded-3 border border-secondary" title="Side View" style="cursor: pointer; width: 60px; height: 60px; background: rgba(15, 23, 42, 0.8);" onclick="switchProductAngle('@Model.ImageSide', '<i class=\'fa-solid fa-cube text-info me-1\'></i> Side View', this)">
+                            <img src="@Model.ImageSide" class="w-100 h-100 rounded" style="object-fit: cover;" alt="Side" />
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.ImagePackaging))
+                    {
+                        <div class="angle-thumb p-1 rounded-3 border border-secondary" title="Packaging View" style="cursor: pointer; width: 60px; height: 60px; background: rgba(15, 23, 42, 0.8);" onclick="switchProductAngle('@Model.ImagePackaging', '<i class=\'fa-solid fa-box-open text-info me-1\'></i> Packaging View', this)">
+                            <img src="@Model.ImagePackaging" class="w-100 h-100 rounded" style="object-fit: cover;" alt="Packaging" />
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Product Specs & Actions -->
+            <div class="col-lg-7">
+                <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                    <span class="badge bg-primary bg-opacity-25 text-primary px-3 py-1 rounded-pill">@Model.Category</span>
+                    @if (Model.StockStatus == "InStock")
+                    {
+                        <span class="badge bg-success bg-opacity-25 text-success px-3 py-1 rounded-pill"><i class="fa-solid fa-check me-1"></i> In Stock</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger bg-opacity-25 text-danger px-3 py-1 rounded-pill">Out of Stock</span>
+                    }
+                </div>
+
+                <h2 class="text-white fw-bold mb-2">@Model.ProductName</h2>
+
+                <!-- Rating summary -->
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <div class="text-warning fs-5">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            if (i <= Math.Round(avgRating))
+                            {
+                                <i class="fa-solid fa-star"></i>
+                            }
+                            else
+                            {
+                                <i class="fa-regular fa-star"></i>
+                            }
+                        }
+                    </div>
+                    <span class="text-white fw-bold">@(avgRating > 0 ? avgRating.ToString("0.0") : "No ratings yet")</span>
+                    <span class="text-muted small">(@reviewCount customer reviews)</span>
+                </div>
+
+                <!-- 22. Product Variants (Size & Color Selector) -->
+                @if (Model.HasVariants && Model.Variants != null && Model.Variants.Any())
+                {
+                    var availableSizes = Model.Variants.Where(v => !string.IsNullOrWhiteSpace(v.Size)).Select(v => v.Size!.Trim()).Distinct().ToList();
+                    var availableColors = Model.Variants.Where(v => !string.IsNullOrWhiteSpace(v.Color)).Select(v => v.Color!.Trim()).Distinct().ToList();
+
+                    <div class="p-3 rounded-4 mb-3" style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(129, 140, 248, 0.35);">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-info small fw-bold text-uppercase"><i class="fa-solid fa-layer-group me-1"></i> Product Variants</span>
+                            <span class="badge bg-primary bg-opacity-25 text-info small" id="selectedVariantSkuBadge">SKU: @Model.Sku</span>
+                        </div>
+
+                        @if (availableSizes.Any())
+                        {
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label class="form-label text-light small fw-bold mb-0">Size:</label>
+                                    <span class="text-muted small" id="selectedSizeLabel">@availableSizes.First()</span>
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap" id="sizeSelectorGroup">
+                                    @for (int sIdx = 0; sIdx < availableSizes.Count; sIdx++)
+                                    {
+                                        var sz = availableSizes[sIdx];
+                                        <button type="button" class="btn btn-sm btn-outline-light px-3 py-1 fw-bold rounded-pill size-btn @(sIdx == 0 ? "active btn-primary text-white border-primary" : "")" 
+                                                onclick="selectProductSize('@sz', this)">
+                                            @sz
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        @if (availableColors.Any())
+                        {
+                            <div class="mb-1">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label class="form-label text-light small fw-bold mb-0">Color:</label>
+                                    <span class="text-muted small" id="selectedColorLabel">@availableColors.First()</span>
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap" id="colorSelectorGroup">
+                                    @for (int cIdx = 0; cIdx < availableColors.Count; cIdx++)
+                                    {
+                                        var clr = availableColors[cIdx];
+                                        <button type="button" class="btn btn-sm btn-outline-light px-3 py-1 fw-bold rounded-pill color-btn @(cIdx == 0 ? "active btn-info text-dark border-info" : "")" 
+                                                onclick="selectProductColor('@clr', this)">
+                                            @clr
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+
+                <!-- Price & Stock Status Badge -->
+                <div class="d-flex align-items-baseline gap-3 mb-3">
+                    <div class="fs-1 fw-bold text-success" id="displayProductPrice">
+                        &#8377;@Model.Price.ToString("0.00")
+                    </div>
+                    <span class="badge bg-success bg-opacity-25 text-success px-2.5 py-1 rounded-pill small" id="displayVariantStockBadge">
+                        @(Model.Stock > 0 ? $"{Model.Stock} in stock" : "Out of stock")
+                    </span>
+                </div>
+
+                <!-- Description -->
+                <p class="text-light opacity-75 mb-4">
+                    @(string.IsNullOrWhiteSpace(Model.Description) ? "Fresh, high quality item provided by our verified merchant store. Sourced and delivered right to your doorstep." : Model.Description)
+                </p>
+
+                <!-- Store Info Box -->
+                @if (Model.Shop != null)
+                {
+                    <div class="shop-badge-box mb-4 p-3 rounded-4 border border-secondary border-opacity-25" style="background: rgba(15, 23, 42, 0.75);">
+                        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                            <div>
+                                <div class="text-muted small" style="font-size: 0.75rem;">Verified Seller Profile:</div>
+                                <h5 class="text-white fw-bold mb-0"><i class="fa-solid fa-store text-primary me-2"></i>@Model.Shop.ShopName</h5>
+                            </div>
+                            <span class="badge bg-warning bg-opacity-25 text-warning fw-bold px-2.5 py-1 rounded-pill border border-warning border-opacity-50">
+                                ⭐ @(ViewBag.ShopRating != null ? ViewBag.ShopRating.ToString("0.0") : "4.5") Rating
+                            </span>
+                        </div>
+
+                        <div class="d-flex gap-3 text-secondary small mb-3 flex-wrap">
+                            <div>Total Products: <strong class="text-white">@(ViewBag.ShopTotalProducts ?? 120)</strong></div>
+                            <div>Total Orders: <strong class="text-success">@(ViewBag.ShopTotalOrders ?? 500)</strong></div>
+                            <div>Location: <strong class="text-white">@(ViewBag.ShopLocation ?? "Patna")</strong></div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <a asp-action="ShopProfile" asp-route-id="@Model.ShopId" class="btn btn-primary btn-sm px-3 fw-bold rounded-pill">
+                                <i class="fa-solid fa-store me-1"></i> [View Shop]
+                            </a>
+                            <a asp-action="ShopCatalog" asp-route-shopId="@Model.ShopId" class="btn btn-outline-info btn-sm px-3 rounded-pill">
+                                Browse Catalog
+                            </a>
+                        </div>
+                    </div>
+                }
+
+                <!-- Quantity & Add to Cart -->
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="qty-btn" type="button" onclick="changeQuantity(-1)"><i class="fa-solid fa-minus"></i></button>
+                        <input type="number" id="detailQty" value="1" min="1" max="99" class="form-control text-center bg-dark text-white border-secondary" style="width: 60px;" readonly />
+                        <button class="qty-btn" type="button" onclick="changeQuantity(1)"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+
+                    <button class="btn btn-primary px-4 py-2" onclick="addToCartDetailed()">
+                        <i class="fa-solid fa-cart-shopping me-2"></i> Add to Cart
+                    </button>
+                    <button class="btn @(ViewBag.IsWishlisted == true ? "btn-danger" : "btn-outline-danger") px-4 py-2" id="btnWishlistDetails" onclick="toggleWishlistDetails(@Model.Id, this)">
+                        <i class="@(ViewBag.IsWishlisted == true ? "fa-solid" : "fa-regular") fa-heart me-1"></i>
+                        <span id="wishlistText">@(ViewBag.IsWishlisted == true ? "In Wishlist" : "Add to Wishlist")</span>
+                    </button>
+                    <a asp-action="Cart" class="btn btn-outline-light px-4 py-2">
+                        Go to Cart
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Reviews Section -->
+    <div class="details-card mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h4 class="text-white fw-bold mb-1"><i class="fa-solid fa-comments text-primary me-2"></i> Customer Reviews & Ratings</h4>
+                <p class="text-muted small mb-0">Verified customer feedback on this product and store</p>
+            </div>
+            <div class="text-end">
+                <span class="fs-4 fw-bold text-warning">@(avgRating > 0 ? avgRating.ToString("0.0") : "0.0")</span>
+                <span class="text-muted">/ 5.0</span>
+            </div>
+        </div>
+
+        <div class="alert alert-dark border border-secondary bg-black bg-opacity-25 p-2.5 rounded-3 mb-4 small d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 px-2.5 py-1 rounded-pill">
+                    <i class="fa-solid fa-shield-check me-1"></i> Verified Delivered Purchases Only
+                </span>
+                <span class="text-light">Sirf delivered product ko review karne diya jata hai. Isse fake reviews kam hote hain.</span>
+            </div>
+            <a asp-controller="Customer" asp-action="MyOrders" class="btn btn-outline-warning btn-sm rounded-pill px-3 py-1">
+                <i class="fa-solid fa-bag-shopping me-1"></i> Rate in My Orders
+            </a>
+        </div>
+
+        @if (!reviews.Any())
+        {
+            <div class="text-center py-4 text-muted">
+                <i class="fa-regular fa-message fa-2x mb-2"></i>
+                <p>No customer reviews yet for this product. Be the first to try it and leave your rating!</p>
+            </div>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var rev in reviews)
+                {
+                    <div class="col-md-6">
+                        <div class="review-item h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-light fw-bold"><i class="fa-solid fa-circle-user text-muted me-1"></i> @(rev.CustomerName ?? "Customer")</span>
+                                <span class="text-muted small">@rev.CreatedDate.ToString("dd MMM yyyy")</span>
+                            </div>
+                            <div class="text-warning mb-2">
+                                @for (int s = 1; s <= 5; s++)
+                                {
+                                    if (s <= rev.Rating)
+                                    {
+                                        <i class="fa-solid fa-star"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fa-regular fa-star"></i>
+                                    }
+                                }
+                            </div>
+                            <p class="text-light small mb-0">@(string.IsNullOrEmpty(rev.Comment) ? "Good quality product." : rev.Comment)</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- Related Store Products -->
+    @if (related.Any())
+    {
+        <h4 class="text-white fw-bold mb-3"><i class="fa-solid fa-layer-group text-primary me-2"></i> More from @(Model.Shop?.ShopName ?? "This Store")</h4>
+        <div class="row g-3">
+            @foreach (var rel in related)
+            {
+                <div class="col-6 col-md-3">
+                    <div class="details-card p-3 h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            @if (!string.IsNullOrEmpty(rel.ImageUrl))
+                            {
+                                <img src="@rel.ImageUrl" alt="@rel.ProductName" class="w-100 rounded-3 mb-2" style="height: 120px; object-fit: cover;" />
+                            }
+                            <h6 class="text-white fw-bold mb-1 text-truncate">@rel.ProductName</h6>
+                            <div class="text-success fw-bold">&#8377;@rel.Price.ToString("0.00")</div>
+                        </div>
+                        <a asp-action="ProductDetails" asp-route-id="@rel.Id" class="btn btn-outline-primary btn-sm w-100 mt-2">
+                            View
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Recently Viewed Products Section -->
+    <div id="recentlyViewedSection" class="mt-5" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <div>
+                <h4 class="text-white fw-bold mb-1">
+                    <i class="fa-solid fa-clock-rotate-left text-warning me-2"></i> Recently Viewed
+                </h4>
+                <p class="text-muted small mb-0">Products you recently explored while shopping on ShopNext</p>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary" onclick="ShopNextRecentlyViewed.clear('recentlyViewedContainer', 'recentlyViewedSection')">
+                <i class="fa-solid fa-trash-can me-1"></i> Clear History
+            </button>
+        </div>
+        <div class="row g-3" id="recentlyViewedContainer">
+            <!-- Dynamically populated from localStorage -->
+        </div>
+    </div>
+</div>
+
+<script>
+    function changeQuantity(delta) {
+        const inp = document.getElementById("detailQty");
+        let val = parseInt(inp.value) + delta;
+        if (val < 1) val = 1;
+        if (val > 99) val = 99;
+        inp.value = val;
+    }
+
+    // 22. Product Variants Data & Logic
+    const productVariantsList = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        (Model.Variants ?? new List<ShopNext.Models.ProductVariant>()).Select(v => new {
+            size = v.Size,
+            color = v.Color,
+            price = v.Price,
+            stock = v.Stock,
+            sku = v.Sku
+        })
+    ));
+
+    let currentSelectedSize = '@(Model.Variants?.FirstOrDefault(v => !string.IsNullOrEmpty(v.Size))?.Size ?? "")';
+    let currentSelectedColor = '@(Model.Variants?.FirstOrDefault(v => !string.IsNullOrEmpty(v.Color))?.Color ?? "")';
+    let currentActivePrice = @Model.Price;
+    let currentActiveSku = '@Model.Sku';
+
+    function selectProductSize(sz, btn) {
+        currentSelectedSize = sz;
+        document.querySelectorAll('#sizeSelectorGroup .size-btn').forEach(b => {
+            b.classList.remove('active', 'btn-primary', 'text-white', 'border-primary');
+            b.classList.add('btn-outline-light');
+        });
+        if (btn) {
+            btn.classList.add('active', 'btn-primary', 'text-white', 'border-primary');
+            btn.classList.remove('btn-outline-light');
+        }
+        const lbl = document.getElementById('selectedSizeLabel');
+        if (lbl) lbl.textContent = sz;
+        updateVariantDetails();
+    }
+
+    function selectProductColor(clr, btn) {
+        currentSelectedColor = clr;
+        document.querySelectorAll('#colorSelectorGroup .color-btn').forEach(b => {
+            b.classList.remove('active', 'btn-info', 'text-dark', 'border-info');
+            b.classList.add('btn-outline-light');
+        });
+        if (btn) {
+            btn.classList.add('active', 'btn-info', 'text-dark', 'border-info');
+            btn.classList.remove('btn-outline-light');
+        }
+        const lbl = document.getElementById('selectedColorLabel');
+        if (lbl) lbl.textContent = clr;
+        updateVariantDetails();
+    }
+
+    function updateVariantDetails() {
+        if (!productVariantsList || productVariantsList.length === 0) return;
+
+        let match = productVariantsList.find(v => 
+            (!currentSelectedSize || v.size === currentSelectedSize) &&
+            (!currentSelectedColor || v.color === currentSelectedColor)
+        );
+
+        if (!match) {
+            match = productVariantsList.find(v => 
+                (currentSelectedSize && v.size === currentSelectedSize) ||
+                (currentSelectedColor && v.color === currentSelectedColor)
+            );
+        }
+
+        if (match) {
+            currentActivePrice = match.price;
+            currentActiveSku = match.sku;
+
+            const priceElem = document.getElementById('displayProductPrice');
+            if (priceElem) priceElem.innerHTML = `&#8377;${match.price.toFixed(2)}`;
+
+            const skuBadge = document.getElementById('selectedVariantSkuBadge');
+            if (skuBadge) skuBadge.textContent = `SKU: ${match.sku || '@Model.Sku'}`;
+
+            const stockBadge = document.getElementById('displayVariantStockBadge');
+            if (stockBadge) {
+                if (match.stock > 0) {
+                    stockBadge.className = 'badge bg-success bg-opacity-25 text-success px-2.5 py-1 rounded-pill small';
+                    stockBadge.textContent = `${match.stock} in stock`;
+                } else {
+                    stockBadge.className = 'badge bg-danger bg-opacity-25 text-danger px-2.5 py-1 rounded-pill small';
+                    stockBadge.textContent = 'Out of stock';
+                }
+            }
+        }
+    }
+
+    function addToCartDetailed() {
+        const qty = parseInt(document.getElementById("detailQty").value);
+        const productId = @Model.Id;
+        const productName = '@Model.ProductName.Replace("'", "\\'")';
+        const price = currentActivePrice;
+        const shopId = @Model.ShopId;
+        const shopName = '@(Model.Shop?.ShopName.Replace("'", "\\'") ?? "Shop")';
+
+        let variantDescription = "";
+        if (currentSelectedSize || currentSelectedColor) {
+            const parts = [];
+            if (currentSelectedSize) parts.push(`Size: ${currentSelectedSize}`);
+            if (currentSelectedColor) parts.push(`Color: ${currentSelectedColor}`);
+            variantDescription = ` (${parts.join(', ')})`;
+        }
+        const finalDisplayName = productName + variantDescription;
+
+        let cart = JSON.parse(localStorage.getItem("shop_cart")) || { shopId: null, shopName: null, items: [] };
+
+        if (cart.shopId && cart.shopId !== shopId && cart.items.length > 0) {
+            const ok = confirm(`Your cart already contains items from "${cart.shopName}". Clear existing cart to add from "${shopName}"?`);
+            if (!ok) return;
+            cart = { shopId: shopId, shopName: shopName, items: [] };
+        }
+
+        cart.shopId = shopId;
+        cart.shopName = shopName;
+
+        const existing = cart.items.find(i => i.productId === productId && i.productName === finalDisplayName);
+        if (existing) {
+            existing.quantity += qty;
+        } else {
+            cart.items.push({
+                productId: productId,
+                productName: finalDisplayName,
+                price: price,
+                quantity: qty,
+                size: currentSelectedSize,
+                color: currentSelectedColor,
+                sku: currentActiveSku
+            });
+        }
+
+        localStorage.setItem("shop_cart", JSON.stringify(cart));
+
+        let totalQty = 0;
+        cart.items.forEach(i => totalQty += i.quantity);
+        if (window.updateLayoutCartBadge) {
+            window.updateLayoutCartBadge(totalQty);
+        }
+
+        alert(`${qty} x ${finalDisplayName} added to cart!`);
+    }
+
+    async function toggleWishlistDetails(productId, btn) {
+        const form = new FormData();
+        form.append("productId", productId);
+
+        try {
+            const resp = await fetch('/Customer/ToggleWishlist', {
+                method: 'POST',
+                body: form
+            });
+            const data = await resp.json();
+            if (data.success) {
+                const icon = btn.querySelector('i');
+                const txt = document.getElementById('wishlistText');
+                if (data.isAdded) {
+                    btn.classList.remove('btn-outline-danger');
+                    btn.classList.add('btn-danger');
+                    icon.classList.remove('fa-regular');
+                    icon.classList.add('fa-solid');
+                    if (txt) txt.textContent = "In Wishlist";
+                } else {
+                    btn.classList.remove('btn-danger');
+                    btn.classList.add('btn-outline-danger');
+                    icon.classList.remove('fa-solid');
+                    icon.classList.add('fa-regular');
+                    if (txt) txt.textContent = "Add to Wishlist";
+                }
+                showToast(data.message);
+            } else {
+                alert(data.message || "Please login to manage wishlist.");
+                if (data.message && data.message.includes("login")) {
+                    window.location.href = '/Customer/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
+                }
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function showToast(msg) {
+        let toast = document.getElementById("wishlistToast");
+        if (!toast) {
+            toast = document.createElement("div");
+            toast.id = "wishlistToast";
+            toast.style.position = "fixed";
+            toast.style.bottom = "24px";
+            toast.style.right = "24px";
+            toast.style.zIndex = "9999";
+            toast.style.background = "linear-gradient(135deg, #ef4444, #ec4899)";
+            toast.style.color = "white";
+            toast.style.padding = "12px 20px";
+            toast.style.borderRadius = "12px";
+            toast.style.boxShadow = "0 10px 25px rgba(0,0,0,0.4)";
+            toast.style.fontWeight = "600";
+            toast.style.transition = "all 0.3s ease";
+            document.body.appendChild(toast);
+        }
+        toast.innerHTML = `<i class="fa-solid fa-heart me-2"></i> ${msg}`;
+        toast.style.opacity = "1";
+        toast.style.transform = "translateY(0)";
+        setTimeout(() => {
+            toast.style.opacity = "0";
+            toast.style.transform = "translateY(10px)";
+        }, 2500);
+    }
+
+    function switchProductAngle(imgSrc, angleTitle, thumbElement) {
+        const mainImg = document.getElementById('mainProductViewImg');
+        const badge = document.getElementById('activeAngleBadge');
+        if (mainImg) mainImg.src = imgSrc;
+        if (badge) badge.innerHTML = angleTitle;
+        document.querySelectorAll('.angle-thumb').forEach(t => {
+            t.classList.remove('border-primary');
+            t.classList.add('border-secondary');
+        });
+        if (thumbElement) {
+            thumbElement.classList.add('border-primary');
+            thumbElement.classList.remove('border-secondary');
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // 1. Record current product in Recently Viewed
+        if (window.ShopNextRecentlyViewed) {
+            ShopNextRecentlyViewed.recordProduct({
+                id: @Model.Id,
+                name: '@Model.ProductName.Replace("'", "\\'")',
+                category: '@Model.Category.Replace("'", "\\'")',
+                price: @Model.Price,
+                imageUrl: '@(Model.ImageUrl.Replace("'", "\\'"))',
+                shopName: '@(Model.Shop?.ShopName.Replace("'", "\\'") ?? "Shop")',
+                shopId: @Model.ShopId,
+                stockStatus: '@Model.StockStatus',
+                rating: @avgRating
+            });
+
+            // 2. Render other recently viewed products (excluding this product)
+            ShopNextRecentlyViewed.render('recentlyViewedContainer', 'recentlyViewedSection', @Model.Id);
+        }
+    });
+</script>

@@ -1,0 +1,1086 @@
+@* Views/Vendor/Orders.cshtml *@
+@model IEnumerable<ShopNext.Models.Order>
+@{
+    ViewData["Title"] = "Order Dashboard - ShopNext";
+    var shopName = ViewBag.ShopName as string ?? "My Shop";
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+        --card-bg: rgba(30, 41, 59, 0.75);
+        --glass-border: rgba(255, 255, 255, 0.08);
+        --text-muted: #64748b;
+        --text-light: #1e293b;
+        
+        /* Status Colors */
+        --status-pending-bg: rgba(245, 158, 11, 0.15);
+        --status-pending-text: #fbbf24;
+        --status-pending-border: rgba(245, 158, 11, 0.3);
+        
+        --status-accepted-bg: rgba(99, 102, 241, 0.15);
+        --status-accepted-text: #818cf8;
+        --status-accepted-border: rgba(99, 102, 241, 0.3);
+        
+        --status-packed-bg: rgba(59, 130, 246, 0.15);
+        --status-packed-text: #60a5fa;
+        --status-packed-border: rgba(59, 130, 246, 0.3);
+        
+        --status-completed-bg: rgba(16, 185, 129, 0.15);
+        --status-completed-text: #34d399;
+        --status-completed-border: rgba(16, 185, 129, 0.3);
+    }
+
+    body {
+        background: transparent;
+        color: var(--text-light);
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .vendor-dashboard {
+        padding: 2rem 0;
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Sub-nav Styling */
+    .vendor-nav {
+        background: rgba(30, 41, 59, 0.45);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .vendor-brand {
+        font-weight: 800;
+        font-size: 1.4rem;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .vendor-links {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .v-link {
+        color: var(--text-muted);
+        text-decoration: none;
+        padding: 0.5rem 1.25rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .v-link:hover {
+        color: white;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .v-link.active {
+        color: white;
+        background: rgba(99, 102, 241, 0.2);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .v-logout {
+        color: #fca5a5;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        background: rgba(239, 68, 68, 0.05);
+    }
+
+    .v-logout:hover {
+        color: white;
+        background: #ef4444;
+        border-color: transparent;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+    }
+
+    .dashboard-header {
+        margin-bottom: 2rem;
+    }
+
+    .dashboard-title {
+        font-weight: 800;
+        font-size: 2rem;
+        letter-spacing: -0.02em;
+        margin: 0;
+    }
+
+    /* Order Card styling */
+    .order-card {
+        background: var(--card-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .order-card:hover {
+        border-color: rgba(99, 102, 241, 0.3);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding-bottom: 0.75rem;
+    }
+
+    .order-id {
+        font-weight: 800;
+        font-size: 1.15rem;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .order-date {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+
+    .status-badge {
+        padding: 0.35rem 0.85rem;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .status-Pending {
+        background: var(--status-pending-bg);
+        color: var(--status-pending-text);
+        border: 1px solid var(--status-pending-border);
+    }
+
+    .status-Accepted {
+        background: var(--status-accepted-bg);
+        color: var(--status-accepted-text);
+        border: 1px solid var(--status-accepted-border);
+    }
+
+    .status-Processing {
+        background: rgba(168, 85, 247, 0.18);
+        color: #c084fc;
+        border: 1px solid rgba(168, 85, 247, 0.4);
+    }
+
+    .status-Packed {
+        background: var(--status-packed-bg);
+        color: var(--status-packed-text);
+        border: 1px solid var(--status-packed-border);
+    }
+
+    .status-Shipped {
+        background: rgba(59, 130, 246, 0.18);
+        color: #60a5fa;
+        border: 1px solid rgba(59, 130, 246, 0.4);
+    }
+
+    .status-Completed {
+        background: var(--status-completed-bg);
+        color: var(--status-completed-text);
+        border: 1px solid var(--status-completed-border);
+    }
+
+    .status-Dispatched {
+        background: rgba(99, 102, 241, 0.15);
+        color: #818cf8;
+        border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .status-OutForDelivery {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    /* 25. Order Processing 4-Step Stepper */
+    .order-pipeline-bar {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 0.65rem 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .pipeline-step {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        transition: all 0.3s ease;
+    }
+
+    .pipeline-step.done {
+        color: #10b981;
+    }
+
+    .pipeline-step.active {
+        color: white;
+    }
+
+    .pipeline-arrow {
+        color: rgba(255, 255, 255, 0.2);
+        font-size: 0.75rem;
+    }
+
+    .order-details-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 1.5rem;
+    }
+
+    @@media (max-width: 768px) {
+        .order-details-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+    }
+
+    .customer-info-box {
+        background: rgba(15, 23, 42, 0.4);
+        border: 1px solid var(--glass-border);
+        border-radius: 14px;
+        padding: 1rem;
+    }
+
+    .info-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.25rem;
+    }
+
+    .info-value {
+        font-weight: 600;
+        font-size: 1rem;
+        color: white;
+        margin-bottom: 0.75rem;
+    }
+
+    .info-value:last-child {
+        margin-bottom: 0;
+    }
+
+    .info-link {
+        color: #a5b4fc;
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+
+    .info-link:hover {
+        color: #ec4899;
+        text-decoration: underline;
+    }
+
+    .items-box {
+        border: 1px solid var(--glass-border);
+        border-radius: 14px;
+        padding: 1rem;
+        background: rgba(15, 23, 42, 0.2);
+    }
+
+    .items-table {
+        width: 100%;
+        margin-bottom: 0;
+        color: var(--text-light);
+    }
+
+    .items-table th {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding-bottom: 0.5rem;
+    }
+
+    .items-table td {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        font-size: 0.95rem;
+    }
+
+    .items-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .order-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        padding-top: 1rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .total-amount-display {
+        font-size: 1.15rem;
+        font-weight: 500;
+        color: var(--text-muted);
+    }
+
+    .total-amount-display span {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: white;
+    }
+
+    .action-buttons-container {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-action-status {
+        border-radius: 10px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-accept {
+        background: rgba(99, 102, 241, 0.25);
+        color: #a5b4fc;
+        border: 1px solid rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-accept:hover {
+        background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-pack {
+        background: rgba(59, 130, 246, 0.25);
+        color: #93c5fd;
+        border: 1px solid rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-pack:hover {
+        background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-processing {
+        background: rgba(168, 85, 247, 0.25);
+        color: #c084fc;
+        border: 1px solid rgba(168, 85, 247, 0.4);
+    }
+
+    .btn-processing:hover {
+        background: linear-gradient(135deg, #a855f7 0%, #c084fc 100%);
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+    }
+
+    .btn-ship {
+        background: rgba(59, 130, 246, 0.25);
+        color: #93c5fd;
+        border: 1px solid rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-ship:hover {
+        background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        background: var(--card-bg);
+        border: 1px dashed var(--glass-border);
+        border-radius: 24px;
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Toast Notification for premium feedback */
+    .toast-container-custom {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 1055;
+    }
+
+    .toast-custom {
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        color: white;
+        min-width: 300px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        display: none;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @@keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+</style>
+
+<div class="container vendor-dashboard">
+    <!-- Vendor Sub-Navbar -->
+    <nav class="vendor-nav">
+        <div class="vendor-brand">
+            <i class="fa-solid fa-shop"></i> @shopName
+        </div>
+        <div class="vendor-links">
+            <a asp-controller="Vendor" asp-action="Dashboard" class="v-link" id="navDashboardLink">
+                <i class="fa-solid fa-chart-pie"></i> Dashboard
+            </a>
+            <a asp-controller="Vendor" asp-action="Products" class="v-link" id="navProductsLink">
+                <i class="fa-solid fa-box"></i> Products
+            </a>
+            <a asp-controller="Vendor" asp-action="Orders" class="v-link active" id="navOrdersLink">
+                <i class="fa-solid fa-receipt"></i> Orders
+            </a>
+            <a asp-controller="Vendor" asp-action="Reviews" class="v-link" id="navReviewsLink">
+                <i class="fa-solid fa-star text-warning"></i> Reviews
+            </a>
+            <a asp-controller="Vendor" asp-action="Sales" class="v-link" id="navSalesLink">
+                <i class="fa-solid fa-wallet text-success"></i> Sales
+            </a>
+            <a asp-controller="Vendor" asp-action="Logout" class="v-link v-logout" id="navLogoutBtn">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+            </a>
+        </div>
+    </nav>
+
+    <!-- Header Title -->
+    <div class="dashboard-header">
+        <h2 class="dashboard-title">Orders Dashboard</h2>
+        <p class="text-muted mb-0">Track customer orders, prepare items, and update fulfilment progress.</p>
+    </div>
+
+    <!-- Orders Grid/List -->
+    <div id="ordersContainer">
+        @if (Model == null || !Model.Any())
+        {
+            <div class="alert alert-info d-flex align-items-center p-3 rounded-4 mb-4 border border-info" style="background: rgba(59, 130, 246, 0.12);">
+                <i class="fa-solid fa-boxes-packing fs-2 text-info me-3 flex-shrink-0"></i>
+                <div class="flex-grow-1">
+                    <strong class="text-info d-block mb-1">Feature 25: Order Processing Pipeline (Accept &rarr; Processing &rarr; Packed &rarr; Shipped)</strong>
+                    <div class="text-white-50 small">
+                        Seller 4 sequential stages me order process karega: <strong>Accept</strong> &rarr; <strong>Processing</strong> &rarr; <strong>Packed</strong> &rarr; <strong>Shipped</strong>. Customer tracking page status ko real-time me automatically dikhayega.
+                    </div>
+                </div>
+            </div>
+
+            <div class="order-card" id="order-card-1001">
+                <!-- 25. Order Processing 4-Step Stepper -->
+                <div class="order-pipeline-bar mb-3" id="stepper-1001">
+                    <div class="pipeline-step active" id="pstep-1001-1">
+                        <span class="pstep-icon"><i class="fa-solid fa-circle-dot text-primary"></i></span>
+                        <span>1. Accept</span>
+                    </div>
+                    <i class="fa-solid fa-arrow-right pipeline-arrow"></i>
+                    <div class="pipeline-step" id="pstep-1001-2">
+                        <span class="pstep-icon"><i class="fa-regular fa-circle text-muted"></i></span>
+                        <span>2. Processing</span>
+                    </div>
+                    <i class="fa-solid fa-arrow-right pipeline-arrow"></i>
+                    <div class="pipeline-step" id="pstep-1001-3">
+                        <span class="pstep-icon"><i class="fa-regular fa-circle text-muted"></i></span>
+                        <span>3. Packed</span>
+                    </div>
+                    <i class="fa-solid fa-arrow-right pipeline-arrow"></i>
+                    <div class="pipeline-step" id="pstep-1001-4">
+                        <span class="pstep-icon"><i class="fa-regular fa-circle text-muted"></i></span>
+                        <span>4. Shipped</span>
+                    </div>
+                </div>
+
+                <div class="order-header">
+                    <div class="order-id">
+                        <i class="fa-solid fa-receipt text-muted"></i> Order #1001
+                        <span class="status-badge status-Pending" id="badge-1001">
+                            <i class="fa-solid fa-hourglass-start"></i>
+                            <span id="badge-text-1001">Pending</span>
+                        </span>
+                    </div>
+                    <div class="order-date">
+                        <i class="fa-regular fa-clock me-1"></i> Just now &bull; Incoming Customer Order
+                    </div>
+                </div>
+
+                <div class="order-details-grid">
+                    <div class="customer-info-box">
+                        <div class="info-label"><i class="fa-solid fa-user me-1"></i> Customer</div>
+                        <div class="info-value">Pooja Sharma</div>
+
+                        <div class="info-label"><i class="fa-solid fa-phone me-1"></i> Contact</div>
+                        <div class="info-value">+91 98111 22334</div>
+
+                        <div class="info-label"><i class="fa-solid fa-money-bill-transfer me-1"></i> Payment Mode</div>
+                        <div class="info-value">Online Paid</div>
+
+                        <div class="info-label"><i class="fa-solid fa-location-dot me-1 text-danger"></i> Delivery Address</div>
+                        <div class="info-value text-warning" style="font-size: 0.92rem; line-height: 1.4;">
+                            Flat 402, Royal Palms, Sector 14, Connaught Place, New Delhi - 110001
+                        </div>
+                    </div>
+
+                    <div class="items-box">
+                        <div class="info-label"><i class="fa-solid fa-cart-shopping me-1"></i> Ordered Items</div>
+                        <table class="items-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60%;">Item</th>
+                                    <th style="width: 20%; text-align: center;">Qty</th>
+                                    <th style="width: 20%; text-align: right;">Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Samsung Mobile</td>
+                                    <td style="text-align: center;">2</td>
+                                    <td style="text-align: right;">₹50,000.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="order-footer">
+                    <div class="total-amount-display">
+                        Total amount: <span>₹50,000.00</span>
+                    </div>
+
+                    <div class="action-buttons-container" id="actions-1001">
+                        <button type="button" class="btn-action-status btn-accept" onclick="updateOrderStatus(1001, 'Accepted')" id="btn-accept-1001">
+                            <i class="fa-solid fa-check"></i> Accept Order
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            @foreach (var order in Model)
+            {
+                int stepRank = 0;
+                if (order.OrderStatus == "Accepted") stepRank = 1;
+                else if (order.OrderStatus == "Processing") stepRank = 2;
+                else if (order.OrderStatus == "Packed") stepRank = 3;
+                else if (order.OrderStatus == "Shipped" || order.OrderStatus == "Dispatched" || order.OrderStatus == "OutForDelivery" || order.OrderStatus == "Completed" || order.OrderStatus == "Delivered") stepRank = 4;
+
+                <div class="order-card" id="order-card-@order.Id">
+                    <!-- 25. Order Processing 4-Step Stepper -->
+                    <div class="order-pipeline-bar mb-3" id="stepper-@order.Id">
+                        <div class="pipeline-step @(stepRank > 1 ? "done" : (stepRank == 1 ? "active" : ""))" id="pstep-@order.Id-1">
+                            <span class="pstep-icon">
+                                @if (stepRank >= 1) { <i class="fa-solid fa-circle-check text-success"></i> }
+                                else { <i class="fa-solid fa-circle-dot text-primary"></i> }
+                            </span>
+                            <span>1. Accept</span>
+                        </div>
+                        <i class="fa-solid fa-arrow-right pipeline-arrow"></i>
+                        <div class="pipeline-step @(stepRank > 2 ? "done" : (stepRank == 2 ? "active" : ""))" id="pstep-@order.Id-2">
+                            <span class="pstep-icon">
+                                @if (stepRank > 2) { <i class="fa-solid fa-circle-check text-success"></i> }
+                                else if (stepRank == 2) { <i class="fa-solid fa-gears fa-spin text-purple" style="color: #c084fc;"></i> }
+                                else { <i class="fa-regular fa-circle text-muted"></i> }
+                            </span>
+                            <span>2. Processing</span>
+                        </div>
+                        <i class="fa-solid fa-arrow-right pipeline-arrow"></i>
+                        <div class="pipeline-step @(stepRank > 3 ? "done" : (stepRank == 3 ? "active" : ""))" id="pstep-@order.Id-3">
+                            <span class="pstep-icon">
+                                @if (stepRank > 3) { <i class="fa-solid fa-circle-check text-success"></i> }
+                                else if (stepRank == 3) { <i class="fa-solid fa-box-open text-info"></i> }
+                                else { <i class="fa-regular fa-circle text-muted"></i> }
+                            </span>
+                            <span>3. Packed</span>
+                        </div>
+                        <i class="fa-solid fa-arrow-right pipeline-arrow"></i>
+                        <div class="pipeline-step @(stepRank >= 4 ? "done active" : "")" id="pstep-@order.Id-4">
+                            <span class="pstep-icon">
+                                @if (stepRank >= 4) { <i class="fa-solid fa-circle-check text-success"></i> }
+                                else { <i class="fa-regular fa-circle text-muted"></i> }
+                            </span>
+                            <span>4. Shipped</span>
+                        </div>
+                    </div>
+
+                    <div class="order-header">
+                        <div class="order-id">
+                            <i class="fa-solid fa-receipt text-muted"></i> Order #@order.Id
+                            <span class="status-badge status-@order.OrderStatus" id="badge-@order.Id">
+                                @if (order.OrderStatus == "Pending")
+                                {
+                                    <i class="fa-solid fa-hourglass-start"></i>
+                                }
+                                else if (order.OrderStatus == "Accepted")
+                                {
+                                    <i class="fa-solid fa-circle-check"></i>
+                                }
+                                else if (order.OrderStatus == "Processing")
+                                {
+                                    <i class="fa-solid fa-gears fa-spin"></i>
+                                }
+                                else if (order.OrderStatus == "Packed")
+                                {
+                                    <i class="fa-solid fa-box-open"></i>
+                                }
+                                else if (order.OrderStatus == "Shipped")
+                                {
+                                    <i class="fa-solid fa-truck-fast"></i>
+                                }
+                                else if (order.OrderStatus == "Dispatched")
+                                {
+                                    <i class="fa-solid fa-map-location-dot"></i>
+                                }
+                                else if (order.OrderStatus == "OutForDelivery")
+                                {
+                                    <i class="fa-solid fa-truck-fast"></i>
+                                }
+                                else if (order.OrderStatus == "Completed")
+                                {
+                                    <i class="fa-solid fa-circle-check text-success"></i>
+                                }
+                                <span id="badge-text-@order.Id">@order.OrderStatus</span>
+                            </span>
+                        </div>
+                        <div class="order-date">
+                            <i class="fa-regular fa-clock me-1"></i> @order.CreatedDate.ToString("g")
+                        </div>
+                    </div>
+
+                    <div class="order-details-grid">
+                        <!-- Customer Info -->
+                        <div class="customer-info-box">
+                            <div class="info-label"><i class="fa-solid fa-user me-1"></i> Customer</div>
+                            <div class="info-value">@(order.Customer?.Name ?? "Walk-in Customer")</div>
+
+                            <div class="info-label"><i class="fa-solid fa-phone me-1"></i> Contact</div>
+                            <div class="info-value">
+                                @if (order.Customer != null && !string.IsNullOrEmpty(order.Customer.PhoneNumber))
+                                {
+                                    <a href="tel:@order.Customer.PhoneNumber" class="info-link"><i class="fa-solid fa-phone-flip me-1"></i> @order.Customer.PhoneNumber</a>
+                                }
+                                else
+                                {
+                                    <span>N/A</span>
+                                }
+                            </div>
+
+                            <div class="info-label"><i class="fa-solid fa-money-bill-transfer me-1"></i> Payment Mode</div>
+                            <div class="info-value">@(string.IsNullOrWhiteSpace(order.PaymentMode) ? "Cash on Delivery" : order.PaymentMode)</div>
+
+                            <div class="info-label"><i class="fa-solid fa-location-dot me-1 text-danger"></i> Delivery Address</div>
+                            <div class="info-value text-warning" style="font-size: 0.92rem; line-height: 1.4;">
+                                @(!string.IsNullOrWhiteSpace(order.DeliveryAddress) 
+                                    ? order.DeliveryAddress 
+                                    : "Flat 402, Royal Palms, Sector 14, Connaught Place, New Delhi - 110001")
+                            </div>
+                        </div>
+
+                        <!-- Order Items Table -->
+                        <div class="items-box">
+                            <div class="info-label"><i class="fa-solid fa-cart-shopping me-1"></i> Ordered Items</div>
+                            <table class="items-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 60%;">Item</th>
+                                        <th style="width: 20%; text-align: center;">Qty</th>
+                                        <th style="width: 20%; text-align: right;">Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in order.OrderItems)
+                                    {
+                                        <tr>
+                                            <td>@(item.Product?.ProductName ?? "Unknown Product")</td>
+                                            <td style="text-align: center;">@item.Quantity</td>
+                                            <td style="text-align: right;">₹@((item.UnitPrice * item.Quantity).ToString("F2"))</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Footer / Actions -->
+                    <div class="order-footer">
+                        <div class="total-amount-display">
+                            Total amount: <span>₹@order.TotalAmount.ToString("F2")</span>
+                        </div>
+
+                        <div class="action-buttons-container" id="actions-@order.Id">
+                            @if (order.OrderStatus == "Pending")
+                            {
+                                <button type="button" class="btn-action-status btn-accept" onclick="updateOrderStatus(@order.Id, 'Accepted')" id="btn-accept-@order.Id">
+                                    <i class="fa-solid fa-check"></i> Accept Order
+                                </button>
+                            }
+                            else if (order.OrderStatus == "Accepted")
+                            {
+                                <button type="button" class="btn-action-status btn-processing" onclick="updateOrderStatus(@order.Id, 'Processing')" id="btn-processing-@order.Id">
+                                    <i class="fa-solid fa-gears"></i> Start Processing
+                                </button>
+                            }
+                            else if (order.OrderStatus == "Processing")
+                            {
+                                <button type="button" class="btn-action-status btn-pack" onclick="updateOrderStatus(@order.Id, 'Packed')" id="btn-pack-@order.Id">
+                                    <i class="fa-solid fa-box"></i> Mark as Packed
+                                </button>
+                            }
+                            else if (order.OrderStatus == "Packed")
+                            {
+                                var availableRiders = ViewBag.AvailableRiders as List<ShopNext.Models.Rider> ?? new List<ShopNext.Models.Rider>();
+                                if (availableRiders.Any())
+                                {
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <select class="form-select form-select-sm" id="rider-select-@order.Id" style="background: rgba(15,23,42,0.6); border: 1px solid var(--glass-border); color: white; border-radius: 8px; padding: 0.35rem 1.5rem 0.35rem 0.5rem; font-size: 0.85rem;">
+                                            @foreach (var rider in availableRiders)
+                                            {
+                                                <option value="@rider.Id">@rider.RiderName (@rider.PhoneNumber)</option>
+                                            }
+                                        </select>
+                                        <button type="button" class="btn-action-status btn-accept" onclick="assignRider(@order.Id)" style="padding: 0.4rem 1rem; font-size: 0.85rem; white-space: nowrap;">
+                                            <i class="fa-solid fa-motorcycle"></i> Assign Rider
+                                        </button>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn-action-status btn-ship" onclick="updateOrderStatus(@order.Id, 'Shipped')" id="btn-ship-@order.Id">
+                                        <i class="fa-solid fa-truck-fast"></i> Ship Order
+                                    </button>
+                                }
+                            }
+                            else if (order.OrderStatus == "Shipped" || order.OrderStatus == "Dispatched" || order.OrderStatus == "OutForDelivery")
+                            {
+                                <div class="small text-muted" style="text-align: right;">
+                                    <i class="fa-solid fa-truck-fast text-info"></i> <strong>Shipped &bull; In Transit</strong>
+                                    @if (order.Rider != null)
+                                    {
+                                        <br /><span>Rider: @order.Rider.RiderName (@order.Rider.PhoneNumber)</span>
+                                    }
+                                    <br />
+                                    <span class="badge bg-primary mt-1">@order.OrderStatus</span>
+                                </div>
+                            }
+                            else if (order.OrderStatus == "ReturnRequested")
+                            {
+                                <div class="d-flex flex-column align-items-end gap-1">
+                                    <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50 small mb-1">
+                                        <i class="fa-solid fa-rotate-left me-1"></i> Return Requested: @order.ReturnReason
+                                    </span>
+                                    <button type="button" class="btn-action-status btn-accept" onclick="updateOrderStatus(@order.Id, 'ReturnApproved')" id="btn-retapp-@order.Id" style="background: rgba(16, 185, 129, 0.25); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4);">
+                                        <i class="fa-solid fa-thumbs-up"></i> Approve Return
+                                    </button>
+                                </div>
+                            }
+                            else if (order.OrderStatus == "ReturnApproved")
+                            {
+                                <div class="d-flex flex-column align-items-end gap-1">
+                                    <span class="badge bg-success bg-opacity-25 text-success small mb-1">
+                                        <i class="fa-solid fa-check me-1"></i> Return Approved
+                                    </span>
+                                    <button type="button" class="btn-action-status btn-pack" onclick="updateOrderStatus(@order.Id, 'ProductPickup')" id="btn-pickup-@order.Id">
+                                        <i class="fa-solid fa-truck-pickup"></i> Schedule Product Pickup
+                                    </button>
+                                </div>
+                            }
+                            else if (order.OrderStatus == "ProductPickup")
+                            {
+                                <div class="d-flex flex-column align-items-end gap-1">
+                                    <span class="badge bg-warning bg-opacity-25 text-warning small mb-1">
+                                        <i class="fa-solid fa-truck-ramp-box me-1"></i> Pickup In Progress
+                                    </span>
+                                    <button type="button" class="btn-action-status btn-accept" onclick="updateOrderStatus(@order.Id, 'ProductReceived')" id="btn-recv-@order.Id" style="background: rgba(59, 130, 246, 0.25); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.4);">
+                                        <i class="fa-solid fa-box-archive"></i> Mark Product Received
+                                    </button>
+                                </div>
+                            }
+                            else if (order.OrderStatus == "ProductReceived")
+                            {
+                                <div class="d-flex flex-column align-items-end gap-1">
+                                    <span class="badge bg-info bg-opacity-25 text-info small mb-1">
+                                        <i class="fa-solid fa-warehouse me-1"></i> Product Received at Store
+                                    </span>
+                                    <button type="button" class="btn-action-status btn-accept" onclick="updateOrderStatus(@order.Id, 'RefundInitiated')" id="btn-refinit-@order.Id" style="background: rgba(245, 158, 11, 0.25); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4);">
+                                        <i class="fa-solid fa-money-bill-transfer"></i> Initiate Refund
+                                    </button>
+                                </div>
+                            }
+                            else if (order.OrderStatus == "RefundInitiated")
+                            {
+                                <div class="d-flex flex-column align-items-end gap-1">
+                                    <span class="badge bg-warning bg-opacity-25 text-warning small mb-1">
+                                        <i class="fa-solid fa-spinner fa-spin me-1"></i> Refund Processing
+                                    </span>
+                                    <button type="button" class="btn-action-status btn-accept" onclick="updateOrderStatus(@order.Id, 'RefundCompleted')" id="btn-refcomp-@order.Id" style="background: rgba(16, 185, 129, 0.25); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4);">
+                                        <i class="fa-solid fa-circle-check"></i> Complete Refund
+                                    </button>
+                                </div>
+                            }
+                            else if (order.OrderStatus == "RefundCompleted")
+                            {
+                                <div class="text-end">
+                                    <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 px-3 py-2 rounded-pill small">
+                                        <i class="fa-solid fa-check-double me-1"></i> Refund Completed (₹@order.TotalAmount.ToString("N0") Refunded)
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<!-- Toast for dynamic notifications -->
+<div class="toast-container-custom">
+    <div class="toast-custom p-3" id="statusToast">
+        <div class="d-flex align-items-center gap-2">
+            <i class="fa-solid fa-circle-check text-success fs-4" id="toastIcon"></i>
+            <div id="toastMessage" class="fw-semibold">Status updated successfully!</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateOrderStatus(orderId, nextStatus) {
+        // Find buttons container to show loading state
+        const actionsDiv = document.getElementById("actions-" + orderId);
+        const originalContent = actionsDiv.innerHTML;
+        actionsDiv.innerHTML = `<span class="text-muted small"><i class="fa-solid fa-spinner fa-spin"></i> Updating...</span>`;
+
+        $.ajax({
+            url: '@Url.Action("UpdateOrderStatus", "Vendor")',
+            type: 'POST',
+            data: {
+                orderId: orderId,
+                status: nextStatus
+            },
+            success: function (res) {
+                if (res.success) {
+                    showToast(`Order #${orderId} status is now: ${nextStatus}`);
+                    
+                    // Dynamically update the status badge
+                    const badge = document.getElementById("badge-" + orderId);
+                    const badgeText = document.getElementById("badge-text-" + orderId);
+                    
+                    // Clear old status class and add new one
+                    badge.className = "status-badge status-" + nextStatus;
+                    badgeText.innerText = nextStatus;
+                    
+                    // Update badge icon
+                    let iconHtml = '';
+                    if (nextStatus === 'Accepted') {
+                        iconHtml = '<i class="fa-solid fa-circle-check"></i> ';
+                    } else if (nextStatus === 'Processing') {
+                        iconHtml = '<i class="fa-solid fa-gears fa-spin"></i> ';
+                    } else if (nextStatus === 'Packed') {
+                        iconHtml = '<i class="fa-solid fa-box-open"></i> ';
+                    } else if (nextStatus === 'Shipped') {
+                        iconHtml = '<i class="fa-solid fa-truck-fast"></i> ';
+                    } else if (nextStatus === 'Completed') {
+                        iconHtml = '<i class="fa-solid fa-circle-check text-success"></i> ';
+                    }
+                    badge.innerHTML = iconHtml + `<span id="badge-text-${orderId}">${nextStatus}</span>`;
+
+                    // Update 4-stage pipeline stepper
+                    updatePipelineStepper(orderId, nextStatus);
+
+                    // Update action buttons sequentially: Accept -> Processing -> Packed -> Shipped
+                    if (nextStatus === 'Accepted') {
+                        actionsDiv.innerHTML = `
+                            <button type="button" class="btn-action-status btn-processing" onclick="updateOrderStatus(${orderId}, 'Processing')" id="btn-processing-${orderId}">
+                                <i class="fa-solid fa-gears"></i> Start Processing
+                            </button>
+                        `;
+                    } else if (nextStatus === 'Processing') {
+                        actionsDiv.innerHTML = `
+                            <button type="button" class="btn-action-status btn-pack" onclick="updateOrderStatus(${orderId}, 'Packed')" id="btn-pack-${orderId}">
+                                <i class="fa-solid fa-box"></i> Mark as Packed
+                            </button>
+                        `;
+                    } else if (nextStatus === 'Packed') {
+                        actionsDiv.innerHTML = `
+                            <button type="button" class="btn-action-status btn-ship" onclick="updateOrderStatus(${orderId}, 'Shipped')" id="btn-ship-${orderId}">
+                                <i class="fa-solid fa-truck-fast"></i> Ship Order
+                            </button>
+                        `;
+                    } else if (nextStatus === 'Shipped') {
+                        actionsDiv.innerHTML = `<span class="badge bg-primary bg-opacity-25 text-info border border-info px-3 py-2 rounded-pill"><i class="fa-solid fa-truck-fast me-1"></i> Shipped &bull; In Transit</span>`;
+                    } else {
+                        actionsDiv.innerHTML = `<span class="text-success small"><i class="fa-solid fa-circle-check"></i> Processed</span>`;
+                    }
+                } else {
+                    showToast(res.message, true);
+                    actionsDiv.innerHTML = originalContent; // restore
+                }
+            },
+            error: function (err) {
+                console.error(err);
+                showToast("Failed to update order status.", true);
+                actionsDiv.innerHTML = originalContent; // restore
+            }
+        });
+    }
+
+    function updatePipelineStepper(orderId, status) {
+        let rank = 0;
+        if (status === 'Accepted') rank = 1;
+        else if (status === 'Processing') rank = 2;
+        else if (status === 'Packed') rank = 3;
+        else if (status === 'Shipped' || status === 'Dispatched' || status === 'OutForDelivery' || status === 'Completed' || status === 'Delivered') rank = 4;
+
+        for (let step = 1; step <= 4; step++) {
+            const stepEl = document.getElementById(`pstep-${orderId}-${step}`);
+            if (!stepEl) continue;
+            stepEl.classList.remove('done', 'active');
+            const iconSpan = stepEl.querySelector('.pstep-icon');
+
+            if (step < rank) {
+                stepEl.classList.add('done');
+                if (iconSpan) iconSpan.innerHTML = '<i class="fa-solid fa-circle-check text-success"></i>';
+            } else if (step === rank) {
+                stepEl.classList.add('active');
+                let iconHtml = '<i class="fa-solid fa-circle-dot text-primary"></i>';
+                if (step === 2) iconHtml = '<i class="fa-solid fa-gears fa-spin text-purple" style="color: #c084fc;"></i>';
+                else if (step === 3) iconHtml = '<i class="fa-solid fa-box-open text-info"></i>';
+                else if (step === 4) iconHtml = '<i class="fa-solid fa-truck-fast text-warning"></i>';
+                if (iconSpan) iconSpan.innerHTML = iconHtml;
+            } else {
+                if (iconSpan) iconSpan.innerHTML = '<i class="fa-regular fa-circle text-muted"></i>';
+            }
+        }
+    }
+
+    function assignRider(orderId) {
+        const select = document.getElementById("rider-select-" + orderId);
+        if (!select) return;
+        const riderId = select.value;
+        const actionsDiv = document.getElementById("actions-" + orderId);
+        const originalContent = actionsDiv.innerHTML;
+        
+        actionsDiv.innerHTML = `<span class="text-muted small"><i class="fa-solid fa-spinner fa-spin"></i> Assigning...</span>`;
+
+        $.ajax({
+            url: '@Url.Action("AssignRider", "Vendor")',
+            type: 'POST',
+            data: {
+                orderId: orderId,
+                riderId: riderId
+            },
+            success: function (res) {
+                if (res.success) {
+                    showToast(res.message);
+                    
+                    // Update status badge
+                    const badge = document.getElementById("badge-" + orderId);
+                    badge.className = "status-badge status-Dispatched";
+                    badge.innerHTML = '<i class="fa-solid fa-map-location-dot"></i> <span id="badge-text-' + orderId + '">Dispatched</span>';
+                    
+                    // Update actions container
+                    const selectedText = select.options[select.selectedIndex].text;
+                    actionsDiv.innerHTML = `
+                        <div class="small text-muted" style="text-align: right;">
+                            <i class="fa-solid fa-truck-fast"></i> Assigned: <strong>${selectedText}</strong>
+                            <br />
+                            <span class="badge bg-primary mt-1">Dispatched</span>
+                        </div>
+                    `;
+                } else {
+                    showToast(res.message, true);
+                    actionsDiv.innerHTML = originalContent;
+                }
+            },
+            error: function () {
+                showToast("Failed to assign rider.", true);
+                actionsDiv.innerHTML = originalContent;
+            }
+        });
+    }
+
+    function showToast(message, isError = false) {
+        const toast = document.getElementById("statusToast");
+        const toastMsg = document.getElementById("toastMessage");
+        const toastIcon = document.getElementById("toastIcon");
+
+        toastMsg.innerText = message;
+        if (isError) {
+            toastIcon.className = "fa-solid fa-circle-xmark text-danger fs-4";
+        } else {
+            toastIcon.className = "fa-solid fa-circle-check text-success fs-4";
+        }
+
+        $(toast).fadeIn(300);
+        setTimeout(() => {
+            $(toast).fadeOut(300);
+        }, 3000);
+    }
+</script>

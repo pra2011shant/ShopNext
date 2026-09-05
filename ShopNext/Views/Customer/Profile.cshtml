@@ -1,0 +1,319 @@
+@model ShopNext.Models.User
+@{
+    ViewData["Title"] = "My Account & Addresses - ShopNext";
+    var addresses = ViewBag.Addresses as IEnumerable<ShopNext.Models.CustomerAddress> ?? Enumerable.Empty<ShopNext.Models.CustomerAddress>();
+}
+
+<style>
+    .profile-card {
+        background: rgba(30, 41, 59, 0.75);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    }
+    .address-card {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 1.5rem;
+        transition: all 0.25s ease;
+        position: relative;
+    }
+    .address-card:hover {
+        border-color: rgba(129, 140, 248, 0.3);
+        transform: translateY(-2px);
+    }
+    .address-card.default-address {
+        border-color: #818cf8;
+        background: rgba(99, 102, 241, 0.08);
+    }
+    .btn-gradient-sm {
+        background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 0.5rem 1.25rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+    .btn-gradient-sm:hover {
+        background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%);
+        color: white;
+        transform: translateY(-1px);
+    }
+</style>
+
+<div class="container py-4">
+    <div class="row g-4">
+        <!-- Sidebar Navigation -->
+        <div class="col-lg-4">
+            <div class="profile-card text-center mb-4">
+                <div class="d-inline-flex p-3 rounded-circle mb-3" style="background: rgba(99, 102, 241, 0.15);">
+                    <i class="fa-solid fa-circle-user fa-3x text-primary"></i>
+                </div>
+                <h4 class="text-white fw-bold mb-1">@Model.Name</h4>
+                <p class="text-muted small mb-2"><i class="fa-solid fa-phone me-1"></i> @Model.PhoneNumber</p>
+                @if (!string.IsNullOrEmpty(Model.Email))
+                {
+                    <p class="text-muted small mb-3"><i class="fa-solid fa-envelope me-1"></i> @Model.Email</p>
+                }
+                <span class="badge bg-primary bg-opacity-25 text-primary px-3 py-2 rounded-pill">ShopNext Customer</span>
+                
+                <hr class="my-4" style="border-color: rgba(255,255,255,0.1);">
+
+                <div class="d-grid gap-2">
+                    <a asp-controller="Customer" asp-action="MyOrders" class="btn btn-outline-light text-start py-2">
+                        <i class="fa-solid fa-bag-shopping me-2 text-info"></i> My Orders
+                    </a>
+                    <a asp-controller="Home" asp-action="Cart" class="btn btn-outline-light text-start py-2">
+                        <i class="fa-solid fa-cart-shopping me-2 text-warning"></i> View My Cart
+                    </a>
+                    <a asp-controller="Home" asp-action="Products" class="btn btn-outline-light text-start py-2">
+                        <i class="fa-solid fa-store me-2 text-success"></i> Explore Marketplace
+                    </a>
+                    <a asp-controller="Customer" asp-action="Logout" class="btn btn-outline-danger text-start py-2 mt-2">
+                        <i class="fa-solid fa-arrow-right-from-bracket me-2"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="col-lg-8">
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fa-solid fa-circle-check me-2"></i> @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fa-solid fa-circle-exclamation me-2"></i> @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <!-- Profile Details Update -->
+            <div class="profile-card mb-4">
+                <h5 class="text-white fw-bold mb-3"><i class="fa-solid fa-user-pen me-2 text-primary"></i> Edit Profile Info</h5>
+                <form asp-controller="Customer" asp-action="UpdateProfile" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-light small">Full Name</label>
+                            <input type="text" name="name" class="form-control bg-dark text-white border-secondary" value="@Model.Name" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-light small">Phone Number</label>
+                            <input type="text" class="form-control bg-dark text-muted border-secondary" value="@Model.PhoneNumber" disabled />
+                            <small class="text-muted">Phone number cannot be changed.</small>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label text-light small">Email Address</label>
+                            <input type="email" name="email" class="form-control bg-dark text-white border-secondary" value="@Model.Email" placeholder="yourname@domain.com" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-light small">Current Password (if changing)</label>
+                            <input type="password" name="currentPassword" class="form-control bg-dark text-white border-secondary" placeholder="Enter current password" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-light small">New Password</label>
+                            <input type="password" name="newPassword" class="form-control bg-dark text-white border-secondary" placeholder="Enter new password" minlength="6" />
+                        </div>
+                        <div class="col-12 text-end">
+                            <button type="submit" class="btn btn-gradient-sm">Save Changes</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Saved Delivery Addresses -->
+            <div class="profile-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="text-white fw-bold mb-0"><i class="fa-solid fa-map-location-dot me-2 text-primary"></i> Saved Delivery Addresses</h5>
+                    <button class="btn btn-gradient-sm btn-sm" data-bs-toggle="modal" data-bs-target="#newAddressModal">
+                        <i class="fa-solid fa-plus me-1"></i> Add New Address
+                    </button>
+                </div>
+
+                @if (!addresses.Any())
+                {
+                    <div class="text-center py-4">
+                        <i class="fa-solid fa-location-dot fa-3x text-muted mb-2"></i>
+                        <p class="text-muted mb-2">You haven't saved any delivery addresses yet.</p>
+                        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newAddressModal">Add Address Now</button>
+                    </div>
+                }
+                else
+                {
+                    <div class="row g-3">
+                        @foreach (var addr in addresses)
+                        {
+                            <div class="col-md-6">
+                                <div class="address-card @(addr.IsDefault ? "default-address" : "") h-100 d-flex flex-column justify-content-between">
+                                    <div>
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <span class="badge bg-secondary">@addr.AddressType</span>
+                                            @if (addr.IsDefault)
+                                            {
+                                                <span class="badge bg-success"><i class="fa-solid fa-check me-1"></i> Default</span>
+                                            }
+                                        </div>
+                                        <h6 class="text-white fw-bold mb-1">@addr.RecipientName</h6>
+                                        <div class="text-muted small mb-1"><i class="fa-solid fa-phone me-1"></i> @addr.PhoneNumber</div>
+                                        <div class="text-light small mb-1">@addr.AddressLine</div>
+                                        @if (!string.IsNullOrEmpty(addr.Landmark))
+                                        {
+                                            <div class="text-muted small mb-1">Landmark: @addr.Landmark</div>
+                                        }
+                                        <div class="text-muted small">@addr.City, @addr.State - @addr.Pincode</div>
+                                    </div>
+                                    <div class="text-end mt-3 pt-2 border-top border-secondary">
+                                        <button class="btn btn-link text-danger btn-sm p-0 text-decoration-none" onclick="deleteAddress(@addr.Id)">
+                                            <i class="fa-solid fa-trash me-1"></i> Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add New Address -->
+<div class="modal fade" id="newAddressModal" tabindex="-1" aria-labelledby="newAddressModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold" id="newAddressModalLabel"><i class="fa-solid fa-location-dot text-primary me-2"></i> Add Delivery Address</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addressForm">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <label class="form-label small">Address Type</label>
+                        <select id="addrType" class="form-select bg-dark text-white border-secondary">
+                            <option value="Home">Home</option>
+                            <option value="Work">Work / Office</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small">Recipient Name *</label>
+                            <input type="text" id="addrRecipient" class="form-control bg-dark text-white border-secondary" value="@Model.Name" required />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small">Phone Number *</label>
+                            <input type="tel" id="addrPhone" class="form-control bg-dark text-white border-secondary" value="@Model.PhoneNumber" required />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Flat / House No. / Street / Area *</label>
+                        <textarea id="addrLine" rows="2" class="form-control bg-dark text-white border-secondary" placeholder="Complete address" required></textarea>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small">City</label>
+                            <input type="text" id="addrCity" class="form-control bg-dark text-white border-secondary" value="New Delhi" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small">Pincode *</label>
+                            <input type="text" id="addrPincode" class="form-control bg-dark text-white border-secondary" placeholder="e.g. 110001" required />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Landmark (Optional)</label>
+                        <input type="text" id="addrLandmark" class="form-control bg-dark text-white border-secondary" placeholder="Nearby landmark" />
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="addrIsDefault" checked>
+                        <label class="form-check-label small" for="addrIsDefault">
+                            Set as default delivery address
+                        </label>
+                    </div>
+                    <button type="button" onclick="saveNewAddress()" class="btn btn-gradient-sm w-100 py-2">Save Address</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function saveNewAddress() {
+        const recipient = document.getElementById("addrRecipient").value.trim();
+        const phone = document.getElementById("addrPhone").value.trim();
+        const line = document.getElementById("addrLine").value.trim();
+        const pincode = document.getElementById("addrPincode").value.trim();
+
+        if (!recipient || !phone || !line || !pincode) {
+            alert("Please fill in recipient name, phone, address line, and pincode.");
+            return;
+        }
+
+        const payload = {
+            AddressType: document.getElementById("addrType").value,
+            RecipientName: recipient,
+            PhoneNumber: phone,
+            AddressLine: line,
+            City: document.getElementById("addrCity").value.trim() || "New Delhi",
+            State: "Delhi",
+            Pincode: pincode,
+            Landmark: document.getElementById("addrLandmark").value.trim(),
+            IsDefault: document.getElementById("addrIsDefault").checked
+        };
+
+        const token = document.querySelector('#addressForm input[name="__RequestVerificationToken"]')?.value;
+
+        try {
+            const resp = await fetch('/Customer/SaveAddress', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || "Failed to save address.");
+            }
+        } catch (e) {
+            alert("Network error: " + e.message);
+        }
+    }
+
+    async function deleteAddress(id) {
+        if (!confirm("Are you sure you want to remove this address?")) return;
+        const form = new FormData();
+        form.append("id", id);
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+        try {
+            const resp = await fetch('/Customer/DeleteAddress', {
+                method: 'POST',
+                headers: { 'RequestVerificationToken': token },
+                body: form
+            });
+            const data = await resp.json();
+            if (data.success) {
+                location.reload();
+            } else {
+                alert("Failed to delete address.");
+            }
+        } catch (e) {
+            alert("Network error: " + e.message);
+        }
+    }
+</script>

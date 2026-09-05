@@ -1,0 +1,399 @@
+@{
+    ViewData["Title"] = "Database Setup & Operations Console";
+    var sqlContent = ViewData["SqlContent"] as string ?? "";
+    var canConnect = (bool)(ViewData["CanConnect"] ?? false);
+    var errorMessage = TempData["ErrorMessage"] as string;
+    var successMessage = TempData["SuccessMessage"] as string;
+}
+
+<div class="container-fluid px-3 px-md-5 py-4">
+    <!-- Header Banner -->
+    <div class="glass-card p-4 p-md-5 mb-4 rounded-4 shadow-sm" style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: white; border: 1px solid rgba(255,255,255,0.1);">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+            <div>
+                <span class="badge bg-primary bg-opacity-25 text-info px-3 py-2 rounded-pill mb-2 border border-info border-opacity-25">
+                    <i class="fa-solid fa-server me-1"></i> MS SQL Server Console
+                </span>
+                <h2 class="fw-bold mb-1">Single-Script Database Setup & Operations</h2>
+                <p class="text-slate-300 mb-0 opacity-75">All tables, audit columns, relationships, and Stored Procedures consolidated into <strong>one master file</strong>.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <form asp-action="RunSetup" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-success d-flex align-items-center gap-2 rounded-3 px-3 py-2 fw-semibold" onclick="return confirm('Do you want to run the full master database script now?');">
+                        <i class="fa-solid fa-play"></i> 1-Click Run Setup
+                    </button>
+                </form>
+                <a href="/sql/ShopNext_Complete_DB_Setup.sql" download="ShopNext_Complete_DB_Setup.sql" class="btn btn-primary d-flex align-items-center gap-2 rounded-3 px-3 py-2 fw-semibold">
+                    <i class="fa-solid fa-download"></i> Download Master .sql
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Alerts -->
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-3 mb-4 shadow-sm" role="alert">
+            <i class="fa-solid fa-circle-check me-2"></i> @successMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-4 shadow-sm" role="alert">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i> @errorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Quick Stats Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="glass-card p-3 rounded-4 border">
+                <div class="text-muted small">Database Status</div>
+                <div class="d-flex align-items-center gap-2 mt-1">
+                    <span class="badge @(canConnect ? "bg-success" : "bg-danger") px-2 py-1">
+                        <i class="fa-solid @(canConnect ? "fa-circle-check" : "fa-circle-xmark") me-1"></i>
+                        @(canConnect ? "Connected (SQL Server)" : "Connection Offline")
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-3 rounded-4 border">
+                <div class="text-muted small">Target Database</div>
+                <div class="fw-bold text-light mt-1">ShopNext</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-3 rounded-4 border">
+                <div class="text-muted small">Master SQL Script</div>
+                <div class="fw-bold text-info mt-1 text-truncate">ShopNext_Complete_DB_Setup.sql</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-3 rounded-4 border">
+                <div class="text-muted small">Total Entities</div>
+                <div class="fw-bold text-warning mt-1">11 Tables + 20+ SPs</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-pills mb-4 gap-2 p-2 glass-card rounded-3" id="sqlTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-semibold" id="tab-tables-btn" data-bs-toggle="pill" data-bs-target="#tab-tables" type="button" role="tab">
+                <i class="fa-solid fa-table me-1 text-info"></i> Database Tables (11)
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-semibold" id="tab-sps-btn" data-bs-toggle="pill" data-bs-target="#tab-sps" type="button" role="tab">
+                <i class="fa-solid fa-gears me-1 text-success"></i> Stored Procedures Catalog
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-semibold" id="tab-script-btn" data-bs-toggle="pill" data-bs-target="#tab-script" type="button" role="tab">
+                <i class="fa-solid fa-code me-1 text-primary"></i> Master SQL Code (Optional Inspector)
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Contents -->
+    <div class="tab-content" id="sqlTabsContent">
+        <!-- TAB 1: Tables Explorer -->
+        <div class="tab-pane fade show active" id="tab-tables" role="tabpanel">
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 h-100 rounded-4 border">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="p-2 rounded-3 bg-primary bg-opacity-10 text-primary me-3"><i class="fa-solid fa-users fa-lg"></i></div>
+                            <div>
+                                <h5 class="fw-bold mb-0">1. dbo.Users</h5>
+                                <span class="text-muted small">Customer & Admin Accounts</span>
+                            </div>
+                        </div>
+                        <ul class="list-group list-group-flush small">
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>Id</span><span class="badge bg-secondary">INT (PK)</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>PhoneNumber, Name, Email</span><span class="text-muted">NVARCHAR</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>Role</span><span class="text-muted">'Customer' / 'Admin'</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>Audit Columns</span><span class="badge bg-info bg-opacity-10 text-info">Remark, CreatedDate, IsActive...</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 h-100 rounded-4 border">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="p-2 rounded-3 bg-success bg-opacity-10 text-success me-3"><i class="fa-solid fa-shop fa-lg"></i></div>
+                            <div>
+                                <h5 class="fw-bold mb-0">2. dbo.Shops</h5>
+                                <span class="text-muted small">Seller Stores (Hyperlocal)</span>
+                            </div>
+                        </div>
+                        <ul class="list-group list-group-flush small">
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>Id</span><span class="badge bg-secondary">INT (PK)</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>ShopName, Category</span><span class="text-muted">NVARCHAR</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>Latitude, Longitude</span><span class="text-muted">DECIMAL(18,9)</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>IsApproved</span><span class="badge bg-warning bg-opacity-25 text-warning">Admin Moderation</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 h-100 rounded-4 border">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="p-2 rounded-3 bg-warning bg-opacity-10 text-warning me-3"><i class="fa-solid fa-boxes-stacked fa-lg"></i></div>
+                            <div>
+                                <h5 class="fw-bold mb-0">3. dbo.Products</h5>
+                                <span class="text-muted small">Seller Product Catalog (11 Fields)</span>
+                            </div>
+                        </div>
+                        <ul class="list-group list-group-flush small">
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>Id, ShopId</span><span class="badge bg-secondary">INT (PK/FK)</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>ProductName, Category, SubCategory, Brand</span><span class="text-muted">NVARCHAR</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>Price, Mrp, Discount</span><span class="text-muted">DECIMAL(18,2)</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>Stock, Sku, StockStatus</span><span class="badge bg-success bg-opacity-10 text-success">Inventory Tracked</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 h-100 rounded-4 border">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="p-2 rounded-3 bg-danger bg-opacity-10 text-danger me-3"><i class="fa-solid fa-cart-shopping fa-lg"></i></div>
+                            <div>
+                                <h5 class="fw-bold mb-0">4. dbo.Orders</h5>
+                                <span class="text-muted small">Customer Orders & Lifecycle</span>
+                            </div>
+                        </div>
+                        <ul class="list-group list-group-flush small">
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>Id, CustomerId, ShopId, RiderId</span><span class="badge bg-secondary">INT (PK/FK)</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>TotalAmount, PaymentMode</span><span class="text-muted">DECIMAL / NVARCHAR</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>OrderStatus</span><span class="text-muted">Placed, Confirmed, Packed, Shipped...</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>CancelReason, ReturnReason</span><span class="text-muted">NVARCHAR(500)</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 h-100 rounded-4 border">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="p-2 rounded-3 bg-info bg-opacity-10 text-info me-3"><i class="fa-solid fa-list-check fa-lg"></i></div>
+                            <div>
+                                <h5 class="fw-bold mb-0">5. dbo.OrderItems</h5>
+                                <span class="text-muted small">Item-Level Line Details</span>
+                            </div>
+                        </div>
+                        <ul class="list-group list-group-flush small">
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>Id, OrderId, ProductId</span><span class="badge bg-secondary">INT (PK/FK)</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>Quantity</span><span class="text-muted">INT</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>UnitPrice</span><span class="text-muted">DECIMAL(18,2)</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 h-100 rounded-4 border">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="p-2 rounded-3 bg-primary bg-opacity-10 text-primary me-3"><i class="fa-solid fa-motorcycle fa-lg"></i></div>
+                            <div>
+                                <h5 class="fw-bold mb-0">6. dbo.Riders</h5>
+                                <span class="text-muted small">Delivery Partners (GPS Live)</span>
+                            </div>
+                        </div>
+                        <ul class="list-group list-group-flush small">
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>Id</span><span class="badge bg-secondary">INT (PK)</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>RiderName, PhoneNumber</span><span class="text-muted">NVARCHAR</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>CurrentLatitude, CurrentLongitude</span><span class="text-muted">DECIMAL(18,9) (GPS Map)</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>IsAvailable</span><span class="badge bg-success bg-opacity-10 text-success">BIT</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 h-100 rounded-4 border">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="p-2 rounded-3 bg-warning bg-opacity-10 text-warning me-3"><i class="fa-solid fa-star fa-lg"></i></div>
+                            <div>
+                                <h5 class="fw-bold mb-0">7. dbo.Reviews</h5>
+                                <span class="text-muted small">Delivered Order Reviews</span>
+                            </div>
+                        </div>
+                        <ul class="list-group list-group-flush small">
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>Id, CustomerId, ProductId, ShopId</span><span class="badge bg-secondary">INT (PK/FK)</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>Rating (1-5), Comment</span><span class="text-muted">INT / NVARCHAR(1000)</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>Anti-Fake Guard</span><span class="badge bg-success bg-opacity-10 text-success">Delivered Orders Only</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 h-100 rounded-4 border">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="p-2 rounded-3 bg-info bg-opacity-10 text-info me-3"><i class="fa-solid fa-location-dot fa-lg"></i></div>
+                            <div>
+                                <h5 class="fw-bold mb-0">8. dbo.CustomerAddresses</h5>
+                                <span class="text-muted small">Saved Customer Addresses</span>
+                            </div>
+                        </div>
+                        <ul class="list-group list-group-flush small">
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>Id, CustomerId</span><span class="badge bg-secondary">INT (PK/FK)</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>AddressLine, City, State, Pincode</span><span class="text-muted">NVARCHAR</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>AddressType, IsDefault</span><span class="text-muted">'Home', 'Work', Other</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 h-100 rounded-4 border">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="p-2 rounded-3 bg-danger bg-opacity-10 text-danger me-3"><i class="fa-solid fa-heart fa-lg"></i></div>
+                            <div>
+                                <h5 class="fw-bold mb-0">9. dbo.Wishlists</h5>
+                                <span class="text-muted small">Saved Customer Favorites</span>
+                            </div>
+                        </div>
+                        <ul class="list-group list-group-flush small">
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>Id, CustomerId, ProductId</span><span class="badge bg-secondary">INT (PK/FK)</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>Cascade Delete</span><span class="badge bg-success bg-opacity-10 text-success">Enabled</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 h-100 rounded-4 border">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="p-2 rounded-3 bg-info bg-opacity-10 text-info me-3"><i class="fa-solid fa-bell fa-lg"></i></div>
+                            <div>
+                                <h5 class="fw-bold mb-0">10. dbo.Notifications</h5>
+                                <span class="text-muted small">User Activity Alerts</span>
+                            </div>
+                        </div>
+                        <ul class="list-group list-group-flush small">
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>Id, CustomerId</span><span class="badge bg-secondary">INT (PK/FK)</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>Title, Message, Type</span><span class="text-muted">NVARCHAR</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>IsRead</span><span class="text-muted">BIT</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 h-100 rounded-4 border">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="p-2 rounded-3 bg-success bg-opacity-10 text-success me-3"><i class="fa-solid fa-ticket fa-lg"></i></div>
+                            <div>
+                                <h5 class="fw-bold mb-0">11. dbo.Coupons</h5>
+                                <span class="text-muted small">Store Promotional Vouchers</span>
+                            </div>
+                        </div>
+                        <ul class="list-group list-group-flush small">
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>Code</span><span class="badge bg-primary">UNIQUE NVARCHAR(50)</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>DiscountType, Value</span><span class="text-muted">'Flat', 'Percent', 'FreeDelivery'</span></li>
+                            <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between"><span>MinOrderAmount</span><span class="text-muted">DECIMAL(18,2)</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: Stored Procedures Catalog -->
+        <div class="tab-pane fade" id="tab-sps" role="tabpanel">
+            <div class="glass-card p-4 rounded-4 border">
+                <h5 class="fw-bold mb-3"><i class="fa-solid fa-gears text-success me-2"></i>Enterprise Stored Procedures Catalog</h5>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>Stored Procedure</th>
+                                <th>Module</th>
+                                <th>Purpose</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>dbo.sp_RegisterCustomer</code></td>
+                                <td>Customer Auth</td>
+                                <td>Registers new shoppers with phone uniqueness checks</td>
+                                <td><span class="badge bg-success">Active</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>dbo.sp_CustomerLogin</code></td>
+                                <td>Customer Auth</td>
+                                <td>Authenticates via Phone/Email and password</td>
+                                <td><span class="badge bg-success">Active</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>dbo.sp_CreateShop</code></td>
+                                <td>Vendor</td>
+                                <td>Onboards new merchant shop with Pending Admin Approval</td>
+                                <td><span class="badge bg-success">Active</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>dbo.sp_GetAllApprovedShops</code></td>
+                                <td>Marketplace</td>
+                                <td>Fetches all admin-approved stores for hyperlocal listing</td>
+                                <td><span class="badge bg-success">Active</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>dbo.sp_InsertProduct</code></td>
+                                <td>Inventory</td>
+                                <td>Adds product with 11 fields (MRP, Selling Price, Discount, SKU, Stock)</td>
+                                <td><span class="badge bg-success">Active</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>dbo.sp_CreateOrder</code></td>
+                                <td>Checkout</td>
+                                <td>Transacts order with auto order ID and audit stamping</td>
+                                <td><span class="badge bg-success">Active</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>dbo.sp_UpdateOrderStatus</code></td>
+                                <td>Lifecycle</td>
+                                <td>Transitions: Placed → Confirmed → Packed → Shipped → Delivered</td>
+                                <td><span class="badge bg-success">Active</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>dbo.sp_UpdateRiderLocation</code></td>
+                                <td>GPS Tracking</td>
+                                <td>Updates real-time delivery rider latitude and longitude</td>
+                                <td><span class="badge bg-success">Active</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>dbo.sp_AddReview</code></td>
+                                <td>Social Proof</td>
+                                <td>Persists verified customer review only for delivered orders</td>
+                                <td><span class="badge bg-success">Active</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: Master SQL Script Code (Collapsible) -->
+        <div class="tab-pane fade" id="tab-script" role="tabpanel">
+            <div class="glass-card p-4 rounded-4 border">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted fw-semibold small"><i class="fa-regular fa-file-code me-1"></i> wwwroot/sql/ShopNext_Complete_DB_Setup.sql (Single Unified File)</span>
+                    <button class="btn btn-sm btn-outline-info" onclick="copyFullSql()">
+                        <i class="fa-regular fa-copy me-1"></i> Copy Entire SQL
+                    </button>
+                </div>
+                <div class="position-relative rounded-3 overflow-hidden border" style="background: #090d16;">
+                    <pre class="m-0 p-3 text-light" style="max-height: 500px; overflow-y: auto; font-family: 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.6;"><code id="fullSqlCode">@sqlContent</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function copyFullSql() {
+        const code = document.getElementById('fullSqlCode').innerText;
+        navigator.clipboard.writeText(code).then(() => {
+            alert("Master SQL script copied to clipboard! You can paste and run it directly in SSMS.");
+        });
+    }
+</script>

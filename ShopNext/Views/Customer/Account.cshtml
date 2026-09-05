@@ -1,0 +1,1373 @@
+@model ShopNext.Models.User
+@{
+    ViewData["Title"] = "My Account - ShopNext";
+    string activeTab = ViewBag.ActiveTab as string ?? "profile";
+    var addresses = ViewBag.Addresses as IEnumerable<ShopNext.Models.CustomerAddress> ?? Enumerable.Empty<ShopNext.Models.CustomerAddress>();
+    var orders = ViewBag.Orders as IEnumerable<ShopNext.Models.Order> ?? Enumerable.Empty<ShopNext.Models.Order>();
+    var wishlist = ViewBag.Wishlist as IEnumerable<ShopNext.Models.Wishlist> ?? Enumerable.Empty<ShopNext.Models.Wishlist>();
+    var notifications = ViewBag.Notifications as IEnumerable<ShopNext.Models.Notification> ?? Enumerable.Empty<ShopNext.Models.Notification>();
+    var coupons = ViewBag.Coupons as IEnumerable<ShopNext.Models.Coupon> ?? Enumerable.Empty<ShopNext.Models.Coupon>();
+    var reviews = ViewBag.Reviews as IEnumerable<ShopNext.Models.Review> ?? Enumerable.Empty<ShopNext.Models.Review>();
+
+    var returnedOrders = orders.Where(o => o.OrderStatus == "ReturnRequested" || o.OrderStatus == "ReturnApproved" || o.OrderStatus == "ProductPickup" || o.OrderStatus == "ProductReceived" || o.OrderStatus == "RefundInitiated" || o.OrderStatus == "RefundCompleted" || o.OrderStatus == "Returned").ToList();
+    int unreadNotifCount = notifications.Count(n => !n.IsRead);
+}
+
+<style>
+    .account-sidebar {
+        background: rgba(30, 41, 59, 0.75);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+    }
+    .account-nav-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0.85rem 1.25rem;
+        color: #cbd5e1;
+        text-decoration: none;
+        font-weight: 500;
+        border-left: 3px solid transparent;
+        transition: all 0.2s ease;
+        background: transparent;
+        width: 100%;
+        border-top: none;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        text-align: left;
+    }
+    .account-nav-btn:hover {
+        background: rgba(99, 102, 241, 0.12);
+        color: white;
+    }
+    .account-nav-btn.active {
+        background: rgba(99, 102, 241, 0.2);
+        border-left-color: #818cf8;
+        color: white;
+        font-weight: 600;
+    }
+    .account-content-card {
+        background: rgba(30, 41, 59, 0.75);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+    }
+    .profile-avatar-img {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #818cf8;
+    }
+    .badge-tab-count {
+        margin-left: auto;
+        font-size: 0.75rem;
+        padding: 0.25rem 0.55rem;
+        border-radius: 50rem;
+    }
+    .coupon-card {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px dashed #818cf8;
+        border-radius: 16px;
+        padding: 1.25rem;
+        position: relative;
+    }
+    .notification-item {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.2s ease;
+    }
+    .notification-item.unread {
+        border-left: 3px solid #818cf8;
+        background: rgba(99, 102, 241, 0.08);
+    }
+    .status-badge {
+        font-size: 0.85rem;
+        padding: 0.35rem 0.8rem;
+        border-radius: 50rem;
+        font-weight: 600;
+    }
+</style>
+
+<div class="container py-4">
+    <!-- Header Banner -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-3">
+            @if (!string.IsNullOrEmpty(Model.ProfilePhoto))
+            {
+                <img src="@Model.ProfilePhoto" alt="@Model.Name" class="profile-avatar-img" />
+            }
+            else
+            {
+                <div class="profile-avatar-img d-flex align-items-center justify-content-center bg-primary bg-opacity-25 text-white fs-2">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+            }
+            <div>
+                <h3 class="text-white fw-bold mb-0">Hello, @Model.Name!</h3>
+                <span class="text-muted small"><i class="fa-solid fa-phone me-1"></i>@Model.PhoneNumber</span>
+                @if (!string.IsNullOrEmpty(Model.Email))
+                {
+                    <span class="text-muted small ms-2"><i class="fa-solid fa-envelope me-1"></i>@Model.Email</span>
+                }
+            </div>
+        </div>
+        <div>
+            <a asp-controller="Home" asp-action="Products" class="btn btn-outline-primary btn-sm me-2">
+                <i class="fa-solid fa-store me-1"></i> Marketplace
+            </a>
+            <a asp-controller="Home" asp-action="Cart" class="btn btn-primary btn-sm">
+                <i class="fa-solid fa-cart-shopping me-1"></i> View Cart
+            </a>
+        </div>
+    </div>
+
+    @Html.AntiForgeryToken()
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fa-solid fa-circle-check me-2"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fa-solid fa-circle-exclamation me-2"></i> @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- 12-Module Layout Grid -->
+    <div class="row g-4">
+        <!-- Left Sidebar: 12 Module Navigation Tabs -->
+        <div class="col-lg-3 col-md-4">
+            <div class="account-sidebar">
+                <div class="p-3 bg-dark text-white fw-bold small text-uppercase" style="letter-spacing: 0.05em; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <i class="fa-solid fa-sliders me-1 text-primary"></i> My Account Hub
+                </div>
+
+                <!-- 1. My Profile -->
+                <button class="account-nav-btn @(activeTab == "profile" ? "active" : "")" onclick="switchTab('profile')">
+                    <i class="fa-solid fa-user text-primary"></i> My Profile
+                </button>
+
+                <!-- 2. My Orders -->
+                <button class="account-nav-btn @(activeTab == "orders" ? "active" : "")" onclick="switchTab('orders')">
+                    <i class="fa-solid fa-box text-info"></i> My Orders
+                    <span class="badge bg-secondary badge-tab-count">@orders.Count()</span>
+                </button>
+
+                <!-- 3. Wishlist -->
+                <button class="account-nav-btn @(activeTab == "wishlist" ? "active" : "")" onclick="switchTab('wishlist')">
+                    <i class="fa-solid fa-heart text-danger"></i> Wishlist
+                    <span class="badge bg-danger badge-tab-count">@wishlist.Count()</span>
+                </button>
+
+                <!-- 4. My Cart -->
+                <button class="account-nav-btn @(activeTab == "cart" ? "active" : "")" onclick="switchTab('cart')">
+                    <i class="fa-solid fa-cart-shopping text-warning"></i> My Cart
+                </button>
+
+                <!-- 5. My Addresses -->
+                <button class="account-nav-btn @(activeTab == "addresses" ? "active" : "")" onclick="switchTab('addresses')">
+                    <i class="fa-solid fa-location-dot text-success"></i> My Addresses
+                    <span class="badge bg-secondary badge-tab-count">@addresses.Count()</span>
+                </button>
+
+                <!-- 6. Payment Methods -->
+                <button class="account-nav-btn @(activeTab == "payments" ? "active" : "")" onclick="switchTab('payments')">
+                    <i class="fa-solid fa-credit-card text-info"></i> Payment Methods
+                </button>
+
+                <!-- 7. Notifications -->
+                <button class="account-nav-btn @(activeTab == "notifications" ? "active" : "")" onclick="switchTab('notifications')">
+                    <i class="fa-solid fa-bell text-warning"></i> Notifications
+                    @if (unreadNotifCount > 0)
+                    {
+                        <span class="badge bg-danger badge-tab-count">@unreadNotifCount</span>
+                    }
+                </button>
+
+                <!-- 8. My Reviews -->
+                <button class="account-nav-btn @(activeTab == "reviews" ? "active" : "")" onclick="switchTab('reviews')">
+                    <i class="fa-solid fa-star text-warning"></i> My Reviews
+                    <span class="badge bg-secondary badge-tab-count">@reviews.Count()</span>
+                </button>
+
+                <!-- 9. Returns & Refunds -->
+                <button class="account-nav-btn @(activeTab == "returns" ? "active" : "")" onclick="switchTab('returns')">
+                    <i class="fa-solid fa-rotate-left text-danger"></i> Returns & Refunds
+                    @if (returnedOrders.Any())
+                    {
+                        <span class="badge bg-warning text-dark badge-tab-count">@returnedOrders.Count</span>
+                    }
+                </button>
+
+                <!-- 10. Coupons -->
+                <button class="account-nav-btn @(activeTab == "coupons" ? "active" : "")" onclick="switchTab('coupons')">
+                    <i class="fa-solid fa-ticket text-primary"></i> Coupons
+                    <span class="badge bg-success badge-tab-count">@coupons.Count()</span>
+                </button>
+
+                <!-- 11. Change Password -->
+                <button class="account-nav-btn @(activeTab == "password" ? "active" : "")" onclick="switchTab('password')">
+                    <i class="fa-solid fa-key text-info"></i> Change Password
+                </button>
+
+                <!-- 12. Logout -->
+                <a asp-controller="Customer" asp-action="Logout" class="account-nav-btn text-danger">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- Right Content Area: Tab Panels -->
+        <div class="col-lg-9 col-md-8">
+            <!-- ============================================== -->
+            <!-- 1. MY PROFILE TAB -->
+            <!-- ============================================== -->
+            <div id="tab-profile" class="account-tab-panel" style="display: @(activeTab == "profile" ? "block" : "none");">
+                <div class="account-content-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                        <div>
+                            <h4 class="text-white fw-bold mb-1"><i class="fa-solid fa-id-card text-primary me-2"></i> My Profile</h4>
+                            <p class="text-muted small mb-0">Your personal details and demographic information</p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                                <i class="fa-solid fa-user-pen me-1"></i> Edit Profile
+                            </button>
+                            <button class="btn btn-outline-info btn-sm" onclick="switchTab('password')">
+                                <i class="fa-solid fa-key me-1"></i> Change Password
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Profile Display Table -->
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-dark rounded-3 border border-secondary">
+                                <span class="text-muted small d-block">Full Name</span>
+                                <strong class="text-white fs-6">@Model.Name</strong>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-dark rounded-3 border border-secondary">
+                                <span class="text-muted small d-block">Mobile Number</span>
+                                <strong class="text-white fs-6">@Model.PhoneNumber</strong>
+                                <span class="badge bg-success ms-2"><i class="fa-solid fa-check me-1"></i> Verified</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-dark rounded-3 border border-secondary">
+                                <span class="text-muted small d-block">Email Address</span>
+                                <strong class="text-white fs-6">@(string.IsNullOrEmpty(Model.Email) ? "Not provided" : Model.Email)</strong>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-dark rounded-3 border border-secondary">
+                                <span class="text-muted small d-block">Gender</span>
+                                <strong class="text-white fs-6">@(string.IsNullOrEmpty(Model.Gender) ? "Not specified" : Model.Gender)</strong>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-dark rounded-3 border border-secondary">
+                                <span class="text-muted small d-block">Date of Birth</span>
+                                <strong class="text-white fs-6">@(Model.DateOfBirth.HasValue ? Model.DateOfBirth.Value.ToString("dd MMMM yyyy") : "Not specified")</strong>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-dark rounded-3 border border-secondary">
+                                <span class="text-muted small d-block">Account Type & Member Since</span>
+                                <strong class="text-white fs-6">Customer &bull; @Model.CreatedAt.ToString("MMM yyyy")</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Buttons at Bottom -->
+                    <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top border-secondary">
+                        <button class="btn btn-primary px-4" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                            <i class="fa-solid fa-user-pen me-2"></i> Edit Profile
+                        </button>
+                        <button class="btn btn-outline-light px-4" onclick="switchTab('password')">
+                            <i class="fa-solid fa-lock me-2"></i> Change Password
+                        </button>
+                    </div>
+
+                    <!-- Recently Viewed Products Section -->
+                    <div id="accountRecentlyViewedSection" class="mt-4 pt-4 border-top border-secondary">
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <div>
+                                <h5 class="text-white fw-bold mb-0">
+                                    <i class="fa-solid fa-clock-rotate-left text-warning me-2"></i> Recently Viewed Products
+                                </h5>
+                                <p class="text-muted small mb-0">Quick access to products you recently browsed</p>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="ShopNextRecentlyViewed.clear('accountRecentlyViewedContainer', 'accountRecentlyViewedSection')">
+                                <i class="fa-solid fa-trash-can me-1"></i> Clear
+                            </button>
+                        </div>
+                        <div class="row g-3" id="accountRecentlyViewedContainer">
+                            <!-- Dynamic Recently Viewed Cards -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- 2. MY ORDERS TAB -->
+            <!-- ============================================== -->
+            <div id="tab-orders" class="account-tab-panel" style="display: @(activeTab == "orders" ? "block" : "none");">
+                <div class="account-content-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                        <div>
+                            <h4 class="text-white fw-bold mb-1"><i class="fa-solid fa-box-open text-primary me-2"></i> My Orders</h4>
+                            <p class="text-muted small mb-0">Past order history, 1-click reorder, return requests, and live receipt tracker</p>
+                        </div>
+                        <a asp-controller="Home" asp-action="Products" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                            <i class="fa-solid fa-plus me-1"></i> Shop More
+                        </a>
+                    </div>
+
+                    @if (!orders.Any())
+                    {
+                        <div class="text-center py-5 text-muted">
+                            <i class="fa-solid fa-box-open fa-3x mb-2 text-primary opacity-50"></i>
+                            <p class="fs-6">No orders placed yet.</p>
+                            <a asp-controller="Home" asp-action="Products" class="btn btn-primary btn-sm rounded-pill px-4">Explore Marketplace</a>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var order in orders)
+                        {
+                            var firstItem = order.OrderItems.FirstOrDefault();
+                            int extraItemsCount = order.OrderItems.Count - 1;
+                            string primaryProductName = firstItem?.Product?.ProductName ?? "Samsung Mobile";
+                            string primaryImageUrl = firstItem?.Product?.ImageUrl ?? "";
+                            bool isDelivered = (order.OrderStatus == "Delivered" || order.OrderStatus == "Completed");
+
+                            <div class="p-3 bg-dark rounded-4 border border-secondary mb-3 shadow-sm" id="acc-order-card-@order.Id">
+                                <!-- Top Row: #ORD1001 & Status -->
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pb-2 mb-2 border-bottom border-secondary border-opacity-50">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50 px-2.5 py-1.5 font-monospace fw-bold">
+                                            #ORD@(order.Id)
+                                        </span>
+                                        <span class="text-white small fw-bold">
+                                            <i class="fa-solid fa-store text-primary me-1"></i> @(order.ShopName ?? "ShopNext Seller")
+                                        </span>
+                                        <span class="text-muted small d-none d-sm-inline">
+                                            &bull; @order.CreatedDate.ToString("dd MMM yyyy")
+                                        </span>
+                                    </div>
+                                    <div>
+                                        @if (isDelivered)
+                                        {
+                                            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 px-3 py-1.5 rounded-pill fw-semibold">
+                                                <i class="fa-solid fa-circle-check me-1"></i> Delivered
+                                            </span>
+                                        }
+                                        else if (order.OrderStatus == "OutForDelivery")
+                                        {
+                                            <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50 px-3 py-1.5 rounded-pill fw-semibold">
+                                                <i class="fa-solid fa-motorcycle me-1"></i> Out for Delivery
+                                            </span>
+                                        }
+                                        else if (order.OrderStatus == "ReturnRequested")
+                                        {
+                                            <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50 px-3 py-1.5 rounded-pill fw-semibold">
+                                                <i class="fa-solid fa-rotate-left me-1"></i> Return Requested
+                                            </span>
+                                        }
+                                        else if (order.OrderStatus == "ReturnApproved")
+                                        {
+                                            <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-50 px-3 py-1.5 rounded-pill fw-semibold">
+                                                <i class="fa-solid fa-thumbs-up me-1"></i> Return Approved
+                                            </span>
+                                        }
+                                        else if (order.OrderStatus == "ProductPickup")
+                                        {
+                                            <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50 px-3 py-1.5 rounded-pill fw-semibold">
+                                                <i class="fa-solid fa-truck-ramp-box me-1 fa-bounce"></i> Product Pickup
+                                            </span>
+                                        }
+                                        else if (order.OrderStatus == "ProductReceived")
+                                        {
+                                            <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-50 px-3 py-1.5 rounded-pill fw-semibold">
+                                                <i class="fa-solid fa-warehouse me-1"></i> Product Received
+                                            </span>
+                                        }
+                                        else if (order.OrderStatus == "RefundInitiated")
+                                        {
+                                            <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50 px-3 py-1.5 rounded-pill fw-semibold">
+                                                <i class="fa-solid fa-money-bill-transfer me-1 fa-fade"></i> Refund Initiated
+                                            </span>
+                                        }
+                                        else if (order.OrderStatus == "RefundCompleted" || order.OrderStatus == "Returned")
+                                        {
+                                            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 px-3 py-1.5 rounded-pill fw-semibold">
+                                                <i class="fa-solid fa-circle-check me-1"></i> Refund Completed
+                                            </span>
+                                        }
+                                        else if (order.OrderStatus == "Cancelled")
+                                        {
+                                            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50 px-3 py-1.5 rounded-pill fw-semibold">
+                                                <i class="fa-solid fa-ban me-1"></i> Cancelled
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-50 px-3 py-1.5 rounded-pill fw-semibold">
+                                                <i class="fa-solid fa-clock me-1"></i> @order.OrderStatus
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+
+                                <!-- Middle: Product + Price -->
+                                <div class="row align-items-center g-3 mb-3">
+                                    <div class="col-md-8">
+                                        <div class="d-flex align-items-center gap-3">
+                                            @if (!string.IsNullOrEmpty(primaryImageUrl))
+                                            {
+                                                <img src="@primaryImageUrl" alt="@primaryProductName" class="rounded-3 border border-secondary" style="width: 60px; height: 60px; object-fit: cover; background: #0f172a;" />
+                                            }
+                                            else
+                                            {
+                                                <div class="rounded-3 border border-secondary d-flex align-items-center justify-content-center text-muted" style="width: 60px; height: 60px; background: #0f172a;">
+                                                    <i class="fa-solid fa-mobile-screen-button fa-2x text-primary opacity-75"></i>
+                                                </div>
+                                            }
+                                            <div>
+                                                <h6 class="text-white fw-bold mb-1">
+                                                    @primaryProductName
+                                                </h6>
+                                                @if (extraItemsCount > 0)
+                                                {
+                                                    <span class="badge bg-secondary bg-opacity-50 text-light small mb-1">
+                                                        + @extraItemsCount more item@(extraItemsCount > 1 ? "s" : "")
+                                                    </span>
+                                                }
+                                                <div class="text-muted small">
+                                                    Qty: @(firstItem?.Quantity ?? 1) &bull; Payment: <strong class="text-light">@order.PaymentMode</strong> (@order.PaymentStatus)
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 text-md-end">
+                                        <span class="text-muted small d-block">Price</span>
+                                        <div class="fs-5 fw-bold text-white">
+                                            &#8377;@order.TotalAmount.ToString("N0")
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons: [View Details] [Buy Again] [Return] -->
+                                <div class="d-flex justify-content-end align-items-center gap-2 pt-2 border-top border-secondary border-opacity-50 flex-wrap">
+                                    <!-- [View Details] -->
+                                    <a asp-controller="Home" asp-action="OrderSuccess" asp-route-orderId="@order.Id" class="btn btn-outline-info btn-sm rounded-pill px-3">
+                                        <i class="fa-solid fa-eye me-1"></i> View Details
+                                    </a>
+
+                                    <!-- [Buy Again] (Delivered order me click karne par product cart me add ho jaye) -->
+                                    @{
+                                        var accOrderItemsJson = System.Text.Json.JsonSerializer.Serialize(order.OrderItems.Select(oi => new {
+                                            productId = oi.ProductId,
+                                            productName = oi.Product?.ProductName ?? primaryProductName,
+                                            price = oi.UnitPrice,
+                                            quantity = oi.Quantity,
+                                            imageUrl = oi.Product?.ImageUrl ?? primaryImageUrl
+                                        }));
+                                    }
+                                    <button type="button" class="btn btn-primary btn-sm rounded-pill px-3" onclick='handleBuyAgainAccount(@order.Id, @order.ShopId, "@(order.ShopName?.Replace("\"", "\\\"") ?? "Shop")", "@primaryProductName.Replace("\"", "\\\"")", @(firstItem?.UnitPrice ?? order.TotalAmount), @(firstItem?.ProductId ?? 14), "@primaryImageUrl", this, @Html.Raw(accOrderItemsJson))'>
+                                        <i class="fa-solid fa-rotate-right me-1"></i> Buy Again
+                                    </button>
+
+                                    <!-- Status-Specific Action (Cancel/Return Rules) -->
+                                    @if (isDelivered)
+                                    {
+                                        <!-- Delivered → Return Product -->
+                                        <button type="button" class="btn btn-outline-warning btn-sm rounded-pill px-3" onclick="openReturnModalAccount(@order.Id, '#ORD@order.Id', '@primaryProductName.Replace("'", "\\'")')">
+                                            <i class="fa-solid fa-rotate-left me-1"></i> Return Product
+                                        </button>
+                                    }
+                                    else if (order.OrderStatus == "Pending" || order.OrderStatus == "Accepted" || order.OrderStatus == "Packed")
+                                    {
+                                        <!-- Placed, Confirmed, Packed → Cancel allowed -->
+                                        <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="openCancelModalAccount(@order.Id, '#ORD@order.Id')">
+                                            <i class="fa-solid fa-ban me-1"></i> Cancel Order
+                                        </button>
+                                    }
+                                    else if (order.OrderStatus == "Dispatched" || order.OrderStatus == "OutForDelivery")
+                                    {
+                                        <!-- Shipped → Not allowed to cancel -->
+                                        <span class="badge bg-secondary bg-opacity-25 text-warning border border-warning border-opacity-25 px-2.5 py-1.5 rounded-pill small" title="Order has been shipped and is with delivery partner. Cancellation is not allowed.">
+                                            <i class="fa-solid fa-truck-fast me-1"></i> Shipped (Cannot Cancel)
+                                        </span>
+                                    }
+
+                                    @if (order.OrderStatus == "ReturnRequested" || order.OrderStatus == "ReturnApproved" || order.OrderStatus == "ProductPickup" || order.OrderStatus == "ProductReceived" || order.OrderStatus == "RefundInitiated" || order.OrderStatus == "RefundCompleted" || order.OrderStatus == "Returned")
+                                    {
+                                        <a asp-controller="Home" asp-action="OrderSuccess" asp-route-orderId="@order.Id" class="btn btn-outline-warning btn-sm rounded-pill px-3">
+                                            <i class="fa-solid fa-money-bill-wave me-1"></i> Track Refund
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- 3. WISHLIST TAB -->
+            <!-- ============================================== -->
+            <div id="tab-wishlist" class="account-tab-panel" style="display: @(activeTab == "wishlist" ? "block" : "none");">
+                <div class="account-content-card">
+                    <h4 class="text-white fw-bold mb-4"><i class="fa-solid fa-heart text-danger me-2"></i> My Wishlist</h4>
+                    @if (!wishlist.Any())
+                    {
+                        <div class="text-center py-5 text-muted">
+                            <i class="fa-regular fa-heart fa-3x mb-2 text-danger opacity-50"></i>
+                            <p>Your wishlist is empty. Tap the heart icon on any product to save it here!</p>
+                            <a asp-controller="Home" asp-action="Products" class="btn btn-primary btn-sm">Browse Products</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="row g-3">
+                            @foreach (var w in wishlist)
+                            {
+                                if (w.Product != null)
+                                {
+                                    <div class="col-md-6 col-lg-4" id="wishlist-item-@w.ProductId">
+                                        <div class="p-3 bg-dark rounded-3 border border-secondary h-100 d-flex flex-column justify-content-between">
+                                            <div>
+                                                <div class="position-relative mb-2">
+                                                    @if (!string.IsNullOrEmpty(w.Product.ImageUrl))
+                                                    {
+                                                        <img src="@w.Product.ImageUrl" alt="@w.Product.ProductName" class="w-100 rounded-2" style="height: 140px; object-fit: cover;" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="w-100 rounded-2 bg-secondary bg-opacity-25 d-flex align-items-center justify-content-center text-muted" style="height: 140px;">
+                                                            <i class="fa-solid fa-basket-shopping fa-3x opacity-50"></i>
+                                                        </div>
+                                                    }
+                                                    <!-- Stock Badge -->
+                                                    @if (w.Product.StockStatus == "InStock")
+                                                    {
+                                                        <span class="badge bg-success position-absolute top-0 end-0 m-2 px-2 py-1 rounded">
+                                                            <i class="fa-solid fa-check me-1"></i> In Stock
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-danger position-absolute top-0 end-0 m-2 px-2 py-1 rounded">
+                                                            Out of Stock
+                                                        </span>
+                                                    }
+                                                </div>
+
+                                                <a asp-controller="Home" asp-action="ProductDetails" asp-route-id="@w.ProductId" class="text-decoration-none text-white">
+                                                    <h6 class="fw-bold text-truncate mb-1" title="@w.Product.ProductName">@w.Product.ProductName</h6>
+                                                </a>
+                                                <span class="text-muted small d-block mb-1">
+                                                    <i class="fa-solid fa-store text-primary me-1"></i>@(w.Product.Shop?.ShopName ?? "Shop")
+                                                </span>
+
+                                                <!-- Rating -->
+                                                <div class="d-flex align-items-center gap-1 mb-2 text-warning small">
+                                                    <i class="fa-solid fa-star"></i>
+                                                    <span class="text-white fw-semibold">4.8</span>
+                                                    <span class="text-muted">(Verified)</span>
+                                                </div>
+
+                                                <!-- Price -->
+                                                <div class="fs-5 fw-bold text-success mb-2">&#8377;@w.Product.Price.ToString("0.00")</div>
+                                            </div>
+
+                                            <div class="d-flex gap-2 mt-2 pt-2 border-top border-secondary">
+                                                <!-- Add to Cart Button -->
+                                                <button class="btn btn-primary btn-sm flex-grow-1" onclick="addWishlistToCart(@w.ProductId, '@w.Product.ProductName.Replace("'", "\\'")', @w.Product.Price, @w.Product.ShopId, '@(w.Product.Shop?.ShopName.Replace("'", "\\'") ?? "Shop")')">
+                                                    <i class="fa-solid fa-cart-plus me-1"></i> Add to Cart
+                                                </button>
+                                                <!-- Remove Button -->
+                                                <button class="btn btn-outline-danger btn-sm" onclick="removeFromWishlist(@w.ProductId)" title="Remove from Wishlist">
+                                                    <i class="fa-solid fa-trash me-1"></i> Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- 4. MY CART TAB -->
+            <!-- ============================================== -->
+            <div id="tab-cart" class="account-tab-panel" style="display: @(activeTab == "cart" ? "block" : "none");">
+                <div class="account-content-card text-center py-5">
+                    <i class="fa-solid fa-cart-shopping fa-3x text-warning mb-3"></i>
+                    <h4 class="text-white fw-bold mb-2">Shopping Cart Overview</h4>
+                    <p class="text-muted mb-4">View items currently selected from your local neighborhood store, update quantities, or proceed to checkout.</p>
+                    <a asp-controller="Home" asp-action="Cart" class="btn btn-primary px-4 py-2">
+                        <i class="fa-solid fa-arrow-right-to-bracket me-1"></i> Open Shopping Cart
+                    </a>
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- 5. MY ADDRESSES TAB -->
+            <!-- ============================================== -->
+            <div id="tab-addresses" class="account-tab-panel" style="display: @(activeTab == "addresses" ? "block" : "none");">
+                <div class="account-content-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="text-white fw-bold mb-0"><i class="fa-solid fa-location-dot text-success me-2"></i> Saved Addresses</h4>
+                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#newAddressModal">
+                            + Add New Address
+                        </button>
+                    </div>
+
+                    @if (!addresses.Any())
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="fa-solid fa-map-location-dot fa-2x mb-2"></i>
+                            <p>No saved addresses yet.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="row g-3">
+                            @foreach (var a in addresses)
+                            {
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-dark rounded-3 border border-secondary h-100 d-flex flex-column justify-content-between">
+                                        <div>
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="badge bg-secondary">@a.AddressType</span>
+                                                @if (a.IsDefault)
+                                                {
+                                                    <span class="badge bg-success">Default</span>
+                                                }
+                                            </div>
+                                            <strong class="text-white d-block">@a.RecipientName</strong>
+                                            <span class="text-muted small d-block">@a.PhoneNumber</span>
+                                            <span class="text-light small d-block mt-1">@a.AddressLine, @a.City - @a.Pincode</span>
+                                        </div>
+                                        <div class="text-end mt-2 pt-2 border-top border-secondary">
+                                            <button class="btn btn-link text-danger btn-sm p-0 text-decoration-none" onclick="deleteAddress(@a.Id)">
+                                                <i class="fa-solid fa-trash me-1"></i> Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- 6. PAYMENT METHODS TAB -->
+            <!-- ============================================== -->
+            <div id="tab-payments" class="account-tab-panel" style="display: @(activeTab == "payments" ? "block" : "none");">
+                <div class="account-content-card">
+                    <h4 class="text-white fw-bold mb-3"><i class="fa-solid fa-credit-card text-info me-2"></i> Payment Preferences</h4>
+                    <p class="text-muted small mb-4">Supported quick checkout options configured for your account</p>
+
+                    <div class="p-3 bg-dark rounded-3 border border-secondary mb-3 d-flex align-items-center gap-3">
+                        <i class="fa-solid fa-money-bill-wave text-success fs-3"></i>
+                        <div>
+                            <strong class="text-white d-block">Cash on Delivery (COD)</strong>
+                            <span class="text-muted small">Pay with cash or UPI on delivery</span>
+                        </div>
+                        <span class="badge bg-success ms-auto">Always Active</span>
+                    </div>
+
+                    <div class="p-3 bg-dark rounded-3 border border-secondary mb-3 d-flex align-items-center gap-3">
+                        <i class="fa-solid fa-qrcode text-primary fs-3"></i>
+                        <div>
+                            <strong class="text-white d-block">Instant UPI Simulation</strong>
+                            <span class="text-muted small">Google Pay, PhonePe, Paytm QR scanner</span>
+                        </div>
+                        <span class="badge bg-primary ms-auto">Enabled</span>
+                    </div>
+
+                    <div class="p-3 bg-dark rounded-3 border border-secondary d-flex align-items-center gap-3">
+                        <i class="fa-solid fa-credit-card text-warning fs-3"></i>
+                        <div>
+                            <strong class="text-white d-block">Credit & Debit Cards</strong>
+                            <span class="text-muted small">Visa, MasterCard, RuPay Card Simulator</span>
+                        </div>
+                        <span class="badge bg-info text-dark ms-auto">Active</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- 7. NOTIFICATIONS TAB -->
+            <!-- ============================================== -->
+            <div id="tab-notifications" class="account-tab-panel" style="display: @(activeTab == "notifications" ? "block" : "none");">
+                <div class="account-content-card">
+                    <h4 class="text-white fw-bold mb-4"><i class="fa-solid fa-bell text-warning me-2"></i> Notifications</h4>
+                    @if (!notifications.Any())
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="fa-regular fa-bell fa-2x mb-2"></i>
+                            <p>No notifications at the moment.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var n in notifications)
+                        {
+                            <div class="notification-item @(!n.IsRead ? "unread" : "")" id="notif-@n.Id">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <strong class="text-white">@n.Title</strong>
+                                    <span class="text-muted small">@n.CreatedDate.ToString("dd MMM, hh:mm tt")</span>
+                                </div>
+                                <p class="text-light small mb-2">@n.Message</p>
+                                @if (!n.IsRead)
+                                {
+                                    <button class="btn btn-link text-primary btn-sm p-0 text-decoration-none" onclick="markRead(@n.Id)">
+                                        <i class="fa-solid fa-check me-1"></i> Mark as Read
+                                    </button>
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- 8. MY REVIEWS TAB -->
+            <!-- ============================================== -->
+            <div id="tab-reviews" class="account-tab-panel" style="display: @(activeTab == "reviews" ? "block" : "none");">
+                <div class="account-content-card">
+                    <h4 class="text-white fw-bold mb-4"><i class="fa-solid fa-star text-warning me-2"></i> My Reviews & Ratings</h4>
+                    @if (!reviews.Any())
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="fa-regular fa-star fa-2x mb-2"></i>
+                            <p>You haven't submitted any reviews yet. Rate your delivered orders to help other shoppers!</p>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var rev in reviews)
+                        {
+                            <div class="p-3 bg-dark rounded-3 border border-secondary mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <strong class="text-white">@(rev.Product?.ProductName ?? rev.Shop?.ShopName ?? "Store")</strong>
+                                    <div class="text-warning">
+                                        @for (int s = 1; s <= 5; s++)
+                                        {
+                                            <i class="fa-@(s <= rev.Rating ? "solid" : "regular") fa-star"></i>
+                                        }
+                                    </div>
+                                </div>
+                                <p class="text-light small mb-1">@rev.Comment</p>
+                                <span class="text-muted small">Posted on @rev.CreatedDate.ToString("dd MMM yyyy")</span>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- 9. RETURNS & REFUNDS TAB -->
+            <!-- ============================================== -->
+            <div id="tab-returns" class="account-tab-panel" style="display: @(activeTab == "returns" ? "block" : "none");">
+                <div class="account-content-card">
+                    <h4 class="text-white fw-bold mb-4"><i class="fa-solid fa-rotate-left text-danger me-2"></i> Returns & Refunds</h4>
+                    @if (!returnedOrders.Any())
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="fa-solid fa-clipboard-check fa-2x mb-2"></i>
+                            <p>No active return requests or refunded orders.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var ret in returnedOrders)
+                        {
+                            <div class="p-3 bg-dark rounded-3 border border-secondary mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <strong class="text-white">Order #@ret.Id &bull; &#8377;@ret.TotalAmount.ToString("0.00")</strong>
+                                    <span class="badge bg-warning text-dark">@ret.OrderStatus</span>
+                                </div>
+                                <div class="text-muted small mb-2">Return Reason: <span class="text-light">@ret.ReturnReason</span></div>
+                                <span class="badge bg-success bg-opacity-25 text-success">Refund Status: In Process</span>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- 10. COUPONS TAB -->
+            <!-- ============================================== -->
+            <div id="tab-coupons" class="account-tab-panel" style="display: @(activeTab == "coupons" ? "block" : "none");">
+                <div class="account-content-card">
+                    <h4 class="text-white fw-bold mb-4"><i class="fa-solid fa-ticket text-primary me-2"></i> Available Promo Coupons</h4>
+                    <div class="row g-3">
+                        @foreach (var c in coupons)
+                        {
+                            <div class="col-md-6">
+                                <div class="coupon-card">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="badge bg-primary fs-6 px-3 py-1">@c.Code</span>
+                                        <button class="btn btn-outline-light btn-sm" onclick="copyCoupon('@c.Code')">
+                                            <i class="fa-regular fa-copy me-1"></i> Copy
+                                        </button>
+                                    </div>
+                                    <p class="text-light small mb-2">@c.Description</p>
+                                    <div class="text-muted small">Min Order: &#8377;@c.MinOrderAmount.ToString("0.00")</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- 11. CHANGE PASSWORD TAB -->
+            <!-- ============================================== -->
+            <div id="tab-password" class="account-tab-panel" style="display: @(activeTab == "password" ? "block" : "none");">
+                <div class="account-content-card">
+                    <h4 class="text-white fw-bold mb-3"><i class="fa-solid fa-key text-info me-2"></i> Change Password</h4>
+                    <p class="text-muted small mb-4">Keep your account secure with a strong password</p>
+
+                    <form asp-controller="Customer" asp-action="ChangePassword" method="post" style="max-width: 480px;">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-3">
+                            <label class="form-label text-light small">Current Password *</label>
+                            <input type="password" name="currentPassword" class="form-control bg-dark text-white border-secondary" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-light small">New Password * (Min 6 chars)</label>
+                            <input type="password" name="newPassword" class="form-control bg-dark text-white border-secondary" minlength="6" required />
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label text-light small">Confirm New Password *</label>
+                            <input type="password" name="confirmPassword" class="form-control bg-dark text-white border-secondary" minlength="6" required />
+                        </div>
+                        <button type="submit" class="btn btn-primary px-4 py-2">
+                            Update Password
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Edit Profile -->
+<div class="modal fade" id="editProfileModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold text-primary"><i class="fa-solid fa-user-pen me-2"></i> Edit Profile Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-controller="Customer" asp-action="UpdateProfile" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small">Full Name *</label>
+                        <input type="text" name="name" class="form-control bg-dark text-white border-secondary" value="@Model.Name" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Mobile Number (Cannot be modified)</label>
+                        <input type="text" class="form-control bg-dark text-muted border-secondary" value="@Model.PhoneNumber" disabled />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Email Address</label>
+                        <input type="email" name="email" class="form-control bg-dark text-white border-secondary" value="@Model.Email" placeholder="yourname@domain.com" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Profile Photo URL (Optional)</label>
+                        <input type="url" name="profilePhoto" class="form-control bg-dark text-white border-secondary" value="@Model.ProfilePhoto" placeholder="https://example.com/photo.jpg" />
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small">Gender (Optional)</label>
+                            <select name="gender" class="form-select bg-dark text-white border-secondary">
+                                <option value="" selected="@(string.IsNullOrEmpty(Model.Gender))">Not specified</option>
+                                <option value="Male" selected="@(Model.Gender == "Male")">Male</option>
+                                <option value="Female" selected="@(Model.Gender == "Female")">Female</option>
+                                <option value="Other" selected="@(Model.Gender == "Other")">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small">Date of Birth (Optional)</label>
+                            <input type="date" name="dob" class="form-control bg-dark text-white border-secondary" value="@(Model.DateOfBirth?.ToString("yyyy-MM-dd"))" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add New Address -->
+<div class="modal fade" id="newAddressModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold" id="newAddressModalLabel"><i class="fa-solid fa-location-dot text-primary me-2"></i> Add Delivery Address</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addressForm">
+                    <div class="mb-3">
+                        <label class="form-label small">Address Type</label>
+                        <select id="addrType" class="form-select bg-dark text-white border-secondary">
+                            <option value="Home">Home</option>
+                            <option value="Office">Office</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small">Recipient Name *</label>
+                            <input type="text" id="addrRecipient" class="form-control bg-dark text-white border-secondary" value="@Model.Name" required />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small">Phone Number *</label>
+                            <input type="tel" id="addrPhone" class="form-control bg-dark text-white border-secondary" value="@Model.PhoneNumber" required />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Flat / House No. / Street / Area *</label>
+                        <textarea id="addrLine" rows="2" class="form-control bg-dark text-white border-secondary" placeholder="Complete address" required></textarea>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small">City</label>
+                            <input type="text" id="addrCity" class="form-control bg-dark text-white border-secondary" value="New Delhi" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small">Pincode *</label>
+                            <input type="text" id="addrPincode" class="form-control bg-dark text-white border-secondary" placeholder="e.g. 110001" required />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Landmark (Optional)</label>
+                        <input type="text" id="addrLandmark" class="form-control bg-dark text-white border-secondary" placeholder="Nearby landmark" />
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="addrIsDefault" checked>
+                        <label class="form-check-label small" for="addrIsDefault">
+                            Set as default delivery address
+                        </label>
+                    </div>
+                    <button type="button" onclick="saveNewAddress()" class="btn btn-primary w-100 py-2">Save Address</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function getToken() {
+        return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+    }
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.account-tab-panel').forEach(p => p.style.display = 'none');
+        document.querySelectorAll('.account-nav-btn').forEach(b => b.classList.remove('active'));
+
+        const targetPanel = document.getElementById('tab-' + tabName);
+        if (targetPanel) {
+            targetPanel.style.display = 'block';
+            const btn = document.querySelector(`[onclick="switchTab('${tabName}')"]`);
+            if (btn) btn.classList.add('active');
+            history.replaceState(null, null, '?tab=' + tabName);
+        }
+    }
+
+    async function removeFromWishlist(productId) {
+        const form = new FormData();
+        form.append("productId", productId);
+
+        try {
+            const resp = await fetch('/Customer/RemoveFromWishlist', {
+                method: 'POST',
+                body: form
+            });
+            const data = await resp.json();
+            if (data.success) {
+                document.getElementById('wishlist-item-' + productId)?.remove();
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async function markRead(notifId) {
+        const form = new FormData();
+        form.append("notificationId", notifId);
+
+        try {
+            const resp = await fetch('/Customer/MarkNotificationRead', {
+                method: 'POST',
+                body: form
+            });
+            const data = await resp.json();
+            if (data.success) {
+                const item = document.getElementById('notif-' + notifId);
+                if (item) {
+                    item.classList.remove('unread');
+                    item.querySelector('button')?.remove();
+                }
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function copyCoupon(code) {
+        navigator.clipboard.writeText(code);
+        alert(`Coupon code "${code}" copied to clipboard!`);
+    }
+
+    async function saveNewAddress() {
+        const recipient = document.getElementById("addrRecipient").value.trim();
+        const phone = document.getElementById("addrPhone").value.trim();
+        const line = document.getElementById("addrLine").value.trim();
+        const pincode = document.getElementById("addrPincode").value.trim();
+
+        if (!recipient || !phone || !line || !pincode) {
+            alert("Please fill in recipient name, phone, address line, and pincode.");
+            return;
+        }
+
+        const payload = {
+            AddressType: document.getElementById("addrType").value,
+            RecipientName: recipient,
+            PhoneNumber: phone,
+            AddressLine: line,
+            City: document.getElementById("addrCity").value.trim() || "New Delhi",
+            State: "Delhi",
+            Pincode: pincode,
+            Landmark: document.getElementById("addrLandmark").value.trim(),
+            IsDefault: document.getElementById("addrIsDefault").checked
+        };
+
+        try {
+            const resp = await fetch('/Customer/SaveAddress', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': getToken()
+                },
+                body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || "Failed to save address.");
+            }
+        } catch (e) {
+            alert("Error: " + e.message);
+        }
+    }
+
+    async function deleteAddress(id) {
+        if (!confirm("Delete this address?")) return;
+        const form = new FormData();
+        form.append("id", id);
+
+        try {
+            const resp = await fetch('/Customer/DeleteAddress', {
+                method: 'POST',
+                headers: { 'RequestVerificationToken': getToken() },
+                body: form
+            });
+            const data = await resp.json();
+            if (data.success) location.reload();
+        } catch (e) {
+            alert("Error: " + e.message);
+        }
+    }
+
+    function addWishlistToCart(productId, productName, price, shopId, shopName) {
+        let cart = JSON.parse(localStorage.getItem("shop_cart")) || { shopId: null, shopName: null, items: [] };
+
+        if (cart.shopId && cart.shopId !== shopId && cart.items.length > 0) {
+            const ok = confirm(`Your cart already contains items from "${cart.shopName}". Clear cart to add from "${shopName}"?`);
+            if (!ok) return;
+            cart = { shopId: shopId, shopName: shopName, items: [] };
+        }
+
+        cart.shopId = shopId;
+        cart.shopName = shopName;
+
+        const existing = cart.items.find(i => i.productId === productId);
+        if (existing) {
+            existing.quantity += 1;
+        } else {
+            cart.items.push({
+                productId: productId,
+                productName: productName,
+                price: price,
+                quantity: 1
+            });
+        }
+
+        localStorage.setItem("shop_cart", JSON.stringify(cart));
+
+        let totalQty = 0;
+        cart.items.forEach(i => totalQty += i.quantity);
+        if (window.updateLayoutCartBadge) {
+            window.updateLayoutCartBadge(totalQty);
+        }
+
+        alert(`"${productName}" added to Cart!`);
+    }
+
+    // Buy Again from Order History (Delivered order me click karne par product cart me add ho jaye)
+    function handleBuyAgainAccount(orderId, shopId, shopName, productName, price, productId, imageUrl, btnElement, itemsJson) {
+        let cart = JSON.parse(localStorage.getItem("shop_cart")) || { shopId: null, shopName: null, items: [] };
+
+        if (cart.shopId && cart.shopId !== shopId && cart.items.length > 0) {
+            const ok = confirm(`Your cart already contains items from "${cart.shopName}". Clear cart to add from "${shopName}"?`);
+            if (!ok) return;
+            cart = { shopId: shopId, shopName: shopName, items: [] };
+        }
+
+        cart.shopId = shopId;
+        cart.shopName = shopName;
+
+        let addedNames = [];
+
+        if (itemsJson && Array.isArray(itemsJson) && itemsJson.length > 0) {
+            itemsJson.forEach(item => {
+                const existing = cart.items.find(i => i.productId === item.productId);
+                if (existing) {
+                    existing.quantity += (item.quantity || 1);
+                } else {
+                    cart.items.push({
+                        productId: item.productId,
+                        productName: item.productName,
+                        price: item.price,
+                        quantity: item.quantity || 1,
+                        imageUrl: item.imageUrl || ''
+                    });
+                }
+                addedNames.push(item.productName);
+            });
+        } else {
+            const existing = cart.items.find(i => i.productId === productId);
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.items.push({
+                    productId: productId,
+                    productName: productName,
+                    price: price,
+                    quantity: 1,
+                    imageUrl: imageUrl || ''
+                });
+            }
+            addedNames.push(productName);
+        }
+
+        localStorage.setItem("shop_cart", JSON.stringify(cart));
+
+        // Sync layout header badge
+        let totalQty = 0;
+        cart.items.forEach(i => totalQty += i.quantity);
+        if (window.updateLayoutCartBadge) {
+            window.updateLayoutCartBadge(totalQty);
+        }
+
+        // Button tactile feedback
+        if (btnElement) {
+            const originalHtml = btnElement.innerHTML;
+            btnElement.classList.remove('btn-primary');
+            btnElement.classList.add('btn-success');
+            btnElement.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> Added to Cart!';
+            btnElement.disabled = true;
+
+            setTimeout(() => {
+                btnElement.classList.remove('btn-success');
+                btnElement.classList.add('btn-primary');
+                btnElement.innerHTML = originalHtml;
+                btnElement.disabled = false;
+            }, 2500);
+        }
+
+        if (confirm(`Added "${addedNames[0] || productName}" from Order #ORD${orderId} to your cart! Go to Cart now?`)) {
+            window.location.href = '/Home/Cart';
+        }
+    }
+
+    // Return Order Modal in Account Hub
+    function openReturnModalAccount(orderId, orderBadge, productName) {
+        document.getElementById("accReturnOrderId").value = orderId;
+        document.getElementById("accReturnOrderBadge").innerText = orderBadge;
+        document.getElementById("accReturnProductName").innerText = productName;
+        new bootstrap.Modal(document.getElementById('accReturnModal')).show();
+    }
+
+    async function submitReturnOrderAccount() {
+        const orderId = document.getElementById("accReturnOrderId").value;
+        const sel = document.getElementById("accReturnReasonSelect").value;
+        const comments = document.getElementById("accReturnReasonText").value.trim();
+        const reason = comments ? `${sel} - ${comments}` : sel;
+
+        const form = new FormData();
+        form.append("orderId", orderId);
+        form.append("returnReason", reason);
+
+        try {
+            const resp = await fetch('/Customer/ReturnOrder', {
+                method: 'POST',
+                headers: { 'RequestVerificationToken': getToken() },
+                body: form
+            });
+            const data = await resp.json();
+            alert(data.message);
+            if (data.success) location.reload();
+        } catch (e) {
+            alert("Error: " + e.message);
+        }
+    }
+
+    // Cancel Order Modal in Account Hub
+    function openCancelModalAccount(orderId, orderBadge) {
+        document.getElementById("accCancelOrderId").value = orderId;
+        document.getElementById("accCancelOrderBadge").innerText = orderBadge;
+        new bootstrap.Modal(document.getElementById('accCancelModal')).show();
+    }
+
+    async function submitCancelOrderAccount() {
+        const orderId = document.getElementById("accCancelOrderId").value;
+        const sel = document.getElementById("accCancelReasonSelect").value;
+        const comments = document.getElementById("accCancelReasonText").value.trim();
+        const reason = comments ? `${sel} - ${comments}` : sel;
+
+        const form = new FormData();
+        form.append("orderId", orderId);
+        form.append("cancelReason", reason);
+
+        try {
+            const resp = await fetch('/Customer/CancelOrder', {
+                method: 'POST',
+                headers: { 'RequestVerificationToken': getToken() },
+                body: form
+            });
+            const data = await resp.json();
+            alert(data.message);
+            if (data.success) location.reload();
+        } catch (e) {
+            alert("Error: " + e.message);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        if (window.ShopNextRecentlyViewed) {
+            ShopNextRecentlyViewed.render('accountRecentlyViewedContainer', 'accountRecentlyViewedSection');
+        }
+    });
+</script>
+
+<!-- Modal: Cancel Order for Account Hub -->
+<div class="modal fade" id="accCancelModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border border-secondary" style="border-radius: 20px;">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold text-danger">
+                    <i class="fa-solid fa-ban me-2"></i> Cancel Order <span id="accCancelOrderBadge" class="badge bg-secondary"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="accCancelOrderId" />
+                <div class="mb-3 p-2.5 bg-danger bg-opacity-10 rounded-3 border border-danger border-opacity-25 small text-light">
+                    <i class="fa-solid fa-circle-exclamation text-danger me-1"></i>
+                    Orders can only be cancelled while <strong>Placed</strong>, <strong>Confirmed</strong>, or <strong>Packed</strong>. Once shipped, cancellation is not allowed.
+                </div>
+
+                <label class="form-label small fw-semibold">Select Cancellation Reason *</label>
+                <select id="accCancelReasonSelect" class="form-select bg-dark text-white border-secondary mb-3">
+                    <option value="Wrong Product">Wrong Product</option>
+                    <option value="Changed Mind">Changed Mind</option>
+                    <option value="Ordered by Mistake">Ordered by Mistake</option>
+                    <option value="Found Cheaper">Found Cheaper</option>
+                    <option value="Other">Other</option>
+                </select>
+
+                <label class="form-label small fw-semibold">Additional Details (Optional):</label>
+                <textarea id="accCancelReasonText" class="form-control bg-dark text-white border-secondary" placeholder="Optional comments..." rows="2"></textarea>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold" onclick="submitCancelOrderAccount()">
+                    <i class="fa-solid fa-ban me-1"></i> Confirm Cancellation
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Return Order for Account Hub -->
+<div class="modal fade" id="accReturnModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border border-secondary" style="border-radius: 20px;">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold text-warning">
+                    <i class="fa-solid fa-rotate-left me-2"></i> Return Order <span id="accReturnOrderBadge" class="badge bg-secondary"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="accReturnOrderId" />
+                <div class="mb-3 p-3 bg-black bg-opacity-25 rounded-3 border border-secondary">
+                    <span class="text-muted small d-block">Returning Item:</span>
+                    <strong class="text-white fs-6" id="accReturnProductName">Product</strong>
+                </div>
+
+                <label class="form-label small fw-semibold">Select Return Reason *</label>
+                <select id="accReturnReasonSelect" class="form-select bg-dark text-white border-secondary mb-3">
+                    <option value="Damaged">Damaged</option>
+                    <option value="Wrong Product">Wrong Product</option>
+                    <option value="Defective">Defective</option>
+                    <option value="Missing Item">Missing Item</option>
+                    <option value="Not as Described">Not as Described</option>
+                </select>
+
+                <label class="form-label small fw-semibold">Additional Comments (Optional):</label>
+                <textarea id="accReturnReasonText" class="form-control bg-dark text-white border-secondary" placeholder="Provide any details to help process your return faster..." rows="3"></textarea>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning rounded-pill px-4 fw-bold" onclick="submitReturnOrderAccount()">
+                    <i class="fa-solid fa-check me-1"></i> Submit Return
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

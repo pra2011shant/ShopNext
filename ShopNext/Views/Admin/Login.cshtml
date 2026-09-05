@@ -1,0 +1,50 @@
+@{
+    ViewData["Title"] = "Admin Portal Login - ShopNext";
+}
+
+<div class="row justify-content-center align-items-center" style="min-height: 75vh;">
+    <div class="col-md-6 col-lg-4">
+        <div class="glass-card shadow-lg p-4 p-md-5 border-0 rounded-4">
+            <div class="text-center mb-4">
+                <div class="d-inline-flex p-3 rounded-circle bg-primary bg-opacity-10 text-primary mb-3">
+                    <i class="fa-solid fa-user-shield fa-2x"></i>
+                </div>
+                <h3 class="fw-bold text-dark mb-1">Admin Portal</h3>
+                <p class="text-muted small">Sign in to manage shops, approvals, and system audit logs</p>
+            </div>
+
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger d-flex align-items-center mb-4 rounded-3" role="alert">
+                    <i class="fa-solid fa-circle-exclamation me-2"></i>
+                    <div>@ViewBag.Error</div>
+                </div>
+            }
+
+            <form asp-controller="Admin" asp-action="Login" method="post">
+                @Html.AntiForgeryToken()
+                
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-dark"><i class="fa-solid fa-user me-1 text-primary"></i> Username</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-regular fa-user"></i></span>
+                        <input type="text" name="username" class="form-control border-start-0 ps-0" placeholder="e.g. admin" required autofocus />
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold text-dark"><i class="fa-solid fa-lock me-1 text-primary"></i> Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-key"></i></span>
+                        <input type="password" name="password" class="form-control border-start-0 ps-0" placeholder="••••••••" required />
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold rounded-3 mb-3 shadow-sm">
+                    <i class="fa-solid fa-arrow-right-to-bracket me-1"></i> Sign In to Admin Panel
+                </button>
+
+            </form>
+        </div>
+    </div>
+</div>

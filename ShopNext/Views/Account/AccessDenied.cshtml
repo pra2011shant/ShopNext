@@ -1,0 +1,100 @@
+@{
+    ViewData["Title"] = "403 - Access Denied";
+    Layout = "_Layout";
+    string currentRole = ViewBag.CurrentRole as string ?? "Guest";
+    string currentName = ViewBag.CurrentName as string ?? "User";
+    string returnUrl = ViewBag.ReturnUrl as string ?? "";
+}
+
+<div class="container py-5 my-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="glass-card text-center p-5 rounded-4 shadow-lg border border-danger border-opacity-30 position-relative overflow-hidden" style="background: radial-gradient(circle at 50% 0%, rgba(239, 68, 68, 0.15) 0%, rgba(15, 23, 42, 0.85) 75%);">
+                
+                <!-- Shield Icon with Ambient Glow -->
+                <div class="mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center p-4 rounded-circle bg-danger bg-opacity-20 text-danger border border-danger border-opacity-40 shadow-sm" style="width: 100px; height: 100px;">
+                        <i class="fa-solid fa-shield-halved fs-1"></i>
+                    </div>
+                </div>
+
+                <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 px-3 py-1.5 rounded-pill mb-3 text-uppercase fw-bold letter-spacing-1">
+                    <i class="fa-solid fa-lock me-1"></i> Security Barrier Enforced
+                </span>
+
+                <h1 class="display-6 fw-bold text-white mb-2">403 - Access Denied</h1>
+                <p class="text-secondary fs-6 mb-4 max-w-500 mx-auto">
+                    You do not have the required role permissions to access this requested resource.
+                    @if (!string.IsNullOrEmpty(returnUrl))
+                    {
+                        <span class="d-block text-danger text-opacity-75 small mt-1 font-monospace">Target: @returnUrl</span>
+                    }
+                </p>
+
+                <!-- Current Role Status Badge -->
+                <div class="p-3 rounded-3 mb-4 mx-auto border border-secondary border-opacity-25 text-start" style="max-width: 480px; background: rgba(0, 0, 0, 0.4);">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-secondary small">Your Current Identity:</span>
+                        <span class="badge bg-info bg-opacity-20 text-info fw-bold">@currentRole</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-secondary small">Logged In As:</span>
+                        <span class="text-white fw-semibold small">@currentName</span>
+                    </div>
+                </div>
+
+                <!-- Role Portals Cards -->
+                <div class="row g-3 mb-4 text-start">
+                    <div class="col-md-4">
+                        <div class="p-3 rounded-4 border border-secondary border-opacity-25 h-100 transition-hover" style="background: rgba(15, 23, 42, 0.6);">
+                            <div class="d-flex align-items-center gap-2 mb-2 text-info">
+                                <i class="fa-solid fa-bag-shopping fs-5"></i>
+                                <span class="fw-bold">Customer</span>
+                            </div>
+                            <small class="text-secondary d-block mb-3">Browse products, track your orders &amp; support tickets.</small>
+                            <a href="/Customer/MyOrders" class="btn btn-outline-info btn-sm w-100 rounded-pill">
+                                My Orders <i class="fa-solid fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="p-3 rounded-4 border border-secondary border-opacity-25 h-100 transition-hover" style="background: rgba(15, 23, 42, 0.6);">
+                            <div class="d-flex align-items-center gap-2 mb-2 text-warning">
+                                <i class="fa-solid fa-store fs-5"></i>
+                                <span class="fw-bold">Seller Portal</span>
+                            </div>
+                            <small class="text-secondary d-block mb-3">Manage merchant catalog, inventory &amp; store orders.</small>
+                            <a href="/Vendor/Dashboard" class="btn btn-outline-warning btn-sm w-100 rounded-pill">
+                                Seller Login <i class="fa-solid fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="p-3 rounded-4 border border-secondary border-opacity-25 h-100 transition-hover" style="background: rgba(15, 23, 42, 0.6);">
+                            <div class="d-flex align-items-center gap-2 mb-2 text-danger">
+                                <i class="fa-solid fa-shield-cat fs-5"></i>
+                                <span class="fw-bold">Admin Console</span>
+                            </div>
+                            <small class="text-secondary d-block mb-3">Platform approvals, reports &amp; operational desk.</small>
+                            <a href="/Admin/Login" class="btn btn-outline-danger btn-sm w-100 rounded-pill">
+                                Admin Login <i class="fa-solid fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Links -->
+                <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap">
+                    <a href="/" class="btn btn-gradient-primary rounded-pill px-4">
+                        <i class="fa-solid fa-house me-1"></i> Back to Homepage
+                    </a>
+                    <a href="/Account/Logout" class="btn btn-outline-light rounded-pill px-4">
+                        <i class="fa-solid fa-arrow-right-from-bracket me-1"></i> Switch Account / Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
