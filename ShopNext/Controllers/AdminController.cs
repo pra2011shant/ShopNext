@@ -24,8 +24,9 @@ namespace ShopNext.Controllers
         private readonly ICustomerRiskService _riskService;
         private readonly IAddressRiskService _addressRiskService;
         private readonly IMultiAccountDetectionService _multiAccountService;
+        private readonly ICodAbuseService _codAbuseService;
 
-        public AdminController(IShopNextService service, ShopNextDbContext context, IAuditService auditService, ICustomerRiskService riskService, IAddressRiskService addressRiskService, IMultiAccountDetectionService multiAccountService)
+        public AdminController(IShopNextService service, ShopNextDbContext context, IAuditService auditService, ICustomerRiskService riskService, IAddressRiskService addressRiskService, IMultiAccountDetectionService multiAccountService, ICodAbuseService codAbuseService)
         {
             _service = service;
             _context = context;
@@ -33,6 +34,7 @@ namespace ShopNext.Controllers
             _riskService = riskService;
             _addressRiskService = addressRiskService;
             _multiAccountService = multiAccountService;
+            _codAbuseService = codAbuseService;
         }
 
         private bool IsAdminLoggedIn()
@@ -535,7 +537,8 @@ namespace ShopNext.Controllers
                 NotificationsList = notificationsList,
                 Reports = await _service.GetAdminReportsAsync("Sales", "30Days"),
                 AddressRiskList = await _addressRiskService.GetAddressRiskAnalyticsAsync(),
-                MultiAccountClustersList = await _multiAccountService.GetMultiAccountClustersAsync()
+                MultiAccountClustersList = await _multiAccountService.GetMultiAccountClustersAsync(),
+                CodAbuseList = await _codAbuseService.GetCodAbuseAnalyticsAsync()
             };
 
             ViewBag.PendingShops = pendingShops;
@@ -3762,6 +3765,68 @@ namespace ShopNext.Controllers
                 clusterStatus = request.Status,
                 adminNotes = request.AdminNotes,
                 restrictWelcomeCoupons = request.RestrictFirstOrderCoupons,
+                updatedDate = DateTime.Now.ToString("dd MMM yyyy, hh:mm tt")
+            });
+        }
+
+        #endregion
+
+        #region Point 49: COD Abuse Detection APIs
+
+        // GET: /Admin/GetCustomerCodDetails?customerId=...
+        [HttpGet]
+        public async Task<IActionResult> GetCustomerCodDetails(int customerId)
+        {
+            if (customerId <= 0)
+            {
+                return Json(new { success = false, message = "Valid Customer ID is required." });
+            }
+
+            var codDetails = await _codAbuseService.GetCustomerCodDetailsAsync(customerId);
+            if (codDetails == null)
+            {
+                return Json(new { success = false, message = "Customer COD profile not found." });
+            }
+
+            return Json(new
+            {
+                success = true,
+                data = codDetails
+            });
+        }
+
+        // POST: /Admin/UpdateCustomerCodPolicy
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateCustomerCodPolicy([FromBody] UpdateCustomerCodPolicyRequest request)
+        {
+            if (request == null || request.CustomerId <= 0)
+            {
+                return Json(new { success = false, message = "Invalid COD policy request." });
+            }
+
+            var success = await _codAbuseService.UpdateCustomerCodPolicyAsync(
+                request.CustomerId,
+                request.PolicyAction,
+                request.Reason
+            );
+
+            if (!success)
+            {
+                return Json(new { success = false, message = "Failed to update customer COD policy." });
+            }
+
+            string actionMsg = request.PolicyAction == "COD Restricted"
+                ? "Customer is now in Prepaid-Only mode. Cash on Delivery is disabled at checkout."
+                : (request.PolicyAction == "Restore COD" ? "Cash on Delivery access restored." : "Warning notice recorded.");
+
+            return Json(new
+            {
+                success = true,
+                message = $"Customer #{request.CustomerId} COD policy updated: {actionMsg}",
+                policyAction = request.PolicyAction,
+                isCodDisabled = request.PolicyAction == "COD Restricted",
+                reason = request.Reason,
                 updatedDate = DateTime.Now.ToString("dd MMM yyyy, hh:mm tt")
             });
         }

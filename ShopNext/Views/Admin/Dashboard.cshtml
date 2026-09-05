@@ -410,6 +410,10 @@
             <span><i class="fa-solid fa-credit-card text-success"></i> Payments</span>
             <span class="sidebar-badge bg-success bg-opacity-20 text-success" id="sidebarPaymentBadge">@Model.PaymentsList.Count</span>
         </div>
+        <div class="nav-sidebar-item" onclick="switchAdminTab('codabuse', this)" id="nav-codabuse">
+            <span><i class="fa-solid fa-hand-holding-dollar text-warning"></i> COD Abuse</span>
+            <span class="sidebar-badge bg-warning bg-opacity-20 text-warning" id="sidebarCodAbuseBadge">@Model.CodAbuseList.Count(x => x.CodRiskLevel == "High" || x.AlertBadge == "⚠ High COD Failure") High</span>
+        </div>
 
         <!-- Group 5: POST-PURCHASE -->
         <div class="sidebar-group-title">Post-Purchase</div>
@@ -2146,6 +2150,253 @@
                                                 </button>
                                             }
                                         </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- POINT 49: TAB: COD ABUSE DETECTION & DOORSTEP FAILURE MANAGEMENT -->
+        <div class="tab-panel-container" id="panel-codabuse">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <h3 class="fw-bold text-white mb-0"><i class="fa-solid fa-hand-holding-dollar text-warning me-2"></i> COD Abuse &amp; Rejection Management</h3>
+                            <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30 rounded-pill px-3 py-1">POINT 49</span>
+                        </div>
+                        <p class="text-secondary small mb-0">Tracks high Cash-on-Delivery failure/rejection rates and enforces business policy (Prepaid-Only / COD Restrictions) without account blocking.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-outline-info btn-sm rounded-pill px-3 py-2" onclick="location.reload()">
+                            <i class="fa-solid fa-arrows-rotate me-1"></i> Refresh COD Telemetry
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4 Top KPI Cards for COD Abuse -->
+                <div class="row g-3 mb-4">
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-secondary small fw-semibold text-uppercase">Total COD Orders</div>
+                                    <div class="text-white fw-bold fs-3 mt-1">@Model.CodAbuseList.Sum(x => x.TotalCodOrders)</div>
+                                </div>
+                                <div class="p-3 rounded-3 bg-primary bg-opacity-15 text-primary fs-4">
+                                    <i class="fa-solid fa-truck-ramp-box"></i>
+                                </div>
+                            </div>
+                            <div class="text-secondary small mt-2"><i class="fa-solid fa-indian-rupee-sign me-1 text-info"></i> ₹@Model.CodAbuseList.Sum(x => x.TotalCodAmount).ToString("N0") Gross COD Value</div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="p-3 rounded-4" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-danger small fw-semibold text-uppercase">⚠ High COD Failure</div>
+                                    <div class="text-white fw-bold fs-3 mt-1">@Model.CodAbuseList.Count(x => x.CodRiskLevel == "High" || x.AlertBadge == "⚠ High COD Failure")</div>
+                                </div>
+                                <div class="p-3 rounded-3 bg-danger bg-opacity-20 text-danger fs-4">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                </div>
+                            </div>
+                            <div class="text-danger small mt-2"><i class="fa-solid fa-door-closed me-1"></i> Repeated Doorstep Refusals</div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="p-3 rounded-4" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-warning small fw-semibold text-uppercase">Prepaid-Only Enforced</div>
+                                    <div class="text-white fw-bold fs-3 mt-1">@Model.CodAbuseList.Count(x => x.IsCodDisabled || x.PolicyEnforcement.Contains("COD Restricted"))</div>
+                                </div>
+                                <div class="p-3 rounded-3 bg-warning bg-opacity-20 text-warning fs-4">
+                                    <i class="fa-solid fa-credit-card"></i>
+                                </div>
+                            </div>
+                            <div class="text-warning small mt-2"><i class="fa-solid fa-shield-check me-1"></i> COD Disabled / Online Orders OK</div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="p-3 rounded-4" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-success small fw-semibold text-uppercase">Healthy COD Customers</div>
+                                    <div class="text-white fw-bold fs-3 mt-1">@Model.CodAbuseList.Count(x => x.CodRiskLevel == "Low")</div>
+                                </div>
+                                <div class="p-3 rounded-3 bg-success bg-opacity-20 text-success fs-4">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                </div>
+                            </div>
+                            <div class="text-success small mt-2"><i class="fa-solid fa-percent me-1"></i> 85%+ Successful Delivery</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Business Policy Banner -->
+                <div class="p-3 mb-4 rounded-4" style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(245, 158, 11, 0.3);">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-3 rounded-3 bg-warning bg-opacity-20 text-warning fs-3 flex-shrink-0">
+                            <i class="fa-solid fa-scale-balanced"></i>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <h6 class="fw-bold text-white mb-0">💼 Business Policy: Prepaid-Only Mode for COD Abuse</h6>
+                                <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30 rounded-pill px-2.5 py-0.5" style="font-size: 0.72rem;">Operational Policy</span>
+                            </div>
+                            <p class="text-light text-opacity-80 small mb-0 mt-1">
+                                Agar kisi customer ka doorstep COD failure/rejection rate high ho (e.g. 15 COD orders me se 10 reject/cancel), toh system <strong>COD Risk: High</strong> alert raise karta hai.
+                                <span class="text-warning fw-semibold">Customer ka account full block nahi hota; customer prepaid payment (UPI / Card / NetBanking) se order continue kar sakta hai,</span> jabki COD temporarily unavailable ho jata hai.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters & Search Toolbar -->
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div class="btn-group bg-dark p-1 rounded-3 border border-secondary border-opacity-25" role="group">
+                        <button type="button" class="btn btn-sm btn-dark cod-filter-btn active" onclick="filterCodAbuseTable('all', this)">All Customers</button>
+                        <button type="button" class="btn btn-sm btn-dark cod-filter-btn" onclick="filterCodAbuseTable('high-risk', this)">
+                            <span class="text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i> ⚠ High COD Failure</span>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-dark cod-filter-btn" onclick="filterCodAbuseTable('restricted', this)">
+                            <span class="text-warning"><i class="fa-solid fa-credit-card me-1"></i> COD Restricted</span>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-dark cod-filter-btn" onclick="filterCodAbuseTable('medium-risk', this)">
+                            <span class="text-info"><i class="fa-solid fa-eye me-1"></i> Elevated (Medium)</span>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-dark cod-filter-btn" onclick="filterCodAbuseTable('healthy', this)">
+                            <span class="text-success"><i class="fa-solid fa-circle-check me-1"></i> Healthy COD</span>
+                        </button>
+                    </div>
+
+                    <div class="input-group" style="max-width: 340px;">
+                        <span class="input-group-text bg-dark border-secondary border-opacity-25 text-secondary"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" class="form-control bg-dark text-white border-secondary border-opacity-25" placeholder="Search Customer Name, Mobile..." onkeyup="searchCodAbuseTable(this.value)" id="codAbuseSearchInput" />
+                    </div>
+                </div>
+
+                <!-- COD Abuse Table -->
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0" id="codAbuseMainTable">
+                        <thead>
+                            <tr class="text-secondary small text-uppercase border-bottom border-secondary border-opacity-25">
+                                <th style="width: 25%;">Customer &amp; Contact</th>
+                                <th style="width: 25%;">COD Volume Breakdown (Orders / Deliv / Rejected)</th>
+                                <th style="width: 14%;">Rejection Rate</th>
+                                <th style="width: 14%;">COD Risk Level</th>
+                                <th style="width: 12%;">Policy Status</th>
+                                <th style="width: 10%; text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var cod in Model.CodAbuseList)
+                            {
+                                string filterClass = "all";
+                                if (cod.CodRiskLevel == "High" || cod.AlertBadge == "⚠ High COD Failure") { filterClass += " high-risk"; }
+                                if (cod.IsCodDisabled || cod.PolicyEnforcement.Contains("COD Restricted")) { filterClass += " restricted"; }
+                                if (cod.CodRiskLevel == "Medium") { filterClass += " medium-risk"; }
+                                if (cod.CodRiskLevel == "Low") { filterClass += " healthy"; }
+
+                                <tr class="cod-abuse-row @filterClass"
+                                    data-customer-id="@cod.CustomerId"
+                                    data-name="@cod.CustomerName"
+                                    data-phone="@cod.PhoneNumber"
+                                    data-email="@cod.Email"
+                                    data-risk="@cod.CodRiskLevel"
+                                    data-status="@cod.PolicyEnforcement"
+                                    id="cod-row-@cod.CustomerId">
+                                    <td>
+                                        <div class="d-flex align-items-start gap-2.5">
+                                            <div class="p-2.5 rounded-3 bg-secondary bg-opacity-20 text-white flex-shrink-0 mt-0.5">
+                                                <i class="fa-solid fa-user @(cod.CodRiskLevel == "High" ? "text-danger" : (cod.CodRiskLevel == "Medium" ? "text-warning" : "text-success"))"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-white fw-bold mb-0.5 cust-name">@cod.CustomerName</div>
+                                                <div class="text-secondary small font-monospace">@cod.PhoneNumber &bull; @cod.City</div>
+                                                <div class="text-secondary small text-truncate" style="max-width: 240px;">@cod.Address</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <div class="d-flex justify-content-between align-items-center small mb-1">
+                                                <span class="text-white fw-bold font-monospace">@cod.TotalCodOrders COD Orders</span>
+                                                <span class="text-secondary"><strong class="text-success">@cod.CodDelivered Deliv</strong> &bull; <strong class="text-danger">@cod.CodRejected Rejected</strong></span>
+                                            </div>
+                                            <!-- Progress Bar -->
+                                            <div class="progress" style="height: 7px; background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden;">
+                                                @{
+                                                    decimal dPct = cod.TotalCodOrders > 0 ? (decimal)cod.CodDelivered / cod.TotalCodOrders * 100m : 0m;
+                                                    decimal rPct = cod.TotalCodOrders > 0 ? (decimal)cod.CodRejected / cod.TotalCodOrders * 100m : 0m;
+                                                }
+                                                <div class="progress-bar bg-success" style="width: @dPct%" title="Delivered: @cod.CodDelivered"></div>
+                                                <div class="progress-bar bg-danger" style="width: @rPct%" title="Rejected: @cod.CodRejected (@cod.CodRejectionRate%)"></div>
+                                            </div>
+                                            <div class="d-flex justify-content-between text-secondary small mt-1 font-monospace" style="font-size: 0.73rem;">
+                                                <span class="text-success">Deliv: @cod.CodDeliveryRate%</span>
+                                                <span class="text-danger">Rejection: @cod.CodRejectionRate%</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold fs-6 font-monospace @(cod.CodRejectionRate >= 40 ? "text-danger" : (cod.CodRejectionRate >= 20 ? "text-warning" : "text-success"))">
+                                            @cod.CodRejectionRate%
+                                        </span>
+                                        <div class="text-secondary small font-monospace" style="font-size: 0.72rem;">₹@cod.TotalCodAmount.ToString("N0") COD gross</div>
+                                    </td>
+                                    <td>
+                                        @if (cod.CodRiskLevel == "High" || cod.AlertBadge == "⚠ High COD Failure")
+                                        {
+                                            <span class="badge bg-danger text-white border border-danger px-2.5 py-1.5 rounded-pill fw-bold">
+                                                <i class="fa-solid fa-triangle-exclamation me-1"></i> COD Risk: High
+                                            </span>
+                                            <div class="text-danger small mt-1" style="font-size: 0.72rem;">@cod.AlertBadge</div>
+                                        }
+                                        else if (cod.CodRiskLevel == "Medium")
+                                        {
+                                            <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-40 px-2.5 py-1.5 rounded-pill fw-bold">
+                                                <i class="fa-solid fa-eye me-1"></i> COD Risk: Medium
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30 px-2.5 py-1.5 rounded-pill fw-bold">
+                                                <i class="fa-solid fa-circle-check me-1"></i> COD Risk: Safe
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div id="cod-status-container-@cod.CustomerId">
+                                            @if (cod.IsCodDisabled || cod.PolicyEnforcement.Contains("COD Restricted"))
+                                            {
+                                                <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-40 px-2.5 py-1.5 rounded-pill fw-bold">
+                                                    <i class="fa-solid fa-credit-card me-1"></i> Prepaid Only
+                                                </span>
+                                            }
+                                            else if (cod.PolicyEnforcement == "Warning Issued")
+                                            {
+                                                <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 px-2.5 py-1.5 rounded-pill fw-bold">
+                                                    <i class="fa-solid fa-triangle-exclamation me-1"></i> Warning Issued
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30 px-2.5 py-1.5 rounded-pill fw-bold">
+                                                    <i class="fa-solid fa-circle-check me-1"></i> COD Allowed
+                                                </span>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <button type="button" class="btn btn-outline-warning btn-sm rounded-pill px-3 py-1.5 fw-semibold"
+                                                onclick="openCodAbuseModal(@cod.CustomerId)">
+                                            <i class="fa-solid fa-hand-holding-dollar me-1"></i> Manage COD
+                                        </button>
                                     </td>
                                 </tr>
                             }
@@ -5972,6 +6223,177 @@
                 <button type="button" class="btn btn-secondary px-3 py-2" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-warning px-4 py-2 fw-bold" onclick="submitUpdateClusterStatus()" id="btnSaveClusterStatus">
                     <i class="fa-solid fa-floppy-disk me-1"></i> Save Cluster Status
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- POINT 49: COD Abuse Telemetry & Policy Enforcement Modal -->
+<div class="modal fade" id="codAbuseModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+        <div class="modal-content modal-content-glass" style="background: rgba(15, 23, 42, 0.96); border: 1px solid rgba(255, 255, 255, 0.12);">
+            <div class="modal-header border-bottom border-secondary border-opacity-25 p-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 rounded-3 bg-danger bg-opacity-20 text-danger fs-3" id="modalCodIcon">
+                        <i class="fa-solid fa-hand-holding-dollar"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <h5 class="modal-title fw-bold text-white mb-0" id="modalCodCustomerName">Rahul Sharma</h5>
+                            <span class="badge bg-danger text-white px-2.5 py-1 rounded-pill fw-bold" id="modalCodAlertBadge">⚠ High COD Failure</span>
+                            <span class="badge bg-dark border border-secondary text-info px-2.5 py-1 rounded-pill" id="modalCodRiskBadge">COD Risk: High</span>
+                        </div>
+                        <div class="text-secondary small mt-1" id="modalCodCustomerContact">rahul.sharma@example.com &bull; +91 98765 43210 &bull; Member since 15 Jan 2026</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- 4 KPI Telemetry Bar -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 rounded-3 text-center" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+                            <div class="text-secondary small fw-semibold text-uppercase">Total COD Orders</div>
+                            <div class="text-white fw-bold fs-3 font-monospace mt-1" id="modalCodTotalOrders">15</div>
+                            <div class="text-secondary small">Total COD Bookings</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 rounded-3 text-center" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3);">
+                            <div class="text-success small fw-semibold text-uppercase">Delivered (Success)</div>
+                            <div class="text-success fw-bold fs-3 font-monospace mt-1" id="modalCodDelivered">5</div>
+                            <div class="text-success small" id="modalCodSuccessRate">33.3% Success Rate</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 rounded-3 text-center" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);">
+                            <div class="text-danger small fw-semibold text-uppercase">Rejected / Cancelled</div>
+                            <div class="text-danger fw-bold fs-3 font-monospace mt-1" id="modalCodRejected">10</div>
+                            <div class="text-danger small">Doorstep RTO / Refusals</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 rounded-3 text-center" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3);">
+                            <div class="text-warning small fw-semibold text-uppercase">COD Failure Rate</div>
+                            <div class="text-warning fw-bold fs-3 font-monospace mt-1" id="modalCodRejectionRate">66.7%</div>
+                            <div class="text-secondary small">Threshold: &gt; 40% High Risk</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Business Policy Notice -->
+                <div class="p-3 mb-4 rounded-3" style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(239, 68, 68, 0.25);">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fa-solid fa-scale-balanced text-warning fs-4 flex-shrink-0"></i>
+                        <div class="small text-light">
+                            <strong>Business Safeguard Policy:</strong> Customers with abnormal COD refusal rates are <strong>not blocked</strong> from the platform. According to business policy, the account can be set to <strong>Prepaid-Only / COD Restricted</strong> mode. The customer can freely place orders via UPI, Debit/Credit Card, and NetBanking without reverse logistics freight loss.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs inside Modal -->
+                <ul class="nav nav-pills mb-3 p-1 rounded-3 bg-dark border border-secondary border-opacity-25" id="modalCodTabNav" role="tablist">
+                    <li class="nav-item flex-fill" role="presentation">
+                        <button class="nav-link active w-100 fw-bold py-2 text-center" id="tab-cod-history-btn" data-bs-toggle="pill" data-bs-target="#tab-cod-history" type="button" role="tab">
+                            <i class="fa-solid fa-list-check me-1 text-danger"></i> COD Order History (<span id="modalCodHistoryTabCount">15</span>)
+                        </button>
+                    </li>
+                    <li class="nav-item flex-fill" role="presentation">
+                        <button class="nav-link w-100 fw-bold py-2 text-center" id="tab-cod-policy-btn" data-bs-toggle="pill" data-bs-target="#tab-cod-policy" type="button" role="tab">
+                            <i class="fa-solid fa-shield-halved me-1 text-warning"></i> Policy Enforcement &amp; COD Controls
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content pt-2" id="modalCodTabContent">
+                    <!-- Tab 1: COD Order History -->
+                    <div class="tab-pane fade show active" id="tab-cod-history" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover align-middle mb-0">
+                                <thead>
+                                    <tr class="text-secondary small text-uppercase border-bottom border-secondary border-opacity-25">
+                                        <th>Order ID</th>
+                                        <th>Date</th>
+                                        <th>Amount</th>
+                                        <th>Order Status</th>
+                                        <th>Delivery Outcome</th>
+                                        <th>Doorstep Refusal / RTO Reason</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="modalCodHistoryTableBody">
+                                    <!-- Populated dynamically via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Policy Enforcement & Restriction Controls -->
+                    <div class="tab-pane fade" id="tab-cod-policy" role="tabpanel">
+                        <form id="formCodAbusePolicy" onsubmit="event.preventDefault(); submitUpdateCodPolicy();">
+                            <input type="hidden" id="modalCodCustomerIdHidden" />
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-light fw-semibold small">Payment Policy Status</label>
+                                    <select class="form-select bg-dark text-white border-secondary border-opacity-25" id="modalCodPolicyStatusSelect">
+                                        <option value="Prepaid-Only (COD Restricted)">🚫 Prepaid-Only (COD Restricted - Safe)</option>
+                                        <option value="Normal (All Payment Modes Active)">✅ Normal (All Payment Modes Active)</option>
+                                        <option value="High Risk Warning">⚠ High Risk Warning (Monitoring Active)</option>
+                                        <option value="Strict Verification Required">🔍 Strict Verification (Call Confirmation)</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label text-light fw-semibold small">Cash On Delivery Safeguard Switch</label>
+                                    <div class="p-2.5 rounded-3 bg-dark border border-secondary border-opacity-25">
+                                        <div class="form-check form-switch mb-0">
+                                            <input class="form-check-input" type="checkbox" id="modalCodDisableCheck">
+                                            <label class="form-check-label text-light small fw-semibold" for="modalCodDisableCheck">
+                                                Disable Cash on Delivery (Enforce Prepaid-Only)
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="text-secondary small mt-1" style="font-size: 0.72rem;">Hides or disables COD at checkout for this user. UPI / Card payments remain functional.</div>
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label text-light fw-semibold small">Preset Reason / Policy Notes</label>
+                                    <div class="d-flex flex-wrap gap-1.5 mb-2">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0.5 px-2.5 small" onclick="setPresetCodReason('Exceeded COD doorstep rejection threshold (>50% failures). Switched to prepaid-only mode as per business policy.')">Doorstep Rejection Abuse</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0.5 px-2.5 small" onclick="setPresetCodReason('Repeated fake or cancelled COD orders at time of dispatch. Prepaid payment mandatory.')">Repeated Cancellation</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0.5 px-2.5 small" onclick="setPresetCodReason('Customer verified via phone confirmation. COD payment privileges restored.')">Restored COD Privileges</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0.5 px-2.5 small" onclick="setPresetCodReason('Warning notice issued to customer regarding frequent COD returns. Temporary monitoring active.')">Issue Warning Notice</button>
+                                    </div>
+                                    <textarea class="form-control bg-dark text-white border-secondary border-opacity-25" id="modalCodAdminReason" rows="3" placeholder="Enter administrative policy rationale or notes..."></textarea>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="p-3 rounded-3" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);">
+                                        <label class="form-label text-light fw-semibold small mb-2">Quick Policy Enforcement Actions</label>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <button type="button" class="btn btn-sm btn-danger fw-bold" onclick="submitUpdateCodPolicy('restrict')">
+                                                <i class="fa-solid fa-ban me-1"></i> Enforce Prepaid-Only (Disable COD)
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-success fw-bold" onclick="submitUpdateCodPolicy('restore')">
+                                                <i class="fa-solid fa-rotate-left me-1"></i> Restore Full COD Access
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-warning fw-bold text-dark" onclick="submitUpdateCodPolicy('warning')">
+                                                <i class="fa-solid fa-triangle-exclamation me-1"></i> Set Warning Status
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-secondary border-opacity-25 p-3">
+                <button type="button" class="btn btn-secondary px-3 py-2" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary px-4 py-2 fw-bold" onclick="submitUpdateCodPolicy()" id="btnSaveCodPolicy">
+                    <i class="fa-solid fa-floppy-disk me-1"></i> Save Policy Settings
                 </button>
             </div>
         </div>
@@ -10637,6 +11059,268 @@
                 btn.disabled = false;
                 btn.innerHTML = originalHtml;
                 showToast('Server communication error.', true);
+            }
+        });
+    }
+
+    // ==========================================
+    // POINT 49: COD ABUSE DETECTION & CONTROLS
+    // ==========================================
+    function filterCodAbuseTable(filter, btn) {
+        document.querySelectorAll('.cod-filter-btn').forEach(b => {
+            b.classList.remove('active', 'btn-warning', 'text-dark');
+            b.classList.add('btn-dark');
+        });
+        if (btn) {
+            btn.classList.add('active', 'btn-warning', 'text-dark');
+            btn.classList.remove('btn-dark');
+        }
+
+        const rows = document.querySelectorAll('#codAbuseMainTable tbody tr.cod-row');
+        rows.forEach(row => {
+            const risk = row.getAttribute('data-risk') || '';
+            const status = row.getAttribute('data-status') || '';
+            const alert = row.getAttribute('data-alert') || '';
+
+            if (filter === 'all') {
+                row.style.display = '';
+            } else if (filter === 'high-risk') {
+                if (risk === 'High' || alert.includes('High COD Failure')) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            } else if (filter === 'restricted') {
+                if (status === 'Restricted' || status.includes('Prepaid')) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            } else if (filter === 'medium-risk') {
+                if (risk === 'Medium') {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            } else if (filter === 'healthy') {
+                if (risk === 'Low') {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    function searchCodAbuseTable(query) {
+        const q = (query || '').toLowerCase().trim();
+        const rows = document.querySelectorAll('#codAbuseMainTable tbody tr.cod-row');
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            if (!q || text.includes(q)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    function setPresetCodReason(reason) {
+        const txt = document.getElementById('modalCodAdminReason');
+        if (txt) {
+            txt.value = reason;
+        }
+    }
+
+    function openCodAbuseModal(customerId) {
+        if (!customerId) return;
+
+        // Reset fields
+        document.getElementById('modalCodCustomerIdHidden').value = customerId;
+        document.getElementById('modalCodHistoryTableBody').innerHTML = '<tr><td colspan="6" class="text-center py-4 text-secondary"><i class="fa-solid fa-spinner fa-spin me-2"></i> Loading COD telemetry...</td></tr>';
+
+        $.ajax({
+            url: '@Url.Action("GetCustomerCodDetails", "Admin")',
+            type: 'GET',
+            data: { customerId: customerId },
+            success: function(res) {
+                if (res && res.success && res.data) {
+                    const data = res.data;
+                    document.getElementById('modalCodCustomerName').innerText = data.customerName || 'Customer';
+                    document.getElementById('modalCodCustomerContact').innerHTML = (data.customerEmail || 'No email') + ' &bull; ' + (data.customerPhone || 'No phone') + ' &bull; Registered Customer';
+
+                    // Alert Badge
+                    const alertBadgeEl = document.getElementById('modalCodAlertBadge');
+                    if (data.alertBadge) {
+                        alertBadgeEl.innerText = data.alertBadge;
+                        alertBadgeEl.className = 'badge bg-danger text-white px-2.5 py-1 rounded-pill fw-bold';
+                        alertBadgeEl.classList.remove('d-none');
+                    } else {
+                        alertBadgeEl.classList.add('d-none');
+                    }
+
+                    // Risk Badge
+                    const riskBadgeEl = document.getElementById('modalCodRiskBadge');
+                    riskBadgeEl.innerText = 'COD Risk: ' + data.codRiskLevel;
+                    if (data.codRiskLevel === 'High') {
+                        riskBadgeEl.className = 'badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill';
+                    } else if (data.codRiskLevel === 'Medium') {
+                        riskBadgeEl.className = 'badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30 px-2.5 py-1 rounded-pill';
+                    } else {
+                        riskBadgeEl.className = 'badge bg-success bg-opacity-20 text-success border border-success border-opacity-30 px-2.5 py-1 rounded-pill';
+                    }
+
+                    // KPIs
+                    document.getElementById('modalCodTotalOrders').innerText = data.totalCodOrders;
+                    document.getElementById('modalCodDelivered').innerText = data.deliveredCodOrders;
+                    document.getElementById('modalCodRejected').innerText = data.rejectedCodOrders;
+                    document.getElementById('modalCodRejectionRate').innerText = data.codRejectionRate.toFixed(1) + '%';
+                    
+                    const successPct = data.totalCodOrders > 0 ? ((data.deliveredCodOrders / data.totalCodOrders) * 100).toFixed(1) : '100.0';
+                    document.getElementById('modalCodSuccessRate').innerText = successPct + '% Success Rate';
+                    document.getElementById('modalCodHistoryTabCount').innerText = data.totalCodOrders;
+
+                    // Policy Form
+                    const policySelect = document.getElementById('modalCodPolicyStatusSelect');
+                    if (data.policyEnforcement) {
+                        policySelect.value = data.policyEnforcement;
+                        if (!policySelect.value) {
+                            policySelect.selectedIndex = data.isCodDisabled ? 0 : 1;
+                        }
+                    } else {
+                        policySelect.selectedIndex = data.isCodDisabled ? 0 : 1;
+                    }
+
+                    document.getElementById('modalCodDisableCheck').checked = data.isCodDisabled;
+                    document.getElementById('modalCodAdminReason').value = data.adminReason || '';
+
+                    // Order History Table
+                    let historyHtml = '';
+                    if (data.orderHistory && data.orderHistory.length > 0) {
+                        data.orderHistory.forEach(order => {
+                            const isDelivered = order.isDelivered || order.orderStatus === 'Delivered';
+                            const outcomeBadge = isDelivered 
+                                ? '<span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30 px-2 py-0.5 rounded-pill"><i class="fa-solid fa-circle-check me-1"></i> Delivered</span>' 
+                                : '<span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 px-2 py-0.5 rounded-pill"><i class="fa-solid fa-ban me-1"></i> Doorstep Refusal</span>';
+
+                            historyHtml += `
+                                <tr class="border-bottom border-secondary border-opacity-10">
+                                    <td class="font-monospace text-warning fw-semibold">#${order.orderId}</td>
+                                    <td class="text-secondary small">${order.orderDateFormatted || order.orderDate}</td>
+                                    <td class="text-light fw-bold">₹${Number(order.totalAmount).toLocaleString('en-IN')}</td>
+                                    <td><span class="badge bg-dark border border-secondary text-light">${order.orderStatus}</span></td>
+                                    <td>${outcomeBadge}</td>
+                                    <td class="small ${order.rejectionReason && !isDelivered ? 'text-danger fw-semibold' : 'text-secondary'}">${order.rejectionReason || '—'}</td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        historyHtml = '<tr><td colspan="6" class="text-center py-4 text-secondary">No COD order telemetry found for this customer.</td></tr>';
+                    }
+                    document.getElementById('modalCodHistoryTableBody').innerHTML = historyHtml;
+
+                    // Show Modal
+                    const modalEl = document.getElementById('codAbuseModal');
+                    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modal.show();
+                } else {
+                    showToast(res ? res.message : 'Could not fetch COD analytics.', true);
+                }
+            },
+            error: function() {
+                showToast('Server communication error fetching COD data.', true);
+            }
+        });
+    }
+
+    function submitUpdateCodPolicy(quickAction) {
+        const customerId = parseInt(document.getElementById('modalCodCustomerIdHidden').value, 10);
+        if (!customerId) return;
+
+        let policyStatus = document.getElementById('modalCodPolicyStatusSelect').value;
+        let isCodDisabled = document.getElementById('modalCodDisableCheck').checked;
+        let adminReason = document.getElementById('modalCodAdminReason').value;
+
+        if (quickAction === 'restrict') {
+            policyStatus = 'Prepaid-Only (COD Restricted)';
+            isCodDisabled = true;
+            if (!adminReason) {
+                adminReason = 'Enforced prepaid-only ordering due to excessive COD doorstep failures. Account active for online payments.';
+            }
+        } else if (quickAction === 'restore') {
+            policyStatus = 'Normal (All Payment Modes Active)';
+            isCodDisabled = false;
+            if (!adminReason) {
+                adminReason = 'Customer COD payment privileges restored after verification.';
+            }
+        } else if (quickAction === 'warning') {
+            policyStatus = 'High Risk Warning';
+            isCodDisabled = false;
+            if (!adminReason) {
+                adminReason = 'Warning issued for elevated COD refusal rate. Monitored for future orders.';
+            }
+        }
+
+        const btn = document.getElementById('btnSaveCodPolicy');
+        const origText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Saving Policy...';
+
+        const token = $('input[name="__RequestVerificationToken"]').val();
+
+        $.ajax({
+            url: '@Url.Action("UpdateCustomerCodPolicy", "Admin")',
+            type: 'POST',
+            contentType: 'application/json',
+            headers: {
+                "RequestVerificationToken": token,
+                "X-CSRF-TOKEN": token
+            },
+            data: JSON.stringify({
+                CustomerId: customerId,
+                PolicyEnforcement: policyStatus,
+                IsCodDisabled: isCodDisabled,
+                AdminReason: adminReason
+            }),
+            success: function(res) {
+                btn.disabled = false;
+                btn.innerHTML = origText;
+
+                if (res && res.success) {
+                    showToast(res.message || 'COD policy updated successfully.');
+
+                    // Update live table row
+                    const codStatusBadgeEl = document.getElementById('cod-status-badge-' + customerId);
+                    if (codStatusBadgeEl) {
+                        if (isCodDisabled || policyStatus.includes('Prepaid')) {
+                            codStatusBadgeEl.innerHTML = '<span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 px-2 py-0.5 rounded-pill"><i class="fa-solid fa-ban me-1"></i> Prepaid-Only</span>';
+                        } else {
+                            codStatusBadgeEl.innerHTML = '<span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30 px-2 py-0.5 rounded-pill"><i class="fa-solid fa-circle-check me-1"></i> COD Active</span>';
+                        }
+                    }
+
+                    const policyDisplayEl = document.getElementById('cod-policy-display-' + customerId);
+                    if (policyDisplayEl) {
+                        policyDisplayEl.innerText = policyStatus;
+                    }
+
+                    const row = document.getElementById('cod-row-' + customerId);
+                    if (row) {
+                        row.setAttribute('data-status', isCodDisabled ? 'Restricted' : 'Normal');
+                    }
+
+                    // Hide modal
+                    const modalEl = document.getElementById('codAbuseModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+                } else {
+                    showToast(res ? res.message : 'Error updating COD policy.', true);
+                }
+            },
+            error: function() {
+                btn.disabled = false;
+                btn.innerHTML = origText;
+                showToast('Server communication error updating COD policy.', true);
             }
         });
     }

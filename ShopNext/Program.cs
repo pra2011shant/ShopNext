@@ -37,6 +37,7 @@ builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<ICustomerRiskService, CustomerRiskService>();
 builder.Services.AddScoped<IAddressRiskService, AddressRiskService>();
 builder.Services.AddScoped<IMultiAccountDetectionService, MultiAccountDetectionService>();
+builder.Services.AddScoped<ICodAbuseService, CodAbuseService>();
 
 // 3. Point 46 & 29: Security & Role-Based Authentication Configuration
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

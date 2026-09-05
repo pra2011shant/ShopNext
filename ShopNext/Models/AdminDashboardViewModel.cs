@@ -61,6 +61,9 @@ namespace ShopNext.Models
 
         // Point 48: Multiple Account Detection Dataset
         public List<AdminMultiAccountClusterDto> MultiAccountClustersList { get; set; } = new List<AdminMultiAccountClusterDto>();
+
+        // Point 49: COD Abuse Detection Dataset
+        public List<AdminCodAbuseDto> CodAbuseList { get; set; } = new List<AdminCodAbuseDto>();
     }
 
     /// <summary>
@@ -779,6 +782,65 @@ namespace ShopNext.Models
         public string Status { get; set; } = "Under Review";
         public string? AdminNotes { get; set; }
         public bool RestrictFirstOrderCoupons { get; set; }
+    }
+
+    #endregion
+
+    #region Point 49: COD Abuse Detection DTOs
+
+    /// <summary>
+    /// Point 49: COD Abuse Detection DTO
+    /// Tracks customer Cash-on-Delivery failure metrics (Orders, Delivered, Rejected / Refused at doorstep).
+    /// Enforces business policy: Transition high-failure customers to Prepaid-Only (COD Restricted) mode.
+    /// </summary>
+    public class AdminCodAbuseDto
+    {
+        public int CustomerId { get; set; }
+        public string CustomerName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
+        public string City { get; set; } = "Patna";
+        public string Address { get; set; } = "Patna, Bihar";
+        
+        // COD Volume telemetry
+        public int TotalCodOrders { get; set; }
+        public int CodDelivered { get; set; }
+        public int CodRejected { get; set; } // Doorstep cancelled / rejected
+        public int CodPending { get; set; }
+        public decimal TotalCodAmount { get; set; }
+        public decimal CodRejectionRate { get; set; } // Percentage rejected
+        public decimal CodDeliveryRate { get; set; } // Percentage delivered
+        
+        // COD Risk classification
+        public string CodRiskLevel { get; set; } = "Low"; // High (🔴), Medium (🟡), Low (🟢)
+        public string AlertBadge { get; set; } = "Healthy COD History"; // "⚠ High COD Failure", "Elevated COD Rejection", "Healthy COD History"
+        
+        // Policy enforcement
+        public string PolicyEnforcement { get; set; } = "Normal (COD Allowed)"; // "Normal (COD Allowed)", "COD Restricted (Prepaid Only)", "Warning Issued"
+        public bool IsCodDisabled { get; set; } = false;
+        public string? RestrictionReason { get; set; }
+        public string? LastRejectionReason { get; set; }
+        public string? LastEvaluatedDate { get; set; }
+        
+        public List<AdminCodOrderHistoryItemDto> CodOrders { get; set; } = new List<AdminCodOrderHistoryItemDto>();
+    }
+
+    public class AdminCodOrderHistoryItemDto
+    {
+        public int OrderId { get; set; }
+        public decimal Amount { get; set; }
+        public string OrderStatus { get; set; } = "Delivered"; // Delivered, Cancelled, Returned, Pending
+        public string OrderDate { get; set; } = string.Empty;
+        public string? CancelOrRejectionReason { get; set; }
+        public string? RiderDeliveryNote { get; set; }
+        public bool IsDoorstepRejection { get; set; } = false;
+    }
+
+    public class UpdateCustomerCodPolicyRequest
+    {
+        public int CustomerId { get; set; }
+        public string PolicyAction { get; set; } = "COD Restricted"; // "COD Restricted", "Restore COD", "Warning"
+        public string? Reason { get; set; }
     }
 
     #endregion
