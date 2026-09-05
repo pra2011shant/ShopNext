@@ -119,6 +119,7 @@ namespace ShopNext.Models
         public string Mobile { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
         public string Status { get; set; } = "Active"; // Active, Blocked
+        public bool IsActive { get; set; } = true;
         public string RegistrationDate { get; set; } = "05 Sep 2026";
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public string City { get; set; } = "Patna";
@@ -140,6 +141,14 @@ namespace ShopNext.Models
         public bool IsCodDisabled { get; set; }
         public bool IsFlaggedForReview { get; set; }
         public List<string> RiskFactors { get; set; } = new List<string>();
+
+        // Point 46 Restriction System
+        public string RestrictionLevel { get; set; } = "Normal";
+        public string? RestrictionReason { get; set; }
+        public string? RestrictionAppliedDate { get; set; }
+        public string? SuspendedUntilDate { get; set; }
+        public bool IsReturnDisabled { get; set; }
+        public bool IsAccountSuspended { get; set; }
     }
 
     /// <summary>
@@ -176,6 +185,14 @@ namespace ShopNext.Models
         public bool IsFlaggedForReview { get; set; }
         public string? RiskLastEvaluated { get; set; }
         public List<string> RiskFactors { get; set; } = new List<string>();
+
+        // Point 46 Restriction System
+        public string RestrictionLevel { get; set; } = "Normal";
+        public string? RestrictionReason { get; set; }
+        public string? RestrictionAppliedDate { get; set; }
+        public string? SuspendedUntilDate { get; set; }
+        public bool IsReturnDisabled { get; set; }
+        public bool IsAccountSuspended { get; set; }
 
         public List<AdminCustomerOrderItemDto> Orders { get; set; } = new List<AdminCustomerOrderItemDto>();
     }

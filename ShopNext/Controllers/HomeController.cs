@@ -269,6 +269,31 @@ namespace ShopNext.Controllers
                     }
                 }
 
+                // 1.5. Validate Customer Restrictions (Point 46)
+                var customerObj = await _service.GetUserByIdAsync(customerId);
+                if (customerObj != null)
+                {
+                    if (customerObj.RestrictionLevel == "Account Blocked" || !customerObj.IsActive || customerObj.IsDeleted)
+                    {
+                        return Json(new { success = false, message = "Your account has been blocked due to policy violations. Please contact customer support." });
+                    }
+
+                    if (customerObj.RestrictionLevel == "Account Suspended" || customerObj.IsAccountSuspended)
+                    {
+                        if (customerObj.SuspendedUntilDate.HasValue && customerObj.SuspendedUntilDate.Value > DateTime.Now)
+                        {
+                            string expiryStr = customerObj.SuspendedUntilDate.Value.ToString("dd MMM yyyy");
+                            return Json(new { success = false, message = $"Your account is temporarily suspended until {expiryStr}. Reason: {customerObj.RestrictionReason ?? "Policy enforcement"}. New orders cannot be placed during suspension." });
+                        }
+                    }
+
+                    string checkMode = string.IsNullOrWhiteSpace(request.PaymentMode) ? "COD" : request.PaymentMode.Trim().ToUpper();
+                    if (checkMode == "COD" && (customerObj.RestrictionLevel == "COD Restricted" || customerObj.IsCodDisabled))
+                    {
+                        return Json(new { success = false, message = $"Cash on Delivery (COD) is restricted on your account ({customerObj.RestrictionReason ?? "Policy enforcement"}). You can still order using prepaid payment options (UPI / Card / NetBanking)." });
+                    }
+                }
+
                 // 2. Prepare Order Items and calculate total
                 decimal totalAmount = 0;
                 var orderItems = new List<OrderItem>();

@@ -430,6 +430,26 @@ namespace ShopNext.Controllers
                 return Json(new { success = false, message = "Please select or enter a return reason." });
             }
 
+            // Point 46: Check Customer Return Restrictions
+            var customer = await _service.GetUserByIdAsync(customerId);
+            if (customer != null)
+            {
+                if (customer.RestrictionLevel == "Account Blocked" || !customer.IsActive)
+                {
+                    return Json(new { success = false, message = "Your account has been blocked. Return requests cannot be processed." });
+                }
+
+                if (customer.RestrictionLevel == "Account Suspended" || customer.IsAccountSuspended)
+                {
+                    return Json(new { success = false, message = "Your account is temporarily suspended. Return requests cannot be submitted online." });
+                }
+
+                if (customer.RestrictionLevel == "Return Restricted" || customer.IsReturnDisabled)
+                {
+                    return Json(new { success = false, message = $"Automated returns are restricted on your account ({customer.RestrictionReason ?? "Previous return abuse / swapped items detected"}). For legitimate claims, please contact customer support directly." });
+                }
+            }
+
             bool result = await _service.ReturnOrderAsync(orderId, customerId, returnReason.Trim());
             if (result)
             {

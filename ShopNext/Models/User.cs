@@ -22,5 +22,14 @@ namespace ShopNext.Models
         public bool IsCodDisabled { get; set; } = false; // Admin flag to disable Cash on Delivery
         public bool IsFlaggedForReview { get; set; } = false; // Flagged for manual order inspection
         public DateTime? RiskLastEvaluatedDate { get; set; }
+
+        // Point 46: Granular Customer Restriction System
+        // Levels: "Normal", "Warning", "COD Restricted", "Return Restricted", "Account Suspended", "Account Blocked"
+        public string RestrictionLevel { get; set; } = "Normal";
+        public string? RestrictionReason { get; set; }
+        public DateTime? RestrictionAppliedDate { get; set; }
+        public DateTime? SuspendedUntilDate { get; set; } // When temporary suspension expires
+        public bool IsReturnDisabled { get; set; } = false; // Restricts customer from raising return requests
+        public bool IsAccountSuspended { get; set; } = false; // Temporary freeze on ordering
     }
 }

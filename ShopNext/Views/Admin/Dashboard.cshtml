@@ -715,13 +715,29 @@
                                     <td class="text-light cust-email">@cust.Email</td>
                                     <td class="font-monospace text-secondary cust-mobile">@(string.IsNullOrWhiteSpace(cust.Mobile) ? cust.Phone : cust.Mobile)</td>
                                     <td style="text-align: center;" id="cust-status-cell-@cust.Id">
-                                        @if (cust.Status == "Blocked")
+                                        @if (cust.RestrictionLevel == "Account Blocked" || cust.Status == "Blocked" || !cust.IsActive)
                                         {
-                                            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill"><i class="fa-solid fa-ban me-1"></i> Blocked</span>
+                                            <span class="badge bg-danger text-white border border-danger px-2.5 py-1 rounded-pill"><i class="fa-solid fa-user-slash me-1"></i> Blocked</span>
+                                        }
+                                        else if (cust.RestrictionLevel == "Account Suspended" || cust.IsAccountSuspended)
+                                        {
+                                            <span class="badge bg-secondary bg-opacity-35 text-light border border-secondary border-opacity-30 px-2.5 py-1 rounded-pill"><i class="fa-solid fa-clock me-1"></i> Suspended</span>
+                                        }
+                                        else if (cust.RestrictionLevel == "Return Restricted" || cust.IsReturnDisabled)
+                                        {
+                                            <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30 px-2.5 py-1 rounded-pill" style="color: #fb923c !important;"><i class="fa-solid fa-rotate-left me-1"></i> Return Restricted</span>
+                                        }
+                                        else if (cust.RestrictionLevel == "COD Restricted" || cust.IsCodDisabled)
+                                        {
+                                            <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill"><i class="fa-solid fa-ban me-1"></i> COD Restricted</span>
+                                        }
+                                        else if (cust.RestrictionLevel == "Warning")
+                                        {
+                                            <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30 px-2.5 py-1 rounded-pill"><i class="fa-solid fa-triangle-exclamation me-1"></i> Warning</span>
                                         }
                                         else
                                         {
-                                            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-2.5 py-1 rounded-pill"><i class="fa-solid fa-circle-check me-1"></i> Active</span>
+                                            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-2.5 py-1 rounded-pill"><i class="fa-solid fa-circle-check me-1"></i> Normal</span>
                                         }
                                     </td>
                                     <td style="text-align: center;" id="cust-risk-cell-@cust.Id">
@@ -749,16 +765,21 @@
                                         }
                                         @if (cust.IsCodDisabled)
                                         {
-                                            <div class="mt-1"><span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30" style="font-size: 0.68rem;"><i class="fa-solid fa-ban me-0.5"></i> COD Blocked</span></div>
+                                            <div class="mt-1"><span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30" style="font-size: 0.68rem;"><i class="fa-solid fa-ban me-0.5"></i> COD Restricted</span></div>
                                         }
-                                        @if (cust.IsFlaggedForReview)
+                                        @if (cust.IsReturnDisabled)
                                         {
-                                            <div class="mt-1"><span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30" style="font-size: 0.68rem;"><i class="fa-solid fa-flag me-0.5"></i> Manual Review</span></div>
+                                            <div class="mt-1"><span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30" style="font-size: 0.68rem;"><i class="fa-solid fa-rotate-left me-0.5"></i> Return Blocked</span></div>
                                         }
                                     </td>
                                     <td class="text-secondary small font-monospace">@cust.RegistrationDate</td>
                                     <td style="text-align: center;" id="cust-action-cell-@cust.Id">
-                                        <div class="d-inline-flex gap-2">
+                                        <div class="d-inline-flex gap-1.5 flex-wrap justify-content-center">
+                                            <!-- [Point 46: Manage Restrictions] -->
+                                            <button type="button" class="btn btn-outline-danger btn-sm px-2.5 py-1 rounded-3 fw-bold" onclick="openCustomerRestrictionModal(@cust.Id)" id="btn-restrict-cust-@cust.Id" title="Point 46: Granular Customer Restriction Management (Normal, Warning, COD, Return, Suspended, Blocked)">
+                                                <i class="fa-solid fa-user-gear me-1"></i> Restrict
+                                            </button>
+
                                             <!-- [Risk Profile] -->
                                             <button type="button" class="btn btn-outline-warning btn-sm px-2.5 py-1 rounded-3" onclick="openCustomerRiskModal(@cust.Id)" id="btn-risk-cust-@cust.Id" title="Inspect Suspicious Activity &amp; Risk Engine Score">
                                                 <i class="fa-solid fa-shield-halved me-1"></i> Risk
@@ -768,21 +789,6 @@
                                             <button type="button" class="btn btn-outline-info btn-sm px-2.5 py-1 rounded-3" onclick="viewCustomerModal(@cust.Id)" id="btn-view-cust-@cust.Id" title="View Lifetime History &amp; Orders">
                                                 <i class="fa-solid fa-eye me-1"></i> View
                                             </button>
-                                            
-                                            @if (cust.Status == "Blocked")
-                                            {
-                                                <!-- [Unblock] -->
-                                                <button type="button" class="btn btn-outline-success btn-sm px-2.5 py-1 rounded-3 fw-bold" onclick="unblockCustomer(@cust.Id)" id="btn-toggle-cust-@cust.Id">
-                                                    <i class="fa-solid fa-lock-open me-1"></i> Unblock
-                                                </button>
-                                            }
-                                            else
-                                            {
-                                                <!-- [Block] -->
-                                                <button type="button" class="btn btn-outline-danger btn-sm px-2.5 py-1 rounded-3 fw-bold" onclick="openBlockCustomerModal(@cust.Id, '@Html.Raw(cust.Name.Replace("'", "\\'"))')" id="btn-toggle-cust-@cust.Id">
-                                                    <i class="fa-solid fa-ban me-1"></i> Block
-                                                </button>
-                                            }
                                         </div>
                                     </td>
                                 </tr>
@@ -3462,6 +3468,215 @@
     </div>
 </div>
 
+<!-- ============================================================================== -->
+<!-- POINT 46: GRANULAR CUSTOMER RESTRICTION MANAGEMENT MODAL                      -->
+<!-- ============================================================================== -->
+<div class="modal fade" id="customerRestrictionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content modal-content-glass shadow-lg border-danger border-opacity-30">
+            <div class="modal-header border-bottom border-secondary border-opacity-25 p-4" style="background: rgba(239, 68, 68, 0.08);">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 rounded-circle bg-danger bg-opacity-20 text-danger fs-4 d-inline-flex">
+                        <i class="fa-solid fa-user-gear"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <h5 class="modal-title fw-bold text-white mb-0">Customer Restriction Management</h5>
+                            <span id="mRestrictCurrentBadge" class="badge bg-success bg-opacity-25 text-success px-2.5 py-1 rounded-pill font-monospace">Normal</span>
+                        </div>
+                        <p class="text-secondary small mb-0">Point 46: Granular policy enforcement instead of full account block.</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4" id="custRestrictModalBody">
+                <div class="text-center py-5" id="custRestrictModalLoader">
+                    <i class="fa-solid fa-circle-notch fa-spin fs-2 text-danger"></i>
+                    <div class="text-secondary small mt-2">Loading customer restriction history &amp; access permissions...</div>
+                </div>
+
+                <div id="custRestrictModalContent" style="display: none;">
+                    <input type="hidden" id="targetRestrictionCustId" />
+
+                    <!-- Customer Profile & Stat Header -->
+                    <div class="p-3 rounded-4 mb-4" style="background: rgba(15, 23, 42, 0.7); border: 1px solid var(--card-border);">
+                        <div class="row align-items-center g-3">
+                            <div class="col-md-7">
+                                <div class="d-flex align-items-center gap-2">
+                                    <strong class="text-white fs-6" id="mRestrictCustName">Rahul Kumar</strong>
+                                    <span class="badge px-2 py-0.5 rounded-pill font-monospace" id="mRestrictRiskBadge">Risk: 15/100</span>
+                                </div>
+                                <div class="text-secondary small font-monospace mt-1">
+                                    <span id="mRestrictCustPhone">+91 98112 23344</span> &bull; <span id="mRestrictCustEmail">rahul@example.com</span>
+                                </div>
+                                <div class="text-muted small mt-1" style="font-size: 11px;">
+                                    Active Restriction Reason: <span class="text-warning" id="mRestrictReasonDisplay">No active restriction</span>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="row g-2 text-center" style="font-size: 11px;">
+                                    <div class="col-4">
+                                        <div class="p-1.5 rounded-3 bg-black bg-opacity-40 border border-secondary border-opacity-20">
+                                            <span class="text-muted d-block" style="font-size: 10px;">Orders</span>
+                                            <strong class="text-white font-monospace" id="mRestrictTotalOrders">12</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="p-1.5 rounded-3 bg-black bg-opacity-40 border border-secondary border-opacity-20">
+                                            <span class="text-muted d-block" style="font-size: 10px;">Returns</span>
+                                            <strong class="text-warning font-monospace" id="mRestrictReturnRate">0.0%</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="p-1.5 rounded-3 bg-black bg-opacity-40 border border-secondary border-opacity-20">
+                                            <span class="text-muted d-block" style="font-size: 10px;">Disputes</span>
+                                            <strong class="text-danger font-monospace" id="mRestrictPastDisputes">0</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 6 Granular Restriction Tier Cards -->
+                    <label class="form-label small fw-bold text-light mb-2">
+                        <i class="fa-solid fa-layer-group text-danger me-1"></i> Select Restriction Policy Level (Point 46) *
+                    </label>
+                    <div class="row g-2.5 mb-3" id="restrictionTiersContainer">
+                        <!-- 1. Normal -->
+                        <div class="col-md-4 col-6">
+                            <div class="p-2.5 rounded-3 border h-100 restriction-tier-card" id="tierCard-Normal" onclick="selectRestrictionTier('Normal')" style="cursor: pointer; background: rgba(34, 197, 94, 0.08); border-color: rgba(34, 197, 94, 0.3) !important;">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <strong class="text-success small"><i class="fa-solid fa-circle-check me-1"></i> Normal</strong>
+                                    <input type="radio" name="restrictionTierRadio" value="Normal" id="radioTier-Normal" checked />
+                                </div>
+                                <small class="text-muted d-block" style="font-size: 11px;">Full platform access. Prepaid, COD &amp; returns all allowed.</small>
+                            </div>
+                        </div>
+
+                        <!-- 2. Warning -->
+                        <div class="col-md-4 col-6">
+                            <div class="p-2.5 rounded-3 border h-100 restriction-tier-card" id="tierCard-Warning" onclick="selectRestrictionTier('Warning')" style="cursor: pointer; background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.3) !important;">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <strong class="text-warning small"><i class="fa-solid fa-triangle-exclamation me-1"></i> Warning</strong>
+                                    <input type="radio" name="restrictionTierRadio" value="Warning" id="radioTier-Warning" />
+                                </div>
+                                <small class="text-muted d-block" style="font-size: 11px;">Official warning issued. Profile monitored &amp; flagged.</small>
+                            </div>
+                        </div>
+
+                        <!-- 3. COD Restricted -->
+                        <div class="col-md-4 col-6">
+                            <div class="p-2.5 rounded-3 border h-100 restriction-tier-card" id="tierCard-COD-Restricted" onclick="selectRestrictionTier('COD Restricted')" style="cursor: pointer; background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.3) !important;">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <strong class="text-danger small"><i class="fa-solid fa-ban me-1"></i> COD Restricted</strong>
+                                    <input type="radio" name="restrictionTierRadio" value="COD Restricted" id="radioTier-COD-Restricted" />
+                                </div>
+                                <small class="text-muted d-block" style="font-size: 11px;">Prepaid orders allowed. Doorstep COD disabled.</small>
+                            </div>
+                        </div>
+
+                        <!-- 4. Return Restricted -->
+                        <div class="col-md-4 col-6">
+                            <div class="p-2.5 rounded-3 border h-100 restriction-tier-card" id="tierCard-Return-Restricted" onclick="selectRestrictionTier('Return Restricted')" style="cursor: pointer; background: rgba(249, 115, 22, 0.08); border-color: rgba(249, 115, 22, 0.3) !important;">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <strong class="small" style="color: #fb923c;"><i class="fa-solid fa-rotate-left me-1"></i> Return Restricted</strong>
+                                    <input type="radio" name="restrictionTierRadio" value="Return Restricted" id="radioTier-Return-Restricted" />
+                                </div>
+                                <small class="text-muted d-block" style="font-size: 11px;">Ordering enabled. Automated returns/replacements locked.</small>
+                            </div>
+                        </div>
+
+                        <!-- 5. Account Suspended -->
+                        <div class="col-md-4 col-6">
+                            <div class="p-2.5 rounded-3 border h-100 restriction-tier-card" id="tierCard-Account-Suspended" onclick="selectRestrictionTier('Account Suspended')" style="cursor: pointer; background: rgba(168, 85, 247, 0.08); border-color: rgba(168, 85, 247, 0.3) !important;">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <strong class="text-purple small" style="color: #c084fc;"><i class="fa-solid fa-clock me-1"></i> Suspended</strong>
+                                    <input type="radio" name="restrictionTierRadio" value="Account Suspended" id="radioTier-Account-Suspended" />
+                                </div>
+                                <small class="text-muted d-block" style="font-size: 11px;">Temporary hold. Cannot place new orders for X days.</small>
+                            </div>
+                        </div>
+
+                        <!-- 6. Account Blocked -->
+                        <div class="col-md-4 col-6">
+                            <div class="p-2.5 rounded-3 border h-100 restriction-tier-card" id="tierCard-Account-Blocked" onclick="selectRestrictionTier('Account Blocked')" style="cursor: pointer; background: rgba(220, 38, 38, 0.15); border-color: rgba(220, 38, 38, 0.4) !important;">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <strong class="text-danger small"><i class="fa-solid fa-user-slash me-1"></i> Blocked</strong>
+                                    <input type="radio" name="restrictionTierRadio" value="Account Blocked" id="radioTier-Account-Blocked" />
+                                </div>
+                                <small class="text-muted d-block" style="font-size: 11px;">Permanent ban. Full login &amp; ordering deactivated.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Temporary Suspension Duration Selector (Shown when Account Suspended is active) -->
+                    <div id="mSuspensionDaysWrap" class="mb-3 p-3 rounded-3 bg-black bg-opacity-40 border border-secondary border-opacity-30" style="display: none;">
+                        <label class="form-label small fw-bold text-light mb-1.5"><i class="fa-solid fa-calendar-days text-info me-1"></i> Suspension Duration</label>
+                        <div class="d-flex gap-2">
+                            <select id="mSuspensionDaysSelect" class="form-select form-select-sm bg-dark text-white border-secondary">
+                                <option value="7">7 Days (1 Week Cool-down)</option>
+                                <option value="14" selected>14 Days (2 Weeks Suspension)</option>
+                                <option value="30">30 Days (1 Month Hold)</option>
+                                <option value="60">60 Days (2 Months Suspension)</option>
+                                <option value="90">90 Days (Quarterly Suspension)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Preset Reason & Custom Notes -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-light mb-1"><i class="fa-solid fa-clipboard-list text-warning me-1"></i> Abuse / Violation Reason *</label>
+                        <select id="mRestrictReasonPreset" class="form-select bg-dark text-white border-secondary mb-2" onchange="onRestrictionPresetChange()">
+                            <option value="">-- Choose Common Abuse Trigger --</option>
+                            <option value="Return abuse detected (frequent swaps / spurious items)">Return abuse detected (frequent swaps / spurious items)</option>
+                            <option value="Repeated COD doorstep refusals / fake address">Repeated COD doorstep refusals / fake address</option>
+                            <option value="Abusive behavior / threats against delivery rider">Abusive behavior / threats against delivery rider</option>
+                            <option value="High cancellation rate after merchant packing">High cancellation rate after merchant packing</option>
+                            <option value="Suspected warranty / replacement fraud">Suspected warranty / replacement fraud</option>
+                            <option value="Dispute policy violation / false claims">Dispute policy violation / false claims</option>
+                            <option value="Administrative Trust & Safety review">Administrative Trust &amp; Safety review</option>
+                            <option value="Custom">Custom Explanation...</option>
+                        </select>
+                        <textarea id="mRestrictReasonNotes" class="form-control bg-dark text-white border-secondary small" rows="2" placeholder="Explain the specific reason for restriction. This will be logged in the audit trail and communicated to the customer..."></textarea>
+                    </div>
+
+                    <!-- Real-time Policy Impact Summary Box -->
+                    <div class="p-3 rounded-3 bg-black bg-opacity-50 border border-secondary border-opacity-30">
+                        <small class="text-secondary fw-bold text-uppercase d-block mb-1.5" style="font-size: 10px; letter-spacing: 0.5px;">Active Customer Permissions Under Selected Tier:</small>
+                        <div class="row g-2 text-center" style="font-size: 11px;">
+                            <div class="col-4">
+                                <div class="p-1.5 rounded-2 bg-dark border border-secondary border-opacity-20" id="mPermPrepaid">
+                                    <span class="text-muted d-block" style="font-size: 10px;">Prepaid Orders</span>
+                                    <strong class="text-success"><i class="fa-solid fa-check"></i> Enabled</strong>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-1.5 rounded-2 bg-dark border border-secondary border-opacity-20" id="mPermCod">
+                                    <span class="text-muted d-block" style="font-size: 10px;">Doorstep COD</span>
+                                    <strong class="text-success" id="mPermCodStatus"><i class="fa-solid fa-check"></i> Enabled</strong>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-1.5 rounded-2 bg-dark border border-secondary border-opacity-20" id="mPermReturn">
+                                    <span class="text-muted d-block" style="font-size: 10px;">Online Returns</span>
+                                    <strong class="text-success" id="mPermReturnStatus"><i class="fa-solid fa-check"></i> Enabled</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-secondary border-opacity-25 p-3">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm" id="btnSaveCustomerRestriction" onclick="submitUpdateCustomerRestriction()">
+                    <i class="fa-solid fa-shield-check me-1.5"></i> Apply Restriction Policy
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal 5: [Block] Customer Confirmation Modal (Point 33: Customer Management) -->
 <div class="modal fade" id="blockCustomerModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -5576,6 +5791,236 @@
             }
 
             riskCell.innerHTML = badgeHtml;
+        }
+    }
+
+    // ==========================================
+    // POINT 46: GRANULAR CUSTOMER RESTRICTION MANAGEMENT
+    // Levels: Normal, Warning, COD Restricted, Return Restricted, Account Suspended, Account Blocked
+    // ==========================================
+
+    let activeRestrictionCustomerId = null;
+    let selectedRestrictionTier = "Normal";
+
+    function openCustomerRestrictionModal(customerId) {
+        activeRestrictionCustomerId = customerId;
+        document.getElementById("targetRestrictionCustId").value = customerId;
+        
+        const modal = new bootstrap.Modal(document.getElementById('customerRestrictionModal'));
+        document.getElementById("custRestrictModalLoader").style.display = "block";
+        document.getElementById("custRestrictModalContent").style.display = "none";
+        modal.show();
+
+        $.ajax({
+            url: '@Url.Action("GetCustomerRestrictionDetails", "Admin")',
+            type: 'GET',
+            data: { customerId: customerId },
+            success: function(res) {
+                document.getElementById("custRestrictModalLoader").style.display = "none";
+                if (res.success && res.customer) {
+                    const c = res.customer;
+                    const st = res.stats || {};
+                    document.getElementById("custRestrictModalContent").style.display = "block";
+
+                    document.getElementById("mRestrictCustName").innerText = c.name;
+                    document.getElementById("mRestrictCustPhone").innerText = c.phone || "N/A";
+                    document.getElementById("mRestrictCustEmail").innerText = c.email || "N/A";
+                    document.getElementById("mRestrictReasonDisplay").innerText = c.restrictionReason || "No active restrictions";
+                    document.getElementById("mRestrictReasonNotes").value = c.restrictionReason && c.restrictionReason !== "No active restrictions" ? c.restrictionReason : "";
+
+                    document.getElementById("mRestrictTotalOrders").innerText = st.totalOrders || 0;
+                    document.getElementById("mRestrictReturnRate").innerText = (st.returnRate || 0).toFixed(1) + "%";
+                    document.getElementById("mRestrictPastDisputes").innerText = st.pastDisputes || 0;
+
+                    // Risk Badge
+                    const rBadge = document.getElementById("mRestrictRiskBadge");
+                    if (c.riskLevel === "High" || c.riskScore >= 70) {
+                        rBadge.className = "badge bg-danger bg-opacity-25 text-danger font-monospace";
+                        rBadge.innerText = `High Risk: ${c.riskScore}/100`;
+                    } else if (c.riskLevel === "Medium" || c.riskScore >= 30) {
+                        rBadge.className = "badge bg-warning bg-opacity-25 text-warning font-monospace";
+                        rBadge.innerText = `Medium Risk: ${c.riskScore}/100`;
+                    } else {
+                        rBadge.className = "badge bg-success bg-opacity-25 text-success font-monospace";
+                        rBadge.innerText = `Low Risk: ${c.riskScore}/100`;
+                    }
+
+                    // Current restriction status header badge
+                    const curBadge = document.getElementById("mRestrictCurrentBadge");
+                    curBadge.className = "badge px-2.5 py-1 rounded-pill font-monospace";
+                    if (c.restrictionLevel === "Account Blocked" || !c.isActive) {
+                        curBadge.classList.add("bg-danger", "text-white");
+                        curBadge.innerHTML = `<i class="fa-solid fa-user-slash me-1"></i> Blocked`;
+                    } else if (c.restrictionLevel === "Account Suspended" || c.isAccountSuspended) {
+                        curBadge.classList.add("bg-secondary", "bg-opacity-40", "text-light");
+                        curBadge.innerHTML = `<i class="fa-solid fa-clock me-1"></i> Suspended (${c.suspendedUntilDate})`;
+                    } else if (c.restrictionLevel === "Return Restricted" || c.isReturnDisabled) {
+                        curBadge.classList.add("bg-warning", "bg-opacity-25", "text-warning");
+                        curBadge.innerHTML = `<i class="fa-solid fa-rotate-left me-1"></i> Return Restricted`;
+                    } else if (c.restrictionLevel === "COD Restricted" || c.isCodDisabled) {
+                        curBadge.classList.add("bg-danger", "bg-opacity-25", "text-danger");
+                        curBadge.innerHTML = `<i class="fa-solid fa-ban me-1"></i> COD Restricted`;
+                    } else if (c.restrictionLevel === "Warning") {
+                        curBadge.classList.add("bg-warning", "bg-opacity-25", "text-warning");
+                        curBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1"></i> Warning`;
+                    } else {
+                        curBadge.classList.add("bg-success", "bg-opacity-25", "text-success");
+                        curBadge.innerHTML = `<i class="fa-solid fa-circle-check me-1"></i> Normal`;
+                    }
+
+                    // Set active selection card
+                    const initialTier = c.restrictionLevel || (c.isActive ? (c.isCodDisabled ? "COD Restricted" : "Normal") : "Account Blocked");
+                    selectRestrictionTier(initialTier);
+                } else {
+                    showToast(res.message || "Failed to load customer restriction details.", true);
+                }
+            },
+            error: function() {
+                document.getElementById("custRestrictModalLoader").style.display = "none";
+                showToast("Connection error fetching customer restriction record.", true);
+            }
+        });
+    }
+
+    function selectRestrictionTier(tier) {
+        selectedRestrictionTier = tier;
+
+        // Update radio inputs
+        const radio = document.getElementById("radioTier-" + tier.replace(/ /g, '-'));
+        if (radio) radio.checked = true;
+
+        // Visual highlights
+        $(".restriction-tier-card").each(function() {
+            $(this).css({
+                "border-width": "1px",
+                "box-shadow": "none",
+                "transform": "none"
+            });
+        });
+
+        const activeCard = document.getElementById("tierCard-" + tier.replace(/ /g, '-'));
+        if (activeCard) {
+            activeCard.style.borderWidth = "2px";
+            activeCard.style.boxShadow = "0 0 14px rgba(239, 68, 68, 0.35)";
+            activeCard.style.transform = "scale(1.02)";
+        }
+
+        // Toggle Suspension duration
+        const suspWrap = document.getElementById("mSuspensionDaysWrap");
+        if (tier === "Account Suspended") {
+            suspWrap.style.display = "block";
+        } else {
+            suspWrap.style.display = "none";
+        }
+
+        // Update real-time permission indicators
+        const codEl = document.getElementById("mPermCodStatus");
+        const retEl = document.getElementById("mPermReturnStatus");
+        const prepaidEl = document.getElementById("mPermPrepaid");
+
+        if (tier === "Normal" || tier === "Warning") {
+            prepaidEl.innerHTML = `<span class="text-muted d-block" style="font-size: 10px;">Prepaid Orders</span><strong class="text-success"><i class="fa-solid fa-check"></i> Enabled</strong>`;
+            codEl.className = "text-success";
+            codEl.innerHTML = `<i class="fa-solid fa-check"></i> Enabled`;
+            retEl.className = "text-success";
+            retEl.innerHTML = `<i class="fa-solid fa-check"></i> Enabled`;
+        } else if (tier === "COD Restricted") {
+            prepaidEl.innerHTML = `<span class="text-muted d-block" style="font-size: 10px;">Prepaid Orders</span><strong class="text-success"><i class="fa-solid fa-check"></i> Enabled</strong>`;
+            codEl.className = "text-danger";
+            codEl.innerHTML = `<i class="fa-solid fa-ban"></i> Restricted`;
+            retEl.className = "text-success";
+            retEl.innerHTML = `<i class="fa-solid fa-check"></i> Enabled`;
+        } else if (tier === "Return Restricted") {
+            prepaidEl.innerHTML = `<span class="text-muted d-block" style="font-size: 10px;">Prepaid Orders</span><strong class="text-success"><i class="fa-solid fa-check"></i> Enabled</strong>`;
+            codEl.className = "text-success";
+            codEl.innerHTML = `<i class="fa-solid fa-check"></i> Enabled`;
+            retEl.className = "text-danger";
+            retEl.innerHTML = `<i class="fa-solid fa-ban"></i> Restricted`;
+        } else if (tier === "Account Suspended") {
+            prepaidEl.innerHTML = `<span class="text-muted d-block" style="font-size: 10px;">Prepaid Orders</span><strong class="text-danger"><i class="fa-solid fa-pause"></i> Paused</strong>`;
+            codEl.className = "text-danger";
+            codEl.innerHTML = `<i class="fa-solid fa-pause"></i> Paused`;
+            retEl.className = "text-danger";
+            retEl.innerHTML = `<i class="fa-solid fa-pause"></i> Paused`;
+        } else if (tier === "Account Blocked") {
+            prepaidEl.innerHTML = `<span class="text-muted d-block" style="font-size: 10px;">Prepaid Orders</span><strong class="text-danger"><i class="fa-solid fa-ban"></i> Blocked</strong>`;
+            codEl.className = "text-danger";
+            codEl.innerHTML = `<i class="fa-solid fa-ban"></i> Blocked`;
+            retEl.className = "text-danger";
+            retEl.innerHTML = `<i class="fa-solid fa-ban"></i> Blocked`;
+        }
+    }
+
+    function onRestrictionPresetChange() {
+        const preset = document.getElementById("mRestrictReasonPreset").value;
+        const notes = document.getElementById("mRestrictReasonNotes");
+        if (preset && preset !== "Custom") {
+            notes.value = preset;
+        }
+    }
+
+    function submitUpdateCustomerRestriction() {
+        if (!activeRestrictionCustomerId) return;
+        const tier = selectedRestrictionTier;
+        const reason = document.getElementById("mRestrictReasonNotes").value.trim();
+        const suspDays = document.getElementById("mSuspensionDaysSelect").value;
+
+        if (tier !== "Normal" && !reason) {
+            showToast("Please select or enter the reason for this restriction.", true);
+            return;
+        }
+
+        const confirmMsg = `Are you sure you want to apply restriction "${tier}" to this customer?`;
+        if (!confirm(confirmMsg)) return;
+
+        const btn = document.getElementById("btnSaveCustomerRestriction");
+        btn.disabled = true;
+
+        $.ajax({
+            url: '@Url.Action("UpdateCustomerRestriction", "Admin")',
+            type: 'POST',
+            data: {
+                customerId: activeRestrictionCustomerId,
+                restrictionLevel: tier,
+                reason: reason,
+                suspensionDays: suspDays
+            },
+            success: function(res) {
+                btn.disabled = false;
+                if (res.success) {
+                    showToast(res.message);
+                    bootstrap.Modal.getInstance(document.getElementById('customerRestrictionModal'))?.hide();
+
+                    // Update Table Row Status & Badges
+                    updateCustomerTableRowRestriction(activeRestrictionCustomerId, res);
+                } else {
+                    showToast(res.message || "Failed to update customer restriction.", true);
+                }
+            },
+            error: function() {
+                btn.disabled = false;
+                showToast("Connection error updating customer restriction policy.", true);
+            }
+        });
+    }
+
+    function updateCustomerTableRowRestriction(customerId, data) {
+        const cell = document.getElementById("cust-status-cell-" + customerId);
+        if (cell) {
+            const level = data.restrictionLevel;
+            if (level === "Account Blocked" || !data.isActive) {
+                cell.innerHTML = '<span class="badge bg-danger text-white border border-danger px-2.5 py-1 rounded-pill"><i class="fa-solid fa-user-slash me-1"></i> Blocked</span>';
+            } else if (level === "Account Suspended" || data.isAccountSuspended) {
+                cell.innerHTML = '<span class="badge bg-secondary bg-opacity-35 text-light border border-secondary border-opacity-30 px-2.5 py-1 rounded-pill"><i class="fa-solid fa-clock me-1"></i> Suspended</span>';
+            } else if (level === "Return Restricted" || data.isReturnDisabled) {
+                cell.innerHTML = '<span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30 px-2.5 py-1 rounded-pill" style="color: #fb923c !important;"><i class="fa-solid fa-rotate-left me-1"></i> Return Restricted</span>';
+            } else if (level === "COD Restricted" || data.isCodDisabled) {
+                cell.innerHTML = '<span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill"><i class="fa-solid fa-ban me-1"></i> COD Restricted</span>';
+            } else if (level === "Warning") {
+                cell.innerHTML = '<span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30 px-2.5 py-1 rounded-pill"><i class="fa-solid fa-triangle-exclamation me-1"></i> Warning</span>';
+            } else {
+                cell.innerHTML = '<span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-2.5 py-1 rounded-pill"><i class="fa-solid fa-circle-check me-1"></i> Normal</span>';
+            }
         }
     }
 

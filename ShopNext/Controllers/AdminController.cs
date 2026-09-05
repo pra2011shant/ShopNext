@@ -187,7 +187,13 @@ namespace ShopNext.Controllers
                     RiskScore = score,
                     RiskLevel = level,
                     IsCodDisabled = u.IsCodDisabled,
-                    IsFlaggedForReview = u.IsFlaggedForReview
+                    IsFlaggedForReview = u.IsFlaggedForReview,
+                    RestrictionLevel = u.RestrictionLevel ?? (u.IsActive ? (u.IsCodDisabled ? "COD Restricted" : "Normal") : "Account Blocked"),
+                    RestrictionReason = u.RestrictionReason,
+                    RestrictionAppliedDate = u.RestrictionAppliedDate?.ToString("dd MMM yyyy, hh:mm tt"),
+                    SuspendedUntilDate = u.SuspendedUntilDate?.ToString("dd MMM yyyy"),
+                    IsReturnDisabled = u.IsReturnDisabled,
+                    IsAccountSuspended = u.IsAccountSuspended
                 };
             }).ToList();
 
@@ -733,6 +739,202 @@ namespace ShopNext.Controllers
                     evaluatedAt = DateTime.Now.ToString("dd MMM yyyy, hh:mm tt")
                 },
                 message = $"Risk profile refreshed: Score {riskResult.RiskScore}/100 ({riskResult.RiskLevel} Risk)"
+            });
+        }
+
+        // ==========================================
+        // POINT 46: GRANULAR CUSTOMER RESTRICTION SYSTEM
+        // Levels: Normal, Warning, COD Restricted, Return Restricted, Account Suspended, Account Blocked
+        // ==========================================
+
+        // GET: /Admin/GetCustomerRestrictionDetails
+        [HttpGet]
+        public async Task<IActionResult> GetCustomerRestrictionDetails(int customerId)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized." });
+            }
+
+            var customer = await _context.Users.FindAsync(customerId);
+            if (customer == null)
+            {
+                return Json(new { success = false, message = "Customer not found." });
+            }
+
+            var userOrders = await _context.Orders.Where(o => o.CustomerId == customerId && !o.IsDeleted).ToListAsync();
+            int totalOrders = userOrders.Count;
+            int delivered = userOrders.Count(o => o.OrderStatus == "Delivered" || o.OrderStatus == "Completed");
+            int cancelled = userOrders.Count(o => o.OrderStatus == "Cancelled");
+            int returned = userOrders.Count(o => o.OrderStatus == "Returned" || o.OrderStatus == "ReturnApproved" || !string.IsNullOrEmpty(o.ReturnReason));
+            int pastDisputes = await _context.Complaints.CountAsync(c => c.CustomerId == customerId);
+
+            decimal returnRate = totalOrders > 0 ? (decimal)returned / totalOrders * 100m : 0;
+            decimal cancelRate = totalOrders > 0 ? (decimal)cancelled / totalOrders * 100m : 0;
+
+            return Json(new
+            {
+                success = true,
+                customer = new
+                {
+                    id = customer.Id,
+                    name = customer.Name,
+                    email = customer.Email ?? "N/A",
+                    phone = customer.PhoneNumber,
+                    restrictionLevel = customer.RestrictionLevel ?? (customer.IsActive ? (customer.IsCodDisabled ? "COD Restricted" : "Normal") : "Account Blocked"),
+                    restrictionReason = customer.RestrictionReason ?? "No active restrictions",
+                    restrictionAppliedDate = customer.RestrictionAppliedDate?.ToString("dd MMM yyyy, hh:mm tt") ?? "N/A",
+                    suspendedUntilDate = customer.SuspendedUntilDate?.ToString("dd MMM yyyy") ?? "N/A",
+                    isCodDisabled = customer.IsCodDisabled,
+                    isReturnDisabled = customer.IsReturnDisabled,
+                    isAccountSuspended = customer.IsAccountSuspended,
+                    isActive = customer.IsActive,
+                    riskScore = customer.RiskScore,
+                    riskLevel = customer.RiskLevel,
+                    registeredDate = customer.CreatedDate.ToString("dd MMM yyyy")
+                },
+                stats = new
+                {
+                    totalOrders = totalOrders,
+                    deliveredOrders = delivered,
+                    cancelledOrders = cancelled,
+                    returnedOrders = returned,
+                    returnRate = Math.Round(returnRate, 1),
+                    cancellationRate = Math.Round(cancelRate, 1),
+                    pastDisputes = pastDisputes
+                }
+            });
+        }
+
+        // POST: /Admin/UpdateCustomerRestriction
+        [HttpPost]
+        public async Task<IActionResult> UpdateCustomerRestriction(int customerId, string restrictionLevel, string? reason, int? suspensionDays)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized. Please log in as Admin." });
+            }
+
+            var customer = await _context.Users.FindAsync(customerId);
+            if (customer == null)
+            {
+                return Json(new { success = false, message = "Customer record not found." });
+            }
+
+            string cleanReason = string.IsNullOrWhiteSpace(reason) ? "Administrative policy review" : reason.Trim();
+            customer.RestrictionLevel = restrictionLevel;
+            customer.RestrictionReason = cleanReason;
+            customer.RestrictionAppliedDate = DateTime.Now;
+
+            string notificationTitle = "";
+            string notificationMsg = "";
+            string actionMessage = "";
+
+            switch (restrictionLevel)
+            {
+                case "Normal":
+                    customer.IsActive = true;
+                    customer.IsDeleted = false;
+                    customer.IsCodDisabled = false;
+                    customer.IsReturnDisabled = false;
+                    customer.IsAccountSuspended = false;
+                    customer.SuspendedUntilDate = null;
+                    notificationTitle = "✅ Account Status: Restrictions Lifted";
+                    notificationMsg = "All previous account restrictions have been reviewed and removed. You have full access to COD and returns.";
+                    actionMessage = $"Customer '{customer.Name}' restriction reset to Normal (all features active).";
+                    break;
+
+                case "Warning":
+                    customer.IsActive = true;
+                    customer.IsCodDisabled = false;
+                    customer.IsReturnDisabled = false;
+                    customer.IsAccountSuspended = false;
+                    customer.SuspendedUntilDate = null;
+                    customer.RiskScore = Math.Min(100, customer.RiskScore + 15);
+                    customer.RiskLevel = customer.RiskScore >= 70 ? "High" : "Medium";
+                    notificationTitle = "⚠️ Trust & Safety Warning";
+                    notificationMsg = $"An official warning has been recorded on your account regarding: {cleanReason}. Please adhere to delivery and return guidelines.";
+                    actionMessage = $"Official warning issued to customer '{customer.Name}'.";
+                    break;
+
+                case "COD Restricted":
+                    customer.IsActive = true;
+                    customer.IsCodDisabled = true;
+                    customer.IsReturnDisabled = false;
+                    customer.IsAccountSuspended = false;
+                    customer.SuspendedUntilDate = null;
+                    customer.RiskScore = Math.Min(100, customer.RiskScore + 20);
+                    customer.RiskLevel = customer.RiskScore >= 70 ? "High" : "Medium";
+                    notificationTitle = "🚫 Notice: Cash on Delivery (COD) Restricted";
+                    notificationMsg = $"Cash on Delivery (COD) has been restricted on your account ({cleanReason}). You can continue placing orders using online prepaid payments (UPI, Card, NetBanking).";
+                    actionMessage = $"COD restricted for customer '{customer.Name}'. Prepaid orders remain enabled.";
+                    break;
+
+                case "Return Restricted":
+                    customer.IsActive = true;
+                    customer.IsReturnDisabled = true;
+                    customer.IsAccountSuspended = false;
+                    customer.SuspendedUntilDate = null;
+                    customer.RiskScore = Math.Min(100, customer.RiskScore + 25);
+                    customer.RiskLevel = customer.RiskScore >= 70 ? "High" : "Medium";
+                    notificationTitle = "🔄 Notice: Returns & Replacements Restricted";
+                    notificationMsg = $"Automated returns and replacements have been restricted on your account ({cleanReason}). For any verified product issues, please contact customer support directly.";
+                    actionMessage = $"Returns restricted for customer '{customer.Name}' due to return/swap abuse.";
+                    break;
+
+                case "Account Suspended":
+                    int days = suspensionDays.HasValue && suspensionDays > 0 ? suspensionDays.Value : 14;
+                    customer.IsActive = true;
+                    customer.IsAccountSuspended = true;
+                    customer.SuspendedUntilDate = DateTime.Now.AddDays(days);
+                    customer.RiskScore = Math.Min(100, customer.RiskScore + 30);
+                    customer.RiskLevel = "High";
+                    string expiryStr = customer.SuspendedUntilDate.Value.ToString("dd MMM yyyy");
+                    notificationTitle = $"⏳ Account Suspended Until {expiryStr}";
+                    notificationMsg = $"Your account has been temporarily suspended until {expiryStr} due to: {cleanReason}. You cannot place new orders during this period.";
+                    actionMessage = $"Customer '{customer.Name}' suspended for {days} days (until {expiryStr}).";
+                    break;
+
+                case "Account Blocked":
+                    customer.IsActive = false;
+                    customer.IsAccountSuspended = true;
+                    customer.IsCodDisabled = true;
+                    customer.IsReturnDisabled = true;
+                    customer.SuspendedUntilDate = null;
+                    customer.RiskScore = 100;
+                    customer.RiskLevel = "High";
+                    notificationTitle = "⛔ Account Suspended & Blocked";
+                    notificationMsg = $"Your account has been permanently blocked due to repeated policy violations: {cleanReason}.";
+                    actionMessage = $"Customer '{customer.Name}' permanently blocked.";
+                    break;
+
+                default:
+                    return Json(new { success = false, message = "Invalid restriction level specified." });
+            }
+
+            _context.Notifications.Add(new Notification
+            {
+                CustomerId = customer.Id,
+                Title = notificationTitle,
+                Message = notificationMsg,
+                Type = "Restriction",
+                CreatedDate = DateTime.Now
+            });
+
+            await _context.SaveChangesAsync();
+
+            return Json(new
+            {
+                success = true,
+                message = actionMessage,
+                restrictionLevel = customer.RestrictionLevel,
+                restrictionReason = customer.RestrictionReason,
+                isCodDisabled = customer.IsCodDisabled,
+                isReturnDisabled = customer.IsReturnDisabled,
+                isAccountSuspended = customer.IsAccountSuspended,
+                isActive = customer.IsActive,
+                riskScore = customer.RiskScore,
+                riskLevel = customer.RiskLevel
             });
         }
 
