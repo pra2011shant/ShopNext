@@ -39,6 +39,18 @@ namespace ShopNext.Models
 
         public DateTime? ResolvedDate { get; set; }
 
+        // Point 43: Complainant Information (Rider against Customer / Customer against Order)
+        [StringLength(50)]
+        public string ComplainantRole { get; set; } = "Customer"; // Customer, Rider, Seller
+
+        public int? RiderId { get; set; }
+
+        [StringLength(150)]
+        public string? ComplainantName { get; set; }
+
+        [StringLength(100)]
+        public string? ReasonCategory { get; set; }
+
         // Navigation Properties
         [ForeignKey("CustomerId")]
         public virtual User? Customer { get; set; }

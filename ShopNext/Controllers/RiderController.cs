@@ -304,5 +304,65 @@ namespace ShopNext.Controllers
                 return Json(new { success = false, message = "Error verifying delivery OTP: " + ex.Message });
             }
         }
+
+        // ==========================================
+        // POINT 43: RIDER COMPLAINT AGAINST CUSTOMER
+        // ==========================================
+        [HttpPost]
+        public async Task<IActionResult> SubmitComplaint(int orderId, string reasonCategory, string description)
+        {
+            if (!IsLoggedIn(out int riderId, out _))
+            {
+                return Json(new { success = false, message = "Unauthorized. Please login again." });
+            }
+
+            if (orderId <= 0 || string.IsNullOrWhiteSpace(reasonCategory) || string.IsNullOrWhiteSpace(description))
+            {
+                return Json(new { success = false, message = "Please select a reason and enter complaint details." });
+            }
+
+            try
+            {
+                var complaint = await _service.RaiseRiderComplaintAgainstCustomerAsync(orderId, riderId, reasonCategory.Trim(), description.Trim());
+                return Json(new
+                {
+                    success = true,
+                    message = "Complaint submitted successfully! Ticket #" + complaint.TicketNumber + " generated. Our trust & safety team is investigating.",
+                    ticketNumber = complaint.TicketNumber,
+                    status = complaint.Status
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error submitting complaint: " + ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetMyComplaints()
+        {
+            if (!IsLoggedIn(out int riderId, out _))
+            {
+                return Json(new { success = false, message = "Unauthorized." });
+            }
+
+            var complaints = await _service.GetRiderComplaintsAsync(riderId);
+            return Json(new
+            {
+                success = true,
+                complaints = complaints.Select(c => new
+                {
+                    id = c.Id,
+                    ticketNumber = c.TicketNumber,
+                    orderId = c.OrderId,
+                    customerName = c.Customer?.Name ?? "Customer",
+                    reasonCategory = c.ReasonCategory ?? c.Issue,
+                    description = c.Description,
+                    status = c.Status,
+                    priority = c.Priority,
+                    createdDate = c.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")
+                })
+            });
+        }
     }
 }

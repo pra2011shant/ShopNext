@@ -1255,6 +1255,81 @@ namespace ShopNext.Services
             return complaint;
         }
 
+        public async Task<Complaint> RaiseRiderComplaintAgainstCustomerAsync(int orderId, int riderId, string reasonCategory, string description, string? attachmentUrl = null)
+        {
+            var order = await _context.Orders
+                .Include(o => o.Customer)
+                .Include(o => o.Shop)
+                .FirstOrDefaultAsync(o => o.Id == orderId);
+
+            var rider = await _context.Riders.FindAsync(riderId);
+
+            string ticketNumber = $"RDR-TKT-{DateTime.Now:yyMMdd}-{new Random().Next(100, 999)}";
+            string customerName = order?.Customer?.Name ?? "Customer";
+            string riderName = rider?.RiderName ?? $"Rider #{riderId}";
+
+            var complaint = new Complaint
+            {
+                TicketNumber = ticketNumber,
+                CustomerId = order?.CustomerId ?? 0,
+                OrderId = orderId,
+                Issue = $"[Rider Report] {reasonCategory} - Customer: {customerName}",
+                ReasonCategory = reasonCategory,
+                Description = description,
+                AttachmentUrl = attachmentUrl,
+                Priority = (reasonCategory.Contains("Threats") || reasonCategory.Contains("Unsafe") || reasonCategory.Contains("Abusive") || reasonCategory.Contains("Harassment")) ? "Urgent" : "High",
+                Status = "Open",
+                ComplainantRole = "Rider",
+                RiderId = riderId,
+                ComplainantName = riderName,
+                CreatedDate = DateTime.Now,
+                UpdatedDate = DateTime.Now,
+                IsActive = true,
+                IsDeleted = false
+            };
+
+            _context.Complaints.Add(complaint);
+
+            // Audit Trail
+            _context.AuditLogs.Add(new AuditLog
+            {
+                UserId = riderId,
+                UserName = riderName,
+                UserRole = "Rider",
+                Action = "Rider_Complaint_Raised",
+                EntityName = "Complaint",
+                EntityId = orderId,
+                Details = $"Rider {riderName} raised complaint ({reasonCategory}) against customer {customerName} for Order #{orderId}. Description: {description}",
+                CreatedDate = DateTime.Now
+            });
+
+            // Point 44 & 43: Admin Notification of Rider Incident / Misconduct
+            _context.Notifications.Add(new Notification
+            {
+                CustomerId = order?.CustomerId ?? 0,
+                RecipientRole = "Admin",
+                Title = $"⚠️ Rider Incident Report: {reasonCategory}",
+                Message = $"Rider {riderName} reported Customer {customerName} on Order #{orderId}. Reason: {reasonCategory}. Ticket: #{ticketNumber}",
+                Type = "Complaint",
+                LinkUrl = "/Admin/Dashboard#complaints",
+                IsRead = false,
+                CreatedDate = DateTime.Now
+            });
+
+            await _context.SaveChangesAsync();
+            return complaint;
+        }
+
+        public async Task<List<Complaint>> GetRiderComplaintsAsync(int riderId)
+        {
+            return await _context.Complaints
+                .Include(c => c.Order)
+                .Include(c => c.Customer)
+                .Where(c => c.RiderId == riderId && c.ComplainantRole == "Rider" && !c.IsDeleted)
+                .OrderByDescending(c => c.CreatedDate)
+                .ToListAsync();
+        }
+
         public async Task<List<Complaint>> GetComplaintsByCustomerIdAsync(int customerId)
         {
             return await _context.Complaints

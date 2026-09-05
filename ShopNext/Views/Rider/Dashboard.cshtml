@@ -480,6 +480,11 @@
                                         id="btn-complete-@order.Id">
                                     <i class="fa-solid fa-key"></i> Enter OTP & Deliver
                                 </button>
+                                <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3 ms-2" 
+                                        onclick="openRiderComplaintModal(@order.Id, '@(order.Customer?.Name?.Replace("'", "\\'") ?? "Customer")')"
+                                        title="Report abusive behavior, threats, harassment, or safety issues">
+                                    <i class="fa-solid fa-triangle-exclamation me-1"></i> Report Customer
+                                </button>
                                 <script>
                                     // Resume simulation if refreshed during trip
                                     document.addEventListener("DOMContentLoaded", function() {
@@ -489,15 +494,84 @@
                             }
                             else
                             {
-                                <span class="text-success small fw-bold">
-                                    <i class="fa-solid fa-circle-check"></i> Delivered ✓ (OTP: @(string.IsNullOrEmpty(order.DeliveryOtp) ? "Verified" : order.DeliveryOtp))
-                                </span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="text-success small fw-bold">
+                                        <i class="fa-solid fa-circle-check"></i> Delivered ✓ (OTP: @(string.IsNullOrEmpty(order.DeliveryOtp) ? "Verified" : order.DeliveryOtp))
+                                    </span>
+                                    <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-2.5 py-1" style="font-size: 0.78rem;"
+                                            onclick="openRiderComplaintModal(@order.Id, '@(order.Customer?.Name?.Replace("'", "\\'") ?? "Customer")')"
+                                            title="Report an incident or misbehavior">
+                                        <i class="fa-solid fa-triangle-exclamation me-1"></i> Report
+                                    </button>
+                                </div>
                             }
                         </div>
                     </div>
                 </div>
             }
         }
+    </div>
+</div>
+
+<!-- Modal: Point 43 - Rider Complaint Against Customer -->
+<div class="modal fade" id="riderComplaintModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-white" style="background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 24px; box-shadow: 0 25px 50px rgba(0,0,0,0.5);">
+            <div class="modal-header border-secondary border-opacity-25 pb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle bg-danger bg-opacity-25 p-2 text-danger d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="fa-solid fa-triangle-exclamation fs-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold text-white mb-0">Rider Complaint</h5>
+                        <small class="text-danger fw-semibold">Report customer misbehavior, threats, or safety issues</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="complaintOrderId" />
+
+                <!-- Order and Customer Summary Info -->
+                <div class="p-3 mb-3 rounded-3" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.08);">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-muted small">Order ID:</span>
+                        <strong class="text-primary font-monospace" id="complaintOrderDisplay">#ORD0</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">Customer:</span>
+                        <strong class="text-white" id="complaintCustomerDisplay">Customer</strong>
+                    </div>
+                </div>
+
+                <!-- Reason Dropdown -->
+                <div class="mb-3">
+                    <label class="form-label text-white small fw-bold">Reason *</label>
+                    <select id="complaintReasonSelect" class="form-select bg-dark text-white border-secondary rounded-3">
+                        <option value="Customer Misbehavior" selected>Customer Misbehavior</option>
+                        <option value="Abusive Behavior">Abusive Behavior (Vulgar Language / Verbal Abuse)</option>
+                        <option value="Threats & Harassment">Threats & Harassment</option>
+                        <option value="Repeated Misconduct">Repeated Misconduct</option>
+                        <option value="Unsafe Delivery Location">Unsafe Delivery Location (Hostile Environment / Danger)</option>
+                        <option value="Refused Payment & Fake Address">Refused Payment / Fake Address / Fraud</option>
+                    </select>
+                </div>
+
+                <!-- Description Textarea -->
+                <div class="mb-3">
+                    <label class="form-label text-white small fw-bold">Description *</label>
+                    <textarea id="complaintDescriptionText" rows="4" class="form-control bg-dark text-white border-secondary rounded-3" placeholder="Ghatna ka poora vivaran likhein (Location par kya hua, abusive language, payment dispute, etc.)..." style="resize: none;"></textarea>
+                </div>
+
+                <div id="complaintFeedbackAlert" class="small mb-2" style="display: none;"></div>
+            </div>
+            <div class="modal-footer border-secondary border-opacity-25 pt-2">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold" id="btnSubmitComplaint" onclick="submitRiderComplaint()">
+                    <i class="fa-solid fa-paper-plane me-1"></i> Submit Complaint
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -794,5 +868,79 @@
         setTimeout(() => {
             $(toast).fadeOut(300);
         }, 3500);
+    }
+
+    // Point 43: Rider Complaint Functions
+    let complaintModalInstance = null;
+
+    function openRiderComplaintModal(orderId, customerName) {
+        document.getElementById("complaintOrderId").value = orderId;
+        document.getElementById("complaintOrderDisplay").innerText = "#ORD" + orderId;
+        document.getElementById("complaintCustomerDisplay").innerText = customerName || "Customer";
+        document.getElementById("complaintReasonSelect").value = "Customer Misbehavior";
+        document.getElementById("complaintDescriptionText").value = "";
+        
+        const feedback = document.getElementById("complaintFeedbackAlert");
+        feedback.style.display = "none";
+        feedback.innerHTML = "";
+
+        const btn = document.getElementById("btnSubmitComplaint");
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane me-1"></i> Submit Complaint';
+
+        if (!complaintModalInstance) {
+            complaintModalInstance = new bootstrap.Modal(document.getElementById('riderComplaintModal'));
+        }
+        complaintModalInstance.show();
+    }
+
+    function submitRiderComplaint() {
+        const orderId = document.getElementById("complaintOrderId").value;
+        const reason = document.getElementById("complaintReasonSelect").value;
+        const desc = document.getElementById("complaintDescriptionText").value.trim();
+        const feedback = document.getElementById("complaintFeedbackAlert");
+        const btn = document.getElementById("btnSubmitComplaint");
+
+        if (!desc) {
+            feedback.className = "small text-danger fw-semibold";
+            feedback.innerHTML = '<i class="fa-solid fa-circle-exclamation me-1"></i> Please describe the incident before submitting.';
+            feedback.style.display = "block";
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Submitting...';
+
+        $.ajax({
+            url: '@Url.Action("SubmitComplaint", "Rider")',
+            type: 'POST',
+            data: { orderId: orderId, reasonCategory: reason, description: desc },
+            success: function(res) {
+                if (res.success) {
+                    feedback.className = "alert alert-success py-2 px-3 small fw-bold mb-0 text-success border border-success";
+                    feedback.innerHTML = `<i class="fa-solid fa-circle-check fs-5 me-2"></i> ${res.message}`;
+                    feedback.style.display = "block";
+
+                    showToast(`Incident report filed successfully! Ticket: ${res.ticketNumber}`);
+
+                    setTimeout(() => {
+                        if (complaintModalInstance) complaintModalInstance.hide();
+                    }, 1500);
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-paper-plane me-1"></i> Submit Complaint';
+                    feedback.className = "alert alert-danger py-2 px-3 small fw-semibold mb-0 text-danger border border-danger";
+                    feedback.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1"></i> ${res.message || 'Error filing complaint.'}`;
+                    feedback.style.display = "block";
+                }
+            },
+            error: function() {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane me-1"></i> Submit Complaint';
+                feedback.className = "small text-danger fw-semibold";
+                feedback.innerHTML = '<i class="fa-solid fa-wifi me-1"></i> Connection error while submitting complaint.';
+                feedback.style.display = "block";
+            }
+        });
     }
 </script>

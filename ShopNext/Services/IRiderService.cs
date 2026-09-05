@@ -18,5 +18,7 @@ namespace ShopNext.Services
         Task<IEnumerable<Order>> GetRiderAssignedOrdersAsync(int riderId);
         Task<(bool Success, string Message, string? Otp)> VerifyDeliveryOtpAndCompleteAsync(int orderId, int riderId, string enteredOtp, string? notes = null);
         Task<string> GenerateOrGetDeliveryOtpAsync(int orderId);
+        Task<Complaint> RaiseRiderComplaintAgainstCustomerAsync(int orderId, int riderId, string reasonCategory, string description, string? attachmentUrl = null);
+        Task<List<Complaint>> GetRiderComplaintsAsync(int riderId);
     }
 }
