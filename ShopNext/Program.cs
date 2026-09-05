@@ -36,6 +36,7 @@ builder.Services.AddScoped<IAdminReportService>(sp => sp.GetRequiredService<Shop
 builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<ICustomerRiskService, CustomerRiskService>();
 builder.Services.AddScoped<IAddressRiskService, AddressRiskService>();
+builder.Services.AddScoped<IMultiAccountDetectionService, MultiAccountDetectionService>();
 
 // 3. Point 46 & 29: Security & Role-Based Authentication Configuration
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

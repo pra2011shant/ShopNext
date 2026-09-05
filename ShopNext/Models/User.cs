@@ -31,5 +31,10 @@ namespace ShopNext.Models
         public DateTime? SuspendedUntilDate { get; set; } // When temporary suspension expires
         public bool IsReturnDisabled { get; set; } = false; // Restricts customer from raising return requests
         public bool IsAccountSuspended { get; set; } = false; // Temporary freeze on ordering
+
+        // Point 48: Privacy-Compliant Multiple Account Detection Signals
+        public string? DeviceFingerprintHash { get; set; } // Anonymized SHA-256 standard client hash
+        public string? RegistrationIpMasked { get; set; } // Anonymized subnet mask e.g. 192.168.1.xxx
+        public bool RestrictFirstOrderCoupons { get; set; } = false; // Flag to stop welcome voucher cycling
     }
 }

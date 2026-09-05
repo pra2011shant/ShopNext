@@ -380,6 +380,10 @@
             <span><i class="fa-solid fa-map-location-dot text-danger"></i> Address Risk</span>
             <span class="sidebar-badge bg-danger bg-opacity-20 text-danger" id="sidebarAddressRiskBadge">@Model.AddressRiskList.Count(x => x.RiskLevel == "High Risk" || x.AlertBadge == "⚠ High Activity") Alert</span>
         </div>
+        <div class="nav-sidebar-item" onclick="switchAdminTab('multiaccounts', this)" id="nav-multiaccounts">
+            <span><i class="fa-solid fa-users-viewfinder text-warning"></i> Multi-Accounts</span>
+            <span class="sidebar-badge bg-warning bg-opacity-20 text-warning" id="sidebarMultiAccountsBadge">@Model.MultiAccountClustersList.Count(x => x.AlertBadge.Contains("Possible Multiple Accounts")) Alert</span>
+        </div>
 
         <!-- Group 3: CATALOG & INVENTORY -->
         <div class="sidebar-group-title">Catalog & Inventory</div>
@@ -1214,6 +1218,269 @@
                                         <button type="button" class="btn btn-outline-warning btn-sm rounded-pill px-3 py-1.5 fw-semibold"
                                                 onclick="openAddressRiskModal('@item.AddressKey')">
                                             <i class="fa-solid fa-magnifying-glass me-1"></i> Investigate
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- POINT 48: TAB: MULTIPLE ACCOUNT DETECTION (Privacy-Compliant Signal Clustering) -->
+        <div class="tab-panel-container" id="panel-multiaccounts">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <h3 class="fw-bold text-white mb-0"><i class="fa-solid fa-users-viewfinder text-warning me-2"></i> Multiple Account Detection</h3>
+                            <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30 rounded-pill px-3 py-1">POINT 48</span>
+                        </div>
+                        <p class="text-secondary small mb-0">Identifies multiple accounts created from identical delivery addresses, similar phone patterns, or privacy-safe client tokens.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-outline-info btn-sm rounded-pill px-3 py-2" onclick="location.reload()">
+                            <i class="fa-solid fa-arrows-rotate me-1"></i> Refresh Multi-Account Clusters
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4 Top KPI Cards for Multi-Account Detection -->
+                <div class="row g-3 mb-4">
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-secondary small fw-semibold text-uppercase">Detected Clusters</div>
+                                    <div class="text-white fw-bold fs-3 mt-1">@Model.MultiAccountClustersList.Count</div>
+                                </div>
+                                <div class="p-3 rounded-3 bg-primary bg-opacity-15 text-primary fs-4">
+                                    <i class="fa-solid fa-people-group"></i>
+                                </div>
+                            </div>
+                            <div class="text-secondary small mt-2"><i class="fa-solid fa-link me-1 text-info"></i> Address / Phone / Client Signals</div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="p-3 rounded-4" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-warning small fw-semibold text-uppercase">⚠ Possible Multi-Accounts</div>
+                                    <div class="text-white fw-bold fs-3 mt-1">@Model.MultiAccountClustersList.Count(x => x.AlertBadge.Contains("Possible Multiple Accounts"))</div>
+                                </div>
+                                <div class="p-3 rounded-3 bg-warning bg-opacity-20 text-warning fs-4">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                </div>
+                            </div>
+                            <div class="text-warning small mt-2"><i class="fa-solid fa-clock-rotate-left me-1"></i> Active Review Backlog</div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="p-3 rounded-4" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-danger small fw-semibold text-uppercase">Promo Abuse Flags</div>
+                                    <div class="text-white fw-bold fs-3 mt-1">@Model.MultiAccountClustersList.Count(x => x.RestrictFirstOrderCoupons || x.ClusterStatus == "Promo Abuse Restricted")</div>
+                                </div>
+                                <div class="p-3 rounded-3 bg-danger bg-opacity-20 text-danger fs-4">
+                                    <i class="fa-solid fa-ticket-simple"></i>
+                                </div>
+                            </div>
+                            <div class="text-danger small mt-2"><i class="fa-solid fa-ban me-1"></i> Welcome Voucher Cycling Blocked</div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="p-3 rounded-4" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-success small fw-semibold text-uppercase">Family / Shared Homes</div>
+                                    <div class="text-white fw-bold fs-3 mt-1">@Model.MultiAccountClustersList.Count(x => x.ClusterStatus == "Legitimate Household / Family")</div>
+                                </div>
+                                <div class="p-3 rounded-3 bg-success bg-opacity-20 text-success fs-4">
+                                    <i class="fa-solid fa-house-user"></i>
+                                </div>
+                            </div>
+                            <div class="text-success small mt-2"><i class="fa-solid fa-circle-check me-1"></i> Verified Legitimate Households</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Privacy Compliance Safeguard Banner -->
+                <div class="p-3 mb-4 rounded-4" style="background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(245, 158, 11, 0.3);">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-3 rounded-3 bg-warning bg-opacity-20 text-warning fs-3 flex-shrink-0">
+                            <i class="fa-solid fa-user-lock"></i>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <h6 class="fw-bold text-white mb-0">🔒 Privacy-Compliant Signal Tracking &amp; Fair Policy</h6>
+                                <span class="badge bg-info bg-opacity-20 text-info border border-info border-opacity-30 rounded-pill px-2.5 py-0.5" style="font-size: 0.72rem;">DPDP &amp; Privacy Compliant</span>
+                            </div>
+                            <p class="text-light text-opacity-80 small mb-0 mt-1">
+                                Privacy compliance ke liye system kisi invasive device tracking (IMEI/MAC/Hardware ID) ko store nahi karta. Keval <strong>anonymized SHA-256 client token hashes</strong>, <strong>common delivery addresses</strong>, aur <strong>phone patterns</strong> ko correlate kiya jata hai.
+                                <span class="text-warning fw-semibold">Family members aur flatmates ke legitimate accounts permitted hain.</span> 
+                                Flagging ka main focus multi-account signup coupon abuse aur return fraud prevention par hota hai.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters & Live Search Toolbar -->
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div class="btn-group bg-dark p-1 rounded-3 border border-secondary border-opacity-25" role="group">
+                        <button type="button" class="btn btn-sm btn-dark multi-filter-btn active" onclick="filterMultiAccountTable('all', this)">All Clusters</button>
+                        <button type="button" class="btn btn-sm btn-dark multi-filter-btn" onclick="filterMultiAccountTable('alert', this)">
+                            <span class="text-warning"><i class="fa-solid fa-triangle-exclamation me-1"></i> ⚠ Possible Multi-Accounts</span>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-dark multi-filter-btn" onclick="filterMultiAccountTable('high-confidence', this)">
+                            <span class="text-danger"><i class="fa-solid fa-bullseye me-1"></i> High Confidence</span>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-dark multi-filter-btn" onclick="filterMultiAccountTable('under-review', this)">
+                            <span class="text-info"><i class="fa-solid fa-magnifying-glass me-1"></i> Under Review</span>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-dark multi-filter-btn" onclick="filterMultiAccountTable('family', this)">
+                            <span class="text-success"><i class="fa-solid fa-house-user me-1"></i> Family / Household</span>
+                        </button>
+                    </div>
+
+                    <div class="input-group" style="max-width: 340px;">
+                        <span class="input-group-text bg-dark border-secondary border-opacity-25 text-secondary"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" class="form-control bg-dark text-white border-secondary border-opacity-25" placeholder="Search Cluster, Name, Address..." onkeyup="searchMultiAccountTable(this.value)" id="multiAccountSearchInput" />
+                    </div>
+                </div>
+
+                <!-- Multi-Account Table -->
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0" id="multiAccountMainTable">
+                        <thead>
+                            <tr class="text-secondary small text-uppercase border-bottom border-secondary border-opacity-25">
+                                <th style="width: 22%;">Cluster &amp; Match Factor</th>
+                                <th style="width: 28%;">Linked Accounts Cluster</th>
+                                <th style="width: 14%;">Common Signal Value</th>
+                                <th style="width: 14%;">Activity &amp; Confidence</th>
+                                <th style="width: 12%;">Cluster Status</th>
+                                <th style="width: 10%; text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var clus in Model.MultiAccountClustersList)
+                            {
+                                string filterClass = "all";
+                                if (clus.AlertBadge.Contains("Possible Multiple Accounts")) { filterClass += " alert"; }
+                                if (clus.MatchConfidence == "High") { filterClass += " high-confidence"; }
+                                if (clus.ClusterStatus == "Under Review") { filterClass += " under-review"; }
+                                if (clus.ClusterStatus == "Legitimate Household / Family") { filterClass += " family"; }
+
+                                <tr class="multi-account-row @filterClass"
+                                    data-cluster-id="@clus.ClusterId"
+                                    data-name="@clus.ClusterName"
+                                    data-factor="@clus.PrimaryMatchFactor"
+                                    data-signal="@clus.CommonSignalValue"
+                                    data-confidence="@clus.MatchConfidence"
+                                    data-status="@clus.ClusterStatus"
+                                    id="cluster-row-@clus.ClusterId">
+                                    <td>
+                                        <div class="d-flex align-items-start gap-2.5">
+                                            <div class="p-2.5 rounded-3 bg-warning bg-opacity-15 text-warning flex-shrink-0 mt-0.5">
+                                                <i class="fa-solid fa-users-viewfinder"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-white fw-bold mb-0.5 cluster-name">@clus.ClusterName</div>
+                                                <div class="text-info small font-monospace">@clus.ClusterId &bull; @clus.CreatedDate</div>
+                                                <span class="badge bg-secondary bg-opacity-35 text-light border border-secondary border-opacity-30 rounded-pill px-2 py-0.5 mt-1" style="font-size: 0.72rem;">
+                                                    <i class="fa-solid fa-fingerprint me-1 text-warning"></i> @clus.PrimaryMatchFactor
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <div class="d-flex flex-wrap gap-1 mb-1.5">
+                                                @foreach (var acc in clus.Accounts)
+                                                {
+                                                    <span class="badge bg-dark border border-secondary border-opacity-35 text-light px-2 py-1 rounded-pill" style="font-size: 0.75rem;">
+                                                        <strong class="text-warning">@acc.AccountLabel:</strong> @acc.CustomerName
+                                                    </span>
+                                                }
+                                            </div>
+                                            <div class="text-secondary small font-monospace">
+                                                Total Accounts: <strong class="text-white">@clus.TotalAccountsCount</strong> &bull; Combined: <strong class="text-white">@clus.TotalCombinedOrders Orders (₹@clus.TotalCombinedSpent.ToString("N0"))</strong>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="text-light small text-truncate" style="max-width: 220px;" title="@clus.CommonSignalValue">
+                                            @clus.CommonSignalValue
+                                        </div>
+                                        <div class="text-secondary small mt-0.5 font-monospace" style="font-size: 0.72rem;">
+                                            <i class="fa-solid fa-link me-1 text-info"></i> Correlated Signal
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            @if (clus.AlertBadge.Contains("Possible Multiple Accounts"))
+                                            {
+                                                <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-40 px-2.5 py-1 rounded-pill fw-bold">
+                                                    <i class="fa-solid fa-triangle-exclamation me-1"></i> @clus.AlertBadge
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30 px-2.5 py-1 rounded-pill fw-bold">
+                                                    <i class="fa-solid fa-circle-check me-1"></i> Normal
+                                                </span>
+                                            }
+                                            <div class="d-flex align-items-center gap-1 mt-1">
+                                                <span class="text-secondary small" style="font-size: 0.73rem;">Confidence:</span>
+                                                <span class="badge @(clus.MatchConfidence == "High" ? "bg-danger" : "bg-warning") text-white rounded-pill px-2 py-0.2" style="font-size: 0.7rem;">@clus.MatchConfidence</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div id="cluster-status-container-@clus.ClusterId">
+                                            @if (clus.ClusterStatus == "Under Review")
+                                            {
+                                                <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30 px-2.5 py-1 rounded-pill fw-bold">
+                                                    <i class="fa-solid fa-magnifying-glass me-1"></i> Under Review
+                                                </span>
+                                            }
+                                            else if (clus.ClusterStatus == "Legitimate Household / Family")
+                                            {
+                                                <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30 px-2.5 py-1 rounded-pill fw-bold">
+                                                    <i class="fa-solid fa-house-user me-1"></i> Family / Household
+                                                </span>
+                                            }
+                                            else if (clus.ClusterStatus == "Promo Abuse Restricted")
+                                            {
+                                                <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill fw-bold">
+                                                    <i class="fa-solid fa-ticket-simple me-1"></i> Promo Restricted
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-info bg-opacity-20 text-info border border-info border-opacity-30 px-2.5 py-1 rounded-pill fw-bold">
+                                                    <i class="fa-solid fa-circle-check me-1"></i> @clus.ClusterStatus
+                                                </span>
+                                            }
+                                        </div>
+                                        @if (clus.RestrictFirstOrderCoupons)
+                                        {
+                                            <div class="small text-danger mt-1" style="font-size: 0.72rem;" id="cluster-coupon-indicator-@clus.ClusterId">
+                                                <i class="fa-solid fa-ban me-1"></i> Welcome Vouchers Restricted
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="small text-danger mt-1 d-none" style="font-size: 0.72rem;" id="cluster-coupon-indicator-@clus.ClusterId">
+                                                <i class="fa-solid fa-ban me-1"></i> Welcome Vouchers Restricted
+                                            </div>
+                                        }
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <button type="button" class="btn btn-outline-warning btn-sm rounded-pill px-3 py-1.5 fw-semibold"
+                                                onclick="openMultiAccountClusterModal('@clus.ClusterId')">
+                                            <i class="fa-solid fa-magnifying-glass me-1"></i> Review
                                         </button>
                                     </td>
                                 </tr>
@@ -5508,6 +5775,203 @@
                 <button type="button" class="btn btn-secondary px-3 py-2" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-warning px-4 py-2 fw-bold" onclick="submitUpdateAddressInvestigation()" id="btnSaveAddressInvestigation">
                     <i class="fa-solid fa-floppy-disk me-1"></i> Save Investigation Status
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- POINT 48: Multi-Account Cluster Investigation Modal -->
+<div class="modal fade" id="multiAccountClusterModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+        <div class="modal-content modal-content-glass" style="background: rgba(15, 23, 42, 0.96); border: 1px solid rgba(255, 255, 255, 0.12);">
+            <div class="modal-header border-bottom border-secondary border-opacity-25 p-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 rounded-3 bg-warning bg-opacity-20 text-warning fs-3" id="modalClusIcon">
+                        <i class="fa-solid fa-users-viewfinder"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <h5 class="modal-title fw-bold text-white mb-0" id="modalClusNameDisplay">Residential Cluster: Boring Road Hub</h5>
+                            <span class="badge bg-warning text-dark px-2.5 py-1 rounded-pill fw-bold" id="modalClusAlertBadge">⚠ Possible Multiple Accounts</span>
+                        </div>
+                        <div class="text-secondary small mt-1" id="modalClusSignalDisplay">Primary Signal: Same Delivery Address &bull; Plot 42, Boring Road, Patna</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- 4 KPI Telemetry Bar -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 rounded-3 text-center" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+                            <div class="text-secondary small fw-semibold text-uppercase">Linked Accounts</div>
+                            <div class="text-warning fw-bold fs-3 font-monospace mt-1" id="modalClusAccountCount">4</div>
+                            <div class="text-secondary small">Correlated Users</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 rounded-3 text-center" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">
+                            <div class="text-primary small fw-semibold text-uppercase">Combined Orders</div>
+                            <div class="text-white fw-bold fs-3 font-monospace mt-1" id="modalClusCombinedOrders">50</div>
+                            <div class="text-info small" id="modalClusCombinedSpent">₹1,45,800 gross</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 rounded-3 text-center" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);">
+                            <div class="text-danger small fw-semibold text-uppercase">Match Confidence</div>
+                            <div class="text-danger fw-bold fs-3 font-monospace mt-1" id="modalClusConfidence">High</div>
+                            <div class="text-secondary small" id="modalClusPrimaryFactor">Same Delivery Address</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 rounded-3 text-center" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3);">
+                            <div class="text-success small fw-semibold text-uppercase">Cluster Status</div>
+                            <div class="text-success fw-bold fs-5 mt-2" id="modalClusStatusDisplay">Under Review</div>
+                            <div class="text-secondary small">Investigation Active</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Privacy Compliance Notice -->
+                <div class="p-3 mb-4 rounded-3" style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(245, 158, 11, 0.25);">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fa-solid fa-shield-halved text-warning fs-4 flex-shrink-0"></i>
+                        <div class="small text-light">
+                            <strong>Privacy Guarantee &amp; Policy:</strong> Account correlation uses <em>anonymized SHA-256 client token hashes</em> and <em>delivery address matching</em>. No invasive hardware trackers are collected. Legitimate family households or shared apartments can be marked verified with a single click.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs inside Modal -->
+                <ul class="nav nav-pills mb-3 p-1 rounded-3 bg-dark border border-secondary border-opacity-25" id="modalClusTabNav" role="tablist">
+                    <li class="nav-item flex-fill" role="presentation">
+                        <button class="nav-link active w-100 fw-bold py-2 text-center" id="tab-clus-accounts-btn" data-bs-toggle="pill" data-bs-target="#tab-clus-accounts" type="button" role="tab">
+                            <i class="fa-solid fa-users me-1 text-warning"></i> Linked Accounts (<span id="modalClusAccountsTabBadge">4</span>)
+                        </button>
+                    </li>
+                    <li class="nav-item flex-fill" role="presentation">
+                        <button class="nav-link w-100 fw-bold py-2 text-center" id="tab-clus-signals-btn" data-bs-toggle="pill" data-bs-target="#tab-clus-signals" type="button" role="tab">
+                            <i class="fa-solid fa-network-wired me-1 text-info"></i> Signal Correlation Analysis
+                        </button>
+                    </li>
+                    <li class="nav-item flex-fill" role="presentation">
+                        <button class="nav-link w-100 fw-bold py-2 text-center" id="tab-clus-manage-btn" data-bs-toggle="pill" data-bs-target="#tab-clus-manage" type="button" role="tab">
+                            <i class="fa-solid fa-sliders me-1 text-success"></i> Cluster Policy &amp; Actions
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content pt-2" id="modalClusTabContent">
+                    <!-- Tab 1: Linked Accounts Breakdown -->
+                    <div class="tab-pane fade show active" id="tab-clus-accounts" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover align-middle mb-0">
+                                <thead>
+                                    <tr class="text-secondary small text-uppercase border-bottom border-secondary border-opacity-25">
+                                        <th>Account Label &amp; Name</th>
+                                        <th>Contact Details</th>
+                                        <th>Registration</th>
+                                        <th>Orders / Spent</th>
+                                        <th>Welcome Voucher</th>
+                                        <th>Restriction Tier</th>
+                                        <th style="text-align: right;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="modalClusAccountsTableBody">
+                                    <!-- Populated dynamically via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Signal Correlation Analysis -->
+                    <div class="tab-pane fade" id="tab-clus-signals" role="tabpanel">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <i class="fa-solid fa-location-dot text-danger"></i>
+                                        <strong class="text-white">Common Delivery Address Signal</strong>
+                                    </div>
+                                    <div class="text-light small font-monospace p-2 rounded bg-dark" id="modalClusSignalAddress">Plot 42, Near Alankar Jewellers, Boring Road, Patna, Bihar - 800001</div>
+                                    <div class="text-secondary small mt-2">Shared across all accounts in this cluster for order shipments.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <i class="fa-solid fa-fingerprint text-warning"></i>
+                                        <strong class="text-white">Privacy-Safe Client Token Hash</strong>
+                                    </div>
+                                    <div class="text-light small font-monospace p-2 rounded bg-dark" id="modalClusSignalDevice">client_hash_8a2f*** (Anonymized SHA-256)</div>
+                                    <div class="text-secondary small mt-2">Correlated standard client session signature. No hardware identifiers stored.</div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <i class="fa-solid fa-ticket text-info"></i>
+                                        <strong class="text-white">Promotional Voucher Cycling Pattern</strong>
+                                    </div>
+                                    <div class="text-secondary small" id="modalClusVoucherSummary">
+                                        Multiple accounts claimed new-user introductory discounts. Admin can restrict new welcome vouchers on this cluster without disabling regular order placement.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 3: Cluster Policy & Actions -->
+                    <div class="tab-pane fade" id="tab-clus-manage" role="tabpanel">
+                        <form id="formMultiAccountCluster" onsubmit="event.preventDefault(); submitUpdateClusterStatus();">
+                            <input type="hidden" id="modalClusIdHidden" />
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-light fw-semibold small">Cluster Classification Status</label>
+                                    <select class="form-select bg-dark text-white border-secondary border-opacity-25" id="modalClusStatusSelect">
+                                        <option value="Under Review">🔍 Under Review (Active Monitoring)</option>
+                                        <option value="Legitimate Household / Family">👨‍👩‍👧‍👦 Legitimate Household / Family (Verified Normal Users)</option>
+                                        <option value="Promo Abuse Restricted">🎟 Promo Abuse Restricted (Block Signup Vouchers)</option>
+                                        <option value="Flagged for Verification">⚠ Flagged for Verification (Manual Order Check)</option>
+                                        <option value="Resolved / Verified">✅ Resolved / Verified (Safe Clean Cluster)</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label text-light fw-semibold small">Promotional Safeguard</label>
+                                    <div class="p-2.5 rounded-3 bg-dark border border-secondary border-opacity-25">
+                                        <div class="form-check form-switch mb-0">
+                                            <input class="form-check-input" type="checkbox" id="modalClusRestrictCouponsCheck">
+                                            <label class="form-check-label text-light small fw-semibold" for="modalClusRestrictCouponsCheck">
+                                                Restrict First-Order Welcome Vouchers on this Cluster
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="text-secondary small mt-1" style="font-size: 0.72rem;">Prevents repeated new-user discounts while allowing normal shopping.</div>
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label text-light fw-semibold small">Preset Reason / Investigation Notes</label>
+                                    <div class="d-flex flex-wrap gap-1.5 mb-2">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0.5 px-2.5 small" onclick="setPresetClusterNote('Verified legitimate family members residing at same home. Distinct purchasing patterns.')">Legitimate Family Hub</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0.5 px-2.5 small" onclick="setPresetClusterNote('Detected welcome voucher cycling across duplicate accounts. First-order discounts restricted.')">Promo Voucher Abuse</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0.5 px-2.5 small" onclick="setPresetClusterNote('Commercial office address with multiple independent employees ordering parcels.')">Corporate Office Hub</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0.5 px-2.5 small" onclick="setPresetClusterNote('Review completed. User accounts verified legitimate. No fraud signals detected.')">Verified Clean Cluster</button>
+                                    </div>
+                                    <textarea class="form-control bg-dark text-white border-secondary border-opacity-25" id="modalClusAdminNotes" rows="3" placeholder="Enter investigation observations or cluster status rationale..."></textarea>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-secondary border-opacity-25 p-3">
+                <button type="button" class="btn btn-secondary px-3 py-2" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-warning px-4 py-2 fw-bold" onclick="submitUpdateClusterStatus()" id="btnSaveClusterStatus">
+                    <i class="fa-solid fa-floppy-disk me-1"></i> Save Cluster Status
                 </button>
             </div>
         </div>
@@ -9922,6 +10386,251 @@
                     if (modal) modal.hide();
                 } else {
                     showToast(res ? res.message : 'Error updating investigation status.', true);
+                }
+            },
+            error: function() {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+                showToast('Server communication error.', true);
+            }
+        });
+    }
+
+    // ==========================================
+    // POINT 48: MULTIPLE ACCOUNT DETECTION JAVASCRIPT
+    // ==========================================
+
+    function filterMultiAccountTable(filter, btn) {
+        document.querySelectorAll('.multi-filter-btn').forEach(b => b.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+
+        const rows = document.querySelectorAll('.multi-account-row');
+        rows.forEach(row => {
+            if (filter === 'all') {
+                row.style.display = '';
+            } else if (filter === 'alert') {
+                row.style.display = row.classList.contains('alert') ? '' : 'none';
+            } else if (filter === 'high-confidence') {
+                row.style.display = row.classList.contains('high-confidence') ? '' : 'none';
+            } else if (filter === 'under-review') {
+                row.style.display = row.classList.contains('under-review') ? '' : 'none';
+            } else if (filter === 'family') {
+                row.style.display = row.classList.contains('family') ? '' : 'none';
+            }
+        });
+    }
+
+    function searchMultiAccountTable(query) {
+        const q = (query || '').toLowerCase().trim();
+        const rows = document.querySelectorAll('.multi-account-row');
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            const id = (row.getAttribute('data-cluster-id') || '').toLowerCase();
+            const name = (row.getAttribute('data-name') || '').toLowerCase();
+            const signal = (row.getAttribute('data-signal') || '').toLowerCase();
+
+            if (!q || text.includes(q) || id.includes(q) || name.includes(q) || signal.includes(q)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    function setPresetClusterNote(noteText) {
+        const textarea = document.getElementById('modalClusAdminNotes');
+        if (textarea) textarea.value = noteText;
+    }
+
+    function openMultiAccountClusterModal(clusterId) {
+        if (!clusterId) return;
+
+        // Reset display
+        document.getElementById('modalClusIdHidden').value = clusterId;
+        document.getElementById('modalClusNameDisplay').innerText = 'Loading Cluster...';
+        document.getElementById('modalClusSignalDisplay').innerText = 'Fetching correlated signals...';
+        document.getElementById('modalClusAccountsTableBody').innerHTML = '<tr><td colspan="7" class="text-center py-4 text-secondary"><i class="fa-solid fa-spinner fa-spin me-2"></i> Fetching linked accounts...</td></tr>';
+
+        // Default tab
+        const firstTab = new bootstrap.Tab(document.getElementById('tab-clus-accounts-btn'));
+        firstTab.show();
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('multiAccountClusterModal'));
+        modal.show();
+
+        // Fetch details via AJAX
+        $.ajax({
+            url: '@Url.Action("GetMultiAccountClusterDetails", "Admin")',
+            type: 'GET',
+            data: { clusterId: clusterId },
+            success: function(res) {
+                if (res && res.success && res.data) {
+                    const c = res.data;
+                    document.getElementById('modalClusNameDisplay').innerText = c.clusterName;
+                    document.getElementById('modalClusSignalDisplay').innerText = 'Primary Signal: ' + c.primaryMatchFactor + ' • ' + c.commonSignalValue;
+                    document.getElementById('modalClusAccountCount').innerText = c.totalAccountsCount;
+                    document.getElementById('modalClusAccountsTabBadge').innerText = c.totalAccountsCount;
+                    document.getElementById('modalClusCombinedOrders').innerText = c.totalCombinedOrders;
+                    document.getElementById('modalClusCombinedSpent').innerText = '₹' + Number(c.totalCombinedSpent).toLocaleString('en-IN') + ' gross';
+                    document.getElementById('modalClusConfidence').innerText = c.matchConfidence;
+                    document.getElementById('modalClusPrimaryFactor').innerText = c.primaryMatchFactor;
+                    document.getElementById('modalClusStatusDisplay').innerText = c.clusterStatus;
+
+                    // Alert Badge styling
+                    const alertBadge = document.getElementById('modalClusAlertBadge');
+                    if (c.alertBadge.includes('Possible Multiple Accounts')) {
+                        alertBadge.className = 'badge bg-warning text-dark px-2.5 py-1 rounded-pill fw-bold';
+                        alertBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i> ' + c.alertBadge;
+                    } else {
+                        alertBadge.className = 'badge bg-success text-white px-2.5 py-1 rounded-pill fw-bold';
+                        alertBadge.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> ' + c.alertBadge;
+                    }
+
+                    // Signals tab
+                    document.getElementById('modalClusSignalAddress').innerText = c.commonSignalValue;
+                    document.getElementById('modalClusSignalDevice').innerText = (c.accounts && c.accounts[0] ? c.accounts[0].deviceHashMasked : 'client_hash_8a2f***') + ' (Privacy-Masked SHA-256)';
+
+                    // Form controls
+                    document.getElementById('modalClusStatusSelect').value = c.clusterStatus || 'Under Review';
+                    document.getElementById('modalClusRestrictCouponsCheck').checked = c.restrictFirstOrderCoupons;
+                    document.getElementById('modalClusAdminNotes').value = c.adminNotes || '';
+
+                    // Linked Accounts table
+                    let accHtml = '';
+                    if (c.accounts && c.accounts.length > 0) {
+                        c.accounts.forEach(a => {
+                            let restrictionBadge = `<span class="badge bg-success bg-opacity-20 text-success">Normal</span>`;
+                            if (a.restrictionLevel === 'Account Blocked') {
+                                restrictionBadge = `<span class="badge bg-danger text-white">Blocked</span>`;
+                            } else if (a.restrictionLevel === 'Account Suspended') {
+                                restrictionBadge = `<span class="badge bg-secondary">Suspended</span>`;
+                            } else if (a.restrictionLevel === 'COD Restricted') {
+                                restrictionBadge = `<span class="badge bg-warning bg-opacity-25 text-warning">COD Restricted</span>`;
+                            } else if (a.restrictionLevel === 'Warning') {
+                                restrictionBadge = `<span class="badge bg-warning bg-opacity-25 text-warning">Warning</span>`;
+                            }
+
+                            let voucherBadge = a.usedFirstOrderCoupon 
+                                ? `<span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30"><i class="fa-solid fa-tag me-1"></i> Claimed</span>`
+                                : `<span class="badge bg-secondary bg-opacity-30 text-light">Not Used</span>`;
+
+                            accHtml += `<tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-35">${a.accountLabel}</span>
+                                        <div>
+                                            <div class="fw-bold text-white">${a.customerName}</div>
+                                            <div class="text-secondary small font-monospace">ID: #${a.customerId}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-light small">${a.email}</div>
+                                    <div class="font-monospace text-secondary small">${a.phoneNumber}</div>
+                                </td>
+                                <td class="text-secondary small font-monospace">${a.registrationDate}</td>
+                                <td>
+                                    <div class="fw-bold text-white">${a.ordersCount} Orders</div>
+                                    <div class="text-secondary small font-monospace">₹${Number(a.totalSpent).toLocaleString('en-IN')}</div>
+                                </td>
+                                <td>${voucherBadge}</td>
+                                <td>${restrictionBadge}</td>
+                                <td style="text-align: right;">
+                                    <button type="button" class="btn btn-outline-info btn-sm rounded-pill py-0.5 px-2.5 small"
+                                            onclick="openCustomerRestrictionModal(${a.customerId}, '${a.customerName}')">
+                                        <i class="fa-solid fa-user-shield me-1"></i> Inspect
+                                    </button>
+                                </td>
+                            </tr>`;
+                        });
+                    } else {
+                        accHtml = '<tr><td colspan="7" class="text-center py-3 text-secondary">No linked accounts found in this cluster.</td></tr>';
+                    }
+                    document.getElementById('modalClusAccountsTableBody').innerHTML = accHtml;
+                } else {
+                    showToast(res ? res.message : 'Could not load cluster details.', true);
+                }
+            },
+            error: function() {
+                showToast('Failed to fetch multi-account cluster details.', true);
+            }
+        });
+    }
+
+    function submitUpdateClusterStatus() {
+        const clusterId = document.getElementById('modalClusIdHidden').value;
+        const status = document.getElementById('modalClusStatusSelect').value;
+        const notes = document.getElementById('modalClusAdminNotes').value;
+        const restrictCoupons = document.getElementById('modalClusRestrictCouponsCheck').checked;
+
+        if (!clusterId) return;
+
+        const btn = document.getElementById('btnSaveClusterStatus');
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Saving...';
+
+        const token = $('input[name="__RequestVerificationToken"]').val();
+
+        $.ajax({
+            url: '@Url.Action("UpdateMultiAccountClusterStatus", "Admin")',
+            type: 'POST',
+            contentType: 'application/json',
+            headers: {
+                "RequestVerificationToken": token,
+                "X-CSRF-TOKEN": token
+            },
+            data: JSON.stringify({
+                ClusterId: clusterId,
+                Status: status,
+                AdminNotes: notes,
+                RestrictFirstOrderCoupons: restrictCoupons
+            }),
+            success: function(res) {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+
+                if (res && res.success) {
+                    showToast(res.message || 'Cluster status saved successfully.');
+
+                    // Update live table row
+                    const statusContainer = document.getElementById('cluster-status-container-' + clusterId);
+                    if (statusContainer) {
+                        let newBadge = '';
+                        if (status === 'Under Review') {
+                            newBadge = '<span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30 px-2.5 py-1 rounded-pill fw-bold"><i class="fa-solid fa-magnifying-glass me-1"></i> Under Review</span>';
+                        } else if (status === 'Legitimate Household / Family') {
+                            newBadge = '<span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30 px-2.5 py-1 rounded-pill fw-bold"><i class="fa-solid fa-house-user me-1"></i> Family / Household</span>';
+                        } else if (status === 'Promo Abuse Restricted') {
+                            newBadge = '<span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill fw-bold"><i class="fa-solid fa-ticket-simple me-1"></i> Promo Restricted</span>';
+                        } else {
+                            newBadge = '<span class="badge bg-info bg-opacity-20 text-info border border-info border-opacity-30 px-2.5 py-1 rounded-pill fw-bold"><i class="fa-solid fa-circle-check me-1"></i> ' + status + '</span>';
+                        }
+                        statusContainer.innerHTML = newBadge;
+                    }
+
+                    const couponIndicator = document.getElementById('cluster-coupon-indicator-' + clusterId);
+                    if (couponIndicator) {
+                        if (restrictCoupons) couponIndicator.classList.remove('d-none');
+                        else couponIndicator.classList.add('d-none');
+                    }
+
+                    const row = document.getElementById('cluster-row-' + clusterId);
+                    if (row) {
+                        row.setAttribute('data-status', status);
+                        if (status === 'Under Review') row.classList.add('under-review');
+                        else row.classList.remove('under-review');
+                        if (status === 'Legitimate Household / Family') row.classList.add('family');
+                        else row.classList.remove('family');
+                    }
+
+                    // Hide modal
+                    const modalEl = document.getElementById('multiAccountClusterModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+                } else {
+                    showToast(res ? res.message : 'Error updating cluster status.', true);
                 }
             },
             error: function() {

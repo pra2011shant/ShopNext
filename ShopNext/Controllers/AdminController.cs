@@ -23,14 +23,16 @@ namespace ShopNext.Controllers
         private readonly IAuditService _auditService;
         private readonly ICustomerRiskService _riskService;
         private readonly IAddressRiskService _addressRiskService;
+        private readonly IMultiAccountDetectionService _multiAccountService;
 
-        public AdminController(IShopNextService service, ShopNextDbContext context, IAuditService auditService, ICustomerRiskService riskService, IAddressRiskService addressRiskService)
+        public AdminController(IShopNextService service, ShopNextDbContext context, IAuditService auditService, ICustomerRiskService riskService, IAddressRiskService addressRiskService, IMultiAccountDetectionService multiAccountService)
         {
             _service = service;
             _context = context;
             _auditService = auditService;
             _riskService = riskService;
             _addressRiskService = addressRiskService;
+            _multiAccountService = multiAccountService;
         }
 
         private bool IsAdminLoggedIn()
@@ -532,7 +534,8 @@ namespace ShopNext.Controllers
                 ComplaintsList = complaintsList,
                 NotificationsList = notificationsList,
                 Reports = await _service.GetAdminReportsAsync("Sales", "30Days"),
-                AddressRiskList = await _addressRiskService.GetAddressRiskAnalyticsAsync()
+                AddressRiskList = await _addressRiskService.GetAddressRiskAnalyticsAsync(),
+                MultiAccountClustersList = await _multiAccountService.GetMultiAccountClustersAsync()
             };
 
             ViewBag.PendingShops = pendingShops;
@@ -3700,6 +3703,65 @@ namespace ShopNext.Controllers
                 investigationStatus = request.InvestigationStatus,
                 adminNotes = request.AdminNotes,
                 requireManualOtp = request.RequireManualOtpVerification,
+                updatedDate = DateTime.Now.ToString("dd MMM yyyy, hh:mm tt")
+            });
+        }
+
+        #endregion
+
+        #region Point 48: Multiple Account Detection APIs
+
+        // GET: /Admin/GetMultiAccountClusterDetails?clusterId=...
+        [HttpGet]
+        public async Task<IActionResult> GetMultiAccountClusterDetails(string clusterId)
+        {
+            if (string.IsNullOrWhiteSpace(clusterId))
+            {
+                return Json(new { success = false, message = "Cluster ID is required." });
+            }
+
+            var cluster = await _multiAccountService.GetClusterDetailsAsync(clusterId);
+            if (cluster == null)
+            {
+                return Json(new { success = false, message = "Multi-account cluster not found." });
+            }
+
+            return Json(new
+            {
+                success = true,
+                data = cluster
+            });
+        }
+
+        // POST: /Admin/UpdateMultiAccountClusterStatus
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateMultiAccountClusterStatus([FromBody] UpdateClusterStatusRequest request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.ClusterId))
+            {
+                return Json(new { success = false, message = "Invalid cluster update request." });
+            }
+
+            var success = await _multiAccountService.UpdateClusterStatusAsync(
+                request.ClusterId,
+                request.Status,
+                request.AdminNotes,
+                request.RestrictFirstOrderCoupons
+            );
+
+            if (!success)
+            {
+                return Json(new { success = false, message = "Failed to update cluster status." });
+            }
+
+            return Json(new
+            {
+                success = true,
+                message = $"Multi-account cluster '{request.ClusterId}' status set to '{request.Status}'.",
+                clusterStatus = request.Status,
+                adminNotes = request.AdminNotes,
+                restrictWelcomeCoupons = request.RestrictFirstOrderCoupons,
                 updatedDate = DateTime.Now.ToString("dd MMM yyyy, hh:mm tt")
             });
         }

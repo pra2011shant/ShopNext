@@ -58,6 +58,9 @@ namespace ShopNext.Models
 
         // Point 47: Address Risk Management Dataset
         public List<AdminAddressRiskDto> AddressRiskList { get; set; } = new List<AdminAddressRiskDto>();
+
+        // Point 48: Multiple Account Detection Dataset
+        public List<AdminMultiAccountClusterDto> MultiAccountClustersList { get; set; } = new List<AdminMultiAccountClusterDto>();
     }
 
     /// <summary>
@@ -723,6 +726,59 @@ namespace ShopNext.Models
         public string InvestigationStatus { get; set; } = "Under Investigation";
         public string? AdminNotes { get; set; }
         public bool RequireManualOtpVerification { get; set; }
+    }
+
+    #endregion
+
+    #region Point 48: Multiple Account Detection DTOs
+
+    /// <summary>
+    /// Point 48: Multiple Account Detection Cluster DTO
+    /// Identifies clusters of accounts sharing the same delivery address, phone pattern, or privacy-safe client token.
+    /// Privacy compliance: Uses minimal, privacy-respecting client hash tokens (no invasive tracking).
+    /// </summary>
+    public class AdminMultiAccountClusterDto
+    {
+        public string ClusterId { get; set; } = string.Empty;
+        public string ClusterName { get; set; } = string.Empty;
+        public string PrimaryMatchFactor { get; set; } = "Same Delivery Address"; // "Same Delivery Address", "Similar Phone Pattern", "Device Token Hash"
+        public string CommonSignalValue { get; set; } = string.Empty;
+        public int TotalAccountsCount { get; set; }
+        public int TotalCombinedOrders { get; set; }
+        public decimal TotalCombinedSpent { get; set; }
+        public string AlertBadge { get; set; } = "⚠ Possible Multiple Accounts";
+        public string MatchConfidence { get; set; } = "High"; // High (🔴), Medium (🟡), Low (🟢)
+        public string ClusterStatus { get; set; } = "Under Review"; // "Under Review", "Flagged for Verification", "Legitimate Household / Family", "Promo Abuse Restricted", "Resolved / Verified"
+        public string? AdminNotes { get; set; }
+        public string CreatedDate { get; set; } = string.Empty;
+        public bool RestrictFirstOrderCoupons { get; set; } = false;
+        public List<AdminClusterAccountMemberDto> Accounts { get; set; } = new List<AdminClusterAccountMemberDto>();
+    }
+
+    public class AdminClusterAccountMemberDto
+    {
+        public int CustomerId { get; set; }
+        public string AccountLabel { get; set; } = "Account A"; // Account A, Account B, Account C, Account D
+        public string CustomerName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
+        public string RegistrationDate { get; set; } = string.Empty;
+        public int OrdersCount { get; set; }
+        public int ReturnsCount { get; set; }
+        public decimal TotalSpent { get; set; }
+        public string RestrictionLevel { get; set; } = "Normal";
+        public string Status { get; set; } = "Active";
+        public string DeviceHashMasked { get; set; } = "client_hash_7f***";
+        public bool UsedFirstOrderCoupon { get; set; } = false;
+    }
+
+    public class UpdateClusterStatusRequest
+    {
+        public string ClusterId { get; set; } = string.Empty;
+        public string Status { get; set; } = "Under Review";
+        public string? AdminNotes { get; set; }
+        public bool RestrictFirstOrderCoupons { get; set; }
     }
 
     #endregion
