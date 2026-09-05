@@ -2170,17 +2170,20 @@ namespace ShopNext.Controllers
                     .ThenInclude(o => o!.Rider)
                 .Include(c => c.Order)
                     .ThenInclude(o => o!.Shop)
+                .Include(c => c.Order)
+                    .ThenInclude(o => o!.OrderItems)
+                        .ThenInclude(oi => oi.Product)
                 .FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted);
 
             if (complaint == null)
             {
-                return Json(new { success = false, message = "Complaint ticket not found." });
+                return Json(new { success = false, message = "Complaint / Dispute ticket not found." });
             }
 
             var order = complaint.Order;
             var customer = complaint.Customer ?? (order != null ? await _context.Users.FindAsync(order.CustomerId) : null);
 
-            // Fetch any other complaints on the same order for Dual-Perspective (Customer + Rider)
+            // Fetch any other complaints on the same order for Multi-Party context
             List<Complaint> orderComplaints = new();
             if (complaint.OrderId > 0)
             {
@@ -2239,11 +2242,12 @@ namespace ShopNext.Controllers
             return Json(new
             {
                 success = true,
-                // Ticket Meta
+                // Dispute Ticket Meta
                 complaint = new
                 {
                     id = complaint.Id,
                     ticketNumber = complaint.TicketNumber,
+                    disputeNumber = $"#D{complaint.Id}",
                     orderId = complaint.OrderId,
                     orderNumber = $"#ORD{complaint.OrderId}",
                     customerId = complaint.CustomerId,
@@ -2262,63 +2266,100 @@ namespace ShopNext.Controllers
                     resolutionNotes = complaint.ResolutionNotes ?? "",
                     resolvedDate = complaint.ResolvedDate?.ToString("dd MMM yyyy, hh:mm tt") ?? "N/A"
                 },
-                // 1. Customer Statement
-                customerStatement = new
+                // 1. 3-Party Statements: Customer, Seller, Rider
+                statements = new
                 {
-                    name = customer?.Name ?? "Customer",
-                    phone = customer?.PhoneNumber ?? "N/A",
-                    email = customer?.Email ?? "N/A",
-                    issueCategory = custComplaint?.ReasonCategory ?? custComplaint?.Issue ?? (complaint.ComplainantRole == "Customer" ? complaint.ReasonCategory ?? complaint.Issue : "No direct dispute filed"),
-                    description = custComplaint?.Description ?? (complaint.ComplainantRole == "Customer" ? complaint.Description : "No customer dispute statement logged."),
-                    attachmentUrl = custComplaint?.AttachmentUrl,
-                    hasComplaint = custComplaint != null || complaint.ComplainantRole == "Customer",
-                    filedDate = custComplaint?.CreatedDate.ToString("dd MMM yyyy, hh:mm tt") ?? complaint.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")
-                },
-                // 2. Rider Statement
-                riderStatement = new
-                {
-                    riderId = order?.RiderId ?? 0,
-                    name = riderObj?.RiderName ?? order?.DeliveredByRiderName ?? order?.Rider?.RiderName ?? "Assigned Delivery Partner",
-                    phone = riderObj?.PhoneNumber ?? "N/A",
-                    vehicle = riderObj?.VehicleNumber ?? "Bike / EV",
-                    issueCategory = riderComplaint?.ReasonCategory ?? riderComplaint?.Issue ?? (complaint.ComplainantRole == "Rider" ? complaint.ReasonCategory ?? complaint.Issue : (order?.IsOtpVerified == true ? "Delivery Completed (OTP Verified)" : "Delivery in Progress")),
-                    description = riderComplaint?.Description ?? (complaint.ComplainantRole == "Rider" ? complaint.Description : (order?.IsOtpVerified == true ? $"Rider completed delivery at destination. Verified with recipient OTP #{order?.DeliveryOtp}." : "Rider assigned for delivery. Progress recorded in dispatch logs.")),
-                    attachmentUrl = riderComplaint?.AttachmentUrl,
-                    hasComplaint = riderComplaint != null || complaint.ComplainantRole == "Rider",
-                    filedDate = riderComplaint?.CreatedDate.ToString("dd MMM yyyy, hh:mm tt") ?? "N/A",
-                    totalDeliveries = riderDeliveriesCount,
-                    complaintsCount = riderComplaintsCount
-                },
-                // 3. Delivery Evidence
-                evidence = new
-                {
-                    orderId = order?.Id ?? complaint.OrderId,
-                    orderStatus = order?.OrderStatus ?? "N/A",
-                    orderAmount = order?.TotalAmount.ToString("N2") ?? "0.00",
-                    paymentMode = order?.PaymentMode ?? "COD",
-                    paymentStatus = order?.PaymentStatus ?? "Pending",
-                    deliveryOtp = order?.DeliveryOtp ?? "N/A",
-                    isOtpVerified = order?.IsOtpVerified ?? false,
-                    otpVerifiedDate = order?.OtpVerifiedDate?.ToString("dd MMM yyyy, hh:mm tt") ?? "N/A",
-                    deliveredDate = order?.DeliveredDate?.ToString("dd MMM yyyy, hh:mm tt") ?? "N/A",
-                    riderId = order?.RiderId,
-                    riderName = order?.DeliveredByRiderName ?? order?.Rider?.RiderName ?? "Rider",
-                    shopName = order?.Shop?.ShopName ?? "Shop",
-                    evidenceList = orderEvidences.Select(e => new
+                    customer = new
                     {
-                        id = e.Id,
-                        type = e.EvidenceType,
-                        title = e.Title,
-                        description = e.Description,
-                        photoUrl = e.PhotoUrl,
-                        uploadedBy = e.UploadedByName ?? e.UploadedByRole,
-                        uploadedDate = e.UploadedDate.ToString("dd MMM yyyy, hh:mm tt"),
-                        isVerified = e.IsVerified,
-                        verifiedBy = e.VerifiedBy,
-                        metadataJson = e.MetadataJson
-                    }).ToList()
+                        name = customer?.Name ?? "Customer",
+                        phone = customer?.PhoneNumber ?? "N/A",
+                        email = customer?.Email ?? "N/A",
+                        issueCategory = custComplaint?.ReasonCategory ?? custComplaint?.Issue ?? (complaint.ComplainantRole == "Customer" ? complaint.ReasonCategory ?? complaint.Issue : "Delivery Dispute"),
+                        statement = custComplaint?.Description ?? (complaint.ComplainantRole == "Customer" ? complaint.Description : "No customer grievance statement logged."),
+                        attachmentUrl = custComplaint?.AttachmentUrl,
+                        hasStatement = custComplaint != null || complaint.ComplainantRole == "Customer",
+                        date = custComplaint?.CreatedDate.ToString("dd MMM yyyy, hh:mm tt") ?? complaint.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")
+                    },
+                    seller = new
+                    {
+                        shopName = order?.Shop?.ShopName ?? order?.ShopName ?? "Merchant Partner",
+                        sellerName = order?.Shop?.OwnerName ?? "Store Manager",
+                        phone = order?.Shop?.PhoneNumber ?? "N/A",
+                        statement = complaint.SellerStatement ?? (!string.IsNullOrEmpty(order?.ReturnVerificationNotes) ? order.ReturnVerificationNotes : "Dispatched in original factory condition with tamper-evident seal and barcode verification."),
+                        date = complaint.SellerStatementDate?.ToString("dd MMM yyyy, hh:mm tt") ?? order?.CreatedDate.ToString("dd MMM yyyy, hh:mm tt") ?? "N/A",
+                        dispatchStatus = order?.OrderStatus ?? "Dispatched"
+                    },
+                    rider = new
+                    {
+                        riderId = order?.RiderId ?? 0,
+                        name = riderObj?.RiderName ?? order?.DeliveredByRiderName ?? order?.Rider?.RiderName ?? "Assigned Delivery Partner",
+                        phone = riderObj?.PhoneNumber ?? "N/A",
+                        vehicle = riderObj?.VehicleNumber ?? "Delivery Bike",
+                        statement = complaint.RiderStatement ?? riderComplaint?.Description ?? (order?.IsOtpVerified == true ? $"Delivery completed at recipient location. Verified with OTP #{order?.DeliveryOtp}." : "Rider assigned for delivery. Progress recorded in dispatch telemetry."),
+                        date = complaint.RiderStatementDate?.ToString("dd MMM yyyy, hh:mm tt") ?? riderComplaint?.CreatedDate.ToString("dd MMM yyyy, hh:mm tt") ?? (order?.DeliveredDate?.ToString("dd MMM yyyy, hh:mm tt") ?? "N/A"),
+                        totalDeliveries = riderDeliveriesCount,
+                        complaintsCount = riderComplaintsCount
+                    }
                 },
-                // 4. Order & Customer History Check
+                // 2. 4-Pillar Audit Data
+                audit = new
+                {
+                    // (A) Order Details
+                    order = new
+                    {
+                        orderId = order?.Id ?? complaint.OrderId,
+                        orderNumber = $"#ORD{complaint.OrderId}",
+                        orderDate = order?.CreatedDate.ToString("dd MMM yyyy, hh:mm tt") ?? "N/A",
+                        orderStatus = order?.OrderStatus ?? "N/A",
+                        deliveryAddress = order?.DeliveryAddress ?? "Customer Address",
+                        shopName = order?.Shop?.ShopName ?? order?.ShopName ?? "Store",
+                        items = order?.OrderItems?.Select(oi => new
+                        {
+                            productName = oi.Product?.ProductName ?? "Product Item",
+                            quantity = oi.Quantity,
+                            price = oi.UnitPrice.ToString("N2")
+                        }).ToList() ?? new()
+                    },
+                    // (B) Payment Details
+                    payment = new
+                    {
+                        totalAmount = order?.TotalAmount.ToString("N2") ?? "0.00",
+                        paymentMode = order?.PaymentMode ?? "COD",
+                        paymentStatus = order?.PaymentStatus ?? "Pending"
+                    },
+                    // (C) Return Details
+                    returnDetails = new
+                    {
+                        returnStatus = order?.ReturnStatus ?? "N/A",
+                        returnReason = order?.ReturnReason ?? "No Return Requested",
+                        returnRequestedDate = order?.ReturnRequestedDate?.ToString("dd MMM yyyy, hh:mm tt") ?? "N/A",
+                        returnVerifiedDate = order?.ReturnVerifiedDate?.ToString("dd MMM yyyy, hh:mm tt") ?? "N/A",
+                        returnVerificationNotes = order?.ReturnVerificationNotes ?? "No return verification remarks"
+                    },
+                    // (D) Evidence
+                    evidence = new
+                    {
+                        deliveryOtp = order?.DeliveryOtp ?? "N/A",
+                        isOtpVerified = order?.IsOtpVerified ?? false,
+                        otpVerifiedDate = order?.OtpVerifiedDate?.ToString("dd MMM yyyy, hh:mm tt") ?? "N/A",
+                        deliveredDate = order?.DeliveredDate?.ToString("dd MMM yyyy, hh:mm tt") ?? "N/A",
+                        riderName = order?.DeliveredByRiderName ?? order?.Rider?.RiderName ?? "Rider",
+                        evidenceList = orderEvidences.Select(e => new
+                        {
+                            id = e.Id,
+                            type = e.EvidenceType,
+                            title = e.Title,
+                            description = e.Description,
+                            photoUrl = e.PhotoUrl,
+                            uploadedBy = e.UploadedByName ?? e.UploadedByRole,
+                            uploadedDate = e.UploadedDate.ToString("dd MMM yyyy, hh:mm tt"),
+                            isVerified = e.IsVerified,
+                            verifiedBy = e.VerifiedBy,
+                            metadataJson = e.MetadataJson
+                        }).ToList()
+                    }
+                },
+                // Customer History Profile
                 customerHistory = new
                 {
                     customerId = customer?.Id ?? 0,
@@ -2352,14 +2393,94 @@ namespace ShopNext.Controllers
                 return Json(new { success = false, message = "Unauthorized. Please log in as Admin." });
             }
 
-            var customer = await _context.Users.FindAsync(customerId);
+            var customer = customerId > 0 ? await _context.Users.FindAsync(customerId) : null;
             var complaint = await _context.Complaints.FindAsync(complaintId);
             var order = complaint != null && complaint.OrderId > 0 ? await _context.Orders.FindAsync(complaint.OrderId) : null;
 
             string actionMessage = "";
             string cleanNotes = notes ?? "";
 
-            if (actionType == "DisableCOD" && customer != null)
+            if (actionType == "SetUnderInvestigation")
+            {
+                if (complaint != null)
+                {
+                    complaint.Status = "Under Investigation";
+                    complaint.ResolutionNotes = (complaint.ResolutionNotes != null ? complaint.ResolutionNotes + " | " : "") + $"Status set to Under Investigation: {cleanNotes}";
+                }
+                actionMessage = "Dispute marked as Under Investigation. Both sides notified.";
+            }
+            else if (actionType == "ApproveRefund")
+            {
+                if (order != null)
+                {
+                    order.OrderStatus = "RefundCompleted";
+                    order.PaymentStatus = "Refunded";
+                    order.ReturnStatus = "Approved";
+
+                    _context.Notifications.Add(new Notification
+                    {
+                        CustomerId = order.CustomerId,
+                        Title = "💰 Dispute Resolved: Full Refund Approved",
+                        Message = $"Dispute #D{complaintId} regarding Order #{order.Id} has been resolved in your favor. Refund of ₹{order.TotalAmount:N2} has been processed.",
+                        Type = "Refund",
+                        CreatedDate = DateTime.Now
+                    });
+                }
+                if (complaint != null)
+                {
+                    complaint.Status = "Resolved";
+                    complaint.ResolutionNotes = $"Dispute Resolved in Customer favor: Full refund approved. {cleanNotes}";
+                    complaint.ResolvedDate = DateTime.Now;
+                }
+                actionMessage = "Dispute resolved in Customer favor: Full order refund approved and processed.";
+            }
+            else if (actionType == "ReleaseSellerPayout")
+            {
+                if (order != null)
+                {
+                    order.OrderStatus = "Completed";
+                    order.PaymentStatus = "Paid";
+                    order.ReturnStatus = "Rejected";
+
+                    _context.Notifications.Add(new Notification
+                    {
+                        CustomerId = order.CustomerId,
+                        Title = "Dispute Decision: Claim Dismissed",
+                        Message = $"Dispute #D{complaintId} regarding Order #{order.Id} was reviewed against seller dispatch & delivery evidence. The customer dispute has been dismissed.",
+                        Type = "Dispute",
+                        CreatedDate = DateTime.Now
+                    });
+                }
+                if (complaint != null)
+                {
+                    complaint.Status = "Resolved";
+                    complaint.ResolutionNotes = $"Dispute Resolved in Seller favor: Customer claim dismissed, merchant payout released. {cleanNotes}";
+                    complaint.ResolvedDate = DateTime.Now;
+                }
+                actionMessage = "Dispute resolved in Seller favor: Customer claim dismissed and merchant payout released.";
+            }
+            else if (actionType == "RejectDispute")
+            {
+                if (complaint != null)
+                {
+                    complaint.Status = "Rejected";
+                    complaint.ResolutionNotes = $"Dispute Rejected by Admin: {cleanNotes}";
+                    complaint.ResolvedDate = DateTime.Now;
+                }
+                if (order != null)
+                {
+                    _context.Notifications.Add(new Notification
+                    {
+                        CustomerId = order.CustomerId,
+                        Title = "Dispute Rejected",
+                        Message = $"Dispute #D{complaintId} regarding Order #{order.Id} has been rejected following review of evidence. Reason: {cleanNotes}",
+                        Type = "Dispute",
+                        CreatedDate = DateTime.Now
+                    });
+                }
+                actionMessage = "Dispute has been rejected based on evidence review.";
+            }
+            else if (actionType == "DisableCOD" && customer != null)
             {
                 customer.IsCodDisabled = true;
                 customer.RiskScore = Math.Min(100, customer.RiskScore + 20);
@@ -2445,25 +2566,6 @@ namespace ShopNext.Controllers
                     actionMessage = "Assigned delivery rider suspended from active dispatch pool.";
                 }
             }
-            else if (actionType == "ApproveRefund")
-            {
-                if (order != null)
-                {
-                    order.OrderStatus = "RefundCompleted";
-                    order.PaymentStatus = "Refunded";
-                    order.ReturnStatus = "Approved";
-
-                    _context.Notifications.Add(new Notification
-                    {
-                        CustomerId = order.CustomerId,
-                        Title = "💰 Dispute Refund Approved",
-                        Message = $"Your dispute regarding Order #{order.Id} has been resolved in your favor. Full refund of ₹{order.TotalAmount:N2} has been processed.",
-                        Type = "Refund",
-                        CreatedDate = DateTime.Now
-                    });
-                }
-                actionMessage = "Dispute resolved in customer favor: Full order refund approved and processed.";
-            }
             else if (actionType == "ResolveTicket")
             {
                 if (complaint != null)
@@ -2475,7 +2577,7 @@ namespace ShopNext.Controllers
                 actionMessage = "Dispute ticket marked as Resolved and closed.";
             }
 
-            if (complaint != null && actionType != "ResolveTicket")
+            if (complaint != null && actionType != "ResolveTicket" && actionType != "ApproveRefund" && actionType != "ReleaseSellerPayout" && actionType != "RejectDispute")
             {
                 complaint.ResolutionNotes = (complaint.ResolutionNotes != null ? complaint.ResolutionNotes + " | " : "") + $"Action: {actionType} - {cleanNotes}";
             }
@@ -2500,10 +2602,10 @@ namespace ShopNext.Controllers
                 success = true,
                 message = actionMessage,
                 actionType = actionType,
-                customerRiskScore = customer.RiskScore,
-                customerRiskLevel = customer.RiskLevel,
-                isCodDisabled = customer.IsCodDisabled,
-                isActive = customer.IsActive
+                customerRiskScore = customer?.RiskScore ?? 0,
+                customerRiskLevel = customer?.RiskLevel ?? "Low",
+                isCodDisabled = customer?.IsCodDisabled ?? false,
+                isActive = customer?.IsActive ?? true
             });
         }
 

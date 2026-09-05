@@ -415,6 +415,7 @@ namespace ShopNext.Models
         public string CustomerEmail { get; set; } = string.Empty;
         public string Subject { get; set; } = string.Empty;
         public string Issue { get; set; } = string.Empty;
+        public string? ReasonCategory { get; set; }
         public string Description { get; set; } = string.Empty;
         public string? AttachmentUrl { get; set; }
         public string Priority { get; set; } = "High"; // Low, Medium, High, Urgent

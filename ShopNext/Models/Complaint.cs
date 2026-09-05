@@ -51,6 +51,15 @@ namespace ShopNext.Models
         [StringLength(100)]
         public string? ReasonCategory { get; set; }
 
+        // Point 45: Dispute Management 3-Way Statements
+        [StringLength(1000)]
+        public string? SellerStatement { get; set; }
+        public DateTime? SellerStatementDate { get; set; }
+
+        [StringLength(1000)]
+        public string? RiderStatement { get; set; }
+        public DateTime? RiderStatementDate { get; set; }
+
         // Navigation Properties
         [ForeignKey("CustomerId")]
         public virtual User? Customer { get; set; }
