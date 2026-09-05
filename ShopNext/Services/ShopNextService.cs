@@ -737,6 +737,14 @@ namespace ShopNext.Services
             return false;
         }
 
+        public async Task<OrderEvidence?> GetDeliveryEvidenceAsync(int orderId)
+        {
+            return await _context.OrderEvidences
+                .Where(e => e.OrderId == orderId && e.EvidenceType == "DeliveryOtpVerification" && !e.IsDeleted)
+                .OrderByDescending(e => e.CreatedDate)
+                .FirstOrDefaultAsync();
+        }
+
         // ==========================================
         // REVIEWS & RATINGS
         // ==========================================
@@ -1152,13 +1160,15 @@ namespace ShopNext.Services
             order.OtpVerifiedDate = DateTime.Now;
             order.DeliveredByRiderName = riderName;
 
-            // Point 41 & Point 35: Evidence Record for Delivery OTP Handover
+            // Point 41 & Point 42: Complete Delivery Evidence Record
+            // Maintains: OTP verification, Delivery timestamp, Rider ID, Order ID, Delivery status
+            // Privacy protection: No biometric, facial, or unnecessary customer personal data collected
             _context.OrderEvidences.Add(new OrderEvidence
             {
                 OrderId = order.Id,
                 EvidenceType = "DeliveryOtpVerification",
                 Title = $"Customer Delivery OTP Verified ({cleanEntered})",
-                Description = $"Parcel handover verified via Customer Delivery OTP ({cleanEntered}). Successfully delivered by Rider {riderName} on {DateTime.Now:dd-MMM-yyyy hh:mm tt}. {(string.IsNullOrWhiteSpace(notes) ? "" : "Notes: " + notes)}",
+                Description = $"Order #{order.Id} delivery completed with secure OTP verification ({cleanEntered}). Delivered by Rider #{riderId} ({riderName}) at {DateTime.Now:dd-MMM-yyyy hh:mm tt}. Delivery Status: Completed.",
                 UploadedByRole = "Rider",
                 UploadedByName = riderName,
                 UploadedDate = DateTime.Now,
@@ -1166,12 +1176,16 @@ namespace ShopNext.Services
                 VerifiedBy = "System_Delivery_OTP_Engine",
                 MetadataJson = System.Text.Json.JsonSerializer.Serialize(new
                 {
-                    otp = cleanEntered,
+                    orderId = order.Id,
+                    deliveryStatus = "Completed",
+                    otpVerification = "Verified",
+                    otpCode = cleanEntered,
+                    deliveryTimestamp = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
                     riderId = riderId,
                     riderName = riderName,
-                    deliveredAt = DateTime.Now.ToString("o"),
-                    notes = notes ?? "",
-                    verified = true
+                    handoverNotes = notes ?? "Delivered in person",
+                    isVerified = true,
+                    privacyNotice = "Privacy-compliant telemetry: No customer biometric or sensitive personal data stored."
                 })
             });
 

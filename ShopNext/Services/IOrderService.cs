@@ -17,5 +17,6 @@ namespace ShopNext.Services
         Task<bool> CancelOrderAsync(int orderId, int customerId, string cancelReason);
         Task<bool> ReturnOrderAsync(int orderId, int customerId, string returnReason);
         Task<bool> ConfirmOrderReceivedAsync(int orderId, int customerId);
+        Task<OrderEvidence?> GetDeliveryEvidenceAsync(int orderId);
     }
 }

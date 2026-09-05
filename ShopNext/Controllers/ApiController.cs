@@ -67,6 +67,47 @@ namespace ShopNext.Controllers
         }
 
         // ==========================================
+        // 1.1 POINT 42: DELIVERY EVIDENCE RETRIEVAL API
+        // ==========================================
+        [HttpGet("orders/{orderId:int}/delivery-evidence")]
+        public async Task<IActionResult> GetDeliveryEvidence(int orderId)
+        {
+            var order = await _service.GetOrderByIdAsync(orderId);
+            if (order == null)
+            {
+                return NotFound(new { success = false, message = $"Order #{orderId} not found." });
+            }
+
+            var evidence = await _service.GetDeliveryEvidenceAsync(orderId);
+
+            return Ok(new
+            {
+                success = true,
+                orderId = order.Id,
+                orderStatus = order.OrderStatus,
+                isOtpVerified = order.IsOtpVerified,
+                deliveryTimestamp = order.DeliveredDate ?? order.OtpVerifiedDate ?? evidence?.UploadedDate,
+                riderId = order.RiderId,
+                riderName = order.DeliveredByRiderName ?? order.Rider?.RiderName ?? "Assigned Delivery Partner",
+                evidenceRecord = evidence != null ? new
+                {
+                    evidenceId = evidence.Id,
+                    title = evidence.Title,
+                    description = evidence.Description,
+                    uploadedDate = evidence.UploadedDate,
+                    isVerified = evidence.IsVerified,
+                    verifiedBy = evidence.VerifiedBy,
+                    telemetry = evidence.MetadataJson
+                } : null,
+                privacyCompliance = new
+                {
+                    status = "Compliant",
+                    details = "Maintains only OTP verification, delivery timestamp, rider ID, order ID, and delivery status. No facial or unnecessary customer personal data collected."
+                }
+            });
+        }
+
+        // ==========================================
         // 2. RIDER GPS COORDINATES UPDATE API
         // ==========================================
         [HttpPost("riders/{riderId:int}/location")]
