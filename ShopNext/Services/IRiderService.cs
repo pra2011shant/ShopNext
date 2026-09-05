@@ -16,5 +16,7 @@ namespace ShopNext.Services
         Task<bool> UpdateRiderLocationAsync(int riderId, decimal lat, decimal lng);
         Task<bool> AssignRiderToOrderAsync(int orderId, int riderId);
         Task<IEnumerable<Order>> GetRiderAssignedOrdersAsync(int riderId);
+        Task<(bool Success, string Message, string? Otp)> VerifyDeliveryOtpAndCompleteAsync(int orderId, int riderId, string enteredOtp, string? notes = null);
+        Task<string> GenerateOrGetDeliveryOtpAsync(int orderId);
     }
 }

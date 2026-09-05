@@ -586,12 +586,22 @@ namespace ShopNext.Services
                 await itemCmd.ExecuteNonQueryAsync();
             }
 
-            // Create notification for customer
+            // Point 41: Generate 4-digit Delivery OTP (e.g., 5824)
+            string generatedOtp = new Random().Next(1000, 9999).ToString();
+            var createdOrder = await _context.Orders.FindAsync(newOrderId);
+            if (createdOrder != null)
+            {
+                createdOrder.DeliveryOtp = generatedOtp;
+                createdOrder.IsOtpVerified = false;
+                await _context.SaveChangesAsync();
+            }
+
+            // Create notification for customer with Delivery OTP
             _context.Notifications.Add(new Notification
             {
                 CustomerId = order.CustomerId,
-                Title = $"Order #{newOrderId} Placed Successfully!",
-                Message = $"Your order has been placed with total ₹{order.TotalAmount:0.00}. Track live progress in My Orders.",
+                Title = $"Order #{newOrderId} Placed Successfully! (OTP: {generatedOtp})",
+                Message = $"Your order has been placed with total ₹{order.TotalAmount:0.00}. Your Delivery OTP is {generatedOtp}. Share this OTP with the delivery rider only upon receiving your parcel.",
                 Type = "Order",
                 CreatedDate = DateTime.Now
             });
@@ -1034,7 +1044,23 @@ namespace ShopNext.Services
 
             order.RiderId = riderId;
             order.OrderStatus = "Dispatched";
+            if (string.IsNullOrWhiteSpace(order.DeliveryOtp))
+            {
+                order.DeliveryOtp = new Random().Next(1000, 9999).ToString();
+            }
             await _context.SaveChangesAsync();
+
+            // Point 41: Notify customer with Delivery OTP
+            _context.Notifications.Add(new Notification
+            {
+                CustomerId = order.CustomerId,
+                Title = $"Order #{orderId} Dispatched for Delivery!",
+                Message = $"Your parcel is out with the delivery partner! Your Delivery OTP is {order.DeliveryOtp}. Please share this OTP with the rider when they arrive at your location.",
+                Type = "Delivery",
+                CreatedDate = DateTime.Now
+            });
+            await _context.SaveChangesAsync();
+
             return true;
         }
 
@@ -1048,6 +1074,132 @@ namespace ShopNext.Services
                 .Where(o => o.RiderId == riderId && !o.IsDeleted)
                 .OrderByDescending(o => o.CreatedDate)
                 .ToListAsync();
+        }
+
+        public async Task<string> GenerateOrGetDeliveryOtpAsync(int orderId)
+        {
+            var order = await _context.Orders.FindAsync(orderId);
+            if (order == null) return new Random().Next(1000, 9999).ToString();
+
+            if (string.IsNullOrWhiteSpace(order.DeliveryOtp))
+            {
+                order.DeliveryOtp = new Random().Next(1000, 9999).ToString();
+                await _context.SaveChangesAsync();
+            }
+            return order.DeliveryOtp;
+        }
+
+        public async Task<(bool Success, string Message, string? Otp)> VerifyDeliveryOtpAndCompleteAsync(int orderId, int riderId, string enteredOtp, string? notes = null)
+        {
+            var order = await _context.Orders
+                .Include(o => o.Customer)
+                .Include(o => o.Shop)
+                .FirstOrDefaultAsync(o => o.Id == orderId && !o.IsDeleted);
+
+            if (order == null)
+            {
+                return (false, "Order not found or has been removed.", null);
+            }
+
+            if (order.OrderStatus == "Completed" || order.OrderStatus == "Delivered")
+            {
+                return (false, "Order is already delivered and completed.", order.DeliveryOtp);
+            }
+
+            if (order.OrderStatus == "Cancelled")
+            {
+                return (false, "Cannot complete delivery: Order has been cancelled.", null);
+            }
+
+            // Ensure OTP exists on order
+            if (string.IsNullOrWhiteSpace(order.DeliveryOtp))
+            {
+                order.DeliveryOtp = new Random().Next(1000, 9999).ToString();
+                await _context.SaveChangesAsync();
+            }
+
+            string cleanEntered = (enteredOtp ?? "").Trim();
+            string expectedOtp = order.DeliveryOtp.Trim();
+
+            if (cleanEntered != expectedOtp)
+            {
+                // Record failed audit attempt
+                var riderInfo = await _context.Riders.FindAsync(riderId);
+                _context.AuditLogs.Add(new AuditLog
+                {
+                    UserId = riderId,
+                    UserName = riderInfo?.RiderName ?? $"Rider #{riderId}",
+                    UserRole = "Rider",
+                    Action = "Delivery_OTP_Failed",
+                    EntityName = "Order",
+                    EntityId = orderId,
+                    Details = $"Invalid delivery OTP entered by rider for Order #{orderId}. Entered OTP: '{cleanEntered}', Expected OTP: '{expectedOtp}'.",
+                    CreatedDate = DateTime.Now
+                });
+                await _context.SaveChangesAsync();
+
+                return (false, "Invalid delivery OTP. Please ask the customer for the correct 4-digit OTP shown in their app or SMS.", expectedOtp);
+            }
+
+            // OTP Matched Successfully!
+            var rider = await _context.Riders.FindAsync(riderId);
+            string riderName = rider?.RiderName ?? "Delivery Partner";
+
+            order.OrderStatus = "Completed";
+            order.PaymentStatus = "Paid";
+            order.DeliveredDate = DateTime.Now;
+            order.IsOtpVerified = true;
+            order.OtpVerifiedDate = DateTime.Now;
+            order.DeliveredByRiderName = riderName;
+
+            // Point 41 & Point 35: Evidence Record for Delivery OTP Handover
+            _context.OrderEvidences.Add(new OrderEvidence
+            {
+                OrderId = order.Id,
+                EvidenceType = "DeliveryOtpVerification",
+                Title = $"Customer Delivery OTP Verified ({cleanEntered})",
+                Description = $"Parcel handover verified via Customer Delivery OTP ({cleanEntered}). Successfully delivered by Rider {riderName} on {DateTime.Now:dd-MMM-yyyy hh:mm tt}. {(string.IsNullOrWhiteSpace(notes) ? "" : "Notes: " + notes)}",
+                UploadedByRole = "Rider",
+                UploadedByName = riderName,
+                UploadedDate = DateTime.Now,
+                IsVerified = true,
+                VerifiedBy = "System_Delivery_OTP_Engine",
+                MetadataJson = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    otp = cleanEntered,
+                    riderId = riderId,
+                    riderName = riderName,
+                    deliveredAt = DateTime.Now.ToString("o"),
+                    notes = notes ?? "",
+                    verified = true
+                })
+            });
+
+            // Audit Trail
+            _context.AuditLogs.Add(new AuditLog
+            {
+                UserId = riderId,
+                UserName = riderName,
+                UserRole = "Rider",
+                Action = "Delivery_OTP_Verified_Delivered",
+                EntityName = "Order",
+                EntityId = order.Id,
+                Details = $"Order #{order.Id} securely delivered and confirmed with Customer Delivery OTP ({cleanEntered}).",
+                CreatedDate = DateTime.Now
+            });
+
+            // Customer Notification
+            _context.Notifications.Add(new Notification
+            {
+                CustomerId = order.CustomerId,
+                Title = $"Order #{order.Id} Delivered ✓",
+                Message = $"Your package has been successfully delivered by {riderName} (Verified with OTP: {cleanEntered}). Thank you for choosing ShopNext!",
+                Type = "Delivery",
+                CreatedDate = DateTime.Now
+            });
+
+            await _context.SaveChangesAsync();
+            return (true, "Order delivered successfully! OTP verified.", cleanEntered);
         }
 
         // ==========================================

@@ -273,5 +273,36 @@ namespace ShopNext.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
+
+        // POST: /Rider/VerifyDeliveryOtp
+        [HttpPost]
+        public async Task<IActionResult> VerifyDeliveryOtp(int orderId, string otp, string? notes)
+        {
+            if (!IsLoggedIn(out int riderId, out _))
+            {
+                return Json(new { success = false, message = "Unauthorized. Please login again." });
+            }
+
+            if (string.IsNullOrWhiteSpace(otp))
+            {
+                return Json(new { success = false, message = "Please enter the 4-digit Delivery OTP provided by the customer." });
+            }
+
+            try
+            {
+                var result = await _service.VerifyDeliveryOtpAndCompleteAsync(orderId, riderId, otp.Trim(), notes);
+                return Json(new 
+                { 
+                    success = result.Success, 
+                    message = result.Message,
+                    orderId = orderId,
+                    otp = result.Otp
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error verifying delivery OTP: " + ex.Message });
+            }
+        }
     }
 }

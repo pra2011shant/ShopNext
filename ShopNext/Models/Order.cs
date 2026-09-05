@@ -24,6 +24,12 @@ namespace ShopNext.Models
         public DateTime? ReturnRequestedDate { get; set; }
         public DateTime? ReturnVerifiedDate { get; set; }
 
+        // Point 41: Customer Delivery OTP & Handover Verification
+        public string? DeliveryOtp { get; set; }
+        public bool IsOtpVerified { get; set; } = false;
+        public DateTime? OtpVerifiedDate { get; set; }
+        public string? DeliveredByRiderName { get; set; }
+
         // Additional display properties
         public string? ShopName { get; set; }
 

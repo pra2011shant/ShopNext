@@ -809,6 +809,25 @@
                         <span class="text-success">&#8377;@Model.TotalAmount.ToString("N0")</span>
                     </div>
                 </div>
+
+                <!-- Point 41: Customer Delivery OTP Display -->
+                @if (status != "Cancelled" && !isRefundFlow)
+                {
+                    <div class="p-3 mt-3 rounded-3" style="background: rgba(99, 102, 241, 0.1); border: 1px dashed rgba(99, 102, 241, 0.4);">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                                <span class="text-muted small d-block"><i class="fa-solid fa-key text-warning me-1"></i> Customer Delivery OTP:</span>
+                                <strong class="fs-4 text-warning font-monospace letter-spacing-1">@(string.IsNullOrEmpty(Model.DeliveryOtp) ? "5824" : Model.DeliveryOtp)</strong>
+                            </div>
+                            <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-25 px-2 py-1 small">
+                                <i class="fa-solid fa-shield-halved me-1"></i> Show to Rider
+                            </span>
+                        </div>
+                        <p class="small text-muted mb-0 mt-2" style="font-size: 0.78rem;">
+                            Rider OTP enter karega tabhi order complete hoga. Parcel lene ke baad hi ye OTP share karein.
+                        </p>
+                    </div>
+                }
             </div>
         </div>
     </div>

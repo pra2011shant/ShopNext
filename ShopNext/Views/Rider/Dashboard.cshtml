@@ -452,6 +452,12 @@
                     <div class="order-footer">
                         <div>
                             Total Amount to Collect: <strong class="fs-5 text-success">₹@order.TotalAmount.ToString("F2")</strong>
+                            @if (!string.IsNullOrEmpty(order.DeliveryOtp))
+                            {
+                                <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-25 ms-2 small">
+                                    <i class="fa-solid fa-key me-1"></i> OTP Protected
+                                </span>
+                            }
                         </div>
                         <div id="actions-@order.Id">
                             @if (order.OrderStatus == "Dispatched")
@@ -462,17 +468,17 @@
                                     <i class="fa-solid fa-motorcycle"></i> Start Delivery Trip
                                 </button>
                                 <button type="button" class="btn-action btn-complete" 
-                                        onclick="completeDelivery(@order.Id)"
+                                        onclick="openDeliveryOtpModal(@order.Id, @order.TotalAmount, '@(order.Customer?.Name?.Replace("'", "\\'") ?? "Customer")', '@(order.DeliveryOtp ?? "")')"
                                         id="btn-complete-@order.Id" style="display: none;">
-                                    <i class="fa-solid fa-circle-check"></i> Mark Delivered
+                                    <i class="fa-solid fa-key"></i> Enter OTP & Deliver
                                 </button>
                             }
                             else if (order.OrderStatus == "OutForDelivery")
                             {
                                 <button type="button" class="btn-action btn-complete" 
-                                        onclick="completeDelivery(@order.Id)"
+                                        onclick="openDeliveryOtpModal(@order.Id, @order.TotalAmount, '@(order.Customer?.Name?.Replace("'", "\\'") ?? "Customer")', '@(order.DeliveryOtp ?? "")')"
                                         id="btn-complete-@order.Id">
-                                    <i class="fa-solid fa-circle-check"></i> Mark Delivered
+                                    <i class="fa-solid fa-key"></i> Enter OTP & Deliver
                                 </button>
                                 <script>
                                     // Resume simulation if refreshed during trip
@@ -483,13 +489,78 @@
                             }
                             else
                             {
-                                <span class="text-success small fw-bold"><i class="fa-solid fa-circle-check"></i> Trip Completed</span>
+                                <span class="text-success small fw-bold">
+                                    <i class="fa-solid fa-circle-check"></i> Delivered ✓ (OTP: @(string.IsNullOrEmpty(order.DeliveryOtp) ? "Verified" : order.DeliveryOtp))
+                                </span>
                             }
                         </div>
                     </div>
                 </div>
             }
         }
+    </div>
+</div>
+
+<!-- Modal: Customer Delivery OTP Verification -->
+<div class="modal fade" id="deliveryOtpModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-white" style="background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 24px; box-shadow: 0 25px 50px rgba(0,0,0,0.5);">
+            <div class="modal-header border-secondary border-opacity-25 pb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle bg-primary bg-opacity-25 p-2 text-primary d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="fa-solid fa-key fs-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold text-white mb-0">Delivery Handover OTP</h5>
+                        <small class="text-muted">Point 41: Anti-Theft Handover Verification</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- Order Summary Info -->
+                <div class="p-3 mb-3 rounded-3" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.08);">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-muted small">Order ID:</span>
+                        <strong class="text-primary font-monospace" id="modalOrderId">#ORD0</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-muted small">Customer:</span>
+                        <strong class="text-white" id="modalCustomerName">Customer</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">Collect Amount:</span>
+                        <strong class="text-success fs-6" id="modalTotalAmount">₹0.00</strong>
+                    </div>
+                </div>
+
+                <!-- OTP Input Form -->
+                <div class="text-center py-2">
+                    <label class="form-label text-muted small fw-semibold mb-2">
+                        Customer ke mobile / app par dikh raha 4-digit OTP enter karein:
+                    </label>
+                    <div class="d-flex justify-content-center gap-2 mb-3">
+                        <input type="text" id="deliveryOtpInput" maxlength="4" placeholder="5824"
+                               class="form-control text-center font-monospace fw-bold fs-2 text-warning bg-dark border-secondary"
+                               style="max-width: 220px; letter-spacing: 10px; border-radius: 14px; padding: 0.6rem;" 
+                               autocomplete="off" inputmode="numeric" />
+                    </div>
+                    <div id="otpValidationFeedback" class="small mb-3" style="display: none;"></div>
+                </div>
+
+                <!-- Handover Notes (Optional) -->
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Delivery Remarks / Handover Notes (Optional):</label>
+                    <input type="text" id="deliveryNotesInput" class="form-control form-control-sm bg-dark text-white border-secondary rounded-3" placeholder="e.g. Handed over to customer in person" />
+                </div>
+            </div>
+            <div class="modal-footer border-secondary border-opacity-25 pt-2">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success rounded-pill px-4 fw-bold" id="btnSubmitOtp" onclick="submitDeliveryOtp()">
+                    <i class="fa-solid fa-check me-1"></i> Verify OTP & Deliver
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -505,6 +576,110 @@
 
 <script>
     let activeIntervals = {};
+    let currentOtpOrderId = 0;
+    let otpModalInstance = null;
+
+    function openDeliveryOtpModal(orderId, totalAmount, customerName, expectedOtp) {
+        currentOtpOrderId = orderId;
+        document.getElementById("modalOrderId").innerText = "#ORD" + orderId;
+        document.getElementById("modalCustomerName").innerText = customerName || "Customer";
+        document.getElementById("modalTotalAmount").innerText = "₹" + parseFloat(totalAmount).toFixed(2);
+        
+        const input = document.getElementById("deliveryOtpInput");
+        input.value = "";
+        document.getElementById("deliveryNotesInput").value = "";
+        
+        const feedback = document.getElementById("otpValidationFeedback");
+        feedback.style.display = "none";
+        feedback.innerHTML = "";
+
+        const btn = document.getElementById("btnSubmitOtp");
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> Verify OTP & Deliver';
+
+        if (!otpModalInstance) {
+            otpModalInstance = new bootstrap.Modal(document.getElementById('deliveryOtpModal'));
+        }
+        otpModalInstance.show();
+
+        setTimeout(() => {
+            input.focus();
+        }, 500);
+    }
+
+    function submitDeliveryOtp() {
+        const otp = document.getElementById("deliveryOtpInput").value.trim();
+        const notes = document.getElementById("deliveryNotesInput").value.trim();
+        const feedback = document.getElementById("otpValidationFeedback");
+        const btn = document.getElementById("btnSubmitOtp");
+
+        if (!otp || otp.length < 4) {
+            feedback.className = "small text-danger fw-semibold";
+            feedback.innerHTML = '<i class="fa-solid fa-circle-exclamation me-1"></i> Please enter a valid 4-digit OTP.';
+            feedback.style.display = "block";
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Verifying...';
+
+        $.ajax({
+            url: '@Url.Action("VerifyDeliveryOtp", "Rider")',
+            type: 'POST',
+            data: { orderId: currentOtpOrderId, otp: otp, notes: notes },
+            success: function(res) {
+                if (res.success) {
+                    // Show 5824 ✓ Order Delivered
+                    feedback.className = "alert alert-success py-2 px-3 small fw-bold mb-0 text-success border border-success";
+                    feedback.innerHTML = `<i class="fa-solid fa-circle-check fs-5 me-2"></i> ${otp} ✓ Order Delivered!`;
+                    feedback.style.display = "block";
+
+                    // Update dashboard card badge and actions
+                    const badge = document.getElementById("badge-" + currentOtpOrderId);
+                    if (badge) {
+                        badge.className = "status-badge status-Completed";
+                        badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> <span>Delivered</span>';
+                    }
+
+                    const actions = document.getElementById("actions-" + currentOtpOrderId);
+                    if (actions) {
+                        actions.innerHTML = `<span class="text-success small fw-bold"><i class="fa-solid fa-circle-check"></i> Delivered ✓ (OTP: ${otp})</span>`;
+                    }
+
+                    // Clear simulation
+                    if (activeIntervals[currentOtpOrderId]) {
+                        clearInterval(activeIntervals[currentOtpOrderId]);
+                    }
+
+                    showToast(`Order #${currentOtpOrderId} delivered successfully! OTP: ${otp} ✓`);
+
+                    setTimeout(() => {
+                        if (otpModalInstance) otpModalInstance.hide();
+                    }, 1200);
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> Verify OTP & Deliver';
+                    feedback.className = "alert alert-danger py-2 px-3 small fw-semibold mb-0 text-danger border border-danger";
+                    feedback.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1"></i> ${res.message || 'Invalid OTP. Please check with customer.'}`;
+                    feedback.style.display = "block";
+                }
+            },
+            error: function() {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> Verify OTP & Deliver';
+                feedback.className = "small text-danger fw-semibold";
+                feedback.innerHTML = '<i class="fa-solid fa-wifi me-1"></i> Connection error while verifying OTP.';
+                feedback.style.display = "block";
+            }
+        });
+    }
+
+    // Allow pressing Enter on OTP Input to submit
+    document.getElementById("deliveryOtpInput")?.addEventListener("keyup", function(e) {
+        if (e.key === "Enter") {
+            submitDeliveryOtp();
+        }
+    });
 
     function startDeliveryTrip(orderId, shopLat, shopLng, custLat, custLng) {
         const btnStart = document.getElementById("btn-start-" + orderId);
@@ -521,13 +696,15 @@
                     
                     // Update badge
                     const badge = document.getElementById("badge-" + orderId);
-                    badge.className = "status-badge status-OutForDelivery";
-                    badge.innerHTML = '<i class="fa-solid fa-truck-fast"></i> <span>Out for Delivery</span>';
+                    if (badge) {
+                        badge.className = "status-badge status-OutForDelivery";
+                        badge.innerHTML = '<i class="fa-solid fa-truck-fast"></i> <span>Out for Delivery</span>';
+                    }
 
                     // Switch buttons
                     btnStart.style.display = "none";
                     const btnComplete = document.getElementById("btn-complete-" + orderId);
-                    btnComplete.style.display = "inline-block";
+                    if (btnComplete) btnComplete.style.display = "inline-block";
 
                     // Trigger Geolocation Simulation
                     startLocationSimulation(orderId, shopLat, shopLng, custLat, custLng);
@@ -551,12 +728,11 @@
         const simStep = document.getElementById("sim-step-" + orderId);
         const simBar = document.getElementById("sim-bar-" + orderId);
 
-        simBox.style.display = "block";
+        if (simBox) simBox.style.display = "block";
 
         const steps = 10;
         let step = 0;
 
-        // Clear existing interval if any
         if (activeIntervals[orderId]) {
             clearInterval(activeIntervals[orderId]);
         }
@@ -565,28 +741,27 @@
             step++;
             if (step > steps) {
                 clearInterval(activeIntervals[orderId]);
-                simStatus.innerHTML = '<span class="text-success fw-bold"><i class="fa-solid fa-location-dot"></i> Arrived at Customer!</span>';
-                simStep.innerText = `${steps} / ${steps} steps`;
-                simBar.style.width = '100%';
+                if (simStatus) simStatus.innerHTML = '<span class="text-success fw-bold"><i class="fa-solid fa-location-dot"></i> Arrived at Customer! Ask for Delivery OTP</span>';
+                if (simStep) simStep.innerText = `${steps} / ${steps} steps`;
+                if (simBar) simBar.style.width = '100%';
                 return;
             }
 
-            // Interpolate coordinates
             const currentLat = shopLat + (custLat - shopLat) * (step / steps);
             const currentLng = shopLng + (custLng - shopLng) * (step / steps);
 
-            simStatus.innerText = `Riding bike... step ${step}`;
-            simStep.innerText = `${step} / ${steps} steps`;
-            simBar.style.width = `${(step / steps) * 100}%`;
+            if (simStatus) simStatus.innerText = `Riding bike... step ${step}`;
+            if (simStep) simStep.innerText = `${step} / ${steps} steps`;
+            if (simBar) simBar.style.width = `${(step / steps) * 100}%`;
 
-            // Report location update to backend
             reportLocation(currentLat, currentLng);
 
-        }, 4000); // 4 seconds step interval
+        }, 4000);
     }
 
     function reportLocation(lat, lng) {
-        document.getElementById("currentGpsDisplay").innerText = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        const gpsDisplay = document.getElementById("currentGpsDisplay");
+        if (gpsDisplay) gpsDisplay.innerText = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
 
         $.ajax({
             url: '@Url.Action("UpdateLocation", "Rider")',
@@ -601,52 +776,12 @@
         });
     }
 
-    function completeDelivery(orderId) {
-        const btn = document.getElementById("btn-complete-" + orderId);
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
-
-        // Clear interval
-        if (activeIntervals[orderId]) {
-            clearInterval(activeIntervals[orderId]);
-        }
-
-        $.ajax({
-            url: '@Url.Action("UpdateOrderStatus", "Rider")',
-            type: 'POST',
-            data: { orderId: orderId, status: 'Completed' },
-            success: function(res) {
-                if (res.success) {
-                    showToast("Order delivered successfully!");
-                    
-                    // Update badge
-                    const badge = document.getElementById("badge-" + orderId);
-                    badge.className = "status-badge status-Completed";
-                    badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> <span>Delivered</span>';
-
-                    // Update actions container
-                    document.getElementById("actions-" + orderId).innerHTML = '<span class="text-success small fw-bold"><i class="fa-solid fa-circle-check"></i> Trip Completed</span>';
-                    
-                    // Hide simulation box
-                    document.getElementById("sim-box-" + orderId).style.display = "none";
-                } else {
-                    showToast("Failed to complete delivery.", true);
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Mark Delivered';
-                }
-            },
-            error: function() {
-                showToast("Connection error.", true);
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Mark Delivered';
-            }
-        });
-    }
-
     function showToast(message, isError = false) {
         const toast = document.getElementById("riderToast");
         const toastMsg = document.getElementById("toastMessage");
         const toastIcon = document.getElementById("toastIcon");
+
+        if (!toast || !toastMsg) return;
 
         toastMsg.innerText = message;
         if (isError) {
@@ -658,6 +793,6 @@
         $(toast).fadeIn(300);
         setTimeout(() => {
             $(toast).fadeOut(300);
-        }, 3000);
+        }, 3500);
     }
 </script>
