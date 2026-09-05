@@ -25,8 +25,9 @@ namespace ShopNext.Controllers
         private readonly IAddressRiskService _addressRiskService;
         private readonly IMultiAccountDetectionService _multiAccountService;
         private readonly ICodAbuseService _codAbuseService;
+        private readonly ISaleCampaignService _saleCampaignService;
 
-        public AdminController(IShopNextService service, ShopNextDbContext context, IAuditService auditService, ICustomerRiskService riskService, IAddressRiskService addressRiskService, IMultiAccountDetectionService multiAccountService, ICodAbuseService codAbuseService)
+        public AdminController(IShopNextService service, ShopNextDbContext context, IAuditService auditService, ICustomerRiskService riskService, IAddressRiskService addressRiskService, IMultiAccountDetectionService multiAccountService, ICodAbuseService codAbuseService, ISaleCampaignService saleCampaignService)
         {
             _service = service;
             _context = context;
@@ -35,6 +36,7 @@ namespace ShopNext.Controllers
             _addressRiskService = addressRiskService;
             _multiAccountService = multiAccountService;
             _codAbuseService = codAbuseService;
+            _saleCampaignService = saleCampaignService;
         }
 
         private bool IsAdminLoggedIn()
@@ -538,7 +540,8 @@ namespace ShopNext.Controllers
                 Reports = await _service.GetAdminReportsAsync("Sales", "30Days"),
                 AddressRiskList = await _addressRiskService.GetAddressRiskAnalyticsAsync(),
                 MultiAccountClustersList = await _multiAccountService.GetMultiAccountClustersAsync(),
-                CodAbuseList = await _codAbuseService.GetCodAbuseAnalyticsAsync()
+                CodAbuseList = await _codAbuseService.GetCodAbuseAnalyticsAsync(),
+                SaleCampaignsList = await _saleCampaignService.GetAllCampaignsAsync()
             };
 
             ViewBag.PendingShops = pendingShops;
@@ -3828,6 +3831,131 @@ namespace ShopNext.Controllers
                 isCodDisabled = request.PolicyAction == "COD Restricted",
                 reason = request.Reason,
                 updatedDate = DateTime.Now.ToString("dd MMM yyyy, hh:mm tt")
+            });
+        }
+
+        #endregion
+
+        #region Point 50: Sale / Festival Campaign Management Endpoints
+
+        [HttpGet]
+        public async Task<IActionResult> GetSaleCampaignDetails(int campaignId)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            var campaign = await _saleCampaignService.GetCampaignByIdAsync(campaignId);
+            if (campaign == null)
+            {
+                return Json(new { success = false, message = "Campaign not found." });
+            }
+
+            return Json(new
+            {
+                success = true,
+                data = campaign
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateSaleCampaign([FromBody] CreateOrEditSaleCampaignRequest request)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            if (request == null || string.IsNullOrWhiteSpace(request.CampaignName))
+            {
+                return Json(new { success = false, message = "Campaign Name is required." });
+            }
+
+            var created = await _saleCampaignService.CreateCampaignAsync(request);
+
+            return Json(new
+            {
+                success = true,
+                message = $"Sale Campaign '{created.CampaignName}' launched successfully!",
+                data = created
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateSaleCampaign([FromBody] CreateOrEditSaleCampaignRequest request)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            if (request == null || !request.Id.HasValue || request.Id.Value <= 0)
+            {
+                return Json(new { success = false, message = "Invalid campaign ID." });
+            }
+
+            var updated = await _saleCampaignService.UpdateCampaignAsync(request);
+            if (updated == null)
+            {
+                return Json(new { success = false, message = "Campaign not found or failed to update." });
+            }
+
+            return Json(new
+            {
+                success = true,
+                message = $"Sale Campaign '{updated.CampaignName}' updated successfully!",
+                data = updated
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleSaleCampaignStatus(int campaignId)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            var success = await _saleCampaignService.ToggleCampaignStatusAsync(campaignId);
+            if (!success)
+            {
+                return Json(new { success = false, message = "Campaign not found." });
+            }
+
+            var campaign = await _saleCampaignService.GetCampaignByIdAsync(campaignId);
+
+            return Json(new
+            {
+                success = true,
+                message = $"Campaign status switched to: {campaign?.Status}",
+                isActive = campaign?.IsActive,
+                status = campaign?.Status
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteSaleCampaign(int campaignId)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            var success = await _saleCampaignService.DeleteCampaignAsync(campaignId);
+            if (!success)
+            {
+                return Json(new { success = false, message = "Campaign not found." });
+            }
+
+            return Json(new
+            {
+                success = true,
+                message = "Campaign deleted successfully."
             });
         }
 

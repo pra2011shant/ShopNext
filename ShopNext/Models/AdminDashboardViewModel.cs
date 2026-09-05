@@ -64,6 +64,9 @@ namespace ShopNext.Models
 
         // Point 49: COD Abuse Detection Dataset
         public List<AdminCodAbuseDto> CodAbuseList { get; set; } = new List<AdminCodAbuseDto>();
+
+        // Point 50: Sale / Festival Campaign Management Dataset
+        public List<AdminSaleCampaignDto> SaleCampaignsList { get; set; } = new List<AdminSaleCampaignDto>();
     }
 
     /// <summary>
@@ -841,6 +844,80 @@ namespace ShopNext.Models
         public int CustomerId { get; set; }
         public string PolicyAction { get; set; } = "COD Restricted"; // "COD Restricted", "Restore COD", "Warning"
         public string? Reason { get; set; }
+    }
+
+    #endregion
+
+    #region Point 50: Sale / Festival Campaign Management DTOs
+
+    /// <summary>
+    /// Point 50: Sale / Festival Campaign Management (e.g., Big Billion Days, Mega Shopping Sale)
+    /// Fields: Campaign Name, Start Date, End Date, Start Time, End Time, Discount, Coupon,
+    /// Products, Categories, Sellers, Minimum Order, Maximum Discount.
+    /// Category Discounts Example: Mobiles -> 20% OFF, Fashion -> 40% OFF, Electronics -> 30% OFF.
+    /// </summary>
+    public class AdminSaleCampaignDto
+    {
+        public int Id { get; set; }
+        public string CampaignName { get; set; } = string.Empty;
+        public string Tagline { get; set; } = "Biggest Sale of the Season";
+        public string BannerTheme { get; set; } = "flame-red"; // "flame-red", "festive-gold", "midnight-violet", "electric-blue"
+        public string StartDate { get; set; } = string.Empty; // e.g. "2026-09-10" or "10 Sep 2026"
+        public string StartTime { get; set; } = "00:00";
+        public string EndDate { get; set; } = string.Empty; // e.g. "2026-09-15" or "15 Sep 2026"
+        public string EndTime { get; set; } = "23:59";
+        public string Status { get; set; } = "Live Now"; // "Live Now", "Upcoming", "Ended", "Paused", "Draft"
+        public bool IsActive { get; set; } = true;
+        public decimal DefaultDiscountPct { get; set; } = 25;
+        public string? CouponCode { get; set; } = "MEGASALE";
+        public decimal MinOrderAmount { get; set; } = 999;
+        public decimal? MaxDiscountAmount { get; set; } = 2500;
+        public string ProductsScope { get; set; } = "All Catalog Products"; // "All Catalog Products", "Featured Flagships", "Selected SKUs"
+        public string SellersScope { get; set; } = "All 250 Verified Sellers"; // "All 250 Verified Sellers", "Top Rated Sellers"
+        public int ParticipatingSellersCount { get; set; } = 250;
+        public int TotalOrdersGenerated { get; set; } = 1420;
+        public decimal TotalGrossRevenue { get; set; } = 4850000;
+        public string Description { get; set; } = string.Empty;
+        public string CreatedDate { get; set; } = string.Empty;
+
+        // Dynamic multi-category discounts
+        public List<CampaignCategoryDiscountDto> CategoryDiscounts { get; set; } = new List<CampaignCategoryDiscountDto>();
+
+        // Formatting helpers
+        public string CategorySummary => CategoryDiscounts != null && CategoryDiscounts.Any()
+            ? string.Join(", ", CategoryDiscounts.Select(c => $"{c.CategoryName} → {c.DiscountPercentage:N0}% OFF"))
+            : "Storewide Flat Discount";
+
+        public string ValidityFormatted => $"{StartDate} {StartTime} - {EndDate} {EndTime}";
+    }
+
+    public class CampaignCategoryDiscountDto
+    {
+        public string CategoryName { get; set; } = string.Empty;
+        public decimal DiscountPercentage { get; set; }
+        public string IconClass { get; set; } = "fa-tags";
+        public string BadgeColor { get; set; } = "danger";
+    }
+
+    public class CreateOrEditSaleCampaignRequest
+    {
+        public int? Id { get; set; }
+        public string CampaignName { get; set; } = string.Empty;
+        public string Tagline { get; set; } = "Biggest Sale of the Season";
+        public string BannerTheme { get; set; } = "flame-red";
+        public string StartDate { get; set; } = string.Empty;
+        public string StartTime { get; set; } = "00:00";
+        public string EndDate { get; set; } = string.Empty;
+        public string EndTime { get; set; } = "23:59";
+        public decimal DefaultDiscountPct { get; set; } = 20;
+        public string? CouponCode { get; set; }
+        public decimal MinOrderAmount { get; set; } = 500;
+        public decimal? MaxDiscountAmount { get; set; }
+        public string ProductsScope { get; set; } = "All Catalog Products";
+        public string SellersScope { get; set; } = "All 250 Verified Sellers";
+        public string? CategoryDiscountsJson { get; set; }
+        public string? Description { get; set; }
+        public bool IsActive { get; set; } = true;
     }
 
     #endregion
