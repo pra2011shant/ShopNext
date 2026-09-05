@@ -585,7 +585,7 @@ namespace ShopNext.Controllers
 
         // POST: /Customer/RaiseComplaint
         [HttpPost]
-        public async Task<IActionResult> RaiseComplaint(int orderId, string issue, string description, string? attachmentUrl)
+        public async Task<IActionResult> RaiseComplaint(int orderId, string issue, string description, string? attachmentUrl, string? reasonCategory)
         {
             if (!IsCustomerLoggedIn(out int customerId, out _))
             {
@@ -607,13 +607,20 @@ namespace ShopNext.Controllers
                 return Json(new { success = false, message = "Please enter a detailed description of the issue." });
             }
 
+            var order = await _service.GetOrderByIdAsync(orderId);
+            var customerName = HttpContext.Session.GetString("UserName") ?? "Customer";
+
             var complaint = new Complaint
             {
                 CustomerId = customerId,
                 OrderId = orderId,
                 Issue = issue.Trim(),
+                ReasonCategory = !string.IsNullOrWhiteSpace(reasonCategory) ? reasonCategory.Trim() : issue.Trim(),
                 Description = description.Trim(),
                 AttachmentUrl = string.IsNullOrWhiteSpace(attachmentUrl) ? null : attachmentUrl.Trim(),
+                ComplainantRole = "Customer",
+                ComplainantName = customerName,
+                RiderId = order?.RiderId,
                 Priority = "High",
                 Status = "Open"
             };
@@ -623,7 +630,7 @@ namespace ShopNext.Controllers
             return Json(new
             {
                 success = true,
-                message = "Your complaint has been submitted successfully! Our support team will review it shortly.",
+                message = "Your delivery complaint has been logged successfully. Admin will review both sides (Customer & Rider telemetry) before taking action.",
                 ticketId = created.Id,
                 ticketNumber = created.TicketNumber,
                 status = created.Status,

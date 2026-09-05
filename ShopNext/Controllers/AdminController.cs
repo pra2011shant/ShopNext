@@ -2148,7 +2148,7 @@ namespace ShopNext.Controllers
                 success = true,
                 message = "Inappropriate review deleted successfully."
             });
-        }
+}
 
         // ==========================================
         // POINT 44: COMPLAINT RESOLUTION WORKFLOW
@@ -2180,7 +2180,30 @@ namespace ShopNext.Controllers
             var order = complaint.Order;
             var customer = complaint.Customer ?? (order != null ? await _context.Users.FindAsync(order.CustomerId) : null);
 
-            // Step 2: Evidence Records
+            // Fetch any other complaints on the same order for Dual-Perspective (Customer + Rider)
+            List<Complaint> orderComplaints = new();
+            if (complaint.OrderId > 0)
+            {
+                orderComplaints = await _context.Complaints
+                    .Where(c => c.OrderId == complaint.OrderId && !c.IsDeleted)
+                    .ToListAsync();
+            }
+
+            var custComplaint = orderComplaints.FirstOrDefault(c => c.ComplainantRole == "Customer") ?? (complaint.ComplainantRole == "Customer" ? complaint : null);
+            var riderComplaint = orderComplaints.FirstOrDefault(c => c.ComplainantRole == "Rider") ?? (complaint.ComplainantRole == "Rider" ? complaint : null);
+
+            // Fetch Rider Data & Stats
+            int riderDeliveriesCount = 0;
+            int riderComplaintsCount = 0;
+            Rider? riderObj = null;
+            if (order?.RiderId != null && order.RiderId > 0)
+            {
+                riderObj = await _context.Riders.FindAsync(order.RiderId);
+                riderDeliveriesCount = await _context.Orders.CountAsync(o => o.RiderId == order.RiderId && (o.OrderStatus == "Delivered" || o.OrderStatus == "Completed"));
+                riderComplaintsCount = await _context.Complaints.CountAsync(c => c.OrderId != 0 && c.ComplainantRole == "Customer" && _context.Orders.Any(o => o.Id == c.OrderId && o.RiderId == order.RiderId));
+            }
+
+            // Evidence Records
             List<OrderEvidence> orderEvidences = new();
             if (complaint.OrderId > 0)
             {
@@ -2190,7 +2213,7 @@ namespace ShopNext.Controllers
                     .ToListAsync();
             }
 
-            // Step 3: Customer History Check
+            // Customer History Check
             int totalOrders = 0;
             int deliveredCount = 0;
             int cancelledCount = 0;
@@ -2216,7 +2239,7 @@ namespace ShopNext.Controllers
             return Json(new
             {
                 success = true,
-                // Step 1: Complaint
+                // Ticket Meta
                 complaint = new
                 {
                     id = complaint.Id,
@@ -2239,7 +2262,34 @@ namespace ShopNext.Controllers
                     resolutionNotes = complaint.ResolutionNotes ?? "",
                     resolvedDate = complaint.ResolvedDate?.ToString("dd MMM yyyy, hh:mm tt") ?? "N/A"
                 },
-                // Step 2: Review Evidence
+                // 1. Customer Statement
+                customerStatement = new
+                {
+                    name = customer?.Name ?? "Customer",
+                    phone = customer?.PhoneNumber ?? "N/A",
+                    email = customer?.Email ?? "N/A",
+                    issueCategory = custComplaint?.ReasonCategory ?? custComplaint?.Issue ?? (complaint.ComplainantRole == "Customer" ? complaint.ReasonCategory ?? complaint.Issue : "No direct dispute filed"),
+                    description = custComplaint?.Description ?? (complaint.ComplainantRole == "Customer" ? complaint.Description : "No customer dispute statement logged."),
+                    attachmentUrl = custComplaint?.AttachmentUrl,
+                    hasComplaint = custComplaint != null || complaint.ComplainantRole == "Customer",
+                    filedDate = custComplaint?.CreatedDate.ToString("dd MMM yyyy, hh:mm tt") ?? complaint.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")
+                },
+                // 2. Rider Statement
+                riderStatement = new
+                {
+                    riderId = order?.RiderId ?? 0,
+                    name = riderObj?.RiderName ?? order?.DeliveredByRiderName ?? order?.Rider?.RiderName ?? "Assigned Delivery Partner",
+                    phone = riderObj?.PhoneNumber ?? "N/A",
+                    vehicle = riderObj?.VehicleNumber ?? "Bike / EV",
+                    issueCategory = riderComplaint?.ReasonCategory ?? riderComplaint?.Issue ?? (complaint.ComplainantRole == "Rider" ? complaint.ReasonCategory ?? complaint.Issue : (order?.IsOtpVerified == true ? "Delivery Completed (OTP Verified)" : "Delivery in Progress")),
+                    description = riderComplaint?.Description ?? (complaint.ComplainantRole == "Rider" ? complaint.Description : (order?.IsOtpVerified == true ? $"Rider completed delivery at destination. Verified with recipient OTP #{order?.DeliveryOtp}." : "Rider assigned for delivery. Progress recorded in dispatch logs.")),
+                    attachmentUrl = riderComplaint?.AttachmentUrl,
+                    hasComplaint = riderComplaint != null || complaint.ComplainantRole == "Rider",
+                    filedDate = riderComplaint?.CreatedDate.ToString("dd MMM yyyy, hh:mm tt") ?? "N/A",
+                    totalDeliveries = riderDeliveriesCount,
+                    complaintsCount = riderComplaintsCount
+                },
+                // 3. Delivery Evidence
                 evidence = new
                 {
                     orderId = order?.Id ?? complaint.OrderId,
@@ -2268,7 +2318,7 @@ namespace ShopNext.Controllers
                         metadataJson = e.MetadataJson
                     }).ToList()
                 },
-                // Step 3: Customer History Check
+                // 4. Order & Customer History Check
                 customerHistory = new
                 {
                     customerId = customer?.Id ?? 0,
@@ -2304,16 +2354,12 @@ namespace ShopNext.Controllers
 
             var customer = await _context.Users.FindAsync(customerId);
             var complaint = await _context.Complaints.FindAsync(complaintId);
-
-            if (customer == null)
-            {
-                return Json(new { success = false, message = "Customer profile not found." });
-            }
+            var order = complaint != null && complaint.OrderId > 0 ? await _context.Orders.FindAsync(complaint.OrderId) : null;
 
             string actionMessage = "";
             string cleanNotes = notes ?? "";
 
-            if (actionType == "DisableCOD")
+            if (actionType == "DisableCOD" && customer != null)
             {
                 customer.IsCodDisabled = true;
                 customer.RiskScore = Math.Min(100, customer.RiskScore + 20);
@@ -2329,12 +2375,12 @@ namespace ShopNext.Controllers
                     CreatedDate = DateTime.Now
                 });
             }
-            else if (actionType == "EnableCOD")
+            else if (actionType == "EnableCOD" && customer != null)
             {
                 customer.IsCodDisabled = false;
                 actionMessage = "COD has been re-enabled for this customer.";
             }
-            else if (actionType == "IssueWarning")
+            else if (actionType == "IssueWarning" && customer != null)
             {
                 customer.RiskScore = Math.Min(100, customer.RiskScore + 15);
                 customer.RiskLevel = customer.RiskScore >= 70 ? "High" : "Medium";
@@ -2349,14 +2395,14 @@ namespace ShopNext.Controllers
                     CreatedDate = DateTime.Now
                 });
             }
-            else if (actionType == "IncreaseRisk")
+            else if (actionType == "IncreaseRisk" && customer != null)
             {
                 customer.RiskScore = Math.Min(100, customer.RiskScore + 30);
                 customer.RiskLevel = "High";
                 customer.IsFlaggedForReview = true;
                 actionMessage = "Customer risk score increased to High and flagged for security review.";
             }
-            else if (actionType == "BlockCustomer")
+            else if (actionType == "BlockCustomer" && customer != null)
             {
                 customer.IsActive = false;
                 customer.IsFlaggedForReview = true;
@@ -2366,10 +2412,57 @@ namespace ShopNext.Controllers
                 {
                     CustomerId = customer.Id,
                     Title = "Account Suspended",
-                    Message = "Your account has been suspended following investigation into reported policy violations and delivery threats.",
+                    Message = "Your account has been suspended following investigation into reported policy violations and delivery misconduct.",
                     Type = "Account",
                     CreatedDate = DateTime.Now
                 });
+            }
+            else if (actionType == "IssueRiderWarning")
+            {
+                if (order?.RiderId != null && order.RiderId > 0)
+                {
+                    var rider = await _context.Riders.FindAsync(order.RiderId);
+                    actionMessage = $"Official warning notice issued to Rider {rider?.RiderName ?? "Partner"} for delivery policy breach.";
+                }
+                else
+                {
+                    actionMessage = "Official disciplinary warning logged against assigned delivery rider.";
+                }
+            }
+            else if (actionType == "SuspendRider")
+            {
+                if (order?.RiderId != null && order.RiderId > 0)
+                {
+                    var rider = await _context.Riders.FindAsync(order.RiderId);
+                    if (rider != null)
+                    {
+                        rider.IsAvailable = false;
+                    }
+                    actionMessage = $"Rider {rider?.RiderName ?? "Partner"} has been suspended from taking delivery orders.";
+                }
+                else
+                {
+                    actionMessage = "Assigned delivery rider suspended from active dispatch pool.";
+                }
+            }
+            else if (actionType == "ApproveRefund")
+            {
+                if (order != null)
+                {
+                    order.OrderStatus = "RefundCompleted";
+                    order.PaymentStatus = "Refunded";
+                    order.ReturnStatus = "Approved";
+
+                    _context.Notifications.Add(new Notification
+                    {
+                        CustomerId = order.CustomerId,
+                        Title = "💰 Dispute Refund Approved",
+                        Message = $"Your dispute regarding Order #{order.Id} has been resolved in your favor. Full refund of ₹{order.TotalAmount:N2} has been processed.",
+                        Type = "Refund",
+                        CreatedDate = DateTime.Now
+                    });
+                }
+                actionMessage = "Dispute resolved in customer favor: Full order refund approved and processed.";
             }
             else if (actionType == "ResolveTicket")
             {
@@ -2379,7 +2472,7 @@ namespace ShopNext.Controllers
                     complaint.ResolutionNotes = cleanNotes;
                     complaint.ResolvedDate = DateTime.Now;
                 }
-                actionMessage = "Complaint marked as Resolved and closed.";
+                actionMessage = "Dispute ticket marked as Resolved and closed.";
             }
 
             if (complaint != null && actionType != "ResolveTicket")
@@ -2393,10 +2486,10 @@ namespace ShopNext.Controllers
                 UserId = 1,
                 UserName = "Admin",
                 UserRole = "Admin",
-                Action = $"Complaint_Action_{actionType}",
+                Action = $"Dispute_Action_{actionType}",
                 EntityName = "Complaint",
                 EntityId = complaintId,
-                Details = $"Admin executed action '{actionType}' on Customer #{customerId} for Complaint #{complaintId}. Notes: {cleanNotes}",
+                Details = $"Admin executed dispute decision '{actionType}' on Order #{complaint?.OrderId} (Customer #{customerId}). Notes: {cleanNotes}",
                 CreatedDate = DateTime.Now
             });
 

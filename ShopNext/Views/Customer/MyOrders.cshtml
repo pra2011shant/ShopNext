@@ -711,26 +711,38 @@
                     <div class="fw-bold text-white" id="helpProductName">Product Name</div>
                 </div>
 
-                <!-- 1. Issue Category -->
+                <!-- 1. Issue Category: Point 44 Specific Options -->
                 <div class="mb-3">
-                    <label class="form-label small fw-bold text-light"><i class="fa-solid fa-triangle-exclamation text-warning me-1"></i> Select Issue Category *</label>
-                    <select id="helpIssueSelect" class="form-select bg-dark text-white border-secondary">
-                        <option value="" disabled selected>-- Choose an issue --</option>
-                        <option value="Item Damaged / Defective">Item Damaged / Defective</option>
-                        <option value="Wrong Item Delivered">Wrong Item Delivered</option>
-                        <option value="Missing Item in Package">Missing Item in Package</option>
-                        <option value="Delivery Delayed / Rider Issue">Delivery Delayed / Rider Issue</option>
-                        <option value="Payment / Refund Status">Payment / Refund Status</option>
-                        <option value="Product Quality / Not as Described">Product Quality / Not as Described</option>
-                        <option value="Other">Other Issue</option>
-                    </select>
+                    <label class="form-label small fw-bold text-light mb-2"><i class="fa-solid fa-triangle-exclamation text-warning me-1"></i> Select Delivery Issue *</label>
+                    <div class="d-flex flex-column gap-2" id="deliveryIssueRadioGroup">
+                        <label class="d-flex align-items-center gap-2 p-2.5 rounded-3 border border-secondary border-opacity-30 bg-black bg-opacity-25 cursor-pointer text-white">
+                            <input type="radio" name="custDeliveryIssue" value="Rider didn't deliver" class="form-check-input mt-0" checked />
+                            <span class="small fw-bold"><i class="fa-solid fa-person-circle-xmark text-danger me-1.5"></i> Rider didn't deliver</span>
+                        </label>
+                        <label class="d-flex align-items-center gap-2 p-2.5 rounded-3 border border-secondary border-opacity-30 bg-black bg-opacity-25 cursor-pointer text-white">
+                            <input type="radio" name="custDeliveryIssue" value="Rider misbehaved" class="form-check-input mt-0" />
+                            <span class="small fw-bold"><i class="fa-solid fa-face-angry text-warning me-1.5"></i> Rider misbehaved</span>
+                        </label>
+                        <label class="d-flex align-items-center gap-2 p-2.5 rounded-3 border border-secondary border-opacity-30 bg-black bg-opacity-25 cursor-pointer text-white">
+                            <input type="radio" name="custDeliveryIssue" value="Package damaged" class="form-check-input mt-0" />
+                            <span class="small fw-bold"><i class="fa-solid fa-box-open text-info me-1.5"></i> Package damaged</span>
+                        </label>
+                        <label class="d-flex align-items-center gap-2 p-2.5 rounded-3 border border-secondary border-opacity-30 bg-black bg-opacity-25 cursor-pointer text-white">
+                            <input type="radio" name="custDeliveryIssue" value="Wrong delivery" class="form-check-input mt-0" />
+                            <span class="small fw-bold"><i class="fa-solid fa-shuffle text-primary me-1.5"></i> Wrong delivery</span>
+                        </label>
+                        <label class="d-flex align-items-center gap-2 p-2.5 rounded-3 border border-secondary border-opacity-30 bg-black bg-opacity-25 cursor-pointer text-white">
+                            <input type="radio" name="custDeliveryIssue" value="Other" class="form-check-input mt-0" />
+                            <span class="small fw-bold"><i class="fa-solid fa-ellipsis text-secondary me-1.5"></i> Other</span>
+                        </label>
+                    </div>
                 </div>
 
-                <!-- 2. Detailed Description -->
+                <!-- 2. Detailed Description / Customer Statement -->
                 <div class="mb-3">
-                    <label class="form-label small fw-bold text-light"><i class="fa-solid fa-comment-dots text-info me-1"></i> Issue Description *</label>
-                    <textarea id="helpDescription" class="form-control bg-dark text-white border-secondary" placeholder="Please describe the issue in detail (e.g. package condition, defect symptoms, rider contact status)..." rows="3"></textarea>
-                    <small class="text-secondary mt-1 d-block">Be as descriptive as possible to help our team resolve your issue quickly.</small>
+                    <label class="form-label small fw-bold text-light"><i class="fa-solid fa-comment-dots text-info me-1"></i> Customer Statement / Description *</label>
+                    <textarea id="helpDescription" class="form-control bg-dark text-white border-secondary" placeholder="Please provide your statement (e.g. what happened at delivery location, rider behavior, or package state)..." rows="3"></textarea>
+                    <small class="text-secondary mt-1 d-block">Your statement will be audited alongside Rider telemetry & OTP proof by Admin.</small>
                 </div>
 
                 <!-- 3. Optional Attachment -->
@@ -1150,13 +1162,14 @@
     }
 
     // ==========================================
-    // POINT 43: NEED HELP / COMPLAINT HANDLERS
+    // POINT 44: NEED HELP / CUSTOMER COMPLAINT AGAINST RIDER
     // ==========================================
     function openNeedHelpModal(orderId, orderPill, productName) {
         document.getElementById("helpOrderId").value = orderId;
         document.getElementById("helpOrderPill").innerText = orderPill;
         document.getElementById("helpProductName").innerText = productName || "Order Items";
-        document.getElementById("helpIssueSelect").selectedIndex = 0;
+        const firstRadio = document.querySelector('input[name="custDeliveryIssue"][value="Rider didn\'t deliver"]');
+        if (firstRadio) firstRadio.checked = true;
         document.getElementById("helpDescription").value = "";
         document.getElementById("helpAttachmentUrl").value = "";
 
@@ -1165,23 +1178,24 @@
 
     function submitNeedHelpComplaint() {
         const orderId = document.getElementById("helpOrderId").value;
-        const issue = document.getElementById("helpIssueSelect").value;
+        const selectedRadio = document.querySelector('input[name="custDeliveryIssue"]:checked');
+        const issue = selectedRadio ? selectedRadio.value : "Delivery Issue";
         const desc = document.getElementById("helpDescription").value.trim();
         const attachment = document.getElementById("helpAttachmentUrl").value.trim();
 
         if (!issue) {
-            alert("Please select an issue category.");
+            alert("Please select a delivery issue category.");
             return;
         }
 
         if (!desc) {
-            alert("Please write a description of the problem.");
+            alert("Please provide your statement / description of the issue.");
             return;
         }
 
         const btn = document.getElementById("btnSubmitComplaint");
         btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Submitting...';
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Logging dispute...';
 
         $.ajax({
             url: '/Customer/RaiseComplaint',
@@ -1189,6 +1203,7 @@
             data: {
                 orderId: orderId,
                 issue: issue,
+                reasonCategory: issue,
                 description: desc,
                 attachmentUrl: attachment
             },
