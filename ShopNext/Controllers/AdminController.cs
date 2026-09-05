@@ -2151,7 +2151,8 @@ namespace ShopNext.Controllers
         }
 
         // ==========================================
-        // POINT 43: COMPLAINTS & SUPPORT DESK ENDPOINTS
+        // POINT 44: COMPLAINT RESOLUTION WORKFLOW
+        // 1. Complaint Details -> 2. Review Evidence -> 3. Customer History Check -> 4. Action
         // ==========================================
 
         // GET: /Admin/GetComplaintDetails?id={id}
@@ -2166,6 +2167,9 @@ namespace ShopNext.Controllers
             var complaint = await _context.Complaints
                 .Include(c => c.Customer)
                 .Include(c => c.Order)
+                    .ThenInclude(o => o!.Rider)
+                .Include(c => c.Order)
+                    .ThenInclude(o => o!.Shop)
                 .FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted);
 
             if (complaint == null)
@@ -2173,9 +2177,46 @@ namespace ShopNext.Controllers
                 return Json(new { success = false, message = "Complaint ticket not found." });
             }
 
+            var order = complaint.Order;
+            var customer = complaint.Customer ?? (order != null ? await _context.Users.FindAsync(order.CustomerId) : null);
+
+            // Step 2: Evidence Records
+            List<OrderEvidence> orderEvidences = new();
+            if (complaint.OrderId > 0)
+            {
+                orderEvidences = await _context.OrderEvidences
+                    .Where(e => e.OrderId == complaint.OrderId && !e.IsDeleted)
+                    .OrderByDescending(e => e.CreatedDate)
+                    .ToListAsync();
+            }
+
+            // Step 3: Customer History Check
+            int totalOrders = 0;
+            int deliveredCount = 0;
+            int cancelledCount = 0;
+            int returnedCount = 0;
+            decimal totalSpent = 0;
+            int pastComplaintsCount = 0;
+
+            if (customer != null)
+            {
+                var custOrders = await _context.Orders.Where(o => o.CustomerId == customer.Id && !o.IsDeleted).ToListAsync();
+                totalOrders = custOrders.Count;
+                deliveredCount = custOrders.Count(o => o.OrderStatus == "Delivered" || o.OrderStatus == "Completed");
+                cancelledCount = custOrders.Count(o => o.OrderStatus == "Cancelled");
+                returnedCount = custOrders.Count(o => o.OrderStatus == "Returned" || o.ReturnStatus == "Approved" || o.ReturnStatus == "Returned");
+                totalSpent = custOrders.Sum(o => o.TotalAmount);
+
+                pastComplaintsCount = await _context.Complaints.CountAsync(c => c.CustomerId == customer.Id && !c.IsDeleted);
+            }
+
+            decimal cancelRate = totalOrders > 0 ? ((decimal)cancelledCount / totalOrders) * 100m : 0m;
+            decimal returnRate = totalOrders > 0 ? ((decimal)returnedCount / totalOrders) * 100m : 0m;
+
             return Json(new
             {
                 success = true,
+                // Step 1: Complaint
                 complaint = new
                 {
                     id = complaint.Id,
@@ -2183,9 +2224,12 @@ namespace ShopNext.Controllers
                     orderId = complaint.OrderId,
                     orderNumber = $"#ORD{complaint.OrderId}",
                     customerId = complaint.CustomerId,
-                    customerName = complaint.Customer?.Name ?? "Customer",
-                    customerMobile = complaint.Customer?.PhoneNumber ?? "N/A",
-                    customerEmail = complaint.Customer?.Email ?? "N/A",
+                    customerName = customer?.Name ?? "Customer",
+                    customerMobile = customer?.PhoneNumber ?? "N/A",
+                    customerEmail = customer?.Email ?? "N/A",
+                    complainantRole = complaint.ComplainantRole ?? "Customer",
+                    complainantName = complaint.ComplainantName ?? (complaint.ComplainantRole == "Rider" ? "Rider" : customer?.Name ?? "Customer"),
+                    reasonCategory = complaint.ReasonCategory ?? complaint.Issue,
                     issue = complaint.Issue,
                     description = complaint.Description,
                     attachmentUrl = complaint.AttachmentUrl,
@@ -2193,11 +2237,180 @@ namespace ShopNext.Controllers
                     status = complaint.Status ?? "Open",
                     createdDate = complaint.CreatedDate.ToString("dd MMM yyyy, hh:mm tt"),
                     resolutionNotes = complaint.ResolutionNotes ?? "",
-                    resolvedDate = complaint.ResolvedDate?.ToString("dd MMM yyyy, hh:mm tt") ?? "N/A",
-                    orderStatus = complaint.Order?.OrderStatus ?? "N/A",
-                    orderAmount = complaint.Order?.TotalAmount.ToString("N2") ?? "0.00",
-                    paymentMode = complaint.Order?.PaymentMode ?? "N/A"
+                    resolvedDate = complaint.ResolvedDate?.ToString("dd MMM yyyy, hh:mm tt") ?? "N/A"
+                },
+                // Step 2: Review Evidence
+                evidence = new
+                {
+                    orderId = order?.Id ?? complaint.OrderId,
+                    orderStatus = order?.OrderStatus ?? "N/A",
+                    orderAmount = order?.TotalAmount.ToString("N2") ?? "0.00",
+                    paymentMode = order?.PaymentMode ?? "COD",
+                    paymentStatus = order?.PaymentStatus ?? "Pending",
+                    deliveryOtp = order?.DeliveryOtp ?? "N/A",
+                    isOtpVerified = order?.IsOtpVerified ?? false,
+                    otpVerifiedDate = order?.OtpVerifiedDate?.ToString("dd MMM yyyy, hh:mm tt") ?? "N/A",
+                    deliveredDate = order?.DeliveredDate?.ToString("dd MMM yyyy, hh:mm tt") ?? "N/A",
+                    riderId = order?.RiderId,
+                    riderName = order?.DeliveredByRiderName ?? order?.Rider?.RiderName ?? "Rider",
+                    shopName = order?.Shop?.ShopName ?? "Shop",
+                    evidenceList = orderEvidences.Select(e => new
+                    {
+                        id = e.Id,
+                        type = e.EvidenceType,
+                        title = e.Title,
+                        description = e.Description,
+                        photoUrl = e.PhotoUrl,
+                        uploadedBy = e.UploadedByName ?? e.UploadedByRole,
+                        uploadedDate = e.UploadedDate.ToString("dd MMM yyyy, hh:mm tt"),
+                        isVerified = e.IsVerified,
+                        verifiedBy = e.VerifiedBy,
+                        metadataJson = e.MetadataJson
+                    }).ToList()
+                },
+                // Step 3: Customer History Check
+                customerHistory = new
+                {
+                    customerId = customer?.Id ?? 0,
+                    customerName = customer?.Name ?? "Customer",
+                    customerMobile = customer?.PhoneNumber ?? "N/A",
+                    customerEmail = customer?.Email ?? "N/A",
+                    riskScore = customer?.RiskScore ?? 15,
+                    riskLevel = customer?.RiskLevel ?? (customer != null && customer.RiskScore >= 70 ? "High" : (customer != null && customer.RiskScore >= 30 ? "Medium" : "Low")),
+                    isCodDisabled = customer?.IsCodDisabled ?? false,
+                    isFlaggedForReview = customer?.IsFlaggedForReview ?? false,
+                    isActive = customer?.IsActive ?? true,
+                    registrationDate = customer?.CreatedDate.ToString("dd MMM yyyy") ?? "N/A",
+                    totalOrders = totalOrders,
+                    deliveredCount = deliveredCount,
+                    cancelledCount = cancelledCount,
+                    returnedCount = returnedCount,
+                    cancellationRate = Math.Round(cancelRate, 1),
+                    returnRate = Math.Round(returnRate, 1),
+                    totalSpent = totalSpent.ToString("N2"),
+                    pastComplaintsCount = pastComplaintsCount
                 }
+            });
+        }
+
+        // POST: /Admin/TakeComplaintAction
+        [HttpPost]
+        public async Task<IActionResult> TakeComplaintAction(int complaintId, int customerId, string actionType, string? notes)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized. Please log in as Admin." });
+            }
+
+            var customer = await _context.Users.FindAsync(customerId);
+            var complaint = await _context.Complaints.FindAsync(complaintId);
+
+            if (customer == null)
+            {
+                return Json(new { success = false, message = "Customer profile not found." });
+            }
+
+            string actionMessage = "";
+            string cleanNotes = notes ?? "";
+
+            if (actionType == "DisableCOD")
+            {
+                customer.IsCodDisabled = true;
+                customer.RiskScore = Math.Min(100, customer.RiskScore + 20);
+                customer.RiskLevel = customer.RiskScore >= 70 ? "High" : "Medium";
+                actionMessage = "COD has been disabled for this customer due to misbehavior/risk.";
+
+                _context.Notifications.Add(new Notification
+                {
+                    CustomerId = customer.Id,
+                    Title = "Account Notice: Cash on Delivery (COD) Disabled",
+                    Message = "Due to reported delivery misconduct or safety guidelines, Cash on Delivery (COD) has been restricted on your account. You may still order using online prepaid payment.",
+                    Type = "Account",
+                    CreatedDate = DateTime.Now
+                });
+            }
+            else if (actionType == "EnableCOD")
+            {
+                customer.IsCodDisabled = false;
+                actionMessage = "COD has been re-enabled for this customer.";
+            }
+            else if (actionType == "IssueWarning")
+            {
+                customer.RiskScore = Math.Min(100, customer.RiskScore + 15);
+                customer.RiskLevel = customer.RiskScore >= 70 ? "High" : "Medium";
+                actionMessage = "Official behavioral warning issued to customer.";
+
+                _context.Notifications.Add(new Notification
+                {
+                    CustomerId = customer.Id,
+                    Title = "⚠️ Official Warning from Trust & Safety Team",
+                    Message = $"A complaint was reported regarding Order #{complaint?.OrderId}. Please adhere to delivery safety guidelines and treat delivery partners respectfully. Repeated violations will result in account suspension.",
+                    Type = "Warning",
+                    CreatedDate = DateTime.Now
+                });
+            }
+            else if (actionType == "IncreaseRisk")
+            {
+                customer.RiskScore = Math.Min(100, customer.RiskScore + 30);
+                customer.RiskLevel = "High";
+                customer.IsFlaggedForReview = true;
+                actionMessage = "Customer risk score increased to High and flagged for security review.";
+            }
+            else if (actionType == "BlockCustomer")
+            {
+                customer.IsActive = false;
+                customer.IsFlaggedForReview = true;
+                actionMessage = "Customer account has been suspended/blocked.";
+
+                _context.Notifications.Add(new Notification
+                {
+                    CustomerId = customer.Id,
+                    Title = "Account Suspended",
+                    Message = "Your account has been suspended following investigation into reported policy violations and delivery threats.",
+                    Type = "Account",
+                    CreatedDate = DateTime.Now
+                });
+            }
+            else if (actionType == "ResolveTicket")
+            {
+                if (complaint != null)
+                {
+                    complaint.Status = "Resolved";
+                    complaint.ResolutionNotes = cleanNotes;
+                    complaint.ResolvedDate = DateTime.Now;
+                }
+                actionMessage = "Complaint marked as Resolved and closed.";
+            }
+
+            if (complaint != null && actionType != "ResolveTicket")
+            {
+                complaint.ResolutionNotes = (complaint.ResolutionNotes != null ? complaint.ResolutionNotes + " | " : "") + $"Action: {actionType} - {cleanNotes}";
+            }
+
+            // Audit Trail
+            _context.AuditLogs.Add(new AuditLog
+            {
+                UserId = 1,
+                UserName = "Admin",
+                UserRole = "Admin",
+                Action = $"Complaint_Action_{actionType}",
+                EntityName = "Complaint",
+                EntityId = complaintId,
+                Details = $"Admin executed action '{actionType}' on Customer #{customerId} for Complaint #{complaintId}. Notes: {cleanNotes}",
+                CreatedDate = DateTime.Now
+            });
+
+            await _context.SaveChangesAsync();
+
+            return Json(new
+            {
+                success = true,
+                message = actionMessage,
+                actionType = actionType,
+                customerRiskScore = customer.RiskScore,
+                customerRiskLevel = customer.RiskLevel,
+                isCodDisabled = customer.IsCodDisabled,
+                isActive = customer.IsActive
             });
         }
 

@@ -7320,98 +7320,237 @@
         });
     }
 
-<!-- Modal: Point 43. [View] Complaint Audit Details Modal -->
+<!-- Modal: Point 44. Admin 4-Step Complaint Resolution Workflow Modal -->
 <div class="modal fade" id="adminComplaintDetailsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content modal-content-glass">
             <div class="modal-header border-bottom border-secondary border-opacity-25 p-4">
-                <div class="d-flex align-items-center gap-2.5">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center p-2" style="width: 40px; height: 40px; background: rgba(239, 68, 68, 0.2); color: #f87171;">
-                        <i class="fa-solid fa-headset fs-5"></i>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center p-2" style="width: 44px; height: 44px; background: rgba(239, 68, 68, 0.2); color: #f87171;">
+                        <i class="fa-solid fa-scale-balanced fs-5"></i>
                     </div>
                     <div>
-                        <h5 class="modal-title fw-bold text-white mb-0" id="mComplaintTicketTitle">Support Ticket #TKT-001</h5>
-                        <small class="text-secondary" id="mComplaintDateSub">05 Sep 2026</small>
+                        <div class="d-flex align-items-center gap-2">
+                            <h5 class="modal-title fw-bold text-white mb-0" id="mComplaintTicketTitle">Support Ticket #TKT-001</h5>
+                            <span class="badge px-3 py-1 rounded-pill fs-7" id="mComplaintStatusBadge">Open</span>
+                        </div>
+                        <small class="text-secondary">Filed on <span id="mComplaintDateSub">05 Sep 2026</span> &bull; 4-Step Resolution Audit Workflow</small>
                     </div>
                 </div>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4" id="adminComplaintModalBody">
-                <div class="text-center py-4" id="adminComplaintModalLoader">
+                <div class="text-center py-5" id="adminComplaintModalLoader">
                     <i class="fa-solid fa-spinner fa-spin fs-2 text-danger"></i>
-                    <div class="text-secondary small mt-2">Loading ticket audit details...</div>
+                    <div class="text-secondary small mt-2">Loading complete dispute & evidence audit telemetry...</div>
                 </div>
 
                 <div id="adminComplaintModalContent" style="display: none;">
-                    <!-- Status & Issue Header -->
-                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2 p-3 rounded-4" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.1);">
-                        <div>
-                            <span class="text-muted small d-block">Issue Category:</span>
-                            <span class="badge bg-secondary bg-opacity-40 text-light fs-6 px-3 py-1 rounded-pill mt-1" id="mComplaintIssue">Item Damaged / Defective</span>
-                        </div>
-                        <div class="text-end">
-                            <span class="text-muted small d-block">Current Status:</span>
-                            <span class="badge px-3 py-1.5 rounded-pill fs-6 mt-1" id="mComplaintStatusBadge">Open</span>
-                        </div>
-                    </div>
-
-                    <!-- Customer & Order Cards Grid -->
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <div class="p-3 rounded-4 h-100" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.08);">
-                                <div class="fw-bold text-white mb-2"><i class="fa-solid fa-user text-primary me-2"></i> Customer Details</div>
-                                <div class="text-light fw-bold fs-6" id="mComplaintCustName">Rahul Sharma</div>
-                                <div class="text-secondary small font-monospace"><i class="fa-solid fa-phone me-1.5"></i> <span id="mComplaintCustPhone">9876543210</span></div>
-                                <div class="text-secondary small"><i class="fa-solid fa-envelope me-1.5"></i> <span id="mComplaintCustEmail">rahul@example.com</span></div>
+                    <!-- Workflow Step Progress Indicator -->
+                    <div class="p-3 rounded-4 mb-4" style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255,255,255,0.1);">
+                        <div class="row g-2 text-center align-items-center">
+                            <div class="col-3">
+                                <div class="p-2 rounded-3 border border-primary border-opacity-40" style="background: rgba(59, 130, 246, 0.15);">
+                                    <div class="fw-bold text-primary small"><i class="fa-solid fa-file-lines me-1"></i> 1. Complaint</div>
+                                    <small class="text-muted" style="font-size: 11px;">Ticket & Reason</small>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="p-3 rounded-4 h-100" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.08);">
-                                <div class="fw-bold text-white mb-2"><i class="fa-solid fa-bag-shopping text-info me-2"></i> Linked Order Telemetry</div>
-                                <div class="text-info fw-bold font-monospace fs-6" id="mComplaintOrderNum">#ORD1001</div>
-                                <div class="text-secondary small">Total Amount: <span class="text-success fw-bold font-monospace" id="mComplaintOrderAmount">₹1,299.00</span></div>
-                                <div class="text-secondary small">Order Status: <span class="badge bg-secondary bg-opacity-30 text-light" id="mComplaintOrderStatus">Delivered</span></div>
+                            <div class="col-3">
+                                <div class="p-2 rounded-3 border border-info border-opacity-40" style="background: rgba(6, 182, 212, 0.15);">
+                                    <div class="fw-bold text-info small"><i class="fa-solid fa-magnifying-glass-chart me-1"></i> 2. Review Evidence</div>
+                                    <small class="text-muted" style="font-size: 11px;">OTP & Telemetry</small>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Customer Description -->
-                    <div class="mb-3 p-3 rounded-4" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.08);">
-                        <label class="form-label text-secondary small fw-bold mb-1"><i class="fa-solid fa-comment-dots text-warning me-1"></i> Customer Complaint Description</label>
-                        <div class="p-2.5 rounded-3 bg-black bg-opacity-30 text-light border border-secondary border-opacity-25" id="mComplaintDescription">
-                            Screen had deep scratches upon unboxing package. Need replacement or refund.
-                        </div>
-                    </div>
-
-                    <!-- Attachment / Photo Proof -->
-                    <div class="mb-3 p-3 rounded-4" id="mComplaintAttachmentWrap" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.08); display: none;">
-                        <label class="form-label text-secondary small fw-bold mb-2"><i class="fa-solid fa-paperclip text-info me-1"></i> Attached Photo Proof</label>
-                        <div class="d-flex align-items-center gap-3">
-                            <a href="#" target="_blank" id="mComplaintAttachmentLink" class="d-inline-block rounded-3 overflow-hidden border border-secondary border-opacity-30" style="max-width: 220px; max-height: 140px;">
-                                <img src="" id="mComplaintAttachmentImg" class="img-fluid" style="object-fit: cover;" alt="Proof" />
-                            </a>
-                            <div>
-                                <a href="#" target="_blank" id="mComplaintAttachmentBtn" class="btn btn-outline-info btn-sm px-3 rounded-pill">
-                                    <i class="fa-solid fa-up-right-from-square me-1"></i> Open Full Image
-                                </a>
+                            <div class="col-3">
+                                <div class="p-2 rounded-3 border border-warning border-opacity-40" style="background: rgba(245, 158, 11, 0.15);">
+                                    <div class="fw-bold text-warning small"><i class="fa-solid fa-chart-line me-1"></i> 3. Customer History</div>
+                                    <small class="text-muted" style="font-size: 11px;">Risk Profile & Stats</small>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="p-2 rounded-3 border border-danger border-opacity-40" style="background: rgba(239, 68, 68, 0.15);">
+                                    <div class="fw-bold text-danger small"><i class="fa-solid fa-gavel me-1"></i> 4. Action</div>
+                                    <small class="text-muted" style="font-size: 11px;">Enforce Resolution</small>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Resolution Notes -->
-                    <div class="p-3 rounded-4" id="mComplaintResolutionWrap" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); display: none;">
-                        <label class="form-label text-success small fw-bold mb-1"><i class="fa-solid fa-reply me-1"></i> Support Resolution Audit Notes</label>
-                        <div class="text-light small fst-italic" id="mComplaintResolutionNotes">
-                            Support executive contacted delivery partner for reverse pickup.
+                    <div class="row g-4">
+                        <!-- Left Column: Step 1 & Step 2 -->
+                        <div class="col-lg-6">
+                            <!-- STEP 1: COMPLAINT DETAILS -->
+                            <div class="p-3.5 rounded-4 mb-3" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(59, 130, 246, 0.25);">
+                                <div class="d-flex justify-content-between align-items-center mb-2.5">
+                                    <span class="fw-bold text-primary fs-6"><i class="fa-solid fa-circle-1 me-1.5"></i> Complaint Details</span>
+                                    <span class="badge bg-secondary bg-opacity-40 text-light" id="mComplaintComplainantRole"><i class="fa-solid fa-user me-1"></i> Customer</span>
+                                </div>
+                                <div class="mb-2">
+                                    <small class="text-muted d-block">Complainant / Reported By:</small>
+                                    <strong class="text-white" id="mComplaintComplainantName">Rahul Sharma</strong>
+                                </div>
+                                <div class="mb-2">
+                                    <small class="text-muted d-block">Issue Category / Reason:</small>
+                                    <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30 mt-1" id="mComplaintReasonCategory">Misbehavior / Unsafe Location</span>
+                                </div>
+                                <div class="mb-2">
+                                    <small class="text-muted d-block">Incident Description:</small>
+                                    <div class="p-2.5 rounded-3 bg-black bg-opacity-40 text-light border border-secondary border-opacity-25 mt-1 small" id="mComplaintDescription">
+                                        Customer was verbally abusive during parcel handover.
+                                    </div>
+                                </div>
+                                <!-- Attachment -->
+                                <div id="mComplaintAttachmentWrap" style="display: none;">
+                                    <small class="text-muted d-block mb-1">Incident Proof / Photo Attachment:</small>
+                                    <a href="#" target="_blank" id="mComplaintAttachmentLink" class="d-inline-block rounded-3 overflow-hidden border border-secondary border-opacity-30" style="max-width: 180px; max-height: 120px;">
+                                        <img src="" id="mComplaintAttachmentImg" class="img-fluid" style="object-fit: cover;" alt="Proof" />
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- STEP 2: REVIEW EVIDENCE -->
+                            <div class="p-3.5 rounded-4" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(6, 182, 212, 0.25);">
+                                <div class="d-flex justify-content-between align-items-center mb-2.5">
+                                    <span class="fw-bold text-info fs-6"><i class="fa-solid fa-circle-2 me-1.5"></i> Review Delivery Evidence</span>
+                                    <span class="badge bg-info bg-opacity-20 text-info font-monospace" id="mEvidenceOrderNum">#ORD1001</span>
+                                </div>
+                                
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <div class="p-2 rounded-3 bg-black bg-opacity-30 border border-secondary border-opacity-20">
+                                            <small class="text-muted d-block" style="font-size: 11px;">Delivery OTP Status</small>
+                                            <div id="mEvidenceOtpStatus" class="fw-bold text-success small mt-0.5"><i class="fa-solid fa-shield-check me-1"></i> OTP Verified ✓</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="p-2 rounded-3 bg-black bg-opacity-30 border border-secondary border-opacity-20">
+                                            <small class="text-muted d-block" style="font-size: 11px;">Delivery Timestamp</small>
+                                            <div id="mEvidenceDeliveryTime" class="text-light small font-monospace mt-0.5">05 Sep 2026, 04:30 PM</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="p-2 rounded-3 bg-black bg-opacity-30 border border-secondary border-opacity-20">
+                                            <small class="text-muted d-block" style="font-size: 11px;">Assigned Rider</small>
+                                            <div id="mEvidenceRiderInfo" class="text-light small mt-0.5"><i class="fa-solid fa-motorcycle text-warning me-1"></i> Rajesh (ID: #5)</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="p-2 rounded-3 bg-black bg-opacity-30 border border-secondary border-opacity-20">
+                                            <small class="text-muted d-block" style="font-size: 11px;">Order Amount & Mode</small>
+                                            <div id="mEvidenceOrderAmount" class="text-light small mt-0.5">₹1,299.00 (COD)</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-1">
+                                    <small class="text-secondary fw-bold d-block mb-1.5"><i class="fa-solid fa-fingerprint text-info me-1"></i> Telemetry & Evidence Logs:</small>
+                                    <div id="mEvidenceLogList" class="d-flex flex-column gap-2" style="max-height: 180px; overflow-y: auto;">
+                                        <!-- Populated dynamically via JS -->
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <small class="text-secondary d-block mt-1">Resolved On: <span id="mComplaintResolvedDate">N/A</span></small>
+
+                        <!-- Right Column: Step 3 & Step 4 -->
+                        <div class="col-lg-6">
+                            <!-- STEP 3: CUSTOMER HISTORY CHECK -->
+                            <div class="p-3.5 rounded-4 mb-3" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(245, 158, 11, 0.25);">
+                                <div class="d-flex justify-content-between align-items-center mb-2.5">
+                                    <span class="fw-bold text-warning fs-6"><i class="fa-solid fa-circle-3 me-1.5"></i> Customer History Check</span>
+                                    <span class="badge px-3 py-1 rounded-pill" id="mCustRiskBadge">Low Risk (15/100)</span>
+                                </div>
+
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <div>
+                                        <strong class="text-white fs-6" id="mCustName">Rahul Sharma</strong>
+                                        <div class="text-secondary small font-monospace"><span id="mCustPhone">9876543210</span> &bull; <span id="mCustEmail">rahul@example.com</span></div>
+                                    </div>
+                                    <div id="mCustCodStatusBadge">
+                                        <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30">COD Active</span>
+                                    </div>
+                                </div>
+
+                                <div class="row g-2 text-center mb-2">
+                                    <div class="col-3">
+                                        <div class="p-2 rounded-3 bg-black bg-opacity-40 border border-secondary border-opacity-20">
+                                            <small class="text-muted d-block" style="font-size: 10px;">Total Orders</small>
+                                            <strong class="text-white font-monospace fs-6" id="mCustTotalOrders">12</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="p-2 rounded-3 bg-black bg-opacity-40 border border-secondary border-opacity-20">
+                                            <small class="text-muted d-block" style="font-size: 10px;">Delivered</small>
+                                            <strong class="text-success font-monospace fs-6" id="mCustDeliveredCount">10</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="p-2 rounded-3 bg-black bg-opacity-40 border border-secondary border-opacity-20">
+                                            <small class="text-muted d-block" style="font-size: 10px;">Cancel Rate</small>
+                                            <strong class="text-warning font-monospace fs-6" id="mCustCancelRate">8.3%</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="p-2 rounded-3 bg-black bg-opacity-40 border border-secondary border-opacity-20">
+                                            <small class="text-muted d-block" style="font-size: 10px;">Return Rate</small>
+                                            <strong class="text-danger font-monospace fs-6" id="mCustReturnRate">0.0%</strong>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-between text-secondary small p-2 rounded-3 bg-black bg-opacity-20">
+                                    <span>Total Lifetime Spent: <strong class="text-success" id="mCustTotalSpent">₹14,500.00</strong></span>
+                                    <span>Past Disputes/Complaints: <strong class="text-danger" id="mCustPastComplaints">1</strong></span>
+                                </div>
+                            </div>
+
+                            <!-- STEP 4: ACTION PANEL -->
+                            <div class="p-3.5 rounded-4" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(239, 68, 68, 0.25);">
+                                <div class="d-flex justify-content-between align-items-center mb-2.5">
+                                    <span class="fw-bold text-danger fs-6"><i class="fa-solid fa-circle-4 me-1.5"></i> Admin Enforcement Actions</span>
+                                    <small class="text-muted">Instant Trust & Safety Actions</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label text-secondary small fw-bold mb-1"><i class="fa-solid fa-comment-pen text-info me-1"></i> Enforcement / Action Notes:</label>
+                                    <textarea id="adminComplaintActionNotes" class="form-control bg-dark text-white border-secondary border-opacity-30 small" rows="2" placeholder="Enter notes or explanation for this disciplinary / support action..."></textarea>
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <button type="button" class="btn btn-outline-warning btn-sm w-100 py-2 rounded-3 fw-bold" onclick="executeComplaintWorkflowAction('IssueWarning')">
+                                                <i class="fa-solid fa-triangle-exclamation me-1"></i> Issue Warning
+                                            </button>
+                                        </div>
+                                        <div class="col-6" id="mBtnCodActionWrap">
+                                            <button type="button" id="mBtnToggleCod" class="btn btn-outline-danger btn-sm w-100 py-2 rounded-3 fw-bold" onclick="executeComplaintWorkflowAction('DisableCOD')">
+                                                <i class="fa-solid fa-ban me-1"></i> Disable COD
+                                            </button>
+                                        </div>
+                                        <div class="col-6">
+                                            <button type="button" class="btn btn-outline-danger btn-sm w-100 py-2 rounded-3 fw-bold" onclick="executeComplaintWorkflowAction('IncreaseRisk')">
+                                                <i class="fa-solid fa-gauge-high me-1"></i> Increase Risk (High)
+                                            </button>
+                                        </div>
+                                        <div class="col-6">
+                                            <button type="button" class="btn btn-danger btn-sm w-100 py-2 rounded-3 fw-bold" onclick="executeComplaintWorkflowAction('BlockCustomer')">
+                                                <i class="fa-solid fa-user-slash me-1"></i> Block Customer
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-success w-100 py-2 rounded-3 fw-bold mt-1 shadow-sm" onclick="executeComplaintWorkflowAction('ResolveTicket')">
+                                        <i class="fa-solid fa-circle-check me-1.5"></i> Mark Complaint Resolved & Close
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer border-top border-secondary border-opacity-25 p-3">
                 <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-warning rounded-pill px-4 fw-bold" id="mBtnUpdateStatusFromDetails">
-                    <i class="fa-solid fa-pen-to-square me-1"></i> Update Status
+                <button type="button" class="btn btn-outline-warning rounded-pill px-4 fw-bold" id="mBtnUpdateStatusFromDetails">
+                    <i class="fa-solid fa-pen-to-square me-1"></i> Update Ticket Status
                 </button>
             </div>
         </div>
@@ -7493,10 +7632,14 @@
         });
     }
 
+    let activeAdminComplaintId = 0;
+    let activeAdminCustomerId = 0;
+
     function viewAdminComplaintModal(id) {
         const modal = new bootstrap.Modal(document.getElementById('adminComplaintDetailsModal'));
         document.getElementById("adminComplaintModalLoader").style.display = "block";
         document.getElementById("adminComplaintModalContent").style.display = "none";
+        document.getElementById("adminComplaintActionNotes").value = "";
         modal.show();
 
         $.ajax({
@@ -7507,15 +7650,21 @@
                 document.getElementById("adminComplaintModalLoader").style.display = "none";
                 if (res.success && res.complaint) {
                     const c = res.complaint;
+                    const ev = res.evidence || {};
+                    const ch = res.customerHistory || {};
+                    
+                    activeAdminComplaintId = c.id;
+                    activeAdminCustomerId = ch.customerId || c.customerId;
+
                     document.getElementById("adminComplaintModalContent").style.display = "block";
 
-                    document.getElementById("mComplaintTicketTitle").innerText = `Support Ticket #${c.ticketNumber}`;
+                    // Ticket Header
+                    document.getElementById("mComplaintTicketTitle").innerText = `Dispute #${c.ticketNumber}`;
                     document.getElementById("mComplaintDateSub").innerText = c.createdDate;
-                    document.getElementById("mComplaintIssue").innerText = c.issue;
 
-                    // Badge
+                    // Header Status Badge
                     const badge = document.getElementById("mComplaintStatusBadge");
-                    badge.className = "badge px-3 py-1.5 rounded-pill fs-6";
+                    badge.className = "badge px-3 py-1 rounded-pill fs-7";
                     if (c.status === "Open") {
                         badge.classList.add("bg-danger", "bg-opacity-25", "text-danger", "border", "border-danger", "border-opacity-30");
                         badge.innerHTML = '<i class="fa-solid fa-circle-exclamation me-1"></i> Open';
@@ -7530,50 +7679,172 @@
                         badge.innerHTML = '<i class="fa-solid fa-lock me-1"></i> Closed';
                     }
 
-                    // Customer & Order
-                    document.getElementById("mComplaintCustName").innerText = c.customerName;
-                    document.getElementById("mComplaintCustPhone").innerText = c.customerMobile;
-                    document.getElementById("mComplaintCustEmail").innerText = c.customerEmail;
-
-                    document.getElementById("mComplaintOrderNum").innerText = c.orderNumber;
-                    document.getElementById("mComplaintOrderAmount").innerText = `₹${c.orderAmount}`;
-                    document.getElementById("mComplaintOrderStatus").innerText = c.orderStatus;
-
+                    // STEP 1: COMPLAINT DETAILS
+                    const roleEl = document.getElementById("mComplaintComplainantRole");
+                    if (c.complainantRole === "Rider") {
+                        roleEl.className = "badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-30";
+                        roleEl.innerHTML = '<i class="fa-solid fa-motorcycle me-1"></i> Rider Complaint';
+                    } else {
+                        roleEl.className = "badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-30";
+                        roleEl.innerHTML = '<i class="fa-solid fa-user me-1"></i> Customer Complaint';
+                    }
+                    document.getElementById("mComplaintComplainantName").innerText = c.complainantName || c.customerName;
+                    document.getElementById("mComplaintReasonCategory").innerText = c.reasonCategory || c.issue;
                     document.getElementById("mComplaintDescription").innerText = c.description;
 
-                    // Attachment
                     const attachWrap = document.getElementById("mComplaintAttachmentWrap");
                     if (c.attachmentUrl) {
                         attachWrap.style.display = "block";
                         document.getElementById("mComplaintAttachmentImg").src = c.attachmentUrl;
                         document.getElementById("mComplaintAttachmentLink").href = c.attachmentUrl;
-                        document.getElementById("mComplaintAttachmentBtn").href = c.attachmentUrl;
                     } else {
                         attachWrap.style.display = "none";
                     }
 
-                    // Resolution Notes
-                    const resWrap = document.getElementById("mComplaintResolutionWrap");
-                    if (c.resolutionNotes) {
-                        resWrap.style.display = "block";
-                        document.getElementById("mComplaintResolutionNotes").innerText = c.resolutionNotes;
-                        document.getElementById("mComplaintResolvedDate").innerText = c.resolvedDate;
+                    // STEP 2: REVIEW EVIDENCE
+                    document.getElementById("mEvidenceOrderNum").innerText = c.orderNumber;
+                    const otpEl = document.getElementById("mEvidenceOtpStatus");
+                    if (ev.isOtpVerified) {
+                        otpEl.innerHTML = `<span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30"><i class="fa-solid fa-shield-check me-1"></i> Verified (OTP: ${ev.deliveryOtp})</span>`;
                     } else {
-                        resWrap.style.display = "none";
+                        otpEl.innerHTML = `<span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-30"><i class="fa-solid fa-clock me-1"></i> OTP: ${ev.deliveryOtp || 'Pending'}</span>`;
+                    }
+                    document.getElementById("mEvidenceDeliveryTime").innerText = ev.deliveredDate !== "N/A" ? ev.deliveredDate : (ev.otpVerifiedDate !== "N/A" ? ev.otpVerifiedDate : "Pending Delivery");
+                    document.getElementById("mEvidenceRiderInfo").innerHTML = `<i class="fa-solid fa-motorcycle text-warning me-1"></i> ${ev.riderName} ${ev.riderId ? `(ID: #${ev.riderId})` : ''}`;
+                    document.getElementById("mEvidenceOrderAmount").innerText = `₹${ev.orderAmount} (${ev.paymentMode})`;
+
+                    const logContainer = document.getElementById("mEvidenceLogList");
+                    logContainer.innerHTML = "";
+                    if (ev.evidenceList && ev.evidenceList.length > 0) {
+                        ev.evidenceList.forEach(e => {
+                            const item = document.createElement("div");
+                            item.className = "p-2 rounded-3 bg-black bg-opacity-40 border border-secondary border-opacity-25 d-flex justify-content-between align-items-center gap-2";
+                            item.innerHTML = `
+                                <div>
+                                    <div class="d-flex align-items-center gap-1.5">
+                                        <span class="badge bg-secondary bg-opacity-40 text-light" style="font-size: 10px;">${e.type}</span>
+                                        <strong class="text-white small">${e.title}</strong>
+                                    </div>
+                                    <small class="text-muted d-block" style="font-size: 11px;">${e.description} &bull; <span class="text-secondary">${e.uploadedBy} on ${e.uploadedDate}</span></small>
+                                </div>
+                                ${e.photoUrl ? `<a href="${e.photoUrl}" target="_blank" class="btn btn-outline-info btn-sm px-2 py-0.5 rounded-pill" style="font-size: 10px;"><i class="fa-solid fa-image me-1"></i> Proof</a>` : ''}
+                            `;
+                            logContainer.appendChild(item);
+                        });
+                    } else {
+                        logContainer.innerHTML = `<div class="text-secondary small fst-italic py-2"><i class="fa-solid fa-info-circle me-1"></i> Standard telemetry maintained: OTP verification logged at timestamp.</div>`;
                     }
 
-                    // Update Status Button
+                    // STEP 3: CUSTOMER HISTORY CHECK
+                    document.getElementById("mCustName").innerText = ch.customerName || c.customerName;
+                    document.getElementById("mCustPhone").innerText = ch.customerMobile || c.customerMobile;
+                    document.getElementById("mCustEmail").innerText = ch.customerEmail || c.customerEmail;
+                    
+                    const riskBadge = document.getElementById("mCustRiskBadge");
+                    riskBadge.className = "badge px-3 py-1 rounded-pill";
+                    if (ch.riskLevel === "High" || ch.riskScore >= 70) {
+                        riskBadge.classList.add("bg-danger", "bg-opacity-25", "text-danger", "border", "border-danger", "border-opacity-30");
+                        riskBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1"></i> High Risk (${ch.riskScore}/100)`;
+                    } else if (ch.riskLevel === "Medium" || ch.riskScore >= 30) {
+                        riskBadge.classList.add("bg-warning", "bg-opacity-25", "text-warning", "border", "border-warning", "border-opacity-30");
+                        riskBadge.innerHTML = `<i class="fa-solid fa-circle-exclamation me-1"></i> Medium Risk (${ch.riskScore}/100)`;
+                    } else {
+                        riskBadge.classList.add("bg-success", "bg-opacity-25", "text-success", "border", "border-success", "border-opacity-30");
+                        riskBadge.innerHTML = `<i class="fa-solid fa-shield-check me-1"></i> Low Risk (${ch.riskScore}/100)`;
+                    }
+
+                    const codBadge = document.getElementById("mCustCodStatusBadge");
+                    const codBtnWrap = document.getElementById("mBtnCodActionWrap");
+                    if (ch.isCodDisabled) {
+                        codBadge.innerHTML = `<span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30"><i class="fa-solid fa-ban me-1"></i> COD Blocked</span>`;
+                        codBtnWrap.innerHTML = `
+                            <button type="button" class="btn btn-outline-success btn-sm w-100 py-2 rounded-3 fw-bold" onclick="executeComplaintWorkflowAction('EnableCOD')">
+                                <i class="fa-solid fa-check me-1"></i> Enable COD
+                            </button>
+                        `;
+                    } else {
+                        codBadge.innerHTML = `<span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30"><i class="fa-solid fa-check me-1"></i> COD Active</span>`;
+                        codBtnWrap.innerHTML = `
+                            <button type="button" class="btn btn-outline-danger btn-sm w-100 py-2 rounded-3 fw-bold" onclick="executeComplaintWorkflowAction('DisableCOD')">
+                                <i class="fa-solid fa-ban me-1"></i> Disable COD
+                            </button>
+                        `;
+                    }
+
+                    document.getElementById("mCustTotalOrders").innerText = ch.totalOrders;
+                    document.getElementById("mCustDeliveredCount").innerText = ch.deliveredCount;
+                    document.getElementById("mCustCancelRate").innerText = `${ch.cancellationRate}%`;
+                    document.getElementById("mCustReturnRate").innerText = `${ch.returnRate}%`;
+                    document.getElementById("mCustTotalSpent").innerText = `₹${ch.totalSpent}`;
+                    document.getElementById("mCustPastComplaints").innerText = ch.pastComplaintsCount;
+
+                    // Status update link
                     document.getElementById("mBtnUpdateStatusFromDetails").onclick = function() {
                         bootstrap.Modal.getInstance(document.getElementById('adminComplaintDetailsModal'))?.hide();
                         openUpdateComplaintStatusModal(c.id, c.status, c.resolutionNotes);
                     };
                 } else {
-                    showToast(res.message || "Failed to load complaint details.", true);
+                    showToast(res.message || "Failed to load dispute telemetry.", true);
                 }
             },
             error: function() {
                 document.getElementById("adminComplaintModalLoader").style.display = "none";
-                showToast("Connection error fetching complaint ticket.", true);
+                showToast("Connection error fetching complaint ticket audit.", true);
+            }
+        });
+    }
+
+    function executeComplaintWorkflowAction(actionType) {
+        if (!activeAdminComplaintId || !activeAdminCustomerId) {
+            showToast("Dispute ticket context missing. Please refresh.", true);
+            return;
+        }
+
+        const notes = document.getElementById("adminComplaintActionNotes").value.trim();
+        const actionLabels = {
+            'IssueWarning': 'Issue Official Behavioral Warning',
+            'DisableCOD': 'Disable Cash on Delivery (COD)',
+            'EnableCOD': 'Re-enable Cash on Delivery (COD)',
+            'IncreaseRisk': 'Increase Risk Profile to High',
+            'BlockCustomer': 'Block / Suspend Customer Account',
+            'ResolveTicket': 'Mark Complaint Resolved and Close Ticket'
+        };
+
+        const confirmMsg = `Are you sure you want to enforce action: "${actionLabels[actionType] || actionType}"?`;
+        if (!confirm(confirmMsg)) return;
+
+        $.ajax({
+            url: '@Url.Action("TakeComplaintAction", "Admin")',
+            type: 'POST',
+            data: {
+                complaintId: activeAdminComplaintId,
+                customerId: activeAdminCustomerId,
+                actionType: actionType,
+                notes: notes
+            },
+            success: function(res) {
+                if (res.success) {
+                    showToast(res.message);
+                    if (actionType === 'ResolveTicket') {
+                        bootstrap.Modal.getInstance(document.getElementById('adminComplaintDetailsModal'))?.hide();
+                        const row = document.getElementById("complaint-row-" + activeAdminComplaintId);
+                        if (row) {
+                            row.setAttribute("data-status", "Resolved");
+                            const cell = document.getElementById("complaint-status-cell-" + activeAdminComplaintId);
+                            if (cell) {
+                                cell.innerHTML = '<span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-2.5 py-1 rounded-pill"><i class="fa-solid fa-circle-check me-1"></i> Resolved</span>';
+                            }
+                        }
+                    } else {
+                        // Re-fetch to refresh risk scores and badges
+                        viewAdminComplaintModal(activeAdminComplaintId);
+                    }
+                } else {
+                    showToast(res.message || "Action execution failed.", true);
+                }
+            },
+            error: function() {
+                showToast("Connection error executing disciplinary action.", true);
             }
         });
     }
