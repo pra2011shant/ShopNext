@@ -1,0 +1,185 @@
+@{
+    ViewData["Title"] = "Seller Protection Policy (SPF) - ShopNext";
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+    .seller-hero {
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.94) 0%, rgba(20, 83, 45, 0.9) 100%), url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=1600') center/cover;
+        border-radius: 24px;
+        padding: 4rem 2rem;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    }
+    .seller-card {
+        background: rgba(30, 41, 59, 0.65);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 2.2rem;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+    .seller-card:hover {
+        border-color: rgba(34, 197, 94, 0.35);
+        transform: translateY(-2px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+    }
+    .gradient-badge {
+        background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+        color: white;
+        padding: 0.35rem 0.9rem;
+        border-radius: 50rem;
+        font-weight: 600;
+        font-size: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .section-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        flex-shrink: 0;
+    }
+    .evidence-pill {
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 1.5rem;
+        height: 100%;
+        transition: all 0.3s ease;
+    }
+    .evidence-pill:hover {
+        border-color: #22c55e;
+        transform: translateY(-3px);
+    }
+</style>
+
+<div class="container py-5 font-outfit">
+    <!-- Hero Banner -->
+    <div class="seller-hero text-center text-white mb-5">
+        <span class="gradient-badge mb-3">
+            <i class="fa-solid fa-store"></i> Merchant Trust & Safety Guarantee
+        </span>
+        <h1 class="display-4 fw-bold mb-3">Seller Protection Policy (SPF)</h1>
+        <p class="lead text-light opacity-75 max-w-700 mx-auto" style="max-width: 740px;">
+            ShopNext local merchants aur partner sellers ko fraudulent returns, product swaps aur deliberate customer damage se 100% financial protection provide karta hai.
+        </p>
+        <div class="d-flex justify-content-center gap-3 mt-4 text-muted small">
+            <span><i class="fa-solid fa-shield-halved me-1 text-success"></i> Seller Protection Fund (SPF)</span>
+            <span>&bull;</span>
+            <span><i class="fa-solid fa-scale-balanced me-1 text-warning"></i> Impartial Dual-Sided Evidence Audit</span>
+        </div>
+    </div>
+
+    <!-- SPF Guarantee Banner -->
+    <div class="p-3 mb-5 rounded-4 border border-success border-opacity-40" style="background: rgba(34, 197, 94, 0.12);">
+        <div class="d-flex align-items-start gap-3">
+            <div class="rounded-circle d-flex align-items-center justify-content-center bg-success text-white flex-shrink-0" style="width: 44px; height: 44px;">
+                <i class="fa-solid fa-hand-holding-dollar fs-5"></i>
+            </div>
+            <div>
+                <h5 class="fw-bold text-success mb-1">🛡️ 100% Merchant Loss Reimbursement (Seller Protection Fund)</h5>
+                <p class="text-light opacity-90 small mb-0">
+                    Agar koi buyer deliberately damaged unit ya wrong item return karta hai aur merchant ki dispatch evidence verified hoti hai, to <strong>ShopNext Seller Protection Fund (SPF)</strong> ke tehat merchant ko pure product ka 100% payout reimburse kiya jata hai.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 1. What Evidence Seller Can Upload -->
+    <div class="seller-card mb-4">
+        <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="section-icon bg-success bg-opacity-20 text-success">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+            </div>
+            <div>
+                <h4 class="fw-bold text-white mb-0">1. Merchant Evidence Upload Pipeline</h4>
+                <small class="text-muted">Evidence merchants can attach at dispatch or return intake</small>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-3">
+                <div class="evidence-pill text-center">
+                    <i class="fa-solid fa-video text-success fs-2 mb-2"></i>
+                    <h6 class="fw-bold text-white mb-1">Packing Video</h6>
+                    <p class="text-muted small mb-0">Sealing of outer flyer with security tape & packaging unboxing recording.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="evidence-pill text-center">
+                    <i class="fa-solid fa-box-open text-warning fs-2 mb-2"></i>
+                    <h6 class="fw-bold text-white mb-1">Product Condition</h6>
+                    <p class="text-muted small mb-0">High-res photos of pristine sealed retail box & intact warranty seals.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="evidence-pill text-center">
+                    <i class="fa-solid fa-barcode text-info fs-2 mb-2"></i>
+                    <h6 class="fw-bold text-white mb-1">SKU & Serial / IMEI</h6>
+                    <p class="text-muted small mb-0">Clear photo of device serial barcode scanned at dispatch workstation.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="evidence-pill text-center">
+                    <i class="fa-solid fa-file-invoice text-primary fs-2 mb-2"></i>
+                    <h6 class="fw-bold text-white mb-1">Shipping Waybill</h6>
+                    <p class="text-muted small mb-0">Courier manifest label & courier rider physical handover proof.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Dual-Sided Comparison Engine -->
+    <div class="seller-card">
+        <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="section-icon bg-warning bg-opacity-20 text-warning">
+                <i class="fa-solid fa-scale-balanced"></i>
+            </div>
+            <div>
+                <h4 class="fw-bold text-white mb-0">2. Dual-Sided Admin Comparison & Resolution</h4>
+                <small class="text-muted">How disputes are arbitrated fairly between buyer & seller</small>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-success border-opacity-30 h-100">
+                    <h6 class="fw-bold text-success"><i class="fa-solid fa-store me-1.5"></i> Seller Outbound Dispatch Evidence</h6>
+                    <ul class="text-muted small ps-3 mb-0">
+                        <li>Merchant packing workstation video timestamped.</li>
+                        <li>Original Serial Number / Barcode verified at dispatch.</li>
+                        <li>Sealed security tape intact.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-danger border-opacity-30 h-100">
+                    <h6 class="fw-bold text-danger"><i class="fa-solid fa-user me-1.5"></i> Customer Inbound Return Evidence</h6>
+                    <ul class="text-muted small ps-3 mb-0">
+                        <li>Customer claimed damage / defect photo.</li>
+                        <li>Customer unboxing video recording.</li>
+                        <li>Hub intake photo showing swapped serial number.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-3 mt-3 bg-black bg-opacity-30 rounded-3 border border-secondary border-opacity-30">
+            <strong class="text-white d-block small mb-1">🎯 Admin Resolution & SPF Payout:</strong>
+            <span class="text-muted small">Agar Serial Number mismatch ya customer damage confirm hota hai, to Admin customer ka return reject karta hai aur <strong>Seller Protection Fund (SPF)</strong> se merchant ke account me 100% order payout release kar deta hai.</span>
+        </div>
+    </div>
+</div>

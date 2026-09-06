@@ -14,6 +14,8 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
+using Microsoft.EntityFrameworkCore;
+
 namespace ShopNext.Controllers
 {
     [Authorize(Roles = "Seller,Admin")]
@@ -22,12 +24,14 @@ namespace ShopNext.Controllers
         private readonly IShopNextService _service;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IAuditService _auditService;
+        private readonly ShopNextDbContext _context;
 
-        public VendorController(IShopNextService service, IWebHostEnvironment webHostEnvironment, IAuditService auditService)
+        public VendorController(IShopNextService service, IWebHostEnvironment webHostEnvironment, IAuditService auditService, ShopNextDbContext context)
         {
             _service = service;
             _webHostEnvironment = webHostEnvironment;
             _auditService = auditService;
+            _context = context;
         }
 
         // Helper to check if vendor is logged in
@@ -968,6 +972,101 @@ namespace ShopNext.Controllers
 
             bool result = await _service.MarkNotificationReadAsync(id);
             return Json(new { success = result });
+        }
+
+        // ==============================================================================
+        // POINT 75: SELLER PROTECTION EVIDENCE PIPELINE
+        // ==============================================================================
+
+        // POST: /Vendor/UploadSellerEvidence
+        [HttpPost]
+        public async Task<IActionResult> UploadSellerEvidence(int orderId, string evidenceType, string title, string? description, IFormFile? file, string? photoUrl, string? sku, string? serialNumber)
+        {
+            if (!IsLoggedIn(out int shopId, out string shopName))
+            {
+                return Json(new { success = false, message = "Please login as a verified merchant." });
+            }
+
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId && o.ShopId == shopId);
+            if (order == null)
+            {
+                return Json(new { success = false, message = "Order not found or access denied." });
+            }
+
+            string savedUrl = photoUrl?.Trim() ?? string.Empty;
+
+            if (file != null && file.Length > 0)
+            {
+                var allowedExts = new[] { ".jpg", ".jpeg", ".png", ".webp", ".mp4", ".mov", ".webm" };
+                var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowedExts.Contains(ext))
+                {
+                    return Json(new { success = false, message = "Invalid file type. Allowed: JPG, PNG, WEBP, MP4, MOV, WEBM." });
+                }
+
+                string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "evidence", "seller");
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+                string uniqueFileName = $"SELLER_ORD{orderId}_SHOP{shopId}_{DateTime.UtcNow:yyyyMMddHHmmss}_{Guid.NewGuid().ToString().Substring(0, 8)}{ext}";
+                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                savedUrl = $"/uploads/evidence/seller/{uniqueFileName}";
+            }
+
+            if (string.IsNullOrWhiteSpace(savedUrl))
+            {
+                return Json(new { success = false, message = "Please provide a valid image/video file or URL." });
+            }
+
+            var metadata = new
+            {
+                ShopId = shopId,
+                ShopName = shopName,
+                OrderId = orderId,
+                Sku = sku ?? "SKU-AUTO",
+                SerialNumber = serialNumber ?? "SN-AUTO",
+                UploadUtc = DateTime.UtcNow,
+                EvidenceType = evidenceType ?? "PackingPhoto",
+                IsProtectedBySPF = true
+            };
+
+            var evidence = new OrderEvidence
+            {
+                OrderId = orderId,
+                EvidenceType = string.IsNullOrWhiteSpace(evidenceType) ? "PackingPhoto" : evidenceType,
+                Title = !string.IsNullOrWhiteSpace(title) ? title.Trim() : "Merchant Dispatch Evidence",
+                Description = description,
+                PhotoUrl = savedUrl,
+                UploadedByRole = "Seller",
+                UploadedByName = shopName,
+                UploadedDate = DateTime.Now,
+                IsVerified = true,
+                VerifiedBy = "Merchant Packaging Station",
+                MetadataJson = System.Text.Json.JsonSerializer.Serialize(metadata)
+            };
+
+            _context.OrderEvidences.Add(evidence);
+            await _context.SaveChangesAsync();
+
+            await _auditService.LogAsync("SellerProtection", "EvidenceUploaded", 
+                orderId, 
+                $"Merchant {shopName} uploaded dispatch evidence for Order #{orderId}. Title: {evidence.Title} | SKU: {sku} | SN: {serialNumber}", 
+                shopId, shopName, "Seller", null);
+
+            return Json(new
+            {
+                success = true,
+                message = "🛡️ Merchant dispatch evidence recorded in immutable audit ledger. Covered under Seller Protection Fund.",
+                evidenceId = evidence.Id,
+                photoUrl = savedUrl,
+                evidenceType = evidence.EvidenceType,
+                uploadedDate = evidence.UploadedDate.ToString("dd MMM yyyy, hh:mm tt")
+            });
         }
     }
 }

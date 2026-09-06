@@ -455,6 +455,12 @@ namespace ShopNext.Controllers
             return View();
         }
 
+        // GET: /Home/SellerProtectionPolicy (Point 75: Seller Protection Policy)
+        public IActionResult SellerProtectionPolicy()
+        {
+            return View();
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
