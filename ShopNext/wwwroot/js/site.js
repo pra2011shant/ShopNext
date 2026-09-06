@@ -275,38 +275,38 @@ const ShopNextRecentlyViewed = {
                 <div class="col-6 col-md-4 col-lg-3">
                     <div class="recently-viewed-card h-100 d-flex flex-column justify-content-between">
                         <div>
-                            <div class="position-relative overflow-hidden rounded-3 mb-2" style="height: 140px; background: #f1f5f9;">
+                            <div class="position-relative overflow-hidden rounded-3 mb-2" style="height: 140px; background: #0f172a; border: 1px solid rgba(255, 255, 255, 0.08);">
                                 ${p.imageUrl ?
                                     `<img src="${p.imageUrl}" alt="${p.name}" class="w-100 h-100" style="object-fit: cover; transition: transform 0.3s ease;" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60';" />`
                                     : `<div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted"><i class="fa-solid fa-box-open fa-2x opacity-50"></i></div>`
                                 }
-                                <span class="badge ${inStock ? 'bg-success' : 'bg-danger'} position-absolute top-0 start-0 m-2 px-2 py-1 rounded" style="font-size: 0.7rem;">
+                                <span class="badge ${inStock ? 'bg-success bg-opacity-25 text-success border border-success border-opacity-30' : 'bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30'} position-absolute top-0 start-0 m-2 px-2 py-1 rounded-pill" style="font-size: 0.7rem;">
                                     ${inStock ? 'In Stock' : 'Out of Stock'}
                                 </span>
-                                <span class="badge bg-dark bg-opacity-75 text-light position-absolute top-0 end-0 m-2 px-2 py-1 rounded" style="font-size: 0.7rem;">
+                                <span class="badge bg-dark bg-opacity-80 text-light position-absolute top-0 end-0 m-2 px-2 py-1 rounded-pill border border-secondary border-opacity-40" style="font-size: 0.7rem;">
                                     ${p.category || 'General'}
                                 </span>
                             </div>
-                            <a href="/Home/ProductDetails/${p.id}" class="text-decoration-none text-main">
-                                <h6 class="fw-bold mb-1 text-truncate" title="${p.name}">${p.name}</h6>
+                            <a href="/Home/ProductDetails/${p.id}" class="text-decoration-none">
+                                <h6 class="fw-bold mb-1 text-truncate text-white" title="${p.name}">${p.name}</h6>
                             </a>
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span class="text-muted small text-truncate" style="max-width: 140px;">
-                                    <i class="fa-solid fa-store text-primary me-1"></i>${p.shopName || 'Shop'}
+                                <span class="text-secondary small text-truncate" style="max-width: 140px;">
+                                    <i class="fa-solid fa-store text-warning me-1"></i>${p.shopName || 'Shop'}
                                 </span>
                                 <span class="text-warning small fw-semibold">
                                     <i class="fa-solid fa-star"></i> ${p.rating ? Number(p.rating).toFixed(1) : '4.8'}
                                 </span>
                             </div>
-                            <div class="fs-5 fw-bold text-primary mb-2">
+                            <div class="fs-5 fw-bold text-success mb-2 font-monospace">
                                 &#8377;${Number(p.price).toFixed(2)}
                             </div>
                         </div>
-                        <div class="d-flex gap-2 pt-2 border-top">
-                            <a href="/Home/ProductDetails/${p.id}" class="btn btn-outline-secondary btn-sm flex-grow-1">
+                        <div class="d-flex gap-2 pt-2 border-top border-secondary border-opacity-25">
+                            <a href="/Home/ProductDetails/${p.id}" class="btn btn-outline-info btn-sm flex-grow-1 rounded-pill">
                                 <i class="fa-solid fa-eye me-1"></i> View
                             </a>
-                            <button class="btn btn-primary btn-sm flex-grow-1" onclick="ShopNextRecentlyViewed.addToCart(${p.id}, '${escapedName}', ${p.price}, ${p.shopId}, '${escapedShop}')">
+                            <button class="btn btn-primary btn-sm flex-grow-1 rounded-pill" onclick="ShopNextRecentlyViewed.addToCart(${p.id}, '${escapedName}', ${p.price}, ${p.shopId}, '${escapedShop}')">
                                 <i class="fa-solid fa-cart-plus"></i> Add
                             </button>
                         </div>

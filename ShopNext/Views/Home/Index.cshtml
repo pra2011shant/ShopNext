@@ -144,29 +144,26 @@
 
     /* Point 41: Today's Deals Section Styles */
     .deals-section {
-        margin-bottom: 3rem;
-        background: linear-gradient(135deg, rgba(239, 68, 68, 0.04) 0%, rgba(245, 158, 11, 0.06) 100%);
-        border: 1px solid rgba(239, 68, 68, 0.2);
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 27, 75, 0.8) 100%);
+        border: 1px solid rgba(239, 68, 68, 0.3);
         border-radius: 24px;
-        padding: 2rem 2rem 2.25rem;
-        position: relative;
-        overflow: hidden;
+        padding: 2rem;
+        margin-bottom: 2.5rem;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(16px);
     }
 
     .deals-header-wrap {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        margin-bottom: 1.5rem;
         flex-wrap: wrap;
         gap: 1rem;
-        margin-bottom: 1.75rem;
-        border-bottom: 1px solid rgba(239, 68, 68, 0.15);
-        padding-bottom: 1rem;
     }
 
     .deal-timer-badge {
-        background: #0f172a;
-        color: #fbbf24;
+        background: rgba(245, 158, 11, 0.15);
         border: 1px solid rgba(245, 158, 11, 0.35);
         padding: 0.45rem 1.1rem;
         border-radius: 50px;
@@ -186,22 +183,23 @@
     }
 
     .deal-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 20px;
         padding: 1.25rem;
         position: relative;
         display: flex;
         flex-direction: column;
         transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(12px);
         overflow: hidden;
     }
 
     .deal-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 15px 30px rgba(239, 68, 68, 0.12);
-        border-color: rgba(239, 68, 68, 0.4);
+        box-shadow: 0 15px 30px rgba(239, 68, 68, 0.25);
+        border-color: rgba(239, 68, 68, 0.5);
     }
 
     .deal-badge-discount {
@@ -223,13 +221,14 @@
         position: absolute;
         top: 12px;
         right: 12px;
-        background: rgba(15, 23, 42, 0.75);
-        backdrop-filter: blur(4px);
+        background: rgba(15, 23, 42, 0.85);
+        backdrop-filter: blur(6px);
         color: #fbbf24;
         font-weight: 700;
         font-size: 0.68rem;
         padding: 0.25rem 0.55rem;
         border-radius: 6px;
+        border: 1px solid rgba(251, 191, 36, 0.3);
         z-index: 2;
     }
 
@@ -238,11 +237,12 @@
         height: 180px;
         border-radius: 14px;
         overflow: hidden;
-        background: #f8fafc;
+        background: #0f172a;
         margin-bottom: 1rem;
         display: flex;
         align-items: center;
         justify-content: center;
+        border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .deal-image-wrap img {
@@ -259,7 +259,7 @@
     .deal-title {
         font-weight: 700;
         font-size: 1.05rem;
-        color: #0f172a;
+        color: #ffffff;
         margin-bottom: 0.25rem;
         line-height: 1.3;
         display: -webkit-box;
@@ -270,7 +270,7 @@
 
     .deal-shop-badge {
         font-size: 0.78rem;
-        color: #64748b;
+        color: #94a3b8;
         margin-bottom: 0.75rem;
     }
 
@@ -341,21 +341,23 @@
     }
 
     .shop-card {
-        background: #ffffff;
-        border: 1px solid var(--border-color);
+        background: rgba(15, 23, 42, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 18px;
         padding: 1.5rem;
         transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         display: flex;
         flex-direction: column;
         height: 100%;
-        box-shadow: var(--shadow-sm);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(12px);
+        color: #ffffff;
     }
 
     .shop-card:hover {
         transform: translateY(-4px);
-        border-color: rgba(79, 70, 229, 0.4);
-        box-shadow: var(--shadow-md);
+        border-color: rgba(99, 102, 241, 0.5);
+        box-shadow: 0 15px 35px rgba(99, 102, 241, 0.15);
     }
 
     .shop-icon-wrapper {
@@ -375,7 +377,7 @@
         font-weight: 700;
         font-size: 1.25rem;
         margin-bottom: 0.25rem;
-        color: var(--text-main);
+        color: #ffffff;
     }
 
     .shop-category {
@@ -485,10 +487,10 @@
                             Limited Time Offers
                         </span>
                     </div>
-                    <h2 class="fw-bold mb-0 text-dark" style="font-size: 1.85rem;">
+                    <h2 class="fw-bold mb-0 text-white" style="font-size: 1.85rem;">
                         <span style="color: #ef4444;">🔥 Today's</span> Deals
                     </h2>
-                    <p class="text-muted small mb-0">Exclusive promotional discounts across verified local merchant catalogs.</p>
+                    <p class="text-secondary small mb-0">Exclusive promotional discounts across verified local merchant catalogs.</p>
                 </div>
 
                 <div class="d-flex align-items-center gap-2">
@@ -532,7 +534,7 @@
 
                         <!-- Store / Category info -->
                         <div class="deal-shop-badge">
-                            <i class="fa-solid fa-store text-warning me-1"></i> @(deal.Product?.Shop?.ShopName ?? "Verified Partner") &bull; <span class="badge bg-secondary bg-opacity-15 text-dark">@(deal.Product?.Category ?? "Special")</span>
+                            <i class="fa-solid fa-store text-warning me-1"></i> @(deal.Product?.Shop?.ShopName ?? "Verified Partner") <span class="mx-1 opacity-50">•</span> <span class="badge bg-secondary bg-opacity-25 text-light">@(deal.Product?.Category ?? "Special")</span>
                         </div>
 
                         <!-- Price Row -->
