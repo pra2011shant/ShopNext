@@ -67,6 +67,9 @@ namespace ShopNext.Models
 
         // Point 50: Sale / Festival Campaign Management Dataset
         public List<AdminSaleCampaignDto> SaleCampaignsList { get; set; } = new List<AdminSaleCampaignDto>();
+
+        // Point 52: Flash Sale Limited Unit Lightning Deals Dataset
+        public List<AdminFlashSaleDto> FlashSalesList { get; set; } = new List<AdminFlashSaleDto>();
     }
 
     /// <summary>
@@ -932,6 +935,80 @@ namespace ShopNext.Models
         public string? CategoryDiscountsJson { get; set; }
         public string? Description { get; set; }
         public bool IsActive { get; set; } = true;
+    }
+
+    #endregion
+
+    #region Point 52: Flash Sale Limited Unit Lightning Deals DTOs
+
+    /// <summary>
+    /// Point 52: Flash Sale (Limited-time, limited-quantity lightning deals)
+    /// Example: Samsung Mobile ₹40,000 -> ₹32,999 | Only 50 Units | Ends in: 00:25:10 | Stock khatam: SOLD OUT
+    /// </summary>
+    public class AdminFlashSaleDto
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = "Samsung Mobile";
+        public string Subtitle { get; set; } = "Galaxy S24 5G Flagship Edition";
+        public string ProductName { get => Subtitle; set => Subtitle = value; }
+        public string ProductImage { get; set; } = "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=400";
+        public string ProductImageUrl { get => ProductImage; set => ProductImage = value; }
+        public string Category { get; set; } = "Mobiles";
+        public string Brand { get; set; } = "Samsung";
+        public decimal OriginalPrice { get; set; } = 40000;
+        public decimal FlashPrice { get; set; } = 32999;
+        public decimal DiscountAmount => Math.Max(0, OriginalPrice - FlashPrice);
+        public decimal DiscountPercentage => OriginalPrice > 0 ? Math.Round((OriginalPrice - FlashPrice) / OriginalPrice * 100) : 0;
+        public int TotalUnits { get; set; } = 50;
+        public int TotalStockUnits { get => TotalUnits; set => TotalUnits = value; }
+        public int ClaimedUnits { get; set; } = 48;
+        public int RemainingUnits => Math.Max(0, TotalUnits - ClaimedUnits);
+        public int ClaimedPercentage => TotalUnits > 0 ? Math.Min(100, (int)((double)ClaimedUnits / TotalUnits * 100)) : 100;
+        public double ClaimPercentage => ClaimedPercentage;
+        public bool IsSoldOut => RemainingUnits <= 0;
+        public bool IsExpired => Status == "Expired" || RemainingSeconds <= 0;
+        public DateTime StartDateTime { get; set; }
+        public DateTime EndDateTime { get; set; }
+        public long RemainingSeconds { get; set; } = 1510; // 00:25:10 = 25*60 + 10 = 1510 seconds
+        public string TimerFormatted { get; set; } = "00:25:10";
+        public string FormattedRemainingTime { get => TimerFormatted; set => TimerFormatted = value; }
+        public string Status { get; set; } = "Live Flash Deal"; // "Live Flash Deal", "Sold Out", "Upcoming", "Expired"
+        public int MaxPerUser { get; set; } = 1;
+        public int MaxUnitsPerCustomer { get => MaxPerUser; set => MaxPerUser = value; }
+        public string ShopName { get; set; } = "Samsung Official Flagship Store";
+        public string CreatedDate { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public bool IsActive { get; set; } = true;
+    }
+
+    public class CreateOrEditFlashSaleRequest
+    {
+        public int? Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Subtitle { get; set; } = string.Empty;
+        public string ProductName { get => Subtitle; set => Subtitle = value; }
+        public string ProductImage { get; set; } = string.Empty;
+        public string ProductImageUrl { get => ProductImage; set => ProductImage = value; }
+        public string Category { get; set; } = "Mobiles";
+        public string Brand { get; set; } = "Samsung";
+        public decimal OriginalPrice { get; set; } = 40000;
+        public decimal FlashPrice { get; set; } = 32999;
+        public int TotalUnits { get; set; } = 50;
+        public int TotalStockUnits { get => TotalUnits; set => TotalUnits = value; }
+        public int ClaimedUnits { get; set; } = 0;
+        public int DurationMinutes { get; set; } = 30;
+        public int MaxPerUser { get; set; } = 1;
+        public int MaxUnitsPerCustomer { get => MaxPerUser; set => MaxPerUser = value; }
+        public string ShopName { get; set; } = "Official Store";
+        public string? Description { get; set; }
+        public bool IsActive { get; set; } = true;
+    }
+
+    public class ClaimFlashSaleRequest
+    {
+        public int FlashSaleId { get; set; }
+        public int Quantity { get; set; } = 1;
+        public int CustomerId { get; set; } = 1;
     }
 
     #endregion

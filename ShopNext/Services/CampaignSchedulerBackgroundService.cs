@@ -41,6 +41,13 @@ namespace ShopNext.Services
                         {
                             _logger.LogInformation("Point 51 Auto-Scheduler processed {TransitionsCount} campaign lifecycle transitions.", transitions);
                         }
+
+                        var flashSaleService = scope.ServiceProvider.GetRequiredService<IFlashSaleService>();
+                        int flashTransitions = await flashSaleService.SyncFlashSaleLifecyclesAsync();
+                        if (flashTransitions > 0)
+                        {
+                            _logger.LogInformation("Point 52 Flash Sale sync processed {TransitionsCount} deal updates.", flashTransitions);
+                        }
                     }
                 }
                 catch (Exception ex)

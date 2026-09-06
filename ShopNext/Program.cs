@@ -39,6 +39,7 @@ builder.Services.AddScoped<IAddressRiskService, AddressRiskService>();
 builder.Services.AddScoped<IMultiAccountDetectionService, MultiAccountDetectionService>();
 builder.Services.AddScoped<ICodAbuseService, CodAbuseService>();
 builder.Services.AddScoped<ISaleCampaignService, SaleCampaignService>();
+builder.Services.AddScoped<IFlashSaleService, FlashSaleService>();
 builder.Services.AddHostedService<CampaignSchedulerBackgroundService>();
 
 // 3. Point 46 & 29: Security & Role-Based Authentication Configuration

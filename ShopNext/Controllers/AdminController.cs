@@ -26,8 +26,9 @@ namespace ShopNext.Controllers
         private readonly IMultiAccountDetectionService _multiAccountService;
         private readonly ICodAbuseService _codAbuseService;
         private readonly ISaleCampaignService _saleCampaignService;
+        private readonly IFlashSaleService _flashSaleService;
 
-        public AdminController(IShopNextService service, ShopNextDbContext context, IAuditService auditService, ICustomerRiskService riskService, IAddressRiskService addressRiskService, IMultiAccountDetectionService multiAccountService, ICodAbuseService codAbuseService, ISaleCampaignService saleCampaignService)
+        public AdminController(IShopNextService service, ShopNextDbContext context, IAuditService auditService, ICustomerRiskService riskService, IAddressRiskService addressRiskService, IMultiAccountDetectionService multiAccountService, ICodAbuseService codAbuseService, ISaleCampaignService saleCampaignService, IFlashSaleService flashSaleService)
         {
             _service = service;
             _context = context;
@@ -37,6 +38,7 @@ namespace ShopNext.Controllers
             _multiAccountService = multiAccountService;
             _codAbuseService = codAbuseService;
             _saleCampaignService = saleCampaignService;
+            _flashSaleService = flashSaleService;
         }
 
         private bool IsAdminLoggedIn()
@@ -541,7 +543,8 @@ namespace ShopNext.Controllers
                 AddressRiskList = await _addressRiskService.GetAddressRiskAnalyticsAsync(),
                 MultiAccountClustersList = await _multiAccountService.GetMultiAccountClustersAsync(),
                 CodAbuseList = await _codAbuseService.GetCodAbuseAnalyticsAsync(),
-                SaleCampaignsList = await _saleCampaignService.GetAllCampaignsAsync()
+                SaleCampaignsList = await _saleCampaignService.GetAllCampaignsAsync(),
+                FlashSalesList = await _flashSaleService.GetAllFlashSalesAsync()
             };
 
             ViewBag.PendingShops = pendingShops;
@@ -3979,6 +3982,200 @@ namespace ShopNext.Controllers
                     : "Campaign schedules evaluated. All campaigns are currently in sync with real-time clocks.",
                 transitionsCount = transitions,
                 data = campaigns
+            });
+        }
+
+        #endregion
+
+        #region Point 52: Flash Sale Management Endpoints
+
+        // GET: /Admin/GetFlashSaleDetails
+        [HttpGet]
+        public async Task<IActionResult> GetFlashSaleDetails(int flashSaleId)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            var deal = await _flashSaleService.GetFlashSaleByIdAsync(flashSaleId);
+            if (deal == null)
+            {
+                return Json(new { success = false, message = "Flash Sale deal not found." });
+            }
+
+            return Json(new { success = true, data = deal });
+        }
+
+        // POST: /Admin/CreateFlashSale
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateFlashSale([FromBody] CreateOrEditFlashSaleRequest request)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            if (request == null || string.IsNullOrWhiteSpace(request.Title) || string.IsNullOrWhiteSpace(request.ProductName))
+            {
+                return Json(new { success = false, message = "Title and Product Name are required." });
+            }
+
+            var created = await _flashSaleService.CreateFlashSaleAsync(request);
+            return Json(new
+            {
+                success = true,
+                message = $"⚡ Flash Sale '{created.Title}' created successfully!",
+                data = created
+            });
+        }
+
+        // POST: /Admin/UpdateFlashSale
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateFlashSale([FromBody] CreateOrEditFlashSaleRequest request)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            if (request == null || !request.Id.HasValue)
+            {
+                return Json(new { success = false, message = "Invalid request." });
+            }
+
+            var updated = await _flashSaleService.UpdateFlashSaleAsync(request);
+            if (updated == null)
+            {
+                return Json(new { success = false, message = "Flash sale deal not found." });
+            }
+
+            return Json(new
+            {
+                success = true,
+                message = $"⚡ Flash Sale '{updated.Title}' updated successfully!",
+                data = updated
+            });
+        }
+
+        // POST: /Admin/ToggleFlashSaleStatus
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleFlashSaleStatus(int flashSaleId)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            var updated = await _flashSaleService.ToggleFlashSaleStatusAsync(flashSaleId);
+            if (updated == null)
+            {
+                return Json(new { success = false, message = "Flash sale deal not found." });
+            }
+
+            return Json(new
+            {
+                success = true,
+                message = $"Status updated: Flash Sale is now {(updated.IsActive ? "ACTIVE" : "PAUSED")}.",
+                data = updated
+            });
+        }
+
+        // POST: /Admin/DeleteFlashSale
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteFlashSale(int flashSaleId)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            var success = await _flashSaleService.DeleteFlashSaleAsync(flashSaleId);
+            if (!success)
+            {
+                return Json(new { success = false, message = "Flash sale deal not found." });
+            }
+
+            return Json(new
+            {
+                success = true,
+                message = "Flash sale deal deleted successfully."
+            });
+        }
+
+        // POST: /Admin/ClaimFlashSale
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ClaimFlashSale([FromBody] ClaimFlashSaleRequest request)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            if (request == null || request.FlashSaleId <= 0)
+            {
+                return Json(new { success = false, message = "Invalid claim request." });
+            }
+
+            var (success, message, deal) = await _flashSaleService.ClaimFlashSaleUnitAsync(request);
+            return Json(new
+            {
+                success,
+                message,
+                data = deal
+            });
+        }
+
+        // POST: /Admin/RestockFlashSale
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RestockFlashSale(int flashSaleId, int addedUnits)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            if (addedUnits <= 0)
+            {
+                return Json(new { success = false, message = "Units to restock must be greater than 0." });
+            }
+
+            var (success, message, deal) = await _flashSaleService.RestockFlashSaleAsync(flashSaleId, addedUnits);
+            return Json(new
+            {
+                success,
+                message,
+                data = deal
+            });
+        }
+
+        // POST: /Admin/SyncFlashSaleLifecycles
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SyncFlashSaleLifecycles()
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            int transitions = await _flashSaleService.SyncFlashSaleLifecyclesAsync();
+            var deals = await _flashSaleService.GetAllFlashSalesAsync();
+
+            return Json(new
+            {
+                success = true,
+                message = transitions > 0
+                    ? $"⚡ Flash Sale Sync: {transitions} deals transitioned status (Sold Out / Expired / Live)."
+                    : "⚡ All Flash Sale deals are synced and ticking with real-time stock clocks.",
+                transitionsCount = transitions,
+                data = deals
             });
         }
 
