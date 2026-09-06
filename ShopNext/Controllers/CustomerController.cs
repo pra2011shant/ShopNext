@@ -731,8 +731,182 @@ namespace ShopNext.Controllers
         }
 
         // ==============================================================================
-        // POINT 61: UNBOXING VIDEO EVIDENCE (IMMUTABLE AUDIT TRAIL)
+        // POINT 78: CUSTOMER SUPPORT TICKET & TWO-WAY CONVERSATION THREAD
         // ==============================================================================
+
+        // GET: /Customer/GetTicketThreadDetails?ticketId={ticketId}&orderId={orderId}
+        [HttpGet]
+        public async Task<IActionResult> GetTicketThreadDetails(int? ticketId, int? orderId)
+        {
+            if (!IsCustomerLoggedIn(out int customerId, out string? customerName))
+            {
+                return Json(new { success = false, message = "Please login to view support ticket." });
+            }
+
+            Complaint? complaint = null;
+            if (ticketId.HasValue && ticketId.Value > 0)
+            {
+                complaint = await _context.Complaints
+                    .Include(c => c.Order)
+                    .FirstOrDefaultAsync(c => c.Id == ticketId.Value && c.CustomerId == customerId);
+            }
+            else if (orderId.HasValue && orderId.Value > 0)
+            {
+                complaint = await _context.Complaints
+                    .Include(c => c.Order)
+                    .Where(c => c.OrderId == orderId.Value && c.CustomerId == customerId)
+                    .OrderByDescending(c => c.CreatedDate)
+                    .FirstOrDefaultAsync();
+            }
+
+            if (complaint == null)
+            {
+                return Json(new { success = false, message = "No active support ticket found for this order." });
+            }
+
+            List<TicketMessageItem> thread = new();
+            if (!string.IsNullOrWhiteSpace(complaint.ThreadMessagesJson))
+            {
+                try
+                {
+                    thread = System.Text.Json.JsonSerializer.Deserialize<List<TicketMessageItem>>(complaint.ThreadMessagesJson) ?? new();
+                }
+                catch { }
+            }
+
+            if (thread.Count == 0)
+            {
+                // Customer initial message
+                thread.Add(new TicketMessageItem
+                {
+                    Id = 1,
+                    SenderRole = complaint.ComplainantRole ?? "Customer",
+                    SenderName = complaint.ComplainantName ?? customerName ?? "Customer",
+                    Message = complaint.Description,
+                    SentAt = complaint.CreatedDate.ToString("dd MMM yyyy, hh:mm tt"),
+                    AttachmentUrl = complaint.AttachmentUrl
+                });
+
+                // If admin resolution notes already exist, synthesize Admin Reply
+                if (!string.IsNullOrWhiteSpace(complaint.ResolutionNotes))
+                {
+                    thread.Add(new TicketMessageItem
+                    {
+                        Id = 2,
+                        SenderRole = "Admin",
+                        SenderName = "Admin (ShopNext Support)",
+                        Message = complaint.ResolutionNotes,
+                        SentAt = complaint.ResolvedDate?.ToString("dd MMM yyyy, hh:mm tt") ?? complaint.CreatedDate.AddMinutes(27).ToString("dd MMM yyyy, hh:mm tt")
+                    });
+                }
+            }
+
+            string cleanTicketNumber = !string.IsNullOrWhiteSpace(complaint.TicketNumber) 
+                ? (complaint.TicketNumber.StartsWith("TKT-") ? "T" + complaint.Id.ToString("D4") : complaint.TicketNumber) 
+                : $"T{complaint.Id:D4}";
+
+            string cleanOrderNumber = $"ORD{complaint.OrderId:D4}";
+
+            return Json(new
+            {
+                success = true,
+                ticketId = complaint.Id,
+                ticketNumber = cleanTicketNumber,
+                orderId = complaint.OrderId,
+                orderNumber = cleanOrderNumber,
+                issue = complaint.Issue,
+                status = complaint.Status,
+                priority = complaint.Priority,
+                createdDate = complaint.CreatedDate.ToString("dd MMM yyyy, hh:mm tt"),
+                messages = thread
+            });
+        }
+
+        // POST: /Customer/PostTicketReply
+        [HttpPost]
+        public async Task<IActionResult> PostTicketReply(int ticketId, string message)
+        {
+            if (!IsCustomerLoggedIn(out int customerId, out string? customerName))
+            {
+                return Json(new { success = false, message = "Please login to post a reply." });
+            }
+
+            if (ticketId <= 0 || string.IsNullOrWhiteSpace(message))
+            {
+                return Json(new { success = false, message = "Please enter a message to reply." });
+            }
+
+            var complaint = await _context.Complaints.FirstOrDefaultAsync(c => c.Id == ticketId && c.CustomerId == customerId);
+            if (complaint == null)
+            {
+                return Json(new { success = false, message = "Support ticket not found." });
+            }
+
+            List<TicketMessageItem> thread = new();
+            if (!string.IsNullOrWhiteSpace(complaint.ThreadMessagesJson))
+            {
+                try
+                {
+                    thread = System.Text.Json.JsonSerializer.Deserialize<List<TicketMessageItem>>(complaint.ThreadMessagesJson) ?? new();
+                }
+                catch { }
+            }
+
+            if (thread.Count == 0)
+            {
+                thread.Add(new TicketMessageItem
+                {
+                    Id = 1,
+                    SenderRole = complaint.ComplainantRole ?? "Customer",
+                    SenderName = complaint.ComplainantName ?? customerName ?? "Customer",
+                    Message = complaint.Description,
+                    SentAt = complaint.CreatedDate.ToString("dd MMM yyyy, hh:mm tt"),
+                    AttachmentUrl = complaint.AttachmentUrl
+                });
+
+                if (!string.IsNullOrWhiteSpace(complaint.ResolutionNotes))
+                {
+                    thread.Add(new TicketMessageItem
+                    {
+                        Id = 2,
+                        SenderRole = "Admin",
+                        SenderName = "Admin (ShopNext Support)",
+                        Message = complaint.ResolutionNotes,
+                        SentAt = complaint.ResolvedDate?.ToString("dd MMM yyyy, hh:mm tt") ?? complaint.CreatedDate.AddMinutes(27).ToString("dd MMM yyyy, hh:mm tt")
+                    });
+                }
+            }
+
+            thread.Add(new TicketMessageItem
+            {
+                Id = thread.Count + 1,
+                SenderRole = "Customer",
+                SenderName = customerName ?? "Customer",
+                Message = message.Trim(),
+                SentAt = DateTime.Now.ToString("dd MMM yyyy, hh:mm tt")
+            });
+
+            complaint.ThreadMessagesJson = System.Text.Json.JsonSerializer.Serialize(thread);
+            if (complaint.Status == "Closed" || complaint.Status == "Resolved")
+            {
+                complaint.Status = "In Progress"; // Re-open on customer message
+            }
+
+            await _context.SaveChangesAsync();
+
+            await _auditService.LogAsync("Ticket_CustomerReply", "Complaint", complaint.Id, 
+                $"Customer {customerName} posted reply to Ticket #{complaint.TicketNumber}", 
+                customerId, customerName, "Customer", HttpContext.Connection.RemoteIpAddress?.ToString());
+
+            return Json(new
+            {
+                success = true,
+                message = "Reply sent successfully.",
+                ticketNumber = complaint.TicketNumber,
+                status = complaint.Status,
+                messages = thread
+            });
+        }
 
         // POST: /Customer/UploadUnboxingVideo
         [HttpPost]

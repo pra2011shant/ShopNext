@@ -2696,7 +2696,21 @@ namespace ShopNext.Controllers
                     status = complaint.Status ?? "Open",
                     createdDate = complaint.CreatedDate.ToString("dd MMM yyyy, hh:mm tt"),
                     resolutionNotes = complaint.ResolutionNotes ?? "",
-                    resolvedDate = complaint.ResolvedDate?.ToString("dd MMM yyyy, hh:mm tt") ?? "N/A"
+                    resolvedDate = complaint.ResolvedDate?.ToString("dd MMM yyyy, hh:mm tt") ?? "N/A",
+                    messages = !string.IsNullOrWhiteSpace(complaint.ThreadMessagesJson) 
+                        ? (System.Text.Json.JsonSerializer.Deserialize<List<TicketMessageItem>>(complaint.ThreadMessagesJson) ?? new()) 
+                        : new List<TicketMessageItem>
+                        {
+                            new TicketMessageItem
+                            {
+                                Id = 1,
+                                SenderRole = complaint.ComplainantRole ?? "Customer",
+                                SenderName = complaint.ComplainantName ?? customer?.Name ?? "Customer",
+                                Message = complaint.Description,
+                                SentAt = complaint.CreatedDate.ToString("dd MMM yyyy, hh:mm tt"),
+                                AttachmentUrl = complaint.AttachmentUrl
+                            }
+                        }
                 },
                 // 1. 3-Party Statements: Customer, Seller, Rider
                 statements = new
@@ -2813,6 +2827,88 @@ namespace ShopNext.Controllers
                     totalSpent = totalSpent.ToString("N2"),
                     pastComplaintsCount = pastComplaintsCount
                 }
+            });
+        }
+
+        // ==========================================
+        // POINT 78: ADMIN SUPPORT TICKET REPLY
+        // ==========================================
+
+        // POST: /Admin/PostAdminTicketReply
+        [HttpPost]
+        public async Task<IActionResult> PostAdminTicketReply(int complaintId, string replyMessage, string? newStatus)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized. Please log in as Admin." });
+            }
+
+            if (complaintId <= 0 || string.IsNullOrWhiteSpace(replyMessage))
+            {
+                return Json(new { success = false, message = "Valid complaint ID and reply message are required." });
+            }
+
+            var complaint = await _context.Complaints.Include(c => c.Order).FirstOrDefaultAsync(c => c.Id == complaintId);
+            if (complaint == null)
+            {
+                return Json(new { success = false, message = "Support ticket not found." });
+            }
+
+            List<TicketMessageItem> thread = new();
+            if (!string.IsNullOrWhiteSpace(complaint.ThreadMessagesJson))
+            {
+                try
+                {
+                    thread = System.Text.Json.JsonSerializer.Deserialize<List<TicketMessageItem>>(complaint.ThreadMessagesJson) ?? new();
+                }
+                catch { }
+            }
+
+            if (thread.Count == 0)
+            {
+                thread.Add(new TicketMessageItem
+                {
+                    Id = 1,
+                    SenderRole = complaint.ComplainantRole ?? "Customer",
+                    SenderName = complaint.ComplainantName ?? "Customer",
+                    Message = complaint.Description,
+                    SentAt = complaint.CreatedDate.ToString("dd MMM yyyy, hh:mm tt"),
+                    AttachmentUrl = complaint.AttachmentUrl
+                });
+            }
+
+            thread.Add(new TicketMessageItem
+            {
+                Id = thread.Count + 1,
+                SenderRole = "Admin",
+                SenderName = "Admin (ShopNext Helpdesk)",
+                Message = replyMessage.Trim(),
+                SentAt = DateTime.Now.ToString("dd MMM yyyy, hh:mm tt")
+            });
+
+            complaint.ThreadMessagesJson = System.Text.Json.JsonSerializer.Serialize(thread);
+            complaint.ResolutionNotes = replyMessage.Trim();
+            if (!string.IsNullOrWhiteSpace(newStatus))
+            {
+                complaint.Status = newStatus;
+            }
+            if (newStatus == "Resolved" || newStatus == "Closed")
+            {
+                complaint.ResolvedDate = DateTime.Now;
+            }
+
+            await _context.SaveChangesAsync();
+            await _auditService.LogAsync("Ticket_AdminReply", "Complaint", complaint.Id, 
+                $"Admin replied to Ticket #{complaint.TicketNumber}: {replyMessage.Trim()}", 
+                1, "Admin", "Admin", HttpContext.Connection.RemoteIpAddress?.ToString());
+
+            return Json(new
+            {
+                success = true,
+                message = "Reply posted successfully.",
+                ticketNumber = complaint.TicketNumber,
+                status = complaint.Status,
+                messages = thread
             });
         }
 

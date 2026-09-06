@@ -60,11 +60,24 @@ namespace ShopNext.Models
         public string? RiderStatement { get; set; }
         public DateTime? RiderStatementDate { get; set; }
 
+        // Point 78: Customer Support Ticket Threaded Conversation & Replies
+        public string? ThreadMessagesJson { get; set; }
+
         // Navigation Properties
         [ForeignKey("CustomerId")]
         public virtual User? Customer { get; set; }
 
         [ForeignKey("OrderId")]
         public virtual Order? Order { get; set; }
+    }
+
+    public class TicketMessageItem
+    {
+        public int Id { get; set; }
+        public string SenderRole { get; set; } = "Customer"; // Customer, Admin, Support
+        public string SenderName { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
+        public string SentAt { get; set; } = string.Empty;
+        public string? AttachmentUrl { get; set; }
     }
 }

@@ -882,9 +882,70 @@
                     <span class="badge bg-warning bg-opacity-25 text-warning px-3 py-1 rounded-pill mt-2">Status: Open</span>
                 </div>
 
-                <button type="button" class="btn btn-success rounded-pill px-4 fw-bold" data-bs-dismiss="modal">
-                    <i class="fa-solid fa-check me-1"></i> Done
-                </button>
+                <div class="d-flex justify-content-center gap-2">
+                    <button type="button" class="btn btn-outline-info rounded-pill px-3.5 fw-bold" onclick="viewCreatedTicket()">
+                        <i class="fa-solid fa-comments me-1"></i> Open Ticket Chat
+                    </button>
+                    <button type="button" class="btn btn-success rounded-pill px-4 fw-bold" data-bs-dismiss="modal">
+                        <i class="fa-solid fa-check me-1"></i> Done
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Point 78. Customer Support Ticket & Threaded Reply Desk -->
+<div class="modal fade" id="customerSupportTicketModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-dark text-white border border-primary border-opacity-30 shadow-lg" style="border-radius: 20px; background: rgba(15, 23, 42, 0.95) !important; backdrop-filter: blur(16px);">
+            <!-- Header -->
+            <div class="modal-header border-bottom border-secondary border-opacity-25 p-3.5">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-2.5 rounded-3 bg-primary bg-opacity-20 text-primary fs-5">
+                        <i class="fa-solid fa-headset"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <h5 class="modal-title fw-bold text-white mb-0 font-monospace" id="suppTicketNumberTitle">Ticket #T1001</h5>
+                            <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-30 px-2.5 py-0.5 rounded-pill font-monospace small" id="suppTicketStatusBadge">Status: Open</span>
+                        </div>
+                        <div class="text-secondary small mt-0.5">
+                            <span class="text-light font-monospace" id="suppTicketOrderTitle">Order #ORD1001</span> &bull; 
+                            <span class="text-info fw-semibold" id="suppTicketIssueTitle">Issue: Wrong Product</span>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- Body: Chat History -->
+            <div class="modal-body p-3.5" style="max-height: 480px; min-height: 260px; overflow-y: auto;" id="suppTicketChatBody">
+                <div class="text-center py-4" id="suppTicketLoader">
+                    <i class="fa-solid fa-spinner fa-spin fs-3 text-info"></i>
+                    <div class="text-secondary small mt-2">Loading ticket conversation thread...</div>
+                </div>
+
+                <!-- Chat Thread Container -->
+                <div id="suppTicketMessageContainer" class="d-flex flex-column gap-3" style="display: none;">
+                    <!-- Dynamically rendered messages -->
+                </div>
+            </div>
+
+            <!-- Footer: Reply Section -->
+            <div class="modal-footer border-top border-secondary border-opacity-25 p-3 d-flex flex-column gap-2">
+                <input type="hidden" id="suppCurrentTicketId" />
+                <div class="input-group">
+                    <textarea id="suppTicketReplyInput" class="form-control bg-black bg-opacity-40 text-white border-secondary border-opacity-50" placeholder="Type your message / follow-up to Support Admin..." rows="2" style="border-radius: 12px 0 0 12px; resize: none;"></textarea>
+                    <button type="button" class="btn btn-primary px-4 fw-bold d-flex align-items-center gap-2" id="btnSubmitTicketReply" onclick="submitTicketReply()" style="border-radius: 0 12px 12px 0;">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>Reply</span>
+                    </button>
+                </div>
+                <div class="d-flex justify-content-between align-items-center w-100 px-1">
+                    <small class="text-secondary"><i class="fa-solid fa-shield-halved text-success me-1"></i> Responses audited by ShopNext Customer Protection Desk</small>
+                    <small class="text-secondary font-monospace" id="suppTicketCreatedDate">06 Sep 2026</small>
+                </div>
             </div>
         </div>
     </div>
@@ -1267,11 +1328,15 @@
     // ==========================================
     // POINT 44: NEED HELP / CUSTOMER COMPLAINT AGAINST RIDER
     // ==========================================
+    let lastCreatedTicketId = 0;
+    let lastCreatedOrderId = 0;
+
     function openNeedHelpModal(orderId, orderPill, productName) {
+        lastCreatedOrderId = orderId;
         document.getElementById("helpOrderId").value = orderId;
         document.getElementById("helpOrderPill").innerText = orderPill;
         document.getElementById("helpProductName").innerText = productName || "Order Items";
-        const firstRadio = document.querySelector('input[name="custDeliveryIssue"][value="Rider didn\'t deliver"]');
+        const firstRadio = document.querySelector('input[name="custDeliveryIssue"][value="Wrong Product"]') || document.querySelector('input[name="custDeliveryIssue"]');
         if (firstRadio) firstRadio.checked = true;
         document.getElementById("helpDescription").value = "";
         document.getElementById("helpAttachmentUrl").value = "";
@@ -1281,6 +1346,7 @@
 
     function submitNeedHelpComplaint() {
         const orderId = document.getElementById("helpOrderId").value;
+        lastCreatedOrderId = orderId;
         const selectedRadio = document.querySelector('input[name="custDeliveryIssue"]:checked');
         const issue = selectedRadio ? selectedRadio.value : "Delivery Issue";
         const desc = document.getElementById("helpDescription").value.trim();
@@ -1298,7 +1364,7 @@
 
         const btn = document.getElementById("btnSubmitComplaint");
         btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Logging dispute...';
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Logging ticket...';
 
         $.ajax({
             url: '/Customer/RaiseComplaint',
@@ -1317,7 +1383,8 @@
                 bootstrap.Modal.getInstance(document.getElementById('needHelpModal'))?.hide();
 
                 if (res.success) {
-                    document.getElementById("confirmTicketNumber").innerText = res.ticketNumber || "TKT-LOGGED";
+                    lastCreatedTicketId = res.ticketId;
+                    document.getElementById("confirmTicketNumber").innerText = res.ticketNumber || `T${res.ticketId}`;
                     new bootstrap.Modal(document.getElementById('complaintConfirmationModal')).show();
                 } else {
                     alert(res.message || "Failed to submit complaint.");
@@ -1327,6 +1394,148 @@
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-paper-plane me-1.5"></i> Submit Complaint';
                 alert("Connection error while submitting complaint. Please try again.");
+            }
+        });
+    }
+
+    function viewCreatedTicket() {
+        bootstrap.Modal.getInstance(document.getElementById('complaintConfirmationModal'))?.hide();
+        openCustomerSupportTicketModal(lastCreatedOrderId, lastCreatedTicketId);
+    }
+
+    // Point 78: Customer Support Ticket Modal & Two-Way Conversation Desk
+    function openCustomerSupportTicketModal(orderId, ticketId) {
+        document.getElementById("suppTicketLoader").style.display = "block";
+        document.getElementById("suppTicketMessageContainer").style.display = "none";
+        document.getElementById("suppTicketReplyInput").value = "";
+
+        const modal = new bootstrap.Modal(document.getElementById('customerSupportTicketModal'));
+        modal.show();
+
+        $.ajax({
+            url: '/Customer/GetTicketThreadDetails',
+            type: 'GET',
+            data: { orderId: orderId, ticketId: ticketId },
+            success: function(res) {
+                document.getElementById("suppTicketLoader").style.display = "none";
+                if (res.success) {
+                    document.getElementById("suppTicketMessageContainer").style.display = "flex";
+                    document.getElementById("suppCurrentTicketId").value = res.ticketId;
+                    document.getElementById("suppTicketNumberTitle").innerText = `Ticket #${res.ticketNumber}`;
+                    document.getElementById("suppTicketOrderTitle").innerText = `Order #${res.orderNumber}`;
+                    document.getElementById("suppTicketIssueTitle").innerText = `Issue: ${res.issue}`;
+                    document.getElementById("suppTicketCreatedDate").innerText = res.createdDate;
+
+                    const badge = document.getElementById("suppTicketStatusBadge");
+                    badge.innerText = `Status: ${res.status}`;
+                    if (res.status === 'Open') {
+                        badge.className = "badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-30 px-2.5 py-0.5 rounded-pill font-monospace small";
+                    } else if (res.status === 'Resolved' || res.status === 'Closed') {
+                        badge.className = "badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-2.5 py-0.5 rounded-pill font-monospace small";
+                    } else {
+                        badge.className = "badge bg-info bg-opacity-25 text-info border border-info border-opacity-30 px-2.5 py-0.5 rounded-pill font-monospace small";
+                    }
+
+                    renderTicketThreadMessages(res.messages || []);
+                } else {
+                    alert(res.message || "Failed to load support ticket.");
+                    modal.hide();
+                }
+            },
+            error: function() {
+                document.getElementById("suppTicketLoader").style.display = "none";
+                alert("Connection error fetching ticket thread.");
+                modal.hide();
+            }
+        });
+    }
+
+    function renderTicketThreadMessages(messages) {
+        const container = document.getElementById("suppTicketMessageContainer");
+        container.innerHTML = "";
+
+        if (!messages || messages.length === 0) {
+            container.innerHTML = '<div class="text-secondary text-center py-3 small">No conversation messages logged yet.</div>';
+            return;
+        }
+
+        messages.forEach(m => {
+            const isAdmin = m.senderRole === "Admin" || m.senderRole === "Support" || m.senderRole === "SupportAgent";
+            const bubble = document.createElement("div");
+            bubble.className = `d-flex gap-2.5 align-items-start ${isAdmin ? 'ps-3' : 'pe-3'}`;
+            
+            if (isAdmin) {
+                bubble.innerHTML = `
+                    <div class="rounded-circle bg-success bg-opacity-20 text-success p-2 d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm" style="width: 38px; height: 38px;">
+                        <i class="fa-solid fa-headset"></i>
+                    </div>
+                    <div class="p-3 rounded-4 bg-black bg-opacity-40 border border-success border-opacity-40 flex-grow-1 shadow-sm" style="border-left: 3px solid #22c55e;">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <div class="d-flex align-items-center gap-1.5">
+                                <strong class="text-success small">${m.senderName || 'Admin Reply'}</strong>
+                                <span class="badge bg-success bg-opacity-20 text-success px-1.5 py-0.2 rounded-pill" style="font-size: 10px;"><i class="fa-solid fa-circle-check me-0.5"></i> Support Desk</span>
+                            </div>
+                            <small class="text-secondary font-monospace" style="font-size: 11px;">${m.sentAt || ''}</small>
+                        </div>
+                        <p class="text-light small mb-0" style="white-space: pre-wrap;">${m.message || ''}</p>
+                    </div>
+                `;
+            } else {
+                bubble.innerHTML = `
+                    <div class="rounded-circle bg-primary bg-opacity-20 text-primary p-2 d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm" style="width: 38px; height: 38px;">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div class="p-3 rounded-4 bg-black bg-opacity-40 border border-primary border-opacity-40 flex-grow-1 shadow-sm" style="border-left: 3px solid #38bdf8;">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <strong class="text-info small">${m.senderName || 'Customer Message'}</strong>
+                            <small class="text-secondary font-monospace" style="font-size: 11px;">${m.sentAt || ''}</small>
+                        </div>
+                        <p class="text-light small mb-0" style="white-space: pre-wrap;">${m.message || ''}</p>
+                        ${m.attachmentUrl ? `<div class="mt-2"><a href="${m.attachmentUrl}" target="_blank" class="btn btn-outline-info btn-sm py-0.5 px-2 rounded-pill" style="font-size: 11px;"><i class="fa-solid fa-paperclip me-1"></i> View Attachment</a></div>` : ''}
+                    </div>
+                `;
+            }
+            container.appendChild(bubble);
+        });
+
+        const chatBody = document.getElementById("suppTicketChatBody");
+        setTimeout(() => { chatBody.scrollTop = chatBody.scrollHeight; }, 100);
+    }
+
+    function submitTicketReply() {
+        const ticketId = document.getElementById("suppCurrentTicketId").value;
+        const msg = document.getElementById("suppTicketReplyInput").value.trim();
+
+        if (!msg) {
+            alert("Please write your reply message first.");
+            return;
+        }
+
+        const btn = document.getElementById("btnSubmitTicketReply");
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+        $.ajax({
+            url: '/Customer/PostTicketReply',
+            type: 'POST',
+            data: {
+                ticketId: ticketId,
+                message: msg
+            },
+            success: function(res) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> <span>Reply</span>';
+                if (res.success) {
+                    document.getElementById("suppTicketReplyInput").value = "";
+                    renderTicketThreadMessages(res.messages || []);
+                } else {
+                    alert(res.message || "Failed to post reply.");
+                }
+            },
+            error: function() {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> <span>Reply</span>';
+                alert("Connection error submitting reply.");
             }
         });
     }
