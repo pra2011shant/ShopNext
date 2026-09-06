@@ -315,26 +315,35 @@ namespace ShopNext.Models
     }
 
     /// <summary>
-    /// Point 40: Coupon Management DTO
-    /// Columns: Coupon Code, Discount, Minimum Order, Maximum Discount, Start Date, End Date, Usage Limit, Status
-    /// Example: WELCOME100, ₹100 OFF, Minimum Order ₹999
-    /// Actions: [Add Coupon], [Edit Coupon], [Delete Coupon], [Toggle Status]
+    /// Point 40 & 53: Coupon Management & Campaign Sale Coupons DTO
+    /// Columns: Coupon Code, Discount, Minimum Order, Maximum Discount, Start Date, End Date, Usage Limit, Status, Campaign, Real-time Usage Telemetry
+    /// Example (Point 53): BIGSALE500 | ₹500 OFF | Minimum Order ₹2,999 | Valid only during Sale | Total Usage: 10,000 | Used: 7,845 | Remaining: 2,155
     /// </summary>
     public class AdminCouponDto
     {
         public int Id { get; set; }
-        public string Code { get; set; } = string.Empty; // e.g. WELCOME100
+        public string Code { get; set; } = string.Empty; // e.g. BIGSALE500, WELCOME100
         public string Description { get; set; } = string.Empty;
         public string DiscountType { get; set; } = "Flat"; // Flat, Percentage, FreeDelivery
-        public decimal DiscountValue { get; set; } = 100;
-        public string Discount { get; set; } = "₹100 OFF"; // e.g. ₹100 OFF, 20% OFF
-        public decimal MinOrder { get; set; } = 999;
+        public decimal DiscountValue { get; set; } = 500;
+        public string Discount { get; set; } = "₹500 OFF"; // e.g. ₹500 OFF, 20% OFF
+        public decimal MinOrder { get; set; } = 2999;
         public decimal? MaxDiscount { get; set; }
-        public string StartDate { get; set; } = "01 Sep 2026";
-        public string EndDate { get; set; } = "31 Dec 2026";
-        public int UsageLimit { get; set; } = 500;
-        public int UsedCount { get; set; } = 42;
-        public string Status { get; set; } = "Active"; // Active, Inactive, Expired
+        public string StartDate { get; set; } = "10 Sep 2026";
+        public string EndDate { get; set; } = "15 Sep 2026";
+        public int UsageLimit { get; set; } = 10000;
+        public int TotalUsageLimit { get => UsageLimit; set => UsageLimit = value; }
+        public int UsedCount { get; set; } = 7845;
+        public int RemainingCount => Math.Max(0, UsageLimit - UsedCount);
+        public double UsagePercentage => UsageLimit > 0 ? Math.Min(100, Math.Round(((double)UsedCount / UsageLimit) * 100, 1)) : 0;
+        public bool IsUsageExhausted => RemainingCount <= 0;
+
+        // Point 53: Campaign-Specific Sale Coupon Fields
+        public string? CampaignName { get; set; } = "🔥 Mega Shopping Sale";
+        public int? CampaignId { get; set; }
+        public bool IsValidOnlyDuringSale { get; set; } = true;
+        public string SaleValidityBadge => IsValidOnlyDuringSale ? "Valid only during Sale" : "Standard Promo";
+        public string Status { get; set; } = "Active"; // Active, Inactive, Expired, Exhausted
         public bool IsActive { get; set; } = true;
     }
 
