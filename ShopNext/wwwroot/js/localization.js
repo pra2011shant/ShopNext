@@ -548,56 +548,94 @@
         return dict[key] || TRANSLATIONS['en'][key] || key;
     }
 
-    function applyTranslations(lang) {
-        const targetLang = lang || getCurrentLanguage();
-        const dict = TRANSLATIONS[targetLang] || TRANSLATIONS['en'];
+    let isTranslating = false;
 
-        // 1. Elements with data-i18n
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-            const key = el.getAttribute('data-i18n');
-            if (key && dict[key]) {
+    function applyTranslations(lang) {
+        if (isTranslating) return;
+        isTranslating = true;
+
+        try {
+            const targetLang = lang || getCurrentLanguage();
+            const dict = TRANSLATIONS[targetLang] || TRANSLATIONS['en'];
+
+            // 1. Elements with data-i18n
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (!key || !dict[key]) return;
+                const newText = dict[key];
+
                 if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-                    if (el.getAttribute('placeholder')) el.setAttribute('placeholder', dict[key]);
+                    if (el.getAttribute('placeholder') !== newText) {
+                        el.setAttribute('placeholder', newText);
+                    }
                 } else {
-                    // Check if element contains child icons
+                    // Update only text child or text content without destroying icons
                     const icon = el.querySelector('i');
                     if (icon) {
-                        const iconHtml = icon.outerHTML;
-                        el.innerHTML = iconHtml + ' ' + dict[key];
+                        // Find text node after icon
+                        let textNode = null;
+                        for (let i = 0; i < el.childNodes.length; i++) {
+                            const node = el.childNodes[i];
+                            if (node.nodeType === Node.TEXT_NODE && node.nodeValue.trim().length > 0) {
+                                textNode = node;
+                                break;
+                            }
+                        }
+                        if (textNode) {
+                            if (textNode.nodeValue.trim() !== newText) {
+                                textNode.nodeValue = ' ' + newText;
+                            }
+                        } else {
+                            const span = el.querySelector('.i18n-text');
+                            if (span) {
+                                if (span.innerText !== newText) span.innerText = newText;
+                            } else {
+                                const newSpan = document.createElement('span');
+                                newSpan.className = 'i18n-text ms-1';
+                                newSpan.innerText = newText;
+                                el.appendChild(newSpan);
+                            }
+                        }
                     } else {
-                        el.innerText = dict[key];
+                        if (el.innerText.trim() !== newText) {
+                            el.innerText = newText;
+                        }
                     }
                 }
-            }
-        });
+            });
 
-        // 2. Search inputs with data-i18n-placeholder
-        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-            const key = el.getAttribute('data-i18n-placeholder');
-            if (key && dict[key]) {
-                el.setAttribute('placeholder', dict[key]);
-            }
-        });
+            // 2. Search inputs with data-i18n-placeholder
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (key && dict[key] && el.getAttribute('placeholder') !== dict[key]) {
+                    el.setAttribute('placeholder', dict[key]);
+                }
+            });
 
-        // 3. Update active language badge / text in navbar dropdown
-        const activeFlag = document.getElementById('activeLangFlag');
-        const activeName = document.getElementById('activeLangName');
-        const langInfo = LANGUAGES[targetLang] || LANGUAGES['en'];
+            // 3. Update active language badge / text in navbar dropdown
+            const activeFlag = document.getElementById('activeLangFlag');
+            const activeName = document.getElementById('activeLangName');
+            const langInfo = LANGUAGES[targetLang] || LANGUAGES['en'];
 
-        if (activeFlag) activeFlag.innerText = langInfo.flag;
-        if (activeName) activeName.innerText = langInfo.native;
+            if (activeFlag && activeFlag.innerText !== langInfo.flag) activeFlag.innerText = langInfo.flag;
+            if (activeName && activeName.innerText !== langInfo.native) activeName.innerText = langInfo.native;
 
-        // Highlight selected dropdown item
-        document.querySelectorAll('.lang-dropdown-item').forEach(item => {
-            const itemLang = item.getAttribute('data-lang');
-            if (itemLang === targetLang) {
-                item.classList.add('active', 'bg-primary', 'bg-opacity-25', 'fw-bold');
-            } else {
-                item.classList.remove('active', 'bg-primary', 'bg-opacity-25', 'fw-bold');
-            }
-        });
+            // Highlight selected dropdown item
+            document.querySelectorAll('.lang-dropdown-item').forEach(item => {
+                const itemLang = item.getAttribute('data-lang');
+                if (itemLang === targetLang) {
+                    item.classList.add('active', 'bg-primary', 'bg-opacity-25', 'fw-bold');
+                } else {
+                    item.classList.remove('active', 'bg-primary', 'bg-opacity-25', 'fw-bold');
+                }
+            });
 
-        document.documentElement.setAttribute('lang', targetLang);
+            document.documentElement.setAttribute('lang', targetLang);
+        } catch (e) {
+            console.error('Localization error:', e);
+        } finally {
+            isTranslating = false;
+        }
     }
 
     window.switchLanguage = function (langCode, notify = true) {
@@ -625,19 +663,6 @@
     document.addEventListener('DOMContentLoaded', function () {
         const lang = getCurrentLanguage();
         applyTranslations(lang);
-
-        // MutationObserver for dynamic content
-        const observer = new MutationObserver(function (mutations) {
-            let hasNewNodes = false;
-            mutations.forEach(m => {
-                if (m.addedNodes.length > 0) hasNewNodes = true;
-            });
-            if (hasNewNodes) {
-                applyTranslations(getCurrentLanguage());
-            }
-        });
-
-        observer.observe(document.body, { childList: true, subtree: true });
     });
 
     // Expose ShopNext i18n API to window
@@ -645,6 +670,7 @@
         translate: translateText,
         getCurrentLanguage: getCurrentLanguage,
         switchLanguage: window.switchLanguage,
+        applyTranslations: applyTranslations,
         languages: LANGUAGES
     };
 })();
