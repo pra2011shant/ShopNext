@@ -582,7 +582,12 @@ namespace ShopNext.Controllers
                 Status = c.Status ?? "Open",
                 Date = c.CreatedDate.ToString("dd MMM yyyy, hh:mm tt"),
                 ResolutionNotes = c.ResolutionNotes,
-                ResolvedDate = c.ResolvedDate?.ToString("dd MMM yyyy, hh:mm tt")
+                ResolvedDate = c.ResolvedDate?.ToString("dd MMM yyyy, hh:mm tt"),
+                EscalationLevel = c.EscalationLevel > 0 ? c.EscalationLevel : (c.IsHighValueOrder ? 2 : 1),
+                EscalationStage = c.EscalationStage ?? (c.EscalationLevel == 4 ? "Admin" : (c.EscalationLevel == 3 ? "Seller" : (c.EscalationLevel == 2 ? "Support" : "Customer"))),
+                IsHighValueOrder = c.IsHighValueOrder || (c.Order?.TotalAmount >= 4999),
+                OrderAmount = c.OrderAmount > 0 ? c.OrderAmount : (c.Order?.TotalAmount ?? 0),
+                EscalationReason = c.EscalationReason
             }).ToList();
 
             int openComplaintsCount = complaintsList.Count(c => c.Status == "Open" || c.Status == "In Progress");
@@ -2697,6 +2702,11 @@ namespace ShopNext.Controllers
                     createdDate = complaint.CreatedDate.ToString("dd MMM yyyy, hh:mm tt"),
                     resolutionNotes = complaint.ResolutionNotes ?? "",
                     resolvedDate = complaint.ResolvedDate?.ToString("dd MMM yyyy, hh:mm tt") ?? "N/A",
+                    escalationLevel = complaint.EscalationLevel > 0 ? complaint.EscalationLevel : (complaint.IsHighValueOrder ? 2 : 1),
+                    escalationStage = complaint.EscalationStage ?? "Customer",
+                    isHighValueOrder = complaint.IsHighValueOrder || (order?.TotalAmount >= 4999),
+                    orderAmount = complaint.OrderAmount > 0 ? complaint.OrderAmount : (order?.TotalAmount ?? 0),
+                    escalationReason = complaint.EscalationReason,
                     messages = !string.IsNullOrWhiteSpace(complaint.ThreadMessagesJson) 
                         ? (System.Text.Json.JsonSerializer.Deserialize<List<TicketMessageItem>>(complaint.ThreadMessagesJson) ?? new()) 
                         : new List<TicketMessageItem>
@@ -2909,6 +2919,82 @@ namespace ShopNext.Controllers
                 ticketNumber = complaint.TicketNumber,
                 status = complaint.Status,
                 messages = thread
+            });
+        }
+
+        // POST: /Admin/EscalateComplaintLevel
+        [HttpPost]
+        public async Task<IActionResult> EscalateComplaintLevel(int complaintId, int newLevel, string? reason)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized. Please log in as Admin." });
+            }
+
+            if (complaintId <= 0)
+            {
+                return Json(new { success = false, message = "Invalid complaint specified." });
+            }
+
+            var complaint = await _context.Complaints.Include(c => c.Order).FirstOrDefaultAsync(c => c.Id == complaintId);
+            if (complaint == null)
+            {
+                return Json(new { success = false, message = "Complaint ticket not found." });
+            }
+
+            string stageName = newLevel switch
+            {
+                4 => "Admin",
+                3 => "Seller",
+                2 => "Support",
+                _ => "Customer"
+            };
+
+            complaint.EscalationLevel = newLevel;
+            complaint.EscalationStage = stageName;
+            if (newLevel == 4)
+            {
+                complaint.EscalatedToAdminDate = DateTime.Now;
+                complaint.Priority = "Urgent";
+            }
+            if (!string.IsNullOrWhiteSpace(reason))
+            {
+                complaint.EscalationReason = reason.Trim();
+            }
+
+            List<TicketMessageItem> thread = new();
+            if (!string.IsNullOrWhiteSpace(complaint.ThreadMessagesJson))
+            {
+                try
+                {
+                    thread = System.Text.Json.JsonSerializer.Deserialize<List<TicketMessageItem>>(complaint.ThreadMessagesJson) ?? new();
+                }
+                catch { }
+            }
+
+            thread.Add(new TicketMessageItem
+            {
+                Id = thread.Count + 1,
+                SenderRole = "Admin",
+                SenderName = "Administrative Hierarchy Update",
+                Message = $"📌 Ticket escalation tier changed to Level {newLevel} ({stageName} Tier). Reason: {reason ?? "Escalated for higher priority review."}",
+                SentAt = DateTime.Now.ToString("dd MMM yyyy, hh:mm tt")
+            });
+
+            complaint.ThreadMessagesJson = System.Text.Json.JsonSerializer.Serialize(thread);
+            await _context.SaveChangesAsync();
+
+            await _auditService.LogAsync("Dispute_Escalated", "Complaint", complaint.Id, 
+                $"Admin moved Ticket #{complaint.TicketNumber} to Level {newLevel} ({stageName}).", 
+                1, "Admin", "Admin", HttpContext.Connection.RemoteIpAddress?.ToString());
+
+            return Json(new
+            {
+                success = true,
+                message = $"Ticket escalation updated to Level {newLevel} ({stageName}) successfully.",
+                escalationLevel = complaint.EscalationLevel,
+                escalationStage = complaint.EscalationStage,
+                priority = complaint.Priority
             });
         }
 

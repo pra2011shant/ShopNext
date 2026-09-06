@@ -478,6 +478,11 @@ namespace ShopNext.Models
         public string Date { get; set; } = "05 Sep 2026";
         public string? ResolutionNotes { get; set; }
         public string? ResolvedDate { get; set; }
+        public int EscalationLevel { get; set; } = 1;
+        public string EscalationStage { get; set; } = "Customer";
+        public bool IsHighValueOrder { get; set; } = false;
+        public decimal OrderAmount { get; set; } = 0;
+        public string? EscalationReason { get; set; }
     }
 
     public class AdminNotificationDto

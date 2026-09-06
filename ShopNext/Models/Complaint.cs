@@ -63,6 +63,16 @@ namespace ShopNext.Models
         // Point 78: Customer Support Ticket Threaded Conversation & Replies
         public string? ThreadMessagesJson { get; set; }
 
+        // Point 79: Multi-Tier Support Escalation & High-Value Priority (Customer -> Support -> Seller -> Admin)
+        public int EscalationLevel { get; set; } = 1; // 1 = Customer, 2 = Support Desk, 3 = Seller Arbitration, 4 = Executive Admin Escalation
+        [StringLength(50)]
+        public string EscalationStage { get; set; } = "Customer"; // Customer, Support, Seller, Admin
+        public bool IsHighValueOrder { get; set; } = false;
+        public decimal OrderAmount { get; set; } = 0;
+        public DateTime? EscalatedToAdminDate { get; set; }
+        [StringLength(500)]
+        public string? EscalationReason { get; set; }
+
         // Navigation Properties
         [ForeignKey("CustomerId")]
         public virtual User? Customer { get; set; }

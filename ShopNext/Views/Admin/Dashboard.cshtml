@@ -5179,13 +5179,47 @@
                                 <tr class="complaint-table-row" id="complaint-row-@comp.Id" data-status="@comp.Status" data-search="@comp.TicketId #D@(comp.Id) @comp.OrderNumber @comp.CustomerName @comp.CustomerMobile @comp.Issue @comp.Description">
                                     <!-- Ticket Number & Dispute Number -->
                                     <td>
-                                        <div class="fw-bold text-danger font-monospace">#D@(comp.Id)</div>
+                                        <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                                            <div class="fw-bold text-danger font-monospace">#D@(comp.Id)</div>
+                                            @if (comp.EscalationLevel == 4)
+                                            {
+                                                <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-40 px-1.5 py-0.5 rounded-pill" style="font-size: 10px;">
+                                                    <i class="fa-solid fa-bullhorn me-0.5"></i> L4 Admin Escalation
+                                                </span>
+                                            }
+                                            else if (comp.EscalationLevel == 3)
+                                            {
+                                                <span class="badge bg-purple bg-opacity-25 text-purple border border-purple border-opacity-40 px-1.5 py-0.5 rounded-pill" style="color: #c084fc !important; border-color: rgba(192, 132, 252, 0.4) !important; font-size: 10px;">
+                                                    L3 Seller Tier
+                                                </span>
+                                            }
+                                            else if (comp.EscalationLevel == 2)
+                                            {
+                                                <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-30 px-1.5 py-0.5 rounded-pill" style="font-size: 10px;">
+                                                    L2 Support Tier
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary bg-opacity-25 text-light px-1.5 py-0.5 rounded-pill" style="font-size: 10px;">
+                                                    L1 Customer
+                                                </span>
+                                            }
+                                        </div>
                                         <small class="text-secondary font-monospace" style="font-size: 11px;">@comp.TicketId</small>
                                     </td>
 
                                     <!-- Order Number -->
                                     <td>
                                         <span class="font-monospace text-info fw-bold">@comp.OrderNumber</span>
+                                        @if (comp.IsHighValueOrder || comp.OrderAmount >= 4999)
+                                        {
+                                            <div class="mt-0.5">
+                                                <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30 px-1.5 py-0.5 rounded-pill" style="font-size: 10px;">
+                                                    <i class="fa-solid fa-crown text-warning me-0.5"></i> ₹@(comp.OrderAmount > 0 ? comp.OrderAmount.ToString("N0") : "5,000+") High Value
+                                                </span>
+                                            </div>
+                                        }
                                     </td>
 
                                     <!-- Customer -->

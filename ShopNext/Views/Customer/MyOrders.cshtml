@@ -919,6 +919,49 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
+            <!-- POINT 79: ESCALATION HIERARCHY STEPPER (Customer -> Support -> Seller -> Admin) -->
+            <div class="px-3.5 pt-3 pb-2 border-bottom border-secondary border-opacity-25" style="background: rgba(30, 41, 59, 0.4);">
+                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-secondary small fw-bold text-uppercase" style="font-size: 11px;"><i class="fa-solid fa-layer-group text-info me-1"></i> Escalation Tier:</span>
+                        <span class="badge px-2.5 py-0.5 rounded-pill small font-monospace fw-bold" id="suppEscalationBadge" style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(192, 132, 252, 0.35);">
+                            Level 1: Customer
+                        </span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30 px-2 py-0.5 rounded-pill small" id="suppHighValueBadge" style="display: none;">
+                            <i class="fa-solid fa-crown me-1 text-warning"></i> High-Value VIP Priority
+                        </span>
+                        <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3 py-0.5 fw-bold shadow-sm" id="btnSuppEscalateAdmin" onclick="escalateCurrentTicketToAdmin()" style="font-size: 11px;">
+                            <i class="fa-solid fa-bullhorn me-1"></i> Escalate to Admin
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 4-Stage Stepper Line -->
+                <div class="d-flex align-items-center justify-content-between position-relative px-2 py-1">
+                    <div class="text-center flex-grow-1" id="stepEscalationCust">
+                        <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-1 text-white fw-bold shadow-sm" style="width: 24px; height: 24px; font-size: 11px; background: #0284c7;">1</div>
+                        <div class="small fw-semibold text-info" style="font-size: 11px;">Customer</div>
+                    </div>
+                    <div class="flex-grow-1 border-top border-secondary border-opacity-40 mb-3" id="lineEscalation1"></div>
+                    <div class="text-center flex-grow-1" id="stepEscalationSupp">
+                        <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-1 text-secondary fw-bold shadow-sm" style="width: 24px; height: 24px; font-size: 11px; background: rgba(255,255,255,0.1);">2</div>
+                        <div class="small text-secondary" style="font-size: 11px;">Support</div>
+                    </div>
+                    <div class="flex-grow-1 border-top border-secondary border-opacity-40 mb-3" id="lineEscalation2"></div>
+                    <div class="text-center flex-grow-1" id="stepEscalationSeller">
+                        <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-1 text-secondary fw-bold shadow-sm" style="width: 24px; height: 24px; font-size: 11px; background: rgba(255,255,255,0.1);">3</div>
+                        <div class="small text-secondary" style="font-size: 11px;">Seller</div>
+                    </div>
+                    <div class="flex-grow-1 border-top border-secondary border-opacity-40 mb-3" id="lineEscalation3"></div>
+                    <div class="text-center flex-grow-1" id="stepEscalationAdmin">
+                        <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-1 text-secondary fw-bold shadow-sm" style="width: 24px; height: 24px; font-size: 11px; background: rgba(255,255,255,0.1);">4</div>
+                        <div class="small text-secondary" style="font-size: 11px;">Admin</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Body: Chat History -->
             <div class="modal-body p-3.5" style="max-height: 480px; min-height: 260px; overflow-y: auto;" id="suppTicketChatBody">
                 <div class="text-center py-4" id="suppTicketLoader">
@@ -1436,6 +1479,31 @@
                         badge.className = "badge bg-info bg-opacity-25 text-info border border-info border-opacity-30 px-2.5 py-0.5 rounded-pill font-monospace small";
                     }
 
+                    // Point 79: High Value Priority & Escalation Tier Stepper
+                    const hvBadge = document.getElementById("suppHighValueBadge");
+                    if (res.isHighValueOrder || res.orderAmount >= 4999) {
+                        hvBadge.style.display = "inline-block";
+                        hvBadge.innerText = `👑 High-Value Order (₹${Number(res.orderAmount || 5000).toLocaleString('en-IN')}) Priority`;
+                    } else {
+                        hvBadge.style.display = "none";
+                    }
+
+                    updateEscalationStepperUI(res.escalationLevel || 1, res.escalationStage || 'Customer');
+
+                    const btnEsc = document.getElementById("btnSuppEscalateAdmin");
+                    if (res.escalationLevel >= 4) {
+                        btnEsc.disabled = true;
+                        btnEsc.innerHTML = '<i class="fa-solid fa-check-double me-1"></i> Escalated to Admin';
+                        btnEsc.className = "btn btn-outline-secondary btn-sm rounded-pill px-3 py-0.5 fw-bold disabled";
+                    } else if (res.status === 'Resolved' || res.status === 'Closed') {
+                        btnEsc.style.display = "none";
+                    } else {
+                        btnEsc.disabled = false;
+                        btnEsc.style.display = "inline-block";
+                        btnEsc.innerHTML = '<i class="fa-solid fa-bullhorn me-1"></i> Escalate to Admin';
+                        btnEsc.className = "btn btn-outline-danger btn-sm rounded-pill px-3 py-0.5 fw-bold shadow-sm";
+                    }
+
                     renderTicketThreadMessages(res.messages || []);
                 } else {
                     alert(res.message || "Failed to load support ticket.");
@@ -1446,6 +1514,76 @@
                 document.getElementById("suppTicketLoader").style.display = "none";
                 alert("Connection error fetching ticket thread.");
                 modal.hide();
+            }
+        });
+    }
+
+    function updateEscalationStepperUI(level, stage) {
+        const escBadge = document.getElementById("suppEscalationBadge");
+        escBadge.innerText = `Level ${level}: ${stage || 'Customer'} Tier`;
+
+        const steps = [
+            { id: "stepEscalationCust", line: "lineEscalation1", num: 1, name: "Customer", color: "#0284c7" },
+            { id: "stepEscalationSupp", line: "lineEscalation2", num: 2, name: "Support", color: "#f59e0b" },
+            { id: "stepEscalationSeller", line: "lineEscalation3", num: 3, name: "Seller", color: "#8b5cf6" },
+            { id: "stepEscalationAdmin", line: null, num: 4, name: "Admin", color: "#ef4444" }
+        ];
+
+        steps.forEach(s => {
+            const el = document.getElementById(s.id);
+            if (!el) return;
+            const circle = el.querySelector("div:first-child");
+            const label = el.querySelector("div:last-child");
+
+            if (level >= s.num) {
+                circle.style.background = s.color;
+                circle.className = "rounded-circle d-inline-flex align-items-center justify-content-center mb-1 text-white fw-bold shadow-sm";
+                label.className = "small fw-bold text-white";
+            } else {
+                circle.style.background = "rgba(255,255,255,0.1)";
+                circle.className = "rounded-circle d-inline-flex align-items-center justify-content-center mb-1 text-secondary fw-bold shadow-sm";
+                label.className = "small text-secondary";
+            }
+
+            if (s.line) {
+                const lineEl = document.getElementById(s.line);
+                if (lineEl) {
+                    lineEl.className = level > s.num ? "flex-grow-1 border-top border-info border-2 mb-3" : "flex-grow-1 border-top border-secondary border-opacity-40 mb-3";
+                }
+            }
+        });
+    }
+
+    function escalateCurrentTicketToAdmin() {
+        const ticketId = document.getElementById("suppCurrentTicketId").value;
+        const reason = prompt("Please provide reason for escalating this ticket to Senior Administration:", "Unresolved support grievance requiring executive decision.");
+        if (reason === null) return;
+
+        const btn = document.getElementById("btnSuppEscalateAdmin");
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Escalating...';
+
+        $.ajax({
+            url: '/Customer/EscalateTicketToAdmin',
+            type: 'POST',
+            data: { ticketId: ticketId, escalationReason: reason },
+            success: function(res) {
+                if (res.success) {
+                    alert("Ticket escalated to Executive Admin Review Desk with Urgent Priority!");
+                    updateEscalationStepperUI(4, 'Admin');
+                    btn.innerHTML = '<i class="fa-solid fa-check-double me-1"></i> Escalated to Admin';
+                    btn.className = "btn btn-outline-secondary btn-sm rounded-pill px-3 py-0.5 fw-bold disabled";
+                    renderTicketThreadMessages(res.messages || []);
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-bullhorn me-1"></i> Escalate to Admin';
+                    alert(res.message || "Failed to escalate ticket.");
+                }
+            },
+            error: function() {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-bullhorn me-1"></i> Escalate to Admin';
+                alert("Connection error escalating ticket.");
             }
         });
     }
