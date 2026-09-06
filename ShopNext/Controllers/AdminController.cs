@@ -28,8 +28,9 @@ namespace ShopNext.Controllers
         private readonly ISaleCampaignService _saleCampaignService;
         private readonly IFlashSaleService _flashSaleService;
         private readonly IInventoryProtectionService _inventoryProtectionService;
+        private readonly ISaleFraudMonitoringService _saleFraudService;
 
-        public AdminController(IShopNextService service, ShopNextDbContext context, IAuditService auditService, ICustomerRiskService riskService, IAddressRiskService addressRiskService, IMultiAccountDetectionService multiAccountService, ICodAbuseService codAbuseService, ISaleCampaignService saleCampaignService, IFlashSaleService flashSaleService, IInventoryProtectionService inventoryProtectionService)
+        public AdminController(IShopNextService service, ShopNextDbContext context, IAuditService auditService, ICustomerRiskService riskService, IAddressRiskService addressRiskService, IMultiAccountDetectionService multiAccountService, ICodAbuseService codAbuseService, ISaleCampaignService saleCampaignService, IFlashSaleService flashSaleService, IInventoryProtectionService inventoryProtectionService, ISaleFraudMonitoringService saleFraudService)
         {
             _service = service;
             _context = context;
@@ -41,6 +42,7 @@ namespace ShopNext.Controllers
             _saleCampaignService = saleCampaignService;
             _flashSaleService = flashSaleService;
             _inventoryProtectionService = inventoryProtectionService;
+            _saleFraudService = saleFraudService;
         }
 
         private bool IsAdminLoggedIn()
@@ -623,7 +625,9 @@ namespace ShopNext.Controllers
                 InventoryProtection = await _inventoryProtectionService.GetDashboardSummaryAsync(),
                 SellerSaleParticipationsList = await _saleCampaignService.GetAllSellerSaleParticipationsAsync(),
                 SaleAnalytics = await _saleCampaignService.GetSaleAnalyticsReportAsync(1),
-                AvailableCampaignReports = await _saleCampaignService.GetAllCampaignReportsSummaryAsync()
+                AvailableCampaignReports = await _saleCampaignService.GetAllCampaignReportsSummaryAsync(),
+                SaleFraudSummary = await _saleFraudService.GetSaleFraudDashboardSummaryAsync(),
+                SaleFraudAlertsList = await _saleFraudService.GetSuspiciousActivitiesAsync()
             };
 
             ViewBag.PendingShops = pendingShops;
@@ -3677,10 +3681,14 @@ namespace ShopNext.Controllers
                 role = e.UploadedByRole,
                 uploadedBy = e.UploadedByName,
                 date = e.UploadedDate.ToString("dd MMM yyyy, hh:mm tt"),
-                isVerified = e.IsVerified
+                isVerified = e.IsVerified,
+                evidenceStatus = e.IsVerified ? "Verified Dispatch Evidence" : "Submitted Evidence",
+                originalFileAvailable = true,
+                fileModifiedAfterUpload = "No (Original Preserved)",
+                metadata = e.MetadataJson
             }).ToList();
 
-            var inbound = evidences.Where(e => e.EvidenceType == "CustomerReturnPhoto" || e.EvidenceType == "ReturnPickupPhoto" || e.EvidenceType == "SellerEvidence" || e.EvidenceType == "RiderEvidence").Select(e => new
+            var inbound = evidences.Where(e => e.EvidenceType == "CustomerReturnPhoto" || e.EvidenceType == "Customer_Unboxing_Video" || e.EvidenceType == "Inbound_Customer_Claim" || e.EvidenceType == "ReturnPickupPhoto" || e.EvidenceType == "SellerEvidence" || e.EvidenceType == "RiderEvidence").Select(e => new
             {
                 id = e.Id,
                 type = e.EvidenceType,
@@ -3690,7 +3698,11 @@ namespace ShopNext.Controllers
                 role = e.UploadedByRole,
                 uploadedBy = e.UploadedByName,
                 date = e.UploadedDate.ToString("dd MMM yyyy, hh:mm tt"),
-                isVerified = e.IsVerified
+                isVerified = e.IsVerified,
+                evidenceStatus = e.IsVerified ? "Verified Evidence (QC Passed)" : "Customer-Submitted Evidence (Unverified)",
+                originalFileAvailable = true,
+                fileModifiedAfterUpload = "No (Original Preserved)",
+                metadata = e.MetadataJson
             }).ToList();
 
             return Json(new
@@ -4646,6 +4658,101 @@ namespace ShopNext.Controllers
 
             byte[] buffer = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
             string fileName = $"Sale_Analytics_{report.CampaignName.Replace(" ", "_")}_{DateTime.Now:yyyyMMdd}.csv";
+            return File(buffer, "text/csv", fileName);
+        }
+
+        #endregion
+
+        #region Point 57: Sale Fraud / Abuse Monitoring Endpoints
+
+        // GET: /Admin/GetSaleFraudAlerts
+        [HttpGet]
+        public async Task<IActionResult> GetSaleFraudAlerts()
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            var summary = await _saleFraudService.GetSaleFraudDashboardSummaryAsync();
+            return Json(new
+            {
+                success = true,
+                message = "🚨 Suspicious sale activities loaded.",
+                data = summary
+            });
+        }
+
+        // GET: /Admin/GetSaleFraudAlertDetails
+        [HttpGet]
+        public async Task<IActionResult> GetSaleFraudAlertDetails(int alertId)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            var alert = await _saleFraudService.GetFraudAlertByIdAsync(alertId);
+            if (alert == null)
+            {
+                return Json(new { success = false, message = "Alert not found." });
+            }
+
+            return Json(new
+            {
+                success = true,
+                data = alert
+            });
+        }
+
+        // POST: /Admin/ReviewSaleFraudAlert
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReviewSaleFraudAlert([FromBody] ReviewSaleFraudRequest request)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            if (request == null || request.AlertId <= 0)
+            {
+                return Json(new { success = false, message = "Invalid request payload." });
+            }
+
+            var (success, message, updatedAlert) = await _saleFraudService.ReviewFraudAlertAsync(request.AlertId, request.Action, request.AdminNotes);
+            return Json(new
+            {
+                success = success,
+                message = message,
+                data = updatedAlert
+            });
+        }
+
+        // GET: /Admin/ExportSaleFraudReport
+        [HttpGet]
+        public async Task<IActionResult> ExportSaleFraudReport(string format = "csv")
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Unauthorized();
+            }
+
+            var alerts = await _saleFraudService.GetSuspiciousActivitiesAsync();
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("=== SHOPNEXT SALE FRAUD & ABUSE MONITORING AUDIT REPORT ===");
+            sb.AppendLine($"Generated On: {DateTime.Now:dd MMM yyyy, hh:mm tt}");
+            sb.AppendLine($"Total Flagged Incidents: {alerts.Count}");
+            sb.AppendLine("--------------------------------------------------");
+            sb.AppendLine("Alert ID,Customer,Real Name,Risk Score,Risk Level,Abuse Category,Status,Orders,Cancellations,Returns,Coupons Used,Loss Prevented,IP Address,Device Fingerprint,Trigger Reason");
+            
+            foreach (var a in alerts)
+            {
+                sb.AppendLine($"{a.Id},\"{a.CustomerDisplayName}\",\"{a.RealCustomerName}\",{a.RiskScore},\"{a.RiskLevel}\",\"{a.AbuseCategory}\",\"{a.Status}\",{a.TotalOrdersDuringSale},{a.CancellationsDuringSale},{a.ReturnsDuringSale},{a.CouponsUsedCount},\"{a.PreventedFraudAmountFormatted}\",\"{a.IpAddress}\",\"{a.DeviceFingerprint}\",\"{a.TriggerSummary.Replace("\"", "\"\"")}\"");
+            }
+
+            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+            string fileName = $"Sale_Fraud_Audit_Report_{DateTime.Now:yyyyMMdd_HHmm}.csv";
             return File(buffer, "text/csv", fileName);
         }
 

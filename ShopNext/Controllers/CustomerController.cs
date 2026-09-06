@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using ShopNext.Helpers;
 using ShopNext.Models;
 using ShopNext.Services;
@@ -20,12 +21,14 @@ namespace ShopNext.Controllers
         private readonly IShopNextService _service;
         private readonly ILogger<CustomerController> _logger;
         private readonly IAuditService _auditService;
+        private readonly ShopNextDbContext _context;
 
-        public CustomerController(IShopNextService service, ILogger<CustomerController> logger, IAuditService auditService)
+        public CustomerController(IShopNextService service, ILogger<CustomerController> logger, IAuditService auditService, ShopNextDbContext context)
         {
             _service = service;
             _logger = logger;
             _auditService = auditService;
+            _context = context;
         }
 
         private bool IsCustomerLoggedIn(out int customerId, out string customerName)
@@ -630,6 +633,9 @@ namespace ShopNext.Controllers
             var order = await _service.GetOrderByIdAsync(orderId);
             var customerName = HttpContext.Session.GetString("UserName") ?? "Customer";
 
+            var isWrongProduct = issue.Contains("Wrong Product", StringComparison.OrdinalIgnoreCase) || 
+                                 (!string.IsNullOrWhiteSpace(reasonCategory) && reasonCategory.Contains("Wrong Product", StringComparison.OrdinalIgnoreCase));
+
             var complaint = new Complaint
             {
                 CustomerId = customerId,
@@ -641,16 +647,56 @@ namespace ShopNext.Controllers
                 ComplainantRole = "Customer",
                 ComplainantName = customerName,
                 RiderId = order?.RiderId,
-                Priority = "High",
-                Status = "Open"
+                Priority = isWrongProduct ? "Urgent" : "High",
+                Status = isWrongProduct ? "Return Dispute" : "Open"
             };
 
             var created = await _service.CreateComplaintAsync(complaint);
 
+            // Point 60: Automatically flag order as Return Dispute when Wrong Product is reported
+            if (isWrongProduct && order != null)
+            {
+                var dbOrder = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
+                if (dbOrder != null)
+                {
+                    dbOrder.ReturnStatus = "Return_Dispute";
+                    dbOrder.OrderStatus = "Return_Dispute";
+                    dbOrder.ReturnReason = $"Wrong Product Received: {description.Trim()}";
+                    dbOrder.ReturnRequestedDate = DateTime.Now;
+
+                    if (!string.IsNullOrWhiteSpace(attachmentUrl))
+                    {
+                        var evidence = new OrderEvidence
+                        {
+                            OrderId = orderId,
+                            EvidenceType = "Inbound_Customer_Claim",
+                            Title = "Customer Wrong Product Evidence",
+                            Description = description.Trim(),
+                            PhotoUrl = attachmentUrl.Trim(),
+                            UploadedByRole = "Customer",
+                            UploadedByName = customerName,
+                            UploadedDate = DateTime.Now,
+                            IsVerified = false
+                        };
+                        _context.OrderEvidences.Add(evidence);
+                    }
+
+                    await _context.SaveChangesAsync();
+
+                    await _auditService.LogAsync("CustomerProtection", "WrongProductDispute", 
+                        orderId, 
+                        $"Order #{orderId} auto-flagged as 'Return Dispute' due to Wrong Product Received complaint by {customerName}.", 
+                        customerId, customerName, "Customer", null);
+                }
+            }
+
             return Json(new
             {
                 success = true,
-                message = "Your delivery complaint has been logged successfully. Admin will review both sides (Customer & Rider telemetry) before taking action.",
+                isReturnDispute = isWrongProduct,
+                message = isWrongProduct 
+                    ? "⚠ Return Dispute initiated! Order has been auto-flagged for Admin & Merchant investigation with your uploaded evidence." 
+                    : "Your delivery complaint has been logged successfully. Admin will review both sides before taking action.",
                 ticketId = created.Id,
                 ticketNumber = created.TicketNumber,
                 status = created.Status,
@@ -682,6 +728,120 @@ namespace ShopNext.Controllers
             });
 
             return Json(new { success = true, complaints = result });
+        }
+
+        // ==============================================================================
+        // POINT 61: UNBOXING VIDEO EVIDENCE (IMMUTABLE AUDIT TRAIL)
+        // ==============================================================================
+
+        // POST: /Customer/UploadUnboxingVideo
+        [HttpPost]
+        public async Task<IActionResult> UploadUnboxingVideo(int orderId, string? description, IFormFile? videoFile, string? videoUrl)
+        {
+            if (!IsCustomerLoggedIn(out int customerId, out string customerName))
+            {
+                return Json(new { success = false, message = "Please login to upload evidence." });
+            }
+
+            if (orderId <= 0)
+            {
+                return Json(new { success = false, message = "Invalid order specified." });
+            }
+
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId && o.CustomerId == customerId);
+            if (order == null)
+            {
+                return Json(new { success = false, message = "Order not found or unauthorized access." });
+            }
+
+            string savedVideoUrl = videoUrl?.Trim() ?? string.Empty;
+            string originalFileName = "Direct_URL_Submission";
+            long fileSizeBytes = 0;
+
+            if (videoFile != null && videoFile.Length > 0)
+            {
+                var allowedExtensions = new[] { ".mp4", ".mov", ".webm", ".mkv", ".avi", ".3gp" };
+                var ext = Path.GetExtension(videoFile.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(ext))
+                {
+                    return Json(new { success = false, message = "Invalid video format. Supported formats: MP4, MOV, WEBM, MKV, AVI, 3GP." });
+                }
+
+                if (videoFile.Length > 250 * 1024 * 1024)
+                {
+                    return Json(new { success = false, message = "Video file size exceeds maximum limit of 250MB." });
+                }
+
+                string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "evidence", "videos");
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+                // Immutable Unique Filename: VID_{OrderId}_{CustomerId}_{Timestamp}_{Guid}
+                string uniqueFileName = $"VID_ORD{orderId}_CUST{customerId}_{DateTime.UtcNow:yyyyMMddHHmmss}_{Guid.NewGuid().ToString().Substring(0, 8)}{ext}";
+                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await videoFile.CopyToAsync(stream);
+                }
+
+                savedVideoUrl = $"/uploads/evidence/videos/{uniqueFileName}";
+                originalFileName = videoFile.FileName;
+                fileSizeBytes = videoFile.Length;
+            }
+
+            if (string.IsNullOrWhiteSpace(savedVideoUrl))
+            {
+                return Json(new { success = false, message = "Please select a video file to upload or provide a valid video URL." });
+            }
+
+            var metadata = new
+            {
+                CustomerId = customerId,
+                CustomerName = customerName,
+                OrderId = orderId,
+                OriginalFileName = originalFileName,
+                FileSizeBytes = fileSizeBytes,
+                UploadUtc = DateTime.UtcNow,
+                EvidenceStatus = "Submitted_Pending_Audit",
+                IsImmutable = true,
+                CanCustomerEdit = false,
+                CanCustomerOverwrite = false
+            };
+
+            var evidence = new OrderEvidence
+            {
+                OrderId = orderId,
+                EvidenceType = "Customer_Unboxing_Video",
+                Title = "Customer Unboxing Video",
+                Description = !string.IsNullOrWhiteSpace(description) ? description.Trim() : "Customer submitted unboxing video proof.",
+                PhotoUrl = savedVideoUrl,
+                UploadedByRole = "Customer",
+                UploadedByName = customerName,
+                UploadedDate = DateTime.Now,
+                IsVerified = false,
+                MetadataJson = System.Text.Json.JsonSerializer.Serialize(metadata)
+            };
+
+            _context.OrderEvidences.Add(evidence);
+            await _context.SaveChangesAsync();
+
+            await _auditService.LogAsync("CustomerProtection", "UnboxingVideoUploaded", 
+                orderId, 
+                $"Customer {customerName} (ID: {customerId}) uploaded immutable unboxing video for Order #{orderId}. Filename: {originalFileName}", 
+                customerId, customerName, "Customer", null);
+
+            return Json(new
+            {
+                success = true,
+                message = "🎥 Unboxing video evidence uploaded and permanently recorded in audit ledger. Our QC team will inspect the footage.",
+                evidenceId = evidence.Id,
+                orderId = orderId,
+                customerId = customerId,
+                videoUrl = savedVideoUrl,
+                uploadDate = evidence.UploadedDate.ToString("dd MMM yyyy, hh:mm tt"),
+                status = "Under Review (Immutable)",
+                isImmutable = true
+            });
         }
 
         // ==========================================

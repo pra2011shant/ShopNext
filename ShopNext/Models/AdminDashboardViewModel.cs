@@ -80,6 +80,10 @@ namespace ShopNext.Models
         // Point 56: Sale Analytics & Post-Campaign Report
         public SaleAnalyticsReportDto SaleAnalytics { get; set; } = new SaleAnalyticsReportDto();
         public List<SaleAnalyticsReportDto> AvailableCampaignReports { get; set; } = new List<SaleAnalyticsReportDto>();
+
+        // Point 57: Sale Fraud & Abuse Monitoring Dataset
+        public SaleFraudDashboardSummaryDto SaleFraudSummary { get; set; } = new SaleFraudDashboardSummaryDto();
+        public List<AdminSaleFraudAlertDto> SaleFraudAlertsList { get; set; } = new List<AdminSaleFraudAlertDto>();
     }
 
     /// <summary>
@@ -1183,6 +1187,96 @@ namespace ShopNext.Models
         public string RevenueFormatted { get; set; } = "₹82.0 Lakhs";
         public double Rating { get; set; } = 4.9;
         public double FulfillmentRate { get; set; } = 97.8;
+    }
+
+    #endregion
+
+    #region Point 57: Sale Fraud / Abuse Monitoring DTOs
+
+    public class SaleFraudDashboardSummaryDto
+    {
+        public int TotalSuspiciousActivitiesCount { get; set; } = 6;
+        public int CriticalCount { get; set; } = 2;
+        public int HighRiskCount { get; set; } = 3;
+        public int UnderReviewCount { get; set; } = 4;
+        public int BlockedCount { get; set; } = 1;
+        public int ClearedCount { get; set; } = 1;
+        public decimal PreventedLossAmount { get; set; } = 485000;
+        public string PreventedLossFormatted { get; set; } = "₹4.85 Lakh";
+        public List<AdminSaleFraudAlertDto> SuspiciousAlerts { get; set; } = new List<AdminSaleFraudAlertDto>();
+    }
+
+    public class AdminSaleFraudAlertDto
+    {
+        public int Id { get; set; }
+        public int CustomerId { get; set; }
+        public string CustomerDisplayName { get; set; } = "Customer A";
+        public string RealCustomerName { get; set; } = "Rahul Sharma";
+        public string CustomerEmail { get; set; } = "rahul.dealhunter@gmail.com";
+        public string CustomerPhone { get; set; } = "+91 98765 43210";
+        public int RiskScore { get; set; } = 94; // 0 - 100
+        public string RiskLevel { get; set; } = "Critical"; // "Critical", "High Risk", "Suspicious", "Low"
+        public string AbuseCategory { get; set; } = "Same coupon repeatedly misuse"; 
+        // 6 Core Abuse Categories from Prompt:
+        // 1. Same coupon repeatedly misuse
+        // 2. Excessive coupon attempts
+        // 3. Multiple suspicious accounts
+        // 4. Unusual order patterns
+        // 5. Abnormal cancellations
+        // 6. Abnormal returns
+
+        public string TriggerSummary { get; set; } = "Used promo coupon BIGSALE500 across 14 dummy accounts on the same IP";
+        public string Details { get; set; } = "High-frequency coupon exploit detected during Mega Shopping Sale. Single device fingerprint created 14 linked accounts to bypass the 1-per-user limit.";
+        public DateTime DetectedAt { get; set; } = DateTime.Now.AddMinutes(-35);
+        public string DetectedAtFormatted => DetectedAt.ToString("dd MMM yyyy, hh:mm tt");
+        public string Status { get; set; } = "Under Review"; // "Under Review", "Blocked", "Coupons Restricted", "COD Disabled", "Cleared"
+        public string StatusBadgeClass => Status == "Blocked" ? "bg-danger" : 
+                                         (Status == "Coupons Restricted" ? "bg-warning text-dark" : 
+                                         (Status == "COD Disabled" ? "bg-info text-dark" : 
+                                         (Status == "Cleared" ? "bg-success" : "bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30")));
+        
+        public string RiskBadgeClass => RiskLevel == "Critical" ? "bg-danger text-white" : 
+                                       (RiskLevel == "High Risk" ? "bg-warning text-dark" : "bg-info text-dark");
+
+        public string IpAddress { get; set; } = "103.21.244.18";
+        public string DeviceFingerprint { get; set; } = "DEV-FP-98A1B2-CHROME-WIN";
+        public string Location { get; set; } = "Patna, Bihar";
+        public int TotalOrdersDuringSale { get; set; } = 14;
+        public int CancellationsDuringSale { get; set; } = 2;
+        public int ReturnsDuringSale { get; set; } = 0;
+        public int CouponAttemptsCount { get; set; } = 28;
+        public int CouponsUsedCount { get; set; } = 14;
+        public int LinkedAccountsCount { get; set; } = 5;
+        public decimal PreventedFraudAmount { get; set; } = 7000;
+        public string PreventedFraudAmountFormatted { get; set; } = "₹7,000";
+        public string? AdminActionTaken { get; set; }
+        public string? AdminNotes { get; set; }
+        public List<SaleFraudIncidentLogDto> IncidentLogs { get; set; } = new List<SaleFraudIncidentLogDto>();
+    }
+
+    public class SaleFraudIncidentLogDto
+    {
+        public string Timestamp { get; set; } = "10:45 AM";
+        public string EventName { get; set; } = "Coupon Exploitation";
+        public string Severity { get; set; } = "Critical"; // "Critical", "Warning", "Info"
+        public string Message { get; set; } = "Coupon BIGSALE500 redeemed for 14th time using matching IMEI/IP footprint.";
+    }
+
+    public class ReviewSaleFraudRequest
+    {
+        public int AlertId { get; set; }
+        public string Action { get; set; } = "restrict_coupons"; // "block", "restrict_coupons", "block_cod", "clear"
+        public string? AdminNotes { get; set; }
+    }
+
+    public class SaleFraudCheckResultDto
+    {
+        public bool IsSuspicious { get; set; }
+        public int RiskScore { get; set; }
+        public string RiskLevel { get; set; } = "Low";
+        public string? AbuseCategory { get; set; }
+        public string? TriggerReason { get; set; }
+        public bool ShouldBlockTransaction { get; set; }
     }
 
     #endregion

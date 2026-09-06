@@ -673,6 +673,21 @@
                     </div>
                 </div>
 
+                <!-- Point 63: Rider Return Pickup Issue Alert & Report Action -->
+                <div class="mt-3 p-3 rounded-3 border border-danger border-opacity-40" style="background: rgba(239, 68, 68, 0.12);" id="riderPickupAlertBox">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <div class="small fw-bold text-white mb-0.5">
+                                <i class="fa-solid fa-triangle-exclamation text-danger me-1"></i> Pickup Status: <span class="text-danger fw-bold">❌ Rider did not collect</span>
+                            </div>
+                            <small class="text-secondary" style="font-size: 0.8rem;">Rider did not arrive or refused to pick up the return item?</small>
+                        </div>
+                        <button type="button" class="btn btn-danger btn-sm px-3 py-1.5 rounded-pill fw-bold shadow-sm" onclick="openReportPickupIssueModal()">
+                            <i class="fa-solid fa-bullhorn me-1"></i> Report Pickup Issue
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Interactive Demo Step Transition for quick testing -->
                 <div class="mt-3 p-2 bg-dark rounded-3 border border-secondary text-center">
                     <small class="text-muted d-block mb-1"><i class="fa-solid fa-bolt text-warning me-1"></i> Interactive Test Simulation:</small>
@@ -686,6 +701,76 @@
                 </div>
             </div>
             <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Point 63. Report Return Pickup Issue -->
+<div class="modal fade" id="reportPickupIssueModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border border-secondary" style="border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.6);">
+            <div class="modal-header border-secondary">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: rgba(239, 68, 68, 0.2); color: #f87171;">
+                        <i class="fa-solid fa-truck-ramp-box fs-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold text-white mb-0">Report Return Pickup Issue</h5>
+                        <small class="text-muted">Return <span id="pickupIssueReturnBadge" class="badge bg-danger font-monospace">#R1001</span></small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="pickupIssueOrderId" />
+
+                <div class="p-3 mb-3 rounded-3 border border-danger border-opacity-30 bg-black bg-opacity-30">
+                    <div class="d-flex align-items-center gap-2 text-danger small fw-bold">
+                        <i class="fa-solid fa-circle-xmark"></i> Pickup Status: Rider did not collect
+                    </div>
+                    <small class="text-muted mt-1 d-block">Admin & Fleet Dispatch will investigate why the return pickup wasn't fulfilled.</small>
+                </div>
+
+                <label class="form-label small fw-bold text-light mb-2"><i class="fa-solid fa-list-check text-warning me-1"></i> Select Pickup Issue Reason *</label>
+                <div class="d-flex flex-column gap-2 mb-3" id="pickupIssueRadioGroup">
+                    <label class="d-flex align-items-center gap-2 p-2.5 rounded-3 border border-secondary border-opacity-30 bg-black bg-opacity-25 cursor-pointer text-white">
+                        <input type="radio" name="pickupReasonOption" value="Rider didn't arrive" class="form-check-input mt-0" checked />
+                        <span class="small fw-semibold"><i class="fa-solid fa-person-circle-question text-warning me-1.5"></i> Rider didn't arrive</span>
+                    </label>
+                    <label class="d-flex align-items-center gap-2 p-2.5 rounded-3 border border-secondary border-opacity-30 bg-black bg-opacity-25 cursor-pointer text-white">
+                        <input type="radio" name="pickupReasonOption" value="Rider refused pickup" class="form-check-input mt-0" />
+                        <span class="small fw-semibold"><i class="fa-solid fa-hand text-danger me-1.5"></i> Rider refused pickup</span>
+                    </label>
+                    <label class="d-flex align-items-center gap-2 p-2.5 rounded-3 border border-secondary border-opacity-30 bg-black bg-opacity-25 cursor-pointer text-white">
+                        <input type="radio" name="pickupReasonOption" value="Rider marked pickup without coming" class="form-check-input mt-0" />
+                        <span class="small fw-semibold"><i class="fa-solid fa-map-pin text-info me-1.5"></i> Rider marked pickup without coming</span>
+                    </label>
+                    <label class="d-flex align-items-center gap-2 p-2.5 rounded-3 border border-secondary border-opacity-30 bg-black bg-opacity-25 cursor-pointer text-white">
+                        <input type="radio" name="pickupReasonOption" value="Rider asked me to cancel" class="form-check-input mt-0" />
+                        <span class="small fw-semibold"><i class="fa-solid fa-comment-slash text-warning me-1.5"></i> Rider asked me to cancel</span>
+                    </label>
+                    <label class="d-flex align-items-center gap-2 p-2.5 rounded-3 border border-secondary border-opacity-30 bg-black bg-opacity-25 cursor-pointer text-white">
+                        <input type="radio" name="pickupReasonOption" value="Other" class="form-check-input mt-0" />
+                        <span class="small fw-semibold"><i class="fa-solid fa-ellipsis text-secondary me-1.5"></i> Other</span>
+                    </label>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label small fw-bold text-light"><i class="fa-solid fa-comment-dots text-info me-1"></i> Additional Details (Optional)</label>
+                    <textarea id="pickupIssueNotes" class="form-control bg-dark text-white border-secondary" placeholder="Provide extra details (e.g. rider called and said won't come, or fake attempt SMS received)..." rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary rounded-pill px-3.5" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm" id="btnSubmitPickupIssue" onclick="submitReportPickupIssue()">
+                    <i class="fa-solid fa-paper-plane me-1.5"></i> Submit Pickup Dispute
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- Modal: Point 43. Need Help / Raise Complaint -->
 <div class="modal fade" id="needHelpModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -711,25 +796,33 @@
                     <div class="fw-bold text-white" id="helpProductName">Product Name</div>
                 </div>
 
-                <!-- 1. Issue Category: Point 44 Specific Options -->
+                <!-- 1. Issue Category: Point 59 Customer Protection / Help Center -->
                 <div class="mb-3">
-                    <label class="form-label small fw-bold text-light mb-2"><i class="fa-solid fa-triangle-exclamation text-warning me-1"></i> Select Delivery Issue *</label>
+                    <label class="form-label small fw-bold text-light mb-2"><i class="fa-solid fa-headset text-danger me-1"></i> Select Issue Category *</label>
                     <div class="d-flex flex-column gap-2" id="deliveryIssueRadioGroup">
                         <label class="d-flex align-items-center gap-2 p-2.5 rounded-3 border border-secondary border-opacity-30 bg-black bg-opacity-25 cursor-pointer text-white">
-                            <input type="radio" name="custDeliveryIssue" value="Rider didn't deliver" class="form-check-input mt-0" checked />
-                            <span class="small fw-bold"><i class="fa-solid fa-person-circle-xmark text-danger me-1.5"></i> Rider didn't deliver</span>
+                            <input type="radio" name="custDeliveryIssue" value="Order Issue" class="form-check-input mt-0" checked />
+                            <span class="small fw-bold"><i class="fa-solid fa-box-archive text-primary me-1.5"></i> Order Issue</span>
                         </label>
                         <label class="d-flex align-items-center gap-2 p-2.5 rounded-3 border border-secondary border-opacity-30 bg-black bg-opacity-25 cursor-pointer text-white">
-                            <input type="radio" name="custDeliveryIssue" value="Rider misbehaved" class="form-check-input mt-0" />
-                            <span class="small fw-bold"><i class="fa-solid fa-face-angry text-warning me-1.5"></i> Rider misbehaved</span>
+                            <input type="radio" name="custDeliveryIssue" value="Wrong Product" class="form-check-input mt-0" />
+                            <span class="small fw-bold"><i class="fa-solid fa-shuffle text-warning me-1.5"></i> Wrong Product</span>
                         </label>
                         <label class="d-flex align-items-center gap-2 p-2.5 rounded-3 border border-secondary border-opacity-30 bg-black bg-opacity-25 cursor-pointer text-white">
-                            <input type="radio" name="custDeliveryIssue" value="Package damaged" class="form-check-input mt-0" />
-                            <span class="small fw-bold"><i class="fa-solid fa-box-open text-info me-1.5"></i> Package damaged</span>
+                            <input type="radio" name="custDeliveryIssue" value="Damaged Product" class="form-check-input mt-0" />
+                            <span class="small fw-bold"><i class="fa-solid fa-triangle-exclamation text-danger me-1.5"></i> Damaged Product</span>
                         </label>
                         <label class="d-flex align-items-center gap-2 p-2.5 rounded-3 border border-secondary border-opacity-30 bg-black bg-opacity-25 cursor-pointer text-white">
-                            <input type="radio" name="custDeliveryIssue" value="Wrong delivery" class="form-check-input mt-0" />
-                            <span class="small fw-bold"><i class="fa-solid fa-shuffle text-primary me-1.5"></i> Wrong delivery</span>
+                            <input type="radio" name="custDeliveryIssue" value="Return Issue" class="form-check-input mt-0" />
+                            <span class="small fw-bold"><i class="fa-solid fa-rotate-left text-info me-1.5"></i> Return Issue</span>
+                        </label>
+                        <label class="d-flex align-items-center gap-2 p-2.5 rounded-3 border border-secondary border-opacity-30 bg-black bg-opacity-25 cursor-pointer text-white">
+                            <input type="radio" name="custDeliveryIssue" value="Rider Issue" class="form-check-input mt-0" />
+                            <span class="small fw-bold"><i class="fa-solid fa-motorcycle text-warning me-1.5"></i> Rider Issue</span>
+                        </label>
+                        <label class="d-flex align-items-center gap-2 p-2.5 rounded-3 border border-secondary border-opacity-30 bg-black bg-opacity-25 cursor-pointer text-white">
+                            <input type="radio" name="custDeliveryIssue" value="Refund Issue" class="form-check-input mt-0" />
+                            <span class="small fw-bold"><i class="fa-solid fa-indian-rupee-sign text-success me-1.5"></i> Refund Issue</span>
                         </label>
                         <label class="d-flex align-items-center gap-2 p-2.5 rounded-3 border border-secondary border-opacity-30 bg-black bg-opacity-25 cursor-pointer text-white">
                             <input type="radio" name="custDeliveryIssue" value="Other" class="form-check-input mt-0" />
@@ -745,11 +838,21 @@
                     <small class="text-secondary mt-1 d-block">Your statement will be audited alongside Rider telemetry & OTP proof by Admin.</small>
                 </div>
 
-                <!-- 3. Optional Attachment -->
-                <div class="mb-2">
-                    <label class="form-label small fw-bold text-light"><i class="fa-solid fa-paperclip text-primary me-1"></i> Attachment / Photo Proof (Optional)</label>
-                    <input type="url" id="helpAttachmentUrl" class="form-control bg-dark text-white border-secondary" placeholder="Paste image URL or photo proof link (e.g. https://...)" />
-                    <small class="text-secondary mt-1 d-block">Add photo URL of damaged product, invoice, or package seal.</small>
+                <!-- 3. Photo & Video Evidence (Point 61: Unboxing Video Evidence) -->
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-light mb-1">
+                        <i class="fa-solid fa-video text-danger me-1"></i> Unboxing Video / Photo Evidence (Optional)
+                    </label>
+                    <div class="input-group mb-1">
+                        <span class="input-group-text bg-secondary border-secondary text-white"><i class="fa-solid fa-link"></i></span>
+                        <input type="url" id="helpAttachmentUrl" class="form-control bg-dark text-white border-secondary" placeholder="Paste Unboxing Video URL / Drive Link / Photo Proof URL" />
+                    </div>
+                    <div class="p-2 rounded-2 bg-black bg-opacity-30 border border-secondary border-opacity-30 mt-1">
+                        <small class="text-secondary d-flex align-items-center gap-1.5" style="font-size: 0.78rem;">
+                            <i class="fa-solid fa-shield-halved text-success"></i>
+                            <span><strong>Audit Guaranteed:</strong> Uploaded unboxing videos are stamped with <em>Order ID, Customer ID, & UTC timestamp</em>. Original files are preserved immutably.</span>
+                        </small>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer border-secondary">
@@ -1224,6 +1327,62 @@
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-paper-plane me-1.5"></i> Submit Complaint';
                 alert("Connection error while submitting complaint. Please try again.");
+            }
+        });
+    }
+
+    // Point 63: Rider Return Pickup Issue Functions
+    function openReportPickupIssueModal() {
+        const orderId = document.getElementById("helpOrderId")?.value || 
+                        document.querySelector("#returnModal #returnOrderId")?.value || 
+                        window.currentActiveTrackerOrderId || 1001;
+
+        document.getElementById("pickupIssueOrderId").value = orderId;
+        document.getElementById("pickupIssueReturnBadge").innerText = "#R" + orderId;
+
+        // Hide refund tracker modal and show pickup issue modal
+        bootstrap.Modal.getInstance(document.getElementById('refundTrackerModal'))?.hide();
+        new bootstrap.Modal(document.getElementById('reportPickupIssueModal')).show();
+    }
+
+    function submitReportPickupIssue() {
+        const orderId = document.getElementById("pickupIssueOrderId").value || 1001;
+        const selectedRadio = document.querySelector('input[name="pickupReasonOption"]:checked');
+        const reason = selectedRadio ? selectedRadio.value : "Rider didn't arrive";
+        const notes = document.getElementById("pickupIssueNotes").value.trim();
+
+        const btn = document.getElementById("btnSubmitPickupIssue");
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Submitting...';
+
+        const fullDescription = "Return Pickup Failure Reported: " + reason + (notes ? (" | Notes: " + notes) : "");
+
+        $.ajax({
+            url: '/Customer/RaiseComplaint',
+            type: 'POST',
+            data: {
+                orderId: orderId,
+                issue: "Rider Issue",
+                reasonCategory: "Return Pickup Issue - " + reason,
+                description: fullDescription
+            },
+            success: function (res) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane me-1.5"></i> Submit Pickup Dispute';
+
+                bootstrap.Modal.getInstance(document.getElementById('reportPickupIssueModal'))?.hide();
+
+                if (res.success) {
+                    document.getElementById("confirmTicketNumber").innerText = res.ticketNumber || "TKT-PICKUP-DISPUTE";
+                    new bootstrap.Modal(document.getElementById('complaintConfirmationModal')).show();
+                } else {
+                    alert(res.message || "Failed to submit pickup dispute.");
+                }
+            },
+            error: function () {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane me-1.5"></i> Submit Pickup Dispute';
+                alert("Connection error while submitting pickup dispute. Please try again.");
             }
         });
     }
