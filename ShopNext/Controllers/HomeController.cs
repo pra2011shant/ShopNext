@@ -449,6 +449,12 @@ namespace ShopNext.Controllers
             return View();
         }
 
+        // GET: /Home/CustomerMisusePolicy (Point 74: Fair Use & Customer Misuse Policy)
+        public IActionResult CustomerMisusePolicy()
+        {
+            return View();
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

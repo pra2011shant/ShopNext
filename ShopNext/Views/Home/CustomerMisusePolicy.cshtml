@@ -1,0 +1,218 @@
+@{
+    ViewData["Title"] = "Customer Fair Use & Misuse Policy - ShopNext";
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+    .misuse-hero {
+        background: linear-gradient(135deg, rgba(30, 27, 75, 0.94) 0%, rgba(69, 10, 10, 0.9) 100%), url('https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=1600') center/cover;
+        border-radius: 24px;
+        padding: 4rem 2rem;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    }
+    .misuse-card {
+        background: rgba(30, 41, 59, 0.65);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 2.2rem;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+    .misuse-card:hover {
+        border-color: rgba(239, 68, 68, 0.35);
+        transform: translateY(-2px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+    }
+    .gradient-badge {
+        background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+        color: white;
+        padding: 0.35rem 0.9rem;
+        border-radius: 50rem;
+        font-weight: 600;
+        font-size: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .section-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        flex-shrink: 0;
+    }
+    .ladder-step {
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0.8rem;
+        transition: all 0.3s ease;
+    }
+    .ladder-step:hover {
+        border-color: #ef4444;
+        background: rgba(15, 23, 42, 0.9);
+    }
+    .ladder-num {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+</style>
+
+<div class="container py-5 font-outfit">
+    <!-- Hero Banner -->
+    <div class="misuse-hero text-center text-white mb-5">
+        <span class="gradient-badge mb-3">
+            <i class="fa-solid fa-scale-balanced"></i> Fair Use & Community Safety Standards
+        </span>
+        <h1 class="display-4 fw-bold mb-3">Customer Misuse Policy</h1>
+        <p class="lead text-light opacity-75 max-w-700 mx-auto" style="max-width: 740px;">
+            ShopNext sabhi customers, delivery partners aur local merchants ke liye ek safe, fair aur transparent marketplace banaye rakhne ke liye committed hai. Yahan hamari anti-fraud aur fair use guidelines hain.
+        </p>
+        <div class="d-flex justify-content-center gap-3 mt-4 text-muted small">
+            <span><i class="fa-solid fa-shield-halved me-1 text-success"></i> Evidence-Based Enforcement</span>
+            <span>&bull;</span>
+            <span><i class="fa-solid fa-gavel me-1 text-warning"></i> Due Process & Right of Explanation</span>
+        </div>
+    </div>
+
+    <!-- Due Process Principle Highlight Card -->
+    <div class="p-3 mb-5 rounded-4 border border-warning border-opacity-40" style="background: rgba(245, 158, 11, 0.12);">
+        <div class="d-flex align-items-start gap-3">
+            <div class="rounded-circle d-flex align-items-center justify-content-center bg-warning text-dark flex-shrink-0" style="width: 44px; height: 44px;">
+                <i class="fa-solid fa-circle-exclamation fs-5"></i>
+            </div>
+            <div>
+                <h5 class="fw-bold text-warning mb-1">⚖️ Core Principle: Multi-Point Investigation Before Any Action</h5>
+                <p class="text-light opacity-90 small mb-0">
+                    <strong>ShopNext kisi bhi account par arbitrary (bina saboot) action nahi leta.</strong> Har report ko Admin aur QC teams dwara GPS telemetry, serial barcodes, CCTV logs, aur unboxing footage cross-verify karne ke baad hi appropriate decision liya jata hai. Genuine buyers are 100% protected.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 1. Prohibited Misuse & Abuse Behaviors -->
+    <div class="misuse-card mb-4">
+        <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="section-icon bg-danger bg-opacity-20 text-danger">
+                <i class="fa-solid fa-ban"></i>
+            </div>
+            <div>
+                <h4 class="fw-bold text-white mb-0">1. Prohibited Misuse & Fraudulent Practices</h4>
+                <small class="text-muted">Violations subject to review & account restrictions</small>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25 h-100">
+                    <strong class="text-danger d-block mb-1"><i class="fa-solid fa-box-open me-1.5"></i> Fraudulent Returns & Product Swaps</strong>
+                    <p class="text-muted small mb-0">Sealed product nikal kar empty box return karna ya brand new gadget ke badle purana/counterfeit item swap karna.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25 h-100">
+                    <strong class="text-danger d-block mb-1"><i class="fa-solid fa-shuffle me-1.5"></i> Wrong Product False Claims</strong>
+                    <p class="text-muted small mb-0">Sahi product receive hone ke bawajood intentionally "Wrong Product Received" claim karke replacement ya refund maangna.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25 h-100">
+                    <strong class="text-danger d-block mb-1"><i class="fa-solid fa-burst me-1.5"></i> Intentional Product Damage</strong>
+                    <p class="text-muted small mb-0">Product ko khud intentionally break, scratch ya seal cut karke manufacturing defect ya transit damage claim karna.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25 h-100">
+                    <strong class="text-danger d-block mb-1"><i class="fa-solid fa-image me-1.5"></i> Fake Evidence & Staged Videos</strong>
+                    <p class="text-muted small mb-0">Edited, manipulated ya pehle se khule hue packaging ki fake unboxing recording submit karna.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25 h-100">
+                    <strong class="text-danger d-block mb-1"><i class="fa-solid fa-hand-holding-dollar me-1.5"></i> Repeated COD Doorstep Refusals</strong>
+                    <p class="text-muted small mb-0">High-frequency COD orders place karke delivery partner ke doorstep par aane par bina genuine reason accept karne se baar-baar mana karna.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25 h-100">
+                    <strong class="text-danger d-block mb-1"><i class="fa-solid fa-comments me-1.5"></i> Abusive Behavior & False Grievances</strong>
+                    <p class="text-muted small mb-0">Delivery riders ya support team ke sath misbehavior, abusive language, ya fake complaints file karna.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Graduated Consequence Ladder -->
+    <div class="misuse-card">
+        <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="section-icon bg-warning bg-opacity-20 text-warning">
+                <i class="fa-solid fa-stairs"></i>
+            </div>
+            <div>
+                <h4 class="fw-bold text-white mb-0">2. Graduated Consequences & Action Ladder</h4>
+                <small class="text-muted">Proportionate steps taken based on verified violation severity</small>
+            </div>
+        </div>
+
+        <div class="ladder-step">
+            <div class="ladder-num bg-warning text-dark">1</div>
+            <div>
+                <strong class="text-warning d-block">Level 1: Formal Warning & Advisory</strong>
+                <span class="text-muted small">Account par automated advisory notice bheja jata hai aur suspicious patterns par alert kiya jata hai.</span>
+            </div>
+        </div>
+
+        <div class="ladder-step">
+            <div class="ladder-num bg-info text-white">2</div>
+            <div>
+                <strong class="text-info d-block">Level 2: Forensic Evidence Investigation</strong>
+                <span class="text-muted small">Pending orders ko manual inspection hold par rakha jata hai aur dispatch/intake photos cross-audit hoti hain.</span>
+            </div>
+        </div>
+
+        <div class="ladder-step">
+            <div class="ladder-num bg-warning bg-opacity-75 text-dark">3</div>
+            <div>
+                <strong class="text-warning d-block">Level 3: Return & COD Restrictions</strong>
+                <span class="text-muted small">Cash on Delivery (COD) disable karke account ko Prepaid-Only mode me convert kiya jata hai.</span>
+            </div>
+        </div>
+
+        <div class="ladder-step">
+            <div class="ladder-num bg-danger text-white">4</div>
+            <div>
+                <strong class="text-danger d-block">Level 4: Temporary Account Suspension</strong>
+                <span class="text-muted small">Repeat violations par account login aur checkout 14-30 din ke liye suspend kar diya jata hai.</span>
+            </div>
+        </div>
+
+        <div class="ladder-step">
+            <div class="ladder-num bg-danger text-white">5</div>
+            <div>
+                <strong class="text-danger d-block">Level 5: Permanent Account Termination & Blacklisting</strong>
+                <span class="text-muted small">Severe counterfeit fraud ya multi-account abuse ke case me account permanently terminate aur device hash blacklist kiya jata hai.</span>
+            </div>
+        </div>
+    </div>
+</div>
