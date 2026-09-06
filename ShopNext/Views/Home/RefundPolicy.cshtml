@@ -1,0 +1,324 @@
+@{
+    ViewData["Title"] = "Return & Refund Policy - ShopNext";
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+    .policy-hero {
+        background: linear-gradient(135deg, rgba(30, 27, 75, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%), url('https://images.unsplash.com/photo-1556742049-0a67c5574f73?w=1600') center/cover;
+        border-radius: 24px;
+        padding: 4rem 2rem;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    }
+    .policy-card {
+        background: rgba(30, 41, 59, 0.65);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 2.2rem;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+    .policy-card:hover {
+        border-color: rgba(99, 102, 241, 0.35);
+        transform: translateY(-2px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+    }
+    .gradient-badge {
+        background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+        color: white;
+        padding: 0.35rem 0.9rem;
+        border-radius: 50rem;
+        font-weight: 600;
+        font-size: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .section-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        flex-shrink: 0;
+    }
+    .process-step-box {
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+        position: relative;
+        height: 100%;
+        transition: all 0.3s ease;
+    }
+    .process-step-box:hover {
+        border-color: #6366f1;
+        transform: translateY(-3px);
+    }
+    .step-number {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+        color: white;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem auto;
+    }
+    .flow-arrow {
+        color: #818cf8;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+
+<div class="container py-5 font-outfit">
+    <!-- Hero Banner -->
+    <div class="policy-hero text-center text-white mb-5">
+        <span class="gradient-badge mb-3">
+            <i class="fa-solid fa-rotate-left"></i> 100% Buyer Protection & Fair Play Guarantee
+        </span>
+        <h1 class="display-4 fw-bold mb-3">Return & Refund Policy</h1>
+        <p class="lead text-light opacity-75 max-w-700 mx-auto" style="max-width: 740px;">
+            ShopNext par shopping 100% worry-free hai. Agar aapko koi defective, damaged ya wrong product milta hai, to hamara streamlined reverse logistics & instant refund process aapko protect karta hai.
+        </p>
+        <div class="d-flex justify-content-center gap-3 mt-4 text-muted small">
+            <span><i class="fa-solid fa-clock-rotate-left me-1 text-primary"></i> 7-Days Easy Return Window</span>
+            <span>&bull;</span>
+            <span><i class="fa-solid fa-bolt me-1 text-success"></i> Instant UPI / Bank Settlements</span>
+        </div>
+    </div>
+
+    <!-- 1. Wrong Product Resolution Flowchart Highlight (As per specs) -->
+    <div class="policy-card border border-primary border-opacity-30 mb-5" style="background: rgba(30, 27, 75, 0.4);">
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="section-icon bg-primary bg-opacity-20 text-primary">
+                <i class="fa-solid fa-shuffle"></i>
+            </div>
+            <div>
+                <h4 class="fw-bold text-white mb-0">⚡ Wrong / Damaged Product Resolution Flow</h4>
+                <small class="text-muted">Step-by-step lifecycle from report to money back</small>
+            </div>
+        </div>
+
+        <div class="row g-3 align-items-stretch text-white">
+            <div class="col-md-2">
+                <div class="process-step-box">
+                    <div class="step-number">1</div>
+                    <i class="fa-solid fa-bullhorn text-warning fs-3 mb-2"></i>
+                    <h6 class="fw-bold mb-1">1. Report</h6>
+                    <small class="text-muted">Select 'Wrong Product' in My Orders</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="process-step-box">
+                    <div class="step-number">2</div>
+                    <i class="fa-solid fa-camera text-info fs-3 mb-2"></i>
+                    <h6 class="fw-bold mb-1">2. Evidence</h6>
+                    <small class="text-muted">Upload unboxing photo/video proof</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="process-step-box">
+                    <div class="step-number">3</div>
+                    <i class="fa-solid fa-magnifying-glass-check text-primary fs-3 mb-2"></i>
+                    <h6 class="fw-bold mb-1">3. Verification</h6>
+                    <small class="text-muted">Admin checks dispatch vs claim</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="process-step-box">
+                    <div class="step-number">4</div>
+                    <i class="fa-solid fa-truck-pickup text-warning fs-3 mb-2"></i>
+                    <h6 class="fw-bold mb-1">4. Pickup</h6>
+                    <small class="text-muted">Doorstep collection by rider</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="process-step-box">
+                    <div class="step-number">5</div>
+                    <i class="fa-solid fa-boxes-packing text-info fs-3 mb-2"></i>
+                    <h6 class="fw-bold mb-1">5. Inspection</h6>
+                    <small class="text-muted">Hub barcode & physical QC</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="process-step-box border-success">
+                    <div class="step-number bg-success">6</div>
+                    <i class="fa-solid fa-circle-check text-success fs-3 mb-2"></i>
+                    <h6 class="fw-bold text-success mb-1">6. Settlement</h6>
+                    <small class="text-muted">100% Refund or Free Replacement</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Return Window & Eligibility Matrix -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="policy-card h-100">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="section-icon bg-success bg-opacity-20 text-success">
+                        <i class="fa-solid fa-calendar-days"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold text-white mb-0">📅 Return Window & Rules</h4>
+                        <small class="text-muted">Standard timelines for raising return</small>
+                    </div>
+                </div>
+                <ul class="text-light opacity-90 small ps-3 mb-0">
+                    <li class="mb-2"><strong>Standard Return Window:</strong> Delivery ke <strong>7 din</strong> ke andar return request raise ki ja sakti hai.</li>
+                    <li class="mb-2"><strong>Damaged / Defect On Arrival:</strong> Transit damage ya defective item ko delivery ke <strong>48 ghante</strong> ke andar photo/unboxing video ke sath report karein.</li>
+                    <li class="mb-2"><strong>Condition for Pickup:</strong> Product original brand packaging, tags, MRP sticker, aur accessories ke sath hona chahiye.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="policy-card h-100">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="section-icon bg-info bg-opacity-20 text-info">
+                        <i class="fa-solid fa-list-check"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold text-white mb-0">📦 Eligible vs Non-Returnable</h4>
+                        <small class="text-muted">Category-wise return eligibility</small>
+                    </div>
+                </div>
+                <div class="row g-2 small">
+                    <div class="col-6">
+                        <div class="p-2.5 rounded-3 bg-success bg-opacity-10 border border-success border-opacity-30">
+                            <strong class="text-success d-block mb-1"><i class="fa-solid fa-check me-1"></i> Eligible Items</strong>
+                            <ul class="text-muted ps-3 mb-0" style="font-size: 0.78rem;">
+                                <li>Mobiles & Smart Gadgets</li>
+                                <li>Laptops & Electronics</li>
+                                <li>Fashion & Unused Apparel</li>
+                                <li>Home & Kitchen Appliances</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-2.5 rounded-3 bg-danger bg-opacity-10 border border-danger border-opacity-30">
+                            <strong class="text-danger d-block mb-1"><i class="fa-solid fa-ban me-1"></i> Non-Returnable</strong>
+                            <ul class="text-muted ps-3 mb-0" style="font-size: 0.78rem;">
+                                <li>Intimate Apparel & Undergarments</li>
+                                <li>Perishables, Dairy & Food</li>
+                                <li>Opened Software / Digital Keys</li>
+                                <li>Customized / Personalized Items</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Refund Process & Settlement Timelines -->
+    <div class="policy-card">
+        <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="section-icon bg-success bg-opacity-20 text-success">
+                <i class="fa-solid fa-money-bill-transfer"></i>
+            </div>
+            <div>
+                <h4 class="fw-bold text-white mb-0">💳 Refund Timelines by Payment Mode</h4>
+                <small class="text-muted">Exact clearing windows into your account</small>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-dark table-hover border border-secondary border-opacity-30 rounded-3 mb-0 align-middle small">
+                <thead>
+                    <tr class="text-secondary">
+                        <th>Payment Mode</th>
+                        <th>Settlement Destination</th>
+                        <th>Estimated Timeline</th>
+                        <th>Tracking Reference Provided</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong class="text-info"><i class="fa-solid fa-qrcode me-1"></i> UPI (GPay, PhonePe, Paytm)</strong></td>
+                        <td>Original Linked UPI ID / VPA</td>
+                        <td><span class="badge bg-success bg-opacity-25 text-success">Instant (2 - 15 Minutes)</span></td>
+                        <td>NPCI RRN & Gateway Reference</td>
+                    </tr>
+                    <tr>
+                        <td><strong class="text-warning"><i class="fa-solid fa-wallet me-1"></i> ShopNext Wallet</strong></td>
+                        <td>Instant Wallet Credits</td>
+                        <td><span class="badge bg-success bg-opacity-25 text-success">Instant (0 Seconds)</span></td>
+                        <td>Instant Credit Balance Ledger</td>
+                    </tr>
+                    <tr>
+                        <td><strong class="text-primary"><i class="fa-solid fa-credit-card me-1"></i> Credit / Debit Card</strong></td>
+                        <td>Original Card Issuing Bank</td>
+                        <td><span class="badge bg-info bg-opacity-25 text-info">24 - 48 Hours</span></td>
+                        <td>23-Digit Acquirer ARN Number</td>
+                    </tr>
+                    <tr>
+                        <td><strong class="text-light"><i class="fa-solid fa-money-bill me-1"></i> Cash on Delivery (COD)</strong></td>
+                        <td>Verified Bank Account / UPI Handover</td>
+                        <td><span class="badge bg-warning bg-opacity-25 text-warning">Within 2 Hours of Handover</span></td>
+                        <td>IMPS Reference UTR Number</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 4. Pickup Rules & Dispute Redressal -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="policy-card h-100">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="section-icon bg-warning bg-opacity-20 text-warning">
+                        <i class="fa-solid fa-truck-ramp-box"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold text-white mb-0">🚚 Doorstep Reverse Pickup Rules</h4>
+                        <small class="text-muted">How physical pickup is conducted</small>
+                    </div>
+                </div>
+                <ul class="text-light opacity-90 small ps-3 mb-0">
+                    <li class="mb-2">Rider doorstep par outer condition aur serial number scan karega.</li>
+                    <li class="mb-2">Agar rider pickup attempt fail karta hai, to system automatically <strong>Point 66 Automatic Re-Pickup</strong> schedule karega.</li>
+                    <li class="mb-2">Customer ko rider ke aane par digital handover confirmation SMS milta hai.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="policy-card h-100">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="section-icon bg-danger bg-opacity-20 text-danger">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold text-white mb-0">⚖️ Dispute Redressal & Arbitration</h4>
+                        <small class="text-muted">Impartial resolution by Admin</small>
+                    </div>
+                </div>
+                <p class="text-light opacity-90 small mb-2">
+                    Agar merchant aur customer ke beech product condition par dispute hota hai, to <strong>Point 69 Multi-Party Evidence Synthesis</strong> trigger hota hai:
+                </p>
+                <div class="p-2.5 bg-black bg-opacity-30 rounded-3 border border-secondary border-opacity-30 small text-muted">
+                    <span>Admin side-by-side unboxing videos, dispatch photos, aur rider GPS telemetry audit karke 24-48 ghante me final decision deta hai.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

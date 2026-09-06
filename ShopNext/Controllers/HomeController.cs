@@ -437,6 +437,12 @@ namespace ShopNext.Controllers
             return View();
         }
 
+        // GET: /Home/RefundPolicy (Point 72: Return & Refund Policy)
+        public IActionResult RefundPolicy()
+        {
+            return View();
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
