@@ -3959,6 +3959,29 @@ namespace ShopNext.Controllers
             });
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EvaluateCampaignSchedules()
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            int transitions = await _saleCampaignService.AutoSyncCampaignLifecyclesAsync();
+            var campaigns = await _saleCampaignService.GetAllCampaignsAsync();
+
+            return Json(new
+            {
+                success = true,
+                message = transitions > 0
+                    ? $"Auto-Scheduler processed {transitions} status transitions (Start Time -> Active, End Time -> Expired)."
+                    : "Campaign schedules evaluated. All campaigns are currently in sync with real-time clocks.",
+                transitionsCount = transitions,
+                data = campaigns
+            });
+        }
+
         #endregion
     }
 }

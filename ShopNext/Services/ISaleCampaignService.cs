@@ -12,5 +12,6 @@ namespace ShopNext.Services
         Task<AdminSaleCampaignDto?> UpdateCampaignAsync(CreateOrEditSaleCampaignRequest request);
         Task<bool> ToggleCampaignStatusAsync(int id);
         Task<bool> DeleteCampaignAsync(int id);
+        Task<int> AutoSyncCampaignLifecyclesAsync();
     }
 }

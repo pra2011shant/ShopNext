@@ -880,6 +880,20 @@ namespace ShopNext.Models
         public string Description { get; set; } = string.Empty;
         public string CreatedDate { get; set; } = string.Empty;
 
+        // Point 51: Scheduled Sale & Auto-Lifecycle Telemetry
+        public DateTime? StartDateTime { get; set; }
+        public DateTime? EndDateTime { get; set; }
+        public bool IsAutoScheduled { get; set; } = true;
+        public string AutoLifecycleStatus { get; set; } = "Auto-Scheduled"; // "Auto-Scheduled", "Auto-Active (Live)", "Auto-Expired"
+        public string CountdownLabel { get; set; } = "Sale Starts In:"; // "Sale Starts In:", "Sale Ends In:", "Campaign Expired"
+        public string CountdownFormatted { get; set; } = "02 Days 08 Hours 25 Minutes";
+        public int CountdownDays { get; set; } = 2;
+        public int CountdownHours { get; set; } = 8;
+        public int CountdownMinutes { get; set; } = 25;
+        public int CountdownSeconds { get; set; } = 0;
+        public long TotalSecondsRemaining { get; set; } = 199500; // Total countdown in seconds for JS timers
+        public string AutoStatusBadgeClass => Status == "Live Now" ? "bg-danger" : (Status == "Upcoming" ? "bg-warning" : "bg-secondary");
+
         // Dynamic multi-category discounts
         public List<CampaignCategoryDiscountDto> CategoryDiscounts { get; set; } = new List<CampaignCategoryDiscountDto>();
 

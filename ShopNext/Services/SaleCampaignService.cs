@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using ShopNext.Models;
 
 namespace ShopNext.Services
@@ -35,18 +35,35 @@ namespace ShopNext.Services
             {
                 if (_inMemoryCampaigns.Any()) return;
 
+                var now = DateTime.Now;
+
+                // 1. Scheduled Mega Sale - Starts in exactly 2 Days, 8 Hours, 25 Minutes (Matching Point 51 Prompt Example)
+                var megaStart = now.AddDays(2).AddHours(8).AddMinutes(25);
+                var megaEnd = megaStart.AddDays(5);
+
                 _inMemoryCampaigns.Add(new AdminSaleCampaignDto
                 {
                     Id = 1,
                     CampaignName = "🔥 Mega Shopping Sale",
                     Tagline = "Biggest Super Saver Sale of the Season!",
                     BannerTheme = "flame-red",
-                    StartDate = "10 Sep 2026",
-                    StartTime = "00:00 AM",
-                    EndDate = "15 Sep 2026",
-                    EndTime = "11:59 PM",
-                    Status = "Live Now",
-                    IsActive = true,
+                    StartDateTime = megaStart,
+                    EndDateTime = megaEnd,
+                    StartDate = megaStart.ToString("dd MMM yyyy"),
+                    StartTime = megaStart.ToString("hh:mm tt"),
+                    EndDate = megaEnd.ToString("dd MMM yyyy"),
+                    EndTime = megaEnd.ToString("hh:mm tt"),
+                    Status = "Upcoming",
+                    IsActive = false,
+                    IsAutoScheduled = true,
+                    AutoLifecycleStatus = "Auto-Scheduled (Starts Automatically)",
+                    CountdownLabel = "Sale Starts In:",
+                    CountdownFormatted = "02 Days 08 Hours 25 Minutes",
+                    CountdownDays = 2,
+                    CountdownHours = 8,
+                    CountdownMinutes = 25,
+                    CountdownSeconds = 0,
+                    TotalSecondsRemaining = (long)(megaStart - now).TotalSeconds,
                     DefaultDiscountPct = 25,
                     CouponCode = "MEGASALE",
                     MinOrderAmount = 999,
@@ -57,7 +74,7 @@ namespace ShopNext.Services
                     TotalOrdersGenerated = 1845,
                     TotalGrossRevenue = 5420000,
                     Description = "Major festival shopping event with category-tier discounts across Mobiles, Fashion, Electronics, and Home.",
-                    CreatedDate = "01 Sep 2026",
+                    CreatedDate = now.AddDays(-2).ToString("dd MMM yyyy"),
                     CategoryDiscounts = new List<CampaignCategoryDiscountDto>
                     {
                         new CampaignCategoryDiscountDto { CategoryName = "Mobiles", DiscountPercentage = 20, IconClass = "fa-mobile-screen", BadgeColor = "info" },
@@ -67,50 +84,33 @@ namespace ShopNext.Services
                     }
                 });
 
-                _inMemoryCampaigns.Add(new AdminSaleCampaignDto
-                {
-                    Id = 2,
-                    CampaignName = "⚡ Great Indian Festival Days",
-                    Tagline = "India's Grand Autumn Festive Extravaganza",
-                    BannerTheme = "festive-gold",
-                    StartDate = "20 Sep 2026",
-                    StartTime = "00:00 AM",
-                    EndDate = "28 Sep 2026",
-                    EndTime = "11:59 PM",
-                    Status = "Upcoming",
-                    IsActive = true,
-                    DefaultDiscountPct = 35,
-                    CouponCode = "FESTIVAL500",
-                    MinOrderAmount = 1499,
-                    MaxDiscountAmount = 5000,
-                    ProductsScope = "All Verified Flagships & Deals",
-                    SellersScope = "All 250 Verified Sellers",
-                    ParticipatingSellersCount = 250,
-                    TotalOrdersGenerated = 0,
-                    TotalGrossRevenue = 0,
-                    Description = "Pre-festive shopping festival with massive discounts on high-ticket appliances and premium fashion.",
-                    CreatedDate = "04 Sep 2026",
-                    CategoryDiscounts = new List<CampaignCategoryDiscountDto>
-                    {
-                        new CampaignCategoryDiscountDto { CategoryName = "Mobiles", DiscountPercentage = 25, IconClass = "fa-mobile-screen", BadgeColor = "info" },
-                        new CampaignCategoryDiscountDto { CategoryName = "Fashion", DiscountPercentage = 50, IconClass = "fa-shirt", BadgeColor = "danger" },
-                        new CampaignCategoryDiscountDto { CategoryName = "Electronics", DiscountPercentage = 45, IconClass = "fa-laptop", BadgeColor = "warning" },
-                        new CampaignCategoryDiscountDto { CategoryName = "Groceries", DiscountPercentage = 20, IconClass = "fa-basket-shopping", BadgeColor = "success" }
-                    }
-                });
+                // 2. Active Flash Sale - Started 3 hours ago, Ends in 21 hours
+                var flashStart = now.AddHours(-3);
+                var flashEnd = now.AddHours(21);
 
                 _inMemoryCampaigns.Add(new AdminSaleCampaignDto
                 {
-                    Id = 3,
+                    Id = 2,
                     CampaignName = "🌙 Midnight Super Flash Sale",
-                    Tagline = "6-Hour Exclusive Night Deals",
+                    Tagline = "24-Hour Exclusive Night Blowout",
                     BannerTheme = "midnight-violet",
-                    StartDate = "09 Sep 2026",
-                    StartTime = "10:00 PM",
-                    EndDate = "10 Sep 2026",
-                    EndTime = "04:00 AM",
+                    StartDateTime = flashStart,
+                    EndDateTime = flashEnd,
+                    StartDate = flashStart.ToString("dd MMM yyyy"),
+                    StartTime = flashStart.ToString("hh:mm tt"),
+                    EndDate = flashEnd.ToString("dd MMM yyyy"),
+                    EndTime = flashEnd.ToString("hh:mm tt"),
                     Status = "Live Now",
                     IsActive = true,
+                    IsAutoScheduled = true,
+                    AutoLifecycleStatus = "Auto-Active (Live Now)",
+                    CountdownLabel = "Sale Ends In:",
+                    CountdownFormatted = "00 Days 21 Hours 00 Minutes",
+                    CountdownDays = 0,
+                    CountdownHours = 21,
+                    CountdownMinutes = 0,
+                    CountdownSeconds = 0,
+                    TotalSecondsRemaining = (long)(flashEnd - now).TotalSeconds,
                     DefaultDiscountPct = 30,
                     CouponCode = "MIDNIGHT",
                     MinOrderAmount = 499,
@@ -121,7 +121,7 @@ namespace ShopNext.Services
                     TotalOrdersGenerated = 412,
                     TotalGrossRevenue = 890000,
                     Description = "High-urgency midnight flash sale with steep clearance discounts on apparel and smartphone accessories.",
-                    CreatedDate = "05 Sep 2026",
+                    CreatedDate = now.AddDays(-1).ToString("dd MMM yyyy"),
                     CategoryDiscounts = new List<CampaignCategoryDiscountDto>
                     {
                         new CampaignCategoryDiscountDto { CategoryName = "Mobiles", DiscountPercentage = 15, IconClass = "fa-mobile-screen", BadgeColor = "info" },
@@ -130,35 +130,95 @@ namespace ShopNext.Services
                     }
                 });
 
+                // 3. Upcoming Grand Autumn Festival - Starts in 14 days
+                var festStart = now.AddDays(14);
+                var festEnd = festStart.AddDays(8);
+
                 _inMemoryCampaigns.Add(new AdminSaleCampaignDto
                 {
-                    Id = 4,
-                    CampaignName = "🎉 Diwali Dhamaka Season Sale",
-                    Tagline = "Grand Lights & Deep Festive Discounts",
-                    BannerTheme = "electric-blue",
-                    StartDate = "15 Oct 2026",
-                    StartTime = "00:00 AM",
-                    EndDate = "22 Oct 2026",
-                    EndTime = "11:59 PM",
+                    Id = 3,
+                    CampaignName = "⚡ Great Indian Festival Days",
+                    Tagline = "India's Grand Autumn Festive Extravaganza",
+                    BannerTheme = "festive-gold",
+                    StartDateTime = festStart,
+                    EndDateTime = festEnd,
+                    StartDate = festStart.ToString("dd MMM yyyy"),
+                    StartTime = festStart.ToString("hh:mm tt"),
+                    EndDate = festEnd.ToString("dd MMM yyyy"),
+                    EndTime = festEnd.ToString("hh:mm tt"),
                     Status = "Upcoming",
                     IsActive = false,
-                    DefaultDiscountPct = 40,
-                    CouponCode = "DIWALI2026",
-                    MinOrderAmount = 1999,
-                    MaxDiscountAmount = 10000,
-                    ProductsScope = "All Catalog Products",
+                    IsAutoScheduled = true,
+                    AutoLifecycleStatus = "Auto-Scheduled (Starts Automatically)",
+                    CountdownLabel = "Sale Starts In:",
+                    CountdownFormatted = "14 Days 00 Hours 00 Minutes",
+                    CountdownDays = 14,
+                    CountdownHours = 0,
+                    CountdownMinutes = 0,
+                    CountdownSeconds = 0,
+                    TotalSecondsRemaining = (long)(festStart - now).TotalSeconds,
+                    DefaultDiscountPct = 35,
+                    CouponCode = "FESTIVAL500",
+                    MinOrderAmount = 1499,
+                    MaxDiscountAmount = 5000,
+                    ProductsScope = "All Verified Flagships & Deals",
                     SellersScope = "All 250 Verified Sellers",
                     ParticipatingSellersCount = 250,
                     TotalOrdersGenerated = 0,
                     TotalGrossRevenue = 0,
-                    Description = "Flagship annual shopping event featuring mega cashback, instant bank discounts, and category blowout pricing.",
-                    CreatedDate = "05 Sep 2026",
+                    Description = "Pre-festive shopping festival with massive discounts on high-ticket appliances and premium fashion.",
+                    CreatedDate = now.ToString("dd MMM yyyy"),
                     CategoryDiscounts = new List<CampaignCategoryDiscountDto>
                     {
-                        new CampaignCategoryDiscountDto { CategoryName = "Mobiles", DiscountPercentage = 30, IconClass = "fa-mobile-screen", BadgeColor = "info" },
-                        new CampaignCategoryDiscountDto { CategoryName = "Fashion", DiscountPercentage = 55, IconClass = "fa-shirt", BadgeColor = "danger" },
-                        new CampaignCategoryDiscountDto { CategoryName = "Electronics", DiscountPercentage = 50, IconClass = "fa-laptop", BadgeColor = "warning" },
-                        new CampaignCategoryDiscountDto { CategoryName = "Beauty & Care", DiscountPercentage = 40, IconClass = "fa-sparkles", BadgeColor = "primary" }
+                        new CampaignCategoryDiscountDto { CategoryName = "Mobiles", DiscountPercentage = 25, IconClass = "fa-mobile-screen", BadgeColor = "info" },
+                        new CampaignCategoryDiscountDto { CategoryName = "Fashion", DiscountPercentage = 50, IconClass = "fa-shirt", BadgeColor = "danger" },
+                        new CampaignCategoryDiscountDto { CategoryName = "Electronics", DiscountPercentage = 45, IconClass = "fa-laptop", BadgeColor = "warning" },
+                        new CampaignCategoryDiscountDto { CategoryName = "Groceries", DiscountPercentage = 20, IconClass = "fa-basket-shopping", BadgeColor = "success" }
+                    }
+                });
+
+                // 4. Past / Expired Campaign
+                var expStart = now.AddDays(-6);
+                var expEnd = now.AddDays(-1);
+
+                _inMemoryCampaigns.Add(new AdminSaleCampaignDto
+                {
+                    Id = 4,
+                    CampaignName = "🎉 Weekend Clearance Super Sale",
+                    Tagline = "End of Month Clearance",
+                    BannerTheme = "electric-blue",
+                    StartDateTime = expStart,
+                    EndDateTime = expEnd,
+                    StartDate = expStart.ToString("dd MMM yyyy"),
+                    StartTime = expStart.ToString("hh:mm tt"),
+                    EndDate = expEnd.ToString("dd MMM yyyy"),
+                    EndTime = expEnd.ToString("hh:mm tt"),
+                    Status = "Expired",
+                    IsActive = false,
+                    IsAutoScheduled = true,
+                    AutoLifecycleStatus = "Auto-Expired (Completed)",
+                    CountdownLabel = "Campaign Expired",
+                    CountdownFormatted = "Campaign Expired",
+                    CountdownDays = 0,
+                    CountdownHours = 0,
+                    CountdownMinutes = 0,
+                    CountdownSeconds = 0,
+                    TotalSecondsRemaining = 0,
+                    DefaultDiscountPct = 40,
+                    CouponCode = "CLEARANCE",
+                    MinOrderAmount = 499,
+                    MaxDiscountAmount = 1000,
+                    ProductsScope = "Clearance Overstock SKUs",
+                    SellersScope = "All 250 Verified Sellers",
+                    ParticipatingSellersCount = 180,
+                    TotalOrdersGenerated = 960,
+                    TotalGrossRevenue = 1850000,
+                    Description = "Clearance event concluded successfully with zero manual intervention required.",
+                    CreatedDate = now.AddDays(-7).ToString("dd MMM yyyy"),
+                    CategoryDiscounts = new List<CampaignCategoryDiscountDto>
+                    {
+                        new CampaignCategoryDiscountDto { CategoryName = "Fashion", DiscountPercentage = 60, IconClass = "fa-shirt", BadgeColor = "danger" },
+                        new CampaignCategoryDiscountDto { CategoryName = "Beauty & Care", DiscountPercentage = 45, IconClass = "fa-sparkles", BadgeColor = "primary" }
                     }
                 });
             }
@@ -168,6 +228,7 @@ namespace ShopNext.Services
         {
             lock (_lock)
             {
+                SyncDynamicTimersAndStatuses();
                 return Task.FromResult(_inMemoryCampaigns.OrderByDescending(c => c.IsActive).ThenBy(c => c.Id).ToList());
             }
         }
@@ -176,6 +237,7 @@ namespace ShopNext.Services
         {
             lock (_lock)
             {
+                SyncDynamicTimersAndStatuses();
                 var campaign = _inMemoryCampaigns.FirstOrDefault(c => c.Id == id);
                 return Task.FromResult(campaign);
             }
@@ -186,48 +248,52 @@ namespace ShopNext.Services
             var categoryDiscounts = ParseCategoryDiscounts(request.CategoryDiscountsJson);
             if (!categoryDiscounts.Any())
             {
-                // Default fallback category discounts
                 categoryDiscounts.Add(new CampaignCategoryDiscountDto { CategoryName = "Mobiles", DiscountPercentage = 20, IconClass = "fa-mobile-screen", BadgeColor = "info" });
                 categoryDiscounts.Add(new CampaignCategoryDiscountDto { CategoryName = "Fashion", DiscountPercentage = 40, IconClass = "fa-shirt", BadgeColor = "danger" });
                 categoryDiscounts.Add(new CampaignCategoryDiscountDto { CategoryName = "Electronics", DiscountPercentage = 30, IconClass = "fa-laptop", BadgeColor = "warning" });
             }
+
+            var startDt = ParseDateTime(request.StartDate, request.StartTime) ?? DateTime.Now.AddDays(2).AddHours(8).AddMinutes(25);
+            var endDt = ParseDateTime(request.EndDate, request.EndTime) ?? startDt.AddDays(5);
 
             var newCampaign = new AdminSaleCampaignDto
             {
                 CampaignName = string.IsNullOrWhiteSpace(request.CampaignName) ? "🔥 Mega Shopping Sale" : request.CampaignName.Trim(),
                 Tagline = string.IsNullOrWhiteSpace(request.Tagline) ? "Biggest Sale of the Season" : request.Tagline.Trim(),
                 BannerTheme = string.IsNullOrWhiteSpace(request.BannerTheme) ? "flame-red" : request.BannerTheme,
-                StartDate = string.IsNullOrWhiteSpace(request.StartDate) ? DateTime.Now.ToString("dd MMM yyyy") : request.StartDate,
-                StartTime = string.IsNullOrWhiteSpace(request.StartTime) ? "00:00" : request.StartTime,
-                EndDate = string.IsNullOrWhiteSpace(request.EndDate) ? DateTime.Now.AddDays(5).ToString("dd MMM yyyy") : request.EndDate,
-                EndTime = string.IsNullOrWhiteSpace(request.EndTime) ? "23:59" : request.EndTime,
-                Status = request.IsActive ? "Live Now" : "Draft",
-                IsActive = request.IsActive,
+                StartDateTime = startDt,
+                EndDateTime = endDt,
+                StartDate = string.IsNullOrWhiteSpace(request.StartDate) ? startDt.ToString("dd MMM yyyy") : request.StartDate,
+                StartTime = string.IsNullOrWhiteSpace(request.StartTime) ? startDt.ToString("hh:mm tt") : request.StartTime,
+                EndDate = string.IsNullOrWhiteSpace(request.EndDate) ? endDt.ToString("dd MMM yyyy") : request.EndDate,
+                EndTime = string.IsNullOrWhiteSpace(request.EndTime) ? endDt.ToString("hh:mm tt") : request.EndTime,
                 DefaultDiscountPct = request.DefaultDiscountPct > 0 ? request.DefaultDiscountPct : 20,
                 CouponCode = string.IsNullOrWhiteSpace(request.CouponCode) ? null : request.CouponCode.Trim().ToUpperInvariant(),
                 MinOrderAmount = request.MinOrderAmount >= 0 ? request.MinOrderAmount : 500,
                 MaxDiscountAmount = request.MaxDiscountAmount,
-                ProductsScope = string.IsNullOrWhiteSpace(request.ProductsScope) ? "All Catalog Products" : request.ProductsScope,
+                ProductsScope = string.IsNullOrWhiteSpace(request.ProductsScope) ? "All Catalog Products in Categories" : request.ProductsScope,
                 SellersScope = string.IsNullOrWhiteSpace(request.SellersScope) ? "All 250 Verified Sellers" : request.SellersScope,
                 ParticipatingSellersCount = 250,
                 TotalOrdersGenerated = 0,
                 TotalGrossRevenue = 0,
                 Description = request.Description ?? string.Empty,
                 CreatedDate = DateTime.Now.ToString("dd MMM yyyy"),
+                IsAutoScheduled = true,
                 CategoryDiscounts = categoryDiscounts
             };
 
             lock (_lock)
             {
                 newCampaign.Id = _nextId++;
+                EvaluateSingleCampaignLifecycle(newCampaign, DateTime.Now);
                 _inMemoryCampaigns.Insert(0, newCampaign);
             }
 
             await _auditService.LogAsync(
-                userId: 1,
-                userRole: "Admin",
                 action: "CreateSaleCampaign",
-                details: $"Created sale campaign '{newCampaign.CampaignName}' with Coupon: {newCampaign.CouponCode ?? "None"}, Validity: {newCampaign.ValidityFormatted}, Category Discounts: {newCampaign.CategorySummary}"
+                details: $"Created scheduled sale campaign '{newCampaign.CampaignName}' with Coupon: {newCampaign.CouponCode ?? "None"}, Validity: {newCampaign.ValidityFormatted}, Category Discounts: {newCampaign.CategorySummary}",
+                userId: 1,
+                userRole: "Admin"
             );
 
             return newCampaign;
@@ -250,6 +316,12 @@ namespace ShopNext.Services
                 campaign.StartTime = string.IsNullOrWhiteSpace(request.StartTime) ? campaign.StartTime : request.StartTime;
                 campaign.EndDate = string.IsNullOrWhiteSpace(request.EndDate) ? campaign.EndDate : request.EndDate;
                 campaign.EndTime = string.IsNullOrWhiteSpace(request.EndTime) ? campaign.EndTime : request.EndTime;
+
+                var startDt = ParseDateTime(campaign.StartDate, campaign.StartTime);
+                var endDt = ParseDateTime(campaign.EndDate, campaign.EndTime);
+                if (startDt.HasValue) campaign.StartDateTime = startDt.Value;
+                if (endDt.HasValue) campaign.EndDateTime = endDt.Value;
+
                 campaign.DefaultDiscountPct = request.DefaultDiscountPct;
                 campaign.CouponCode = string.IsNullOrWhiteSpace(request.CouponCode) ? null : request.CouponCode.Trim().ToUpperInvariant();
                 campaign.MinOrderAmount = request.MinOrderAmount;
@@ -257,21 +329,21 @@ namespace ShopNext.Services
                 campaign.ProductsScope = string.IsNullOrWhiteSpace(request.ProductsScope) ? campaign.ProductsScope : request.ProductsScope;
                 campaign.SellersScope = string.IsNullOrWhiteSpace(request.SellersScope) ? campaign.SellersScope : request.SellersScope;
                 campaign.Description = request.Description ?? campaign.Description;
-                campaign.IsActive = request.IsActive;
-                campaign.Status = request.IsActive ? "Live Now" : "Paused";
 
                 var parsedCategories = ParseCategoryDiscounts(request.CategoryDiscountsJson);
                 if (parsedCategories.Any())
                 {
                     campaign.CategoryDiscounts = parsedCategories;
                 }
+
+                EvaluateSingleCampaignLifecycle(campaign, DateTime.Now);
             }
 
             await _auditService.LogAsync(
-                userId: 1,
-                userRole: "Admin",
                 action: "UpdateSaleCampaign",
-                details: $"Updated sale campaign #{campaign.Id} '{campaign.CampaignName}' - Status: {campaign.Status}, Coupon: {campaign.CouponCode ?? "None"}"
+                details: $"Updated scheduled sale campaign #{campaign.Id} '{campaign.CampaignName}' - Status: {campaign.Status}, Coupon: {campaign.CouponCode ?? "None"}",
+                userId: 1,
+                userRole: "Admin"
             );
 
             return campaign;
@@ -286,14 +358,22 @@ namespace ShopNext.Services
                 if (campaign == null) return false;
 
                 campaign.IsActive = !campaign.IsActive;
-                campaign.Status = campaign.IsActive ? "Live Now" : "Paused";
+                if (!campaign.IsActive)
+                {
+                    campaign.Status = "Paused";
+                    campaign.AutoLifecycleStatus = "Paused (Manual Override)";
+                }
+                else
+                {
+                    EvaluateSingleCampaignLifecycle(campaign, DateTime.Now);
+                }
             }
 
             await _auditService.LogAsync(
-                userId: 1,
-                userRole: "Admin",
                 action: "ToggleSaleCampaignStatus",
-                details: $"Toggled sale campaign #{campaign.Id} status to {campaign.Status} (IsActive: {campaign.IsActive})"
+                details: $"Toggled sale campaign #{campaign.Id} status to {campaign.Status} (IsActive: {campaign.IsActive})",
+                userId: 1,
+                userRole: "Admin"
             );
 
             return true;
@@ -317,14 +397,146 @@ namespace ShopNext.Services
             if (removed)
             {
                 await _auditService.LogAsync(
-                    userId: 1,
-                    userRole: "Admin",
                     action: "DeleteSaleCampaign",
-                    details: $"Deleted sale campaign #{id} '{name}'"
+                    details: $"Deleted sale campaign #{id} '{name}'",
+                    userId: 1,
+                    userRole: "Admin"
                 );
             }
 
             return removed;
+        }
+
+        public async Task<int> AutoSyncCampaignLifecyclesAsync()
+        {
+            int transitionsCount = 0;
+            var transitions = new List<(string Name, string OldStatus, string NewStatus)>();
+
+            lock (_lock)
+            {
+                var now = DateTime.Now;
+                foreach (var camp in _inMemoryCampaigns)
+                {
+                    if (!camp.IsAutoScheduled) continue;
+
+                    string oldStatus = camp.Status;
+                    EvaluateSingleCampaignLifecycle(camp, now);
+
+                    if (oldStatus != camp.Status)
+                    {
+                        transitionsCount++;
+                        transitions.Add((camp.CampaignName, oldStatus, camp.Status));
+                    }
+                }
+            }
+
+            foreach (var t in transitions)
+            {
+                await _auditService.LogAsync(
+                    action: "AutoCampaignLifecycleTransition",
+                    details: $"Point 51 Auto-Scheduler: Campaign '{t.Name}' automatically transitioned from [{t.OldStatus}] to [{t.NewStatus}] based on scheduled timestamp without manual intervention.",
+                    userId: 1,
+                    userRole: "SystemAutoScheduler"
+                );
+            }
+
+            return transitionsCount;
+        }
+
+        private static void SyncDynamicTimersAndStatuses()
+        {
+            var now = DateTime.Now;
+            foreach (var camp in _inMemoryCampaigns)
+            {
+                EvaluateSingleCampaignLifecycle(camp, now);
+            }
+        }
+
+        private static void EvaluateSingleCampaignLifecycle(AdminSaleCampaignDto camp, DateTime now)
+        {
+            if (camp.Status == "Paused") return;
+
+            // Ensure valid DateTime objects
+            if (!camp.StartDateTime.HasValue)
+            {
+                camp.StartDateTime = ParseDateTime(camp.StartDate, camp.StartTime) ?? now.AddDays(2);
+            }
+            if (!camp.EndDateTime.HasValue)
+            {
+                camp.EndDateTime = ParseDateTime(camp.EndDate, camp.EndTime) ?? camp.StartDateTime.Value.AddDays(5);
+            }
+
+            var start = camp.StartDateTime.Value;
+            var end = camp.EndDateTime.Value;
+
+            if (now < start)
+            {
+                // Future scheduled sale -> UPCOMING
+                camp.Status = "Upcoming";
+                camp.IsActive = false;
+                camp.CountdownLabel = "Sale Starts In:";
+                camp.AutoLifecycleStatus = "Auto-Scheduled (Will auto-activate at start time)";
+
+                var diff = start - now;
+                camp.CountdownDays = Math.Max(0, diff.Days);
+                camp.CountdownHours = Math.Max(0, diff.Hours);
+                camp.CountdownMinutes = Math.Max(0, diff.Minutes);
+                camp.CountdownSeconds = Math.Max(0, diff.Seconds);
+                camp.TotalSecondsRemaining = (long)Math.Max(0, diff.TotalSeconds);
+                camp.CountdownFormatted = $"{camp.CountdownDays:D2} Days {camp.CountdownHours:D2} Hours {camp.CountdownMinutes:D2} Minutes";
+            }
+            else if (now >= start && now <= end)
+            {
+                // Active running sale -> LIVE NOW
+                camp.Status = "Live Now";
+                camp.IsActive = true;
+                camp.CountdownLabel = "Sale Ends In:";
+                camp.AutoLifecycleStatus = "Auto-Active (Live Now)";
+
+                var diff = end - now;
+                camp.CountdownDays = Math.Max(0, diff.Days);
+                camp.CountdownHours = Math.Max(0, diff.Hours);
+                camp.CountdownMinutes = Math.Max(0, diff.Minutes);
+                camp.CountdownSeconds = Math.Max(0, diff.Seconds);
+                camp.TotalSecondsRemaining = (long)Math.Max(0, diff.TotalSeconds);
+                camp.CountdownFormatted = $"{camp.CountdownDays:D2} Days {camp.CountdownHours:D2} Hours {camp.CountdownMinutes:D2} Minutes";
+            }
+            else
+            {
+                // Concluded sale -> EXPIRED
+                camp.Status = "Expired";
+                camp.IsActive = false;
+                camp.CountdownLabel = "Campaign Expired";
+                camp.AutoLifecycleStatus = "Auto-Expired (Completed)";
+                camp.CountdownDays = 0;
+                camp.CountdownHours = 0;
+                camp.CountdownMinutes = 0;
+                camp.CountdownSeconds = 0;
+                camp.TotalSecondsRemaining = 0;
+                camp.CountdownFormatted = "Campaign Expired";
+            }
+        }
+
+        private static DateTime? ParseDateTime(string? dateStr, string? timeStr)
+        {
+            if (string.IsNullOrWhiteSpace(dateStr)) return null;
+
+            string full = $"{dateStr.Trim()} {(timeStr ?? "00:00").Trim()}";
+            string[] formats = {
+                "dd MMM yyyy hh:mm tt", "dd MMM yyyy HH:mm", "dd MMM yyyy",
+                "yyyy-MM-dd HH:mm", "yyyy-MM-dd hh:mm tt", "yyyy-MM-dd",
+                "dd/MM/yyyy HH:mm", "dd/MM/yyyy"
+            };
+
+            if (DateTime.TryParseExact(full, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
+            {
+                return dt;
+            }
+            if (DateTime.TryParse(full, out var dt2))
+            {
+                return dt2;
+            }
+            return null;
         }
 
         private List<CampaignCategoryDiscountDto> ParseCategoryDiscounts(string? json)

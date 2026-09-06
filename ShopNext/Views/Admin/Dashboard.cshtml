@@ -2634,6 +2634,77 @@
                     </div>
                 </div>
 
+                <!-- POINT 51: Scheduled Sale Automation Hero & Live Flip Countdown (Starts In / Ends In) -->
+                <div class="p-4 mb-4 rounded-3 position-relative overflow-hidden" style="background: linear-gradient(135deg, rgba(30, 27, 75, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1px solid rgba(239, 68, 68, 0.35);">
+                    <div class="row align-items-center g-4">
+                        <div class="col-lg-6">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="badge bg-danger text-white fw-bold px-3 py-1 rounded-pill">
+                                    <i class="fa-solid fa-bolt me-1"></i> Point 51: Auto-Scheduled Sale
+                                </span>
+                                <span class="badge bg-dark border border-secondary text-warning font-monospace px-2.5 py-1 rounded-pill">
+                                    <i class="fa-solid fa-robot me-1"></i> Zero Manual Intervention
+                                </span>
+                            </div>
+                            <h4 class="fw-bold text-white mb-1">🔥 Mega Shopping Sale</h4>
+                            <p class="text-secondary small mb-3">
+                                Sale future date par automatically start hogi: <strong>Start time par Campaign &rarr; ACTIVE</strong>, <strong>End time par Campaign &rarr; EXPIRED</strong>. Admin ko manually start/stop karne ki zarurat nahi.
+                            </p>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="badge bg-dark text-info border border-secondary px-2.5 py-1 rounded-pill small">
+                                    <i class="fa-solid fa-mobile-screen me-1"></i> Mobiles 20% OFF
+                                </span>
+                                <span class="badge bg-dark text-danger border border-secondary px-2.5 py-1 rounded-pill small">
+                                    <i class="fa-solid fa-shirt me-1"></i> Fashion 40% OFF
+                                </span>
+                                <span class="badge bg-dark text-warning border border-secondary px-2.5 py-1 rounded-pill small">
+                                    <i class="fa-solid fa-laptop me-1"></i> Electronics 30% OFF
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6 text-center">
+                            <div class="p-3 rounded-3 bg-dark bg-opacity-80 border border-secondary border-opacity-30 d-inline-block w-100" style="max-width: 480px;">
+                                <div class="text-warning small fw-bold text-uppercase tracking-wider mb-2" id="heroCountdownLabel">
+                                    <i class="fa-regular fa-clock me-1"></i> Sale Starts In:
+                                </div>
+                                
+                                <!-- Flip-style countdown tiles matching prompt: 02 Days, 08 Hours, 25 Minutes, XX Seconds -->
+                                <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
+                                    <div class="text-center">
+                                        <div class="p-2.5 rounded-3 bg-black border border-danger border-opacity-50 text-danger fw-bold fs-3 font-monospace" style="min-width: 65px;" id="heroTimerDays">02</div>
+                                        <div class="text-secondary small mt-1 text-uppercase" style="font-size: 0.7rem;">Days</div>
+                                    </div>
+                                    <div class="fs-4 text-secondary fw-bold">:</div>
+                                    <div class="text-center">
+                                        <div class="p-2.5 rounded-3 bg-black border border-warning border-opacity-50 text-warning fw-bold fs-3 font-monospace" style="min-width: 65px;" id="heroTimerHours">08</div>
+                                        <div class="text-secondary small mt-1 text-uppercase" style="font-size: 0.7rem;">Hours</div>
+                                    </div>
+                                    <div class="fs-4 text-secondary fw-bold">:</div>
+                                    <div class="text-center">
+                                        <div class="p-2.5 rounded-3 bg-black border border-info border-opacity-50 text-info fw-bold fs-3 font-monospace" style="min-width: 65px;" id="heroTimerMinutes">25</div>
+                                        <div class="text-secondary small mt-1 text-uppercase" style="font-size: 0.7rem;">Minutes</div>
+                                    </div>
+                                    <div class="fs-4 text-secondary fw-bold">:</div>
+                                    <div class="text-center">
+                                        <div class="p-2.5 rounded-3 bg-black border border-success border-opacity-50 text-success fw-bold fs-3 font-monospace" style="min-width: 65px;" id="heroTimerSeconds">40</div>
+                                        <div class="text-secondary small mt-1 text-uppercase" style="font-size: 0.7rem;">Seconds</div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-25 px-2">
+                                    <div class="text-success small fw-semibold" id="heroAutoStatusText">
+                                        <i class="fa-solid fa-circle-check me-1"></i> Auto-Start at 08 Sep 2026, 11:33 AM
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-warning py-0.5 px-2 small rounded-pill" onclick="syncCampaignSchedulesManually()" title="Trigger manual background schedule evaluation">
+                                        <i class="fa-solid fa-rotate me-1"></i> Sync Clock
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Featured Sale Cards Showcase (Visual Preview matching prompt) -->
                 <div class="mb-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -2774,6 +2845,9 @@
                                         <div class="font-monospace small">
                                             <div class="text-success"><i class="fa-regular fa-calendar-check me-1"></i> @camp.StartDate (@camp.StartTime)</div>
                                             <div class="text-danger mt-0.5"><i class="fa-regular fa-calendar-xmark me-1"></i> @camp.EndDate (@camp.EndTime)</div>
+                                            <div class="badge @(camp.Status == "Live Now" ? "bg-danger" : (camp.Status == "Upcoming" ? "bg-warning text-dark" : "bg-secondary")) bg-opacity-25 font-monospace small px-2 py-1 mt-1.5 d-block text-start border border-secondary border-opacity-25 camp-row-timer" id="camp-timer-@camp.Id" data-seconds="@camp.TotalSecondsRemaining" data-label="@camp.CountdownLabel">
+                                                <i class="fa-regular fa-clock me-1"></i> @camp.CountdownLabel @camp.CountdownFormatted
+                                            </div>
                                         </div>
                                     </td>
 
@@ -2819,19 +2893,28 @@
                                         <div class="text-secondary small">@camp.TotalOrdersGenerated.ToString("N0") orders</div>
                                     </td>
 
-                                    <!-- Status -->
+                                    <!-- Status (Point 51: Scheduled / Active / Expired) -->
                                     <td style="text-align: center;" id="camp-status-cell-@camp.Id">
-                                        @if (camp.IsActive && camp.Status == "Live Now")
+                                        @if (camp.Status == "Live Now")
                                         {
                                             <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill fw-bold">
-                                                <i class="fa-solid fa-circle-dot fa-fade me-1 text-danger"></i> Live Now
+                                                <i class="fa-solid fa-circle-dot fa-fade me-1 text-danger"></i> ACTIVE (Live)
                                             </span>
+                                            <div class="text-secondary small mt-0.5" style="font-size: 0.7rem;">Auto-Expires at End</div>
                                         }
-                                        else if (camp.IsActive && camp.Status == "Upcoming")
+                                        else if (camp.Status == "Upcoming")
                                         {
                                             <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-30 px-2.5 py-1 rounded-pill fw-bold">
-                                                <i class="fa-solid fa-clock me-1"></i> Upcoming
+                                                <i class="fa-solid fa-clock me-1"></i> SCHEDULED
                                             </span>
+                                            <div class="text-secondary small mt-0.5" style="font-size: 0.7rem;">Auto-Starts at Start</div>
+                                        }
+                                        else if (camp.Status == "Expired")
+                                        {
+                                            <span class="badge bg-secondary bg-opacity-30 text-secondary border border-secondary border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-hourglass-end me-1"></i> EXPIRED
+                                            </span>
+                                            <div class="text-secondary small mt-0.5" style="font-size: 0.7rem;">Auto-Concluded</div>
                                         }
                                         else
                                         {
@@ -12481,6 +12564,92 @@
             }
         });
     }
+
+    // ==========================================
+    // POINT 51: REAL-TIME TICKING COUNTDOWN & AUTO-LIFECYCLE ENGINE
+    // ==========================================
+    let heroTotalRemainingSeconds = 199500; // 2 days 8 hours 25 mins 00 secs
+    let heroTimerInterval = null;
+
+    function initScheduledSaleLiveCountdown() {
+        if (heroTimerInterval) clearInterval(heroTimerInterval);
+
+        heroTimerInterval = setInterval(() => {
+            if (heroTotalRemainingSeconds > 0) {
+                heroTotalRemainingSeconds--;
+
+                const days = Math.floor(heroTotalRemainingSeconds / 86400);
+                const hours = Math.floor((heroTotalRemainingSeconds % 86400) / 3600);
+                const mins = Math.floor((heroTotalRemainingSeconds % 3600) / 60);
+                const secs = heroTotalRemainingSeconds % 60;
+
+                const dEl = document.getElementById('heroTimerDays');
+                const hEl = document.getElementById('heroTimerHours');
+                const mEl = document.getElementById('heroTimerMinutes');
+                const sEl = document.getElementById('heroTimerSeconds');
+
+                if (dEl) dEl.innerText = String(days).padStart(2, '0');
+                if (hEl) hEl.innerText = String(hours).padStart(2, '0');
+                if (mEl) mEl.innerText = String(mins).padStart(2, '0');
+                if (sEl) sEl.innerText = String(secs).padStart(2, '0');
+            } else {
+                // Countdown reached 0 -> Auto Transition to ACTIVE
+                const lbl = document.getElementById('heroCountdownLabel');
+                const st = document.getElementById('heroAutoStatusText');
+                if (lbl) lbl.innerHTML = '<i class="fa-solid fa-fire text-danger me-1"></i> SALE IS NOW LIVE!';
+                if (st) st.innerHTML = '<i class="fa-solid fa-circle-check text-success me-1"></i> Campaign Status: ACTIVE (Live Now)';
+
+                // Auto sync backend
+                syncCampaignSchedulesManually(true);
+                clearInterval(heroTimerInterval);
+            }
+
+            // Also decrement row-level timer badges
+            document.querySelectorAll('.camp-row-timer').forEach(el => {
+                let sec = parseInt(el.getAttribute('data-seconds'), 10) || 0;
+                if (sec > 0) {
+                    sec--;
+                    el.setAttribute('data-seconds', sec);
+
+                    const d = Math.floor(sec / 86400);
+                    const h = Math.floor((sec % 86400) / 3600);
+                    const m = Math.floor((sec % 3600) / 60);
+                    const label = el.getAttribute('data-label') || 'Sale Starts In:';
+                    el.innerHTML = `<i class="fa-regular fa-clock me-1"></i> ${label} ${String(d).padStart(2,'0')} Days ${String(h).padStart(2,'0')} Hours ${String(m).padStart(2,'0')} Minutes`;
+                }
+            });
+        }, 1000);
+    }
+
+    function syncCampaignSchedulesManually(isSilent = false) {
+        const token = $('input[name="__RequestVerificationToken"]').val();
+
+        $.ajax({
+            url: '@Url.Action("EvaluateCampaignSchedules", "Admin")',
+            type: 'POST',
+            headers: {
+                "RequestVerificationToken": token,
+                "X-CSRF-TOKEN": token
+            },
+            success: function(res) {
+                if (!isSilent) {
+                    if (res && res.success) {
+                        showToast(res.message);
+                    } else {
+                        showToast('Failed to sync schedules.', true);
+                    }
+                }
+            },
+            error: function() {
+                if (!isSilent) showToast('Server communication error syncing schedules.', true);
+            }
+        });
+    }
+
+    // Initialize ticker on load
+    $(document).ready(function() {
+        initScheduledSaleLiveCountdown();
+    });
 
     // ==========================================
     // TOAST NOTIFICATIONS
