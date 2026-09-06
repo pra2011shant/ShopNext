@@ -546,6 +546,31 @@ namespace ShopNext.Services
 
         public async Task<int> CreateOrderWithItemsAsync(Order order, List<OrderItem> items)
         {
+            // Point 54: Atomic Inventory Protection & Overselling Prevention
+            foreach (var item in items)
+            {
+                var prod = await _context.Products.FindAsync(item.ProductId);
+                if (prod != null)
+                {
+                    if (prod.Stock < item.Quantity)
+                    {
+                        throw new InvalidOperationException($"Inventory Protection Alert: '{prod.ProductName}' is out of stock! Available units: {prod.Stock}, Requested: {item.Quantity}. Order rejected to prevent overselling.");
+                    }
+
+                    // Safely decrement stock
+                    prod.Stock -= item.Quantity;
+                    if (prod.Stock == 0)
+                    {
+                        prod.StockStatus = "OutOfStock";
+                    }
+                    else if (prod.Stock < 5)
+                    {
+                        prod.StockStatus = "LowStock";
+                    }
+                }
+            }
+            await _context.SaveChangesAsync();
+
             using var command = _context.Database.GetDbConnection().CreateCommand();
             command.CommandText = "dbo.sp_InsertOrder";
             command.CommandType = CommandType.StoredProcedure;

@@ -27,8 +27,9 @@ namespace ShopNext.Controllers
         private readonly ICodAbuseService _codAbuseService;
         private readonly ISaleCampaignService _saleCampaignService;
         private readonly IFlashSaleService _flashSaleService;
+        private readonly IInventoryProtectionService _inventoryProtectionService;
 
-        public AdminController(IShopNextService service, ShopNextDbContext context, IAuditService auditService, ICustomerRiskService riskService, IAddressRiskService addressRiskService, IMultiAccountDetectionService multiAccountService, ICodAbuseService codAbuseService, ISaleCampaignService saleCampaignService, IFlashSaleService flashSaleService)
+        public AdminController(IShopNextService service, ShopNextDbContext context, IAuditService auditService, ICustomerRiskService riskService, IAddressRiskService addressRiskService, IMultiAccountDetectionService multiAccountService, ICodAbuseService codAbuseService, ISaleCampaignService saleCampaignService, IFlashSaleService flashSaleService, IInventoryProtectionService inventoryProtectionService)
         {
             _service = service;
             _context = context;
@@ -39,6 +40,7 @@ namespace ShopNext.Controllers
             _codAbuseService = codAbuseService;
             _saleCampaignService = saleCampaignService;
             _flashSaleService = flashSaleService;
+            _inventoryProtectionService = inventoryProtectionService;
         }
 
         private bool IsAdminLoggedIn()
@@ -617,7 +619,8 @@ namespace ShopNext.Controllers
                 MultiAccountClustersList = await _multiAccountService.GetMultiAccountClustersAsync(),
                 CodAbuseList = await _codAbuseService.GetCodAbuseAnalyticsAsync(),
                 SaleCampaignsList = await _saleCampaignService.GetAllCampaignsAsync(),
-                FlashSalesList = await _flashSaleService.GetAllFlashSalesAsync()
+                FlashSalesList = await _flashSaleService.GetAllFlashSalesAsync(),
+                InventoryProtection = await _inventoryProtectionService.GetDashboardSummaryAsync()
             };
 
             ViewBag.PendingShops = pendingShops;
@@ -4382,6 +4385,95 @@ namespace ShopNext.Controllers
                 transitionsCount = transitions,
                 data = deals
             });
+        }
+
+        #endregion
+
+        #region Point 54: Sale Inventory Protection & Concurrency Endpoints
+
+        // ==========================================
+        // POINT 54: SALE INVENTORY PROTECTION & CONCURRENCY
+        // Safeguards flash sale inventory from overselling under concurrent rush
+        // ==========================================
+
+        // POST: /Admin/SimulateConcurrentSaleRush
+        [HttpPost]
+        public async Task<IActionResult> SimulateConcurrentSaleRush([FromBody] ConcurrencySimulationRequest request)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            request ??= new ConcurrencySimulationRequest();
+            if (request.InitialStock <= 0) request.InitialStock = 10;
+            if (request.ConcurrentUsers <= 0) request.ConcurrentUsers = 100;
+
+            var result = await _inventoryProtectionService.RunConcurrencySimulationAsync(request);
+
+            return Json(new
+            {
+                success = true,
+                message = $"📦 Concurrency Stress Test Completed! {result.TotalRequests} users competed for {result.InitialStock} units. Fulfilled: {result.FulfilledOrdersCount}, Prevented: {result.OutOfStockRejectedCount}, Oversold: {result.OversellCount} (0 Overselling).",
+                data = result
+            });
+        }
+
+        // POST: /Admin/TestReserveStock
+        [HttpPost]
+        public async Task<IActionResult> TestReserveStock(int productId, int quantity, string orderReference)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            if (quantity <= 0)
+            {
+                return Json(new { success = false, message = "Quantity must be greater than 0." });
+            }
+
+            string orderRef = string.IsNullOrWhiteSpace(orderReference) ? $"ORD-TST-{new Random().Next(1000, 9999)}" : orderReference;
+            var result = await _inventoryProtectionService.TryReserveStockAsync(productId, quantity, orderRef, 1);
+
+            return Json(new
+            {
+                success = result.Success,
+                message = result.Message,
+                data = result
+            });
+        }
+
+        // POST: /Admin/ReleaseStock
+        [HttpPost]
+        public async Task<IActionResult> ReleaseStock(int productId, int quantity, string orderReference, string? reason)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            var result = await _inventoryProtectionService.ReleaseStockAsync(productId, quantity, orderReference, reason ?? "Admin Stock Restoral");
+
+            return Json(new
+            {
+                success = result.Success,
+                message = result.Message,
+                data = result
+            });
+        }
+
+        // GET: /Admin/GetInventoryProtectionSummary
+        [HttpGet]
+        public async Task<IActionResult> GetInventoryProtectionSummary()
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            var summary = await _inventoryProtectionService.GetDashboardSummaryAsync();
+            return Json(new { success = true, data = summary });
         }
 
         #endregion

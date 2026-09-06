@@ -70,6 +70,9 @@ namespace ShopNext.Models
 
         // Point 52: Flash Sale Limited Unit Lightning Deals Dataset
         public List<AdminFlashSaleDto> FlashSalesList { get; set; } = new List<AdminFlashSaleDto>();
+
+        // Point 54: Sale Inventory Protection & Concurrency Handling
+        public InventoryProtectionDashboardDto InventoryProtection { get; set; } = new InventoryProtectionDashboardDto();
     }
 
     /// <summary>
