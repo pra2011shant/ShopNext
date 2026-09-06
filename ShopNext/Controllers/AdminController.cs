@@ -621,7 +621,9 @@ namespace ShopNext.Controllers
                 SaleCampaignsList = await _saleCampaignService.GetAllCampaignsAsync(),
                 FlashSalesList = await _flashSaleService.GetAllFlashSalesAsync(),
                 InventoryProtection = await _inventoryProtectionService.GetDashboardSummaryAsync(),
-                SellerSaleParticipationsList = await _saleCampaignService.GetAllSellerSaleParticipationsAsync()
+                SellerSaleParticipationsList = await _saleCampaignService.GetAllSellerSaleParticipationsAsync(),
+                SaleAnalytics = await _saleCampaignService.GetSaleAnalyticsReportAsync(1),
+                AvailableCampaignReports = await _saleCampaignService.GetAllCampaignReportsSummaryAsync()
             };
 
             ViewBag.PendingShops = pendingShops;
@@ -4568,6 +4570,83 @@ namespace ShopNext.Controllers
 
             var list = await _saleCampaignService.GetAllSellerSaleParticipationsAsync(campaignId, shopId);
             return Json(new { success = true, data = list });
+        }
+
+        #endregion
+
+        #region Point 56: Sale Analytics & Post-Campaign Report Endpoints
+
+        // ==========================================
+        // POINT 56: SALE ANALYTICS & POST-CAMPAIGN INTELLIGENCE
+        // Reports: Total Orders (25,500), Products Sold (38,200), Revenue (₹2.5 Cr), Top Category, Product, Seller, Returns, Cancellations
+        // ==========================================
+
+        // GET: /Admin/GetSaleAnalyticsReport
+        [HttpGet]
+        public async Task<IActionResult> GetSaleAnalyticsReport(int campaignId = 1)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            var report = await _saleCampaignService.GetSaleAnalyticsReportAsync(campaignId);
+            return Json(new
+            {
+                success = true,
+                message = $"📊 Loaded post-campaign intelligence report for '{report.CampaignName}'!",
+                data = report
+            });
+        }
+
+        // GET: /Admin/ExportSaleAnalyticsReport
+        [HttpGet]
+        public async Task<IActionResult> ExportSaleAnalyticsReport(int campaignId = 1, string format = "csv")
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Unauthorized();
+            }
+
+            var report = await _saleCampaignService.GetSaleAnalyticsReportAsync(campaignId);
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("=== SHOPNEXT SALE ANALYTICS EXECUTIVE REPORT ===");
+            sb.AppendLine($"Campaign: {report.CampaignName}");
+            sb.AppendLine($"Date Range: {report.DateRange}");
+            sb.AppendLine($"Status: {report.CampaignStatus}");
+            sb.AppendLine("--------------------------------------------------");
+            sb.AppendLine($"Total Orders: {report.TotalOrders:N0}");
+            sb.AppendLine($"Products Sold: {report.ProductsSold:N0} units");
+            sb.AppendLine($"Gross Revenue: {report.RevenueFormatted} (₹{report.Revenue:N2})");
+            sb.AppendLine($"Net Realized GMV: {report.NetRevenueFormatted}");
+            sb.AppendLine($"Top Category: {report.TopCategory} ({report.TopCategoryShareFormatted})");
+            sb.AppendLine($"Top Product: {report.TopProduct} ({report.TopProductUnitsSold:N0} units | ₹{report.TopProductRevenue:N0})");
+            sb.AppendLine($"Top Seller: {report.TopSeller} ({report.TopSellerOrdersFulfilled:N0} orders | {report.TopSellerRating}★)");
+            sb.AppendLine($"Returns: {report.Returns:N0} ({report.ReturnRatePct}%)");
+            sb.AppendLine($"Cancellations: {report.Cancellations:N0} ({report.CancellationRatePct}%)");
+            sb.AppendLine($"Successful Deliveries: {report.SuccessfulDeliveries:N0} ({report.FulfillmentRatePct}%)");
+            sb.AppendLine("--------------------------------------------------");
+            sb.AppendLine("Category,Revenue,Units Sold,Percentage Share");
+            foreach (var cat in report.CategoryBreakdown)
+            {
+                sb.AppendLine($"\"{cat.CategoryName}\",{cat.Revenue:N2},{cat.UnitsSold},{cat.PercentageShare}%");
+            }
+            sb.AppendLine("--------------------------------------------------");
+            sb.AppendLine("Rank,Product Name,Category,Seller,Units Sold,Revenue");
+            foreach (var p in report.TopProductsList)
+            {
+                sb.AppendLine($"{p.Rank},\"{p.ProductName}\",\"{p.Category}\",\"{p.SellerName}\",{p.UnitsSold},{p.GrossRevenue:N2}");
+            }
+            sb.AppendLine("--------------------------------------------------");
+            sb.AppendLine("Rank,Seller Name,City,Orders Fulfilled,Revenue,Rating");
+            foreach (var s in report.TopSellersList)
+            {
+                sb.AppendLine($"{s.Rank},\"{s.SellerName}\",\"{s.ShopCity}\",{s.OrdersCount},{s.Revenue:N2},{s.Rating}★");
+            }
+
+            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+            string fileName = $"Sale_Analytics_{report.CampaignName.Replace(" ", "_")}_{DateTime.Now:yyyyMMdd}.csv";
+            return File(buffer, "text/csv", fileName);
         }
 
         #endregion

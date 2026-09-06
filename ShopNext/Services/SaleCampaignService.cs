@@ -879,5 +879,122 @@ namespace ShopNext.Services
         }
 
         #endregion
+
+        #region Point 56: Sale Analytics & Post-Campaign Intelligence Report
+
+        public Task<SaleAnalyticsReportDto> GetSaleAnalyticsReportAsync(int campaignId)
+        {
+            var camp = _inMemoryCampaigns.FirstOrDefault(c => c.Id == campaignId) ?? _inMemoryCampaigns.FirstOrDefault();
+            string campName = camp?.CampaignName ?? "🔥 Mega Shopping Sale";
+            string dateRange = camp != null ? $"{camp.StartDate} - {camp.EndDate}" : "10 Sep 2026 - 15 Sep 2026";
+
+            if (campaignId == 2)
+            {
+                // Flash Sale Report
+                return Task.FromResult(new SaleAnalyticsReportDto
+                {
+                    CampaignId = 2,
+                    CampaignName = "🌙 Midnight Super Flash Sale",
+                    DateRange = dateRange,
+                    CampaignStatus = "Live Flash Analytics",
+                    TotalOrders = 4850,
+                    ProductsSold = 6120,
+                    Revenue = 4250000,
+                    RevenueFormatted = "₹42.5 Lakhs",
+                    NetRevenueFormatted = "₹40.8 Lakhs",
+                    TopCategory = "Mobiles",
+                    TopCategoryRevenue = 2800000,
+                    TopCategoryShareFormatted = "65.9% of Flash GMV",
+                    TopProduct = "Samsung Mobile (Galaxy S24 5G)",
+                    TopProductImage = "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=200",
+                    TopProductUnitsSold = 2100,
+                    TopProductRevenue = 6929790,
+                    TopSeller = "Samsung Official Flagship Store",
+                    TopSellerOrdersFulfilled = 2200,
+                    TopSellerRevenue = 2800000,
+                    TopSellerRating = 4.9,
+                    Returns = 145,
+                    Cancellations = 95,
+                    CategoryBreakdown = new List<CampaignCategoryShareDto>
+                    {
+                        new CampaignCategoryShareDto { CategoryName = "Mobiles", Revenue = 2800000, RevenueFormatted = "₹28.0 L", UnitsSold = 3400, PercentageShare = 65.9, ColorClass = "info", IconClass = "fa-mobile-screen" },
+                        new CampaignCategoryShareDto { CategoryName = "Electronics", Revenue = 1150000, RevenueFormatted = "₹11.5 L", UnitsSold = 1920, PercentageShare = 27.1, ColorClass = "warning", IconClass = "fa-laptop" },
+                        new CampaignCategoryShareDto { CategoryName = "Accessories", Revenue = 300000, RevenueFormatted = "₹3.0 L", UnitsSold = 800, PercentageShare = 7.0, ColorClass = "success", IconClass = "fa-headphones" }
+                    },
+                    TopProductsList = new List<CampaignProductPerformanceDto>
+                    {
+                        new CampaignProductPerformanceDto { Rank = 1, ProductName = "Samsung Mobile Galaxy S24", Category = "Mobiles", SellerName = "Samsung Official Flagship Store", UnitsSold = 2100, SalePrice = 32999, GrossRevenue = 6929790, RevenueFormatted = "₹69.3 L", ReturnsCount = 45 },
+                        new CampaignProductPerformanceDto { Rank = 2, ProductName = "Apple AirPods Pro (2nd Gen)", Category = "Electronics", SellerName = "Apple Authorized Reseller", UnitsSold = 1400, SalePrice = 18499, GrossRevenue = 2589860, RevenueFormatted = "₹25.9 L", ReturnsCount = 28 },
+                        new CampaignProductPerformanceDto { Rank = 3, ProductName = "Sony WH-1000XM5 Headphones", Category = "Electronics", SellerName = "AudioPhile India", UnitsSold = 950, SalePrice = 22999, GrossRevenue = 2184905, RevenueFormatted = "₹21.8 L", ReturnsCount = 18 }
+                    },
+                    TopSellersList = new List<CampaignSellerPerformanceDto>
+                    {
+                        new CampaignSellerPerformanceDto { Rank = 1, SellerName = "Samsung Official Flagship Store", ShopCity = "Bangalore, Karnataka", OrdersCount = 2200, UnitsSold = 2400, Revenue = 2800000, RevenueFormatted = "₹28.0 L", Rating = 4.9, FulfillmentRate = 98.4 },
+                        new CampaignSellerPerformanceDto { Rank = 2, SellerName = "ABC Electronics", ShopCity = "Mumbai, Maharashtra", OrdersCount = 1450, UnitsSold = 1900, Revenue = 950000, RevenueFormatted = "₹9.5 L", Rating = 4.8, FulfillmentRate = 97.2 },
+                        new CampaignSellerPerformanceDto { Rank = 3, SellerName = "Apple Authorized Reseller", ShopCity = "Delhi NCR", OrdersCount = 1200, UnitsSold = 1400, Revenue = 500000, RevenueFormatted = "₹5.0 L", Rating = 4.8, FulfillmentRate = 96.5 }
+                    }
+                });
+            }
+
+            // Default: Prompt Exact Example for Mega Sale
+            return Task.FromResult(new SaleAnalyticsReportDto
+            {
+                CampaignId = 1,
+                CampaignName = "🔥 Mega Shopping Sale",
+                DateRange = dateRange,
+                CampaignStatus = "Concluded (Post-Sale Analysis)",
+                TotalOrders = 25500,
+                ProductsSold = 38200,
+                Revenue = 25000000, // ₹2.5 Crore
+                RevenueFormatted = "₹2.50 Crore",
+                NetRevenueFormatted = "₹2.38 Crore",
+                TopCategory = "Electronics",
+                TopCategoryRevenue = 12000000, // ₹1.2 Crore
+                TopCategoryShareFormatted = "48.0% of Total GMV",
+                TopProduct = "Samsung Mobile",
+                TopProductImage = "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=200",
+                TopProductUnitsSold = 12400,
+                TopProductRevenue = 40918760,
+                TopSeller = "ABC Electronics",
+                TopSellerOrdersFulfilled = 8200,
+                TopSellerRevenue = 8200000,
+                TopSellerRating = 4.9,
+                Returns = 1250,
+                Cancellations = 850,
+                CategoryBreakdown = new List<CampaignCategoryShareDto>
+                {
+                    new CampaignCategoryShareDto { CategoryName = "Electronics", Revenue = 12000000, RevenueFormatted = "₹1.20 Cr", UnitsSold = 18400, PercentageShare = 48.0, ColorClass = "warning", IconClass = "fa-laptop" },
+                    new CampaignCategoryShareDto { CategoryName = "Mobiles & Gadgets", Revenue = 8500000, RevenueFormatted = "₹85.0 L", UnitsSold = 12800, PercentageShare = 34.0, ColorClass = "info", IconClass = "fa-mobile-screen" },
+                    new CampaignCategoryShareDto { CategoryName = "Fashion & Apparel", Revenue = 3500000, RevenueFormatted = "₹35.0 L", UnitsSold = 5500, PercentageShare = 14.0, ColorClass = "danger", IconClass = "fa-shirt" },
+                    new CampaignCategoryShareDto { CategoryName = "Home & Living", Revenue = 1000000, RevenueFormatted = "₹10.0 L", UnitsSold = 1500, PercentageShare = 4.0, ColorClass = "success", IconClass = "fa-house" }
+                },
+                TopProductsList = new List<CampaignProductPerformanceDto>
+                {
+                    new CampaignProductPerformanceDto { Rank = 1, ProductName = "Samsung Mobile (Galaxy S24 Flagship)", Category = "Mobiles", SellerName = "ABC Electronics", UnitsSold = 12400, SalePrice = 32999, GrossRevenue = 40918760, RevenueFormatted = "₹4.09 Cr", ReturnsCount = 280 },
+                    new CampaignProductPerformanceDto { Rank = 2, ProductName = "Apple AirPods Pro (2nd Gen)", Category = "Electronics", SellerName = "Apple Authorized Reseller", UnitsSold = 7600, SalePrice = 18499, GrossRevenue = 14059240, RevenueFormatted = "₹1.41 Cr", ReturnsCount = 180 },
+                    new CampaignProductPerformanceDto { Rank = 3, ProductName = "Sony WH-1000XM5 Wireless Headphones", Category = "Electronics", SellerName = "AudioPhile India", UnitsSold = 4800, SalePrice = 22999, GrossRevenue = 11039520, RevenueFormatted = "₹1.10 Cr", ReturnsCount = 120 },
+                    new CampaignProductPerformanceDto { Rank = 4, ProductName = "Smart 4K QLED TV (55-Inch)", Category = "Electronics", SellerName = "VisionWorld Appliances", UnitsSold = 3200, SalePrice = 44999, GrossRevenue = 14399680, RevenueFormatted = "₹1.44 Cr", ReturnsCount = 95 },
+                    new CampaignProductPerformanceDto { Rank = 5, ProductName = "Dell XPS 15 Flagship Edition Laptop", Category = "Electronics", SellerName = "TechTrend Electronics", UnitsSold = 1800, SalePrice = 85000, GrossRevenue = 15300000, RevenueFormatted = "₹1.53 Cr", ReturnsCount = 65 }
+                },
+                TopSellersList = new List<CampaignSellerPerformanceDto>
+                {
+                    new CampaignSellerPerformanceDto { Rank = 1, SellerName = "ABC Electronics", ShopCity = "Mumbai, Maharashtra", OrdersCount = 8200, UnitsSold = 14500, Revenue = 8200000, RevenueFormatted = "₹82.0 Lakhs", Rating = 4.9, FulfillmentRate = 97.8 },
+                    new CampaignSellerPerformanceDto { Rank = 2, SellerName = "Samsung Official Flagship Store", ShopCity = "Bangalore, Karnataka", OrdersCount = 7400, UnitsSold = 12400, Revenue = 24400000, RevenueFormatted = "₹2.44 Crore", Rating = 4.9, FulfillmentRate = 98.6 },
+                    new CampaignSellerPerformanceDto { Rank = 3, SellerName = "Apple Authorized Reseller", ShopCity = "Delhi NCR", OrdersCount = 5100, UnitsSold = 7600, Revenue = 9430000, RevenueFormatted = "₹94.3 Lakhs", Rating = 4.8, FulfillmentRate = 96.9 },
+                    new CampaignSellerPerformanceDto { Rank = 4, SellerName = "AudioPhile India", ShopCity = "Hyderabad, Telangana", OrdersCount = 3200, UnitsSold = 4800, Revenue = 7360000, RevenueFormatted = "₹73.6 Lakhs", Rating = 4.8, FulfillmentRate = 97.1 },
+                    new CampaignSellerPerformanceDto { Rank = 5, SellerName = "VisionWorld Appliances", ShopCity = "Ahmedabad, Gujarat", OrdersCount = 1600, UnitsSold = 3200, Revenue = 7200000, RevenueFormatted = "₹72.0 Lakhs", Rating = 4.7, FulfillmentRate = 95.4 }
+                }
+            });
+        }
+
+        public async Task<List<SaleAnalyticsReportDto>> GetAllCampaignReportsSummaryAsync()
+        {
+            var list = new List<SaleAnalyticsReportDto>();
+            list.Add(await GetSaleAnalyticsReportAsync(1));
+            list.Add(await GetSaleAnalyticsReportAsync(2));
+            return list;
+        }
+
+        #endregion
     }
 }

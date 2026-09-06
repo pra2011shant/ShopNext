@@ -20,5 +20,9 @@ namespace ShopNext.Services
         Task<AdminSellerSaleParticipationDto?> ApproveSellerParticipationAsync(int participationId, string? remarks, string adminName);
         Task<AdminSellerSaleParticipationDto?> RejectSellerParticipationAsync(int participationId, string? reason, string adminName);
         Task<AdminSellerSaleParticipationDto> OptInProductForSaleAsync(int productId, int shopId, int campaignId, decimal salePrice, int allocatedStock);
+
+        // Point 56: Sale Analytics & Post-Campaign Intelligence Report
+        Task<SaleAnalyticsReportDto> GetSaleAnalyticsReportAsync(int campaignId);
+        Task<List<SaleAnalyticsReportDto>> GetAllCampaignReportsSummaryAsync();
     }
 }

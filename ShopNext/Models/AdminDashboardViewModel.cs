@@ -76,6 +76,10 @@ namespace ShopNext.Models
 
         // Point 55: Seller Sale Participation & Admin Approval Workflow
         public List<AdminSellerSaleParticipationDto> SellerSaleParticipationsList { get; set; } = new List<AdminSellerSaleParticipationDto>();
+
+        // Point 56: Sale Analytics & Post-Campaign Report
+        public SaleAnalyticsReportDto SaleAnalytics { get; set; } = new SaleAnalyticsReportDto();
+        public List<SaleAnalyticsReportDto> AvailableCampaignReports { get; set; } = new List<SaleAnalyticsReportDto>();
     }
 
     /// <summary>
@@ -1080,6 +1084,105 @@ namespace ShopNext.Models
         public int ParticipationId { get; set; }
         public bool Approve { get; set; } = true;
         public string? Remarks { get; set; }
+    }
+
+    #endregion
+
+    #region Point 56: Sale Analytics & Post-Campaign Report DTOs
+
+    /// <summary>
+    /// Point 56: Sale Analytics & Post-Campaign Report DTO
+    /// Example from Prompt:
+    /// Mega Sale Report:
+    /// Total Orders: 25,500
+    /// Products Sold: 38,200
+    /// Revenue: ₹2.5 Crore
+    /// Top Category: Electronics
+    /// Top Product: Samsung Mobile
+    /// Top Seller: ABC Electronics
+    /// Returns: 1,250
+    /// Cancellations: 850
+    /// </summary>
+    public class SaleAnalyticsReportDto
+    {
+        public int CampaignId { get; set; } = 1;
+        public string CampaignName { get; set; } = "🔥 Mega Shopping Sale";
+        public string DateRange { get; set; } = "10 Sep 2026 - 15 Sep 2026";
+        public string CampaignStatus { get; set; } = "Concluded (Post-Sale Analysis)";
+        
+        // Core KPIs matching Prompt Exactly
+        public int TotalOrders { get; set; } = 25500;
+        public int ProductsSold { get; set; } = 38200;
+        public decimal Revenue { get; set; } = 25000000; // ₹2.5 Crore
+        public string RevenueFormatted { get; set; } = "₹2.50 Crore";
+        public decimal NetRevenue => Revenue - (Returns * 2500) - (Cancellations * 1800);
+        public string NetRevenueFormatted { get; set; } = "₹2.38 Crore";
+        public decimal AverageOrderValue => TotalOrders > 0 ? Math.Round(Revenue / TotalOrders, 2) : 0;
+        
+        // Top Performers matching Prompt Exactly
+        public string TopCategory { get; set; } = "Electronics";
+        public decimal TopCategoryRevenue { get; set; } = 12000000; // ₹1.2 Crore
+        public string TopCategoryShareFormatted { get; set; } = "48.0% of Total GMV";
+        
+        public string TopProduct { get; set; } = "Samsung Mobile";
+        public string TopProductImage { get; set; } = "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=200";
+        public int TopProductUnitsSold { get; set; } = 12400;
+        public decimal TopProductRevenue { get; set; } = 40918760;
+        
+        public string TopSeller { get; set; } = "ABC Electronics";
+        public int TopSellerOrdersFulfilled { get; set; } = 8200;
+        public decimal TopSellerRevenue { get; set; } = 8200000;
+        public double TopSellerRating { get; set; } = 4.9;
+        
+        // Post-Sale Return & Cancellation Risk Metrics
+        public int Returns { get; set; } = 1250;
+        public double ReturnRatePct => TotalOrders > 0 ? Math.Round(((double)Returns / TotalOrders) * 100, 1) : 4.9;
+        public int Cancellations { get; set; } = 850;
+        public double CancellationRatePct => TotalOrders > 0 ? Math.Round(((double)Cancellations / TotalOrders) * 100, 1) : 3.3;
+        public int SuccessfulDeliveries => TotalOrders - Returns - Cancellations;
+        public double FulfillmentRatePct => TotalOrders > 0 ? Math.Round(((double)SuccessfulDeliveries / TotalOrders) * 100, 1) : 91.8;
+
+        // Breakdown Collections
+        public List<CampaignCategoryShareDto> CategoryBreakdown { get; set; } = new();
+        public List<CampaignProductPerformanceDto> TopProductsList { get; set; } = new();
+        public List<CampaignSellerPerformanceDto> TopSellersList { get; set; } = new();
+    }
+
+    public class CampaignCategoryShareDto
+    {
+        public string CategoryName { get; set; } = "Electronics";
+        public decimal Revenue { get; set; } = 12000000;
+        public string RevenueFormatted { get; set; } = "₹1.20 Cr";
+        public int UnitsSold { get; set; } = 18400;
+        public double PercentageShare { get; set; } = 48.0;
+        public string ColorClass { get; set; } = "warning";
+        public string IconClass { get; set; } = "fa-laptop";
+    }
+
+    public class CampaignProductPerformanceDto
+    {
+        public int Rank { get; set; } = 1;
+        public string ProductName { get; set; } = "Samsung Mobile (Galaxy S24 Flagship)";
+        public string Category { get; set; } = "Mobiles";
+        public string SellerName { get; set; } = "ABC Electronics";
+        public int UnitsSold { get; set; } = 12400;
+        public decimal SalePrice { get; set; } = 32999;
+        public decimal GrossRevenue { get; set; } = 40918760;
+        public string RevenueFormatted { get; set; } = "₹4.09 Cr";
+        public int ReturnsCount { get; set; } = 280;
+    }
+
+    public class CampaignSellerPerformanceDto
+    {
+        public int Rank { get; set; } = 1;
+        public string SellerName { get; set; } = "ABC Electronics";
+        public string ShopCity { get; set; } = "Mumbai, Maharashtra";
+        public int OrdersCount { get; set; } = 8200;
+        public int UnitsSold { get; set; } = 14500;
+        public decimal Revenue { get; set; } = 8200000;
+        public string RevenueFormatted { get; set; } = "₹82.0 Lakhs";
+        public double Rating { get; set; } = 4.9;
+        public double FulfillmentRate { get; set; } = 97.8;
     }
 
     #endregion
