@@ -3,134 +3,347 @@
     var selectedRole = (string?)ViewBag.Role ?? "Customer";
 }
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-12 col-md-8 col-lg-5">
-            <!-- Modern Glassmorphic Login Card -->
-            <div class="card border-0 rounded-4 shadow-2xl p-4 p-md-5" style="background: rgba(15, 23, 42, 0.82); border: 1px solid rgba(255, 255, 255, 0.12) !important; backdrop-filter: blur(20px);">
-                
-                <!-- Brand Header -->
-                <div class="text-center mb-4">
-                    <div class="d-inline-flex align-items-center justify-content-center p-3 rounded-circle mb-3 shadow-lg" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(99, 102, 241, 0.3) 100%); border: 1px solid rgba(99, 102, 241, 0.4);">
-                        <i class="fa-solid fa-shield-halved fa-2x text-info"></i>
-                    </div>
-                    <h2 class="fw-extrabold text-white mb-1" style="letter-spacing: -0.02em;">Welcome to <span style="background: linear-gradient(135deg, #60a5fa 0%, #93c5fd 50%, #ffffff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">ShopNext</span></h2>
-                    <p class="text-secondary small mb-0">Unified Access &bull; Customer &bull; Seller &bull; Rider &bull; Admin</p>
-                </div>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 
-                @if (ViewBag.Error != null)
-                {
-                    <div class="alert alert-danger bg-danger bg-opacity-15 border border-danger border-opacity-30 text-danger rounded-3 py-2.5 px-3 small d-flex align-items-center gap-2 mb-4" role="alert">
-                        <i class="fa-solid fa-circle-exclamation fs-5"></i>
-                        <div>@ViewBag.Error</div>
-                    </div>
-                }
+<style>
+    .login-wrapper {
+        min-height: 82vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+        font-family: 'Outfit', sans-serif;
+    }
 
-                @if (TempData["Success"] != null)
-                {
-                    <div class="alert alert-success bg-success bg-opacity-15 border border-success border-opacity-30 text-success rounded-3 py-2.5 px-3 small d-flex align-items-center gap-2 mb-4" role="alert">
-                        <i class="fa-solid fa-circle-check fs-5"></i>
-                        <div>@TempData["Success"]</div>
-                    </div>
-                }
+    .login-glass-card {
+        width: 100%;
+        max-width: 480px;
+        background: linear-gradient(145deg, rgba(15, 23, 42, 0.94) 0%, rgba(20, 29, 58, 0.92) 100%);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 26px;
+        padding: 2.5rem 2.25rem;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55), 0 0 40px rgba(99, 102, 241, 0.12);
+        position: relative;
+        overflow: hidden;
+    }
 
-                <form asp-controller="Account" asp-action="Login" method="post" id="unifiedLoginForm">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
-                    <input type="hidden" name="role" id="selectedRoleInput" value="@selectedRole" />
+    .login-glass-card::before {
+        content: '';
+        position: absolute;
+        top: -120px;
+        right: -120px;
+        width: 240px;
+        height: 240px;
+        background: radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, transparent 70%);
+        pointer-events: none;
+    }
 
-                    <!-- Role Switcher Segmented Tabs -->
-                    <div class="mb-4">
-                        <label class="form-label text-secondary small fw-bold text-uppercase mb-2">Select Portal Role</label>
-                        <div class="d-flex p-1 rounded-3 gap-1" style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.08);">
-                            <button type="button" class="btn btn-sm flex-fill rounded-2 role-tab-btn @(selectedRole == "Customer" ? "active btn-primary fw-bold" : "text-secondary")" onclick="setLoginRole('Customer', this)">
-                                <i class="fa-solid fa-user me-1"></i> Customer
-                            </button>
-                            <button type="button" class="btn btn-sm flex-fill rounded-2 role-tab-btn @(selectedRole == "Seller" ? "active btn-warning fw-bold text-dark" : "text-secondary")" onclick="setLoginRole('Seller', this)">
-                                <i class="fa-solid fa-store me-1"></i> Seller
-                            </button>
-                            <button type="button" class="btn btn-sm flex-fill rounded-2 role-tab-btn @(selectedRole == "Rider" ? "active btn-success fw-bold" : "text-secondary")" onclick="setLoginRole('Rider', this)">
-                                <i class="fa-solid fa-motorcycle me-1"></i> Rider
-                            </button>
-                            <button type="button" class="btn btn-sm flex-fill rounded-2 role-tab-btn @(selectedRole == "Admin" ? "active btn-danger fw-bold" : "text-secondary")" onclick="setLoginRole('Admin', this)">
-                                <i class="fa-solid fa-crown me-1"></i> Admin
-                            </button>
-                        </div>
-                    </div>
+    .login-brand-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(139, 92, 246, 0.3) 100%);
+        border: 1px solid rgba(139, 92, 246, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        color: #38bdf8;
+        margin: 0 auto 1.25rem;
+        box-shadow: 0 10px 25px rgba(56, 189, 248, 0.2);
+    }
 
-                    <!-- Login Identifier (Phone / Email / Admin ID) -->
-                    <div class="mb-3">
-                        <label class="form-label text-light small fw-semibold" id="identifierLabel">
-                            <i class="fa-solid fa-envelope-open-text me-1 text-info"></i> Phone or Email Address
-                        </label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-black bg-opacity-40 border-secondary border-opacity-25 text-secondary">
-                                <i class="fa-solid fa-id-card"></i>
-                            </span>
-                            <input name="identifier" id="loginIdentifier" class="form-control bg-black bg-opacity-40 border-secondary border-opacity-25 text-white shadow-none" placeholder="e.g. 9876543210 or customer@shopnext.com" autocomplete="username" required />
-                        </div>
-                    </div>
+    .role-grid-container {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        background: rgba(0, 0, 0, 0.45);
+        padding: 6px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        margin-bottom: 1.5rem;
+    }
 
-                    <!-- Password with Eye Toggle -->
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <label class="form-label text-light small fw-semibold mb-0">
-                                <i class="fa-solid fa-lock me-1 text-info"></i> Password
-                            </label>
-                            <a asp-controller="Account" asp-action="ForgotPassword" id="forgotPasswordLink" asp-route-role="@selectedRole" class="text-info text-decoration-none small">Forgot?</a>
-                        </div>
-                        <div class="input-group">
-                            <span class="input-group-text bg-black bg-opacity-40 border-secondary border-opacity-25 text-secondary">
-                                <i class="fa-solid fa-key"></i>
-                            </span>
-                            <input type="password" name="password" id="loginPassword" class="form-control bg-black bg-opacity-40 border-secondary border-opacity-25 text-white shadow-none" placeholder="••••••••" autocomplete="current-password" required />
-                            <button type="button" class="btn btn-outline-secondary border-opacity-25 text-secondary" onclick="togglePasswordVisibility()">
-                                <i class="fa-solid fa-eye" id="togglePasswordIcon"></i>
-                            </button>
-                        </div>
-                    </div>
+    @@media (max-width: 440px) {
+        .role-grid-container {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
 
-                    <!-- Submit Button -->
-                    <button type="submit" class="btn btn-primary w-100 py-2.5 rounded-3 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-lg mb-3" style="background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%); border: none;">
-                        <i class="fa-solid fa-right-to-bracket"></i> Secure Sign In
-                    </button>
+    .role-tab-btn {
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        font-weight: 600;
+        font-size: 0.82rem;
+        padding: 0.65rem 0.4rem;
+        border-radius: 12px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        transition: all 0.25s ease;
+        text-align: center;
+        width: 100%;
+    }
 
-                    <!-- 1-Click Demo Fill Selector for Fast Testing -->
-                    <div class="p-3 rounded-3 mb-3" style="background: rgba(0, 0, 0, 0.35); border: 1px dashed rgba(255, 255, 255, 0.15);">
-                        <div class="text-secondary small fw-bold text-uppercase mb-2 d-flex align-items-center gap-1">
-                            <i class="fa-solid fa-wand-magic-sparkles text-warning"></i> 1-Click Demo Credentials:
-                        </div>
-                        <div class="d-flex flex-wrap gap-1.5">
-                            <button type="button" class="btn btn-outline-info btn-sm rounded-pill px-2.5 py-1" style="font-size: 11px;" onclick="fillDemo('Customer', '9876543210', 'Customer@123')">
-                                👤 Customer
-                            </button>
-                            <button type="button" class="btn btn-outline-warning btn-sm rounded-pill px-2.5 py-1" style="font-size: 11px;" onclick="fillDemo('Seller', '9822334455', 'Seller@123')">
-                                🏪 Seller
-                            </button>
-                            <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-2.5 py-1" style="font-size: 11px;" onclick="fillDemo('Rider', '9811223344', 'Rider@123')">
-                                🛵 Rider
-                            </button>
-                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-2.5 py-1" style="font-size: 11px;" onclick="fillDemo('Admin', 'admin', 'Admin@123')">
-                                👑 Admin
-                            </button>
-                        </div>
-                    </div>
+    .role-tab-btn i {
+        font-size: 1.05rem;
+    }
 
-                    <!-- Registration Links -->
-                    <div class="text-center pt-2 border-top border-secondary border-opacity-20">
-                        <span class="text-secondary small">Don't have an account?</span>
-                        <div class="d-flex justify-content-center gap-3 mt-2 small">
-                            <a asp-controller="Customer" asp-action="Register" class="text-info text-decoration-none fw-semibold">Customer Sign Up</a>
-                            <span class="text-secondary">&bull;</span>
-                            <a asp-controller="Vendor" asp-action="Register" class="text-warning text-decoration-none fw-semibold">Become a Seller</a>
-                            <span class="text-secondary">&bull;</span>
-                            <a asp-controller="Rider" asp-action="Register" class="text-success text-decoration-none fw-semibold">Join as Rider</a>
-                        </div>
-                    </div>
-                </form>
+    .role-tab-btn:hover {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.06);
+    }
 
+    .role-tab-btn.active.role-customer {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: #ffffff;
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+    }
+
+    .role-tab-btn.active.role-seller {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: #ffffff;
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+    }
+
+    .role-tab-btn.active.role-rider {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: #ffffff;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    }
+
+    .role-tab-btn.active.role-admin {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: #ffffff;
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+    }
+
+    .custom-input-box {
+        background: rgba(10, 15, 30, 0.7) !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        color: #ffffff !important;
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+        transition: all 0.25s ease;
+    }
+
+    .custom-input-box::placeholder {
+        color: #64748b !important;
+    }
+
+    .custom-input-box:focus {
+        border-color: #6366f1 !important;
+        box-shadow: 0 0 20px rgba(99, 102, 241, 0.25) !important;
+        background: rgba(15, 23, 42, 0.9) !important;
+    }
+
+    .custom-input-group-text {
+        background: rgba(10, 15, 30, 0.7) !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        border-right: none !important;
+        color: #94a3b8 !important;
+        border-radius: 12px 0 0 12px !important;
+    }
+
+    .btn-submit-login {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        border: none;
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 1.02rem;
+        padding: 0.85rem;
+        border-radius: 14px;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.25s ease;
+        box-shadow: 0 8px 25px rgba(79, 70, 229, 0.35);
+        cursor: pointer;
+    }
+
+    .btn-submit-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 30px rgba(79, 70, 229, 0.5);
+        color: #ffffff;
+    }
+
+    .demo-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+    }
+
+    .demo-pill-btn {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 0.45rem 0.6rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: left;
+    }
+
+    .demo-pill-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(99, 102, 241, 0.4);
+        color: #ffffff;
+    }
+</style>
+
+<div class="login-wrapper">
+    <div class="login-glass-card">
+        
+        <!-- Brand Header -->
+        <div class="text-center mb-4">
+            <div class="login-brand-icon">
+                <i class="fa-solid fa-shield-halved"></i>
             </div>
+            <h2 class="fw-bold text-white mb-1" style="font-size: 1.75rem; letter-spacing: -0.02em;">
+                Sign In to <span style="background: linear-gradient(135deg, #60a5fa 0%, #c084fc 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">ShopNext</span>
+            </h2>
+            <p class="text-secondary small mb-0">Select your role to access your dedicated workspace</p>
         </div>
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger bg-danger bg-opacity-20 border border-danger border-opacity-40 text-white rounded-3 py-2.5 px-3 small d-flex align-items-center gap-2 mb-4" role="alert">
+                <i class="fa-solid fa-circle-exclamation fs-5 text-danger"></i>
+                <div class="text-white fw-medium">@ViewBag.Error</div>
+            </div>
+        }
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success bg-success bg-opacity-20 border border-success border-opacity-40 text-white rounded-3 py-2.5 px-3 small d-flex align-items-center gap-2 mb-4" role="alert">
+                <i class="fa-solid fa-circle-check fs-5 text-success"></i>
+                <div class="text-white fw-medium">@TempData["Success"]</div>
+            </div>
+        }
+
+        <form asp-controller="Account" asp-action="Login" method="post" id="unifiedLoginForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+            <input type="hidden" name="role" id="selectedRoleInput" value="@selectedRole" />
+
+            <!-- 100% Contained Responsive Role Grid -->
+            <div class="mb-3">
+                <label class="form-label text-secondary small fw-bold text-uppercase mb-2 d-flex align-items-center justify-content-between">
+                    <span><i class="fa-solid fa-id-badge text-info me-1"></i> Choose Account Role</span>
+                    <span class="badge bg-secondary bg-opacity-30 text-light px-2 py-0.5 rounded-pill" id="activeRoleLabelBadge">@selectedRole</span>
+                </label>
+                <div class="role-grid-container">
+                    <button type="button" class="role-tab-btn role-customer @(selectedRole == "Customer" ? "active" : "")" onclick="setLoginRole('Customer', this)">
+                        <i class="fa-solid fa-user"></i>
+                        <span>Customer</span>
+                    </button>
+                    <button type="button" class="role-tab-btn role-seller @(selectedRole == "Seller" ? "active" : "")" onclick="setLoginRole('Seller', this)">
+                        <i class="fa-solid fa-store"></i>
+                        <span>Seller</span>
+                    </button>
+                    <button type="button" class="role-tab-btn role-rider @(selectedRole == "Rider" ? "active" : "")" onclick="setLoginRole('Rider', this)">
+                        <i class="fa-solid fa-motorcycle"></i>
+                        <span>Rider</span>
+                    </button>
+                    <button type="button" class="role-tab-btn role-admin @(selectedRole == "Admin" ? "active" : "")" onclick="setLoginRole('Admin', this)">
+                        <i class="fa-solid fa-crown"></i>
+                        <span>Admin</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Login Identifier Input -->
+            <div class="mb-3">
+                <label class="form-label text-white small fw-bold mb-1" id="identifierLabel">
+                    <i class="fa-solid fa-envelope-open-text me-1 text-info"></i> Phone or Email Address
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text custom-input-group-text">
+                        <i class="fa-solid fa-id-card"></i>
+                    </span>
+                    <input name="identifier" id="loginIdentifier" class="form-control custom-input-box" style="border-radius: 0 12px 12px 0;" placeholder="e.g. 9876543210 or customer@shopnext.com" autocomplete="username" required />
+                </div>
+            </div>
+
+            <!-- Password Input -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label text-white small fw-bold mb-0">
+                        <i class="fa-solid fa-lock me-1 text-info"></i> Password
+                    </label>
+                    <a asp-controller="Account" asp-action="ForgotPassword" id="forgotPasswordLink" asp-route-role="@selectedRole" class="text-info text-decoration-none small fw-semibold">Forgot?</a>
+                </div>
+                <div class="input-group">
+                    <span class="input-group-text custom-input-group-text">
+                        <i class="fa-solid fa-key"></i>
+                    </span>
+                    <input type="password" name="password" id="loginPassword" class="form-control custom-input-box" style="border-radius: 0 !important;" placeholder="••••••••" autocomplete="current-password" required />
+                    <button type="button" class="btn custom-input-box" style="border-left: none !important; border-radius: 0 12px 12px 0; color: #94a3b8;" onclick="togglePasswordVisibility()">
+                        <i class="fa-solid fa-eye" id="togglePasswordIcon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn-submit-login mb-4" id="loginSubmitBtn">
+                <i class="fa-solid fa-right-to-bracket"></i> Secure Sign In
+            </button>
+
+            <!-- 1-Click Fast Fill Matrix (100% Inside Frame) -->
+            <div class="p-3 rounded-4 mb-4" style="background: rgba(0, 0, 0, 0.4); border: 1px dashed rgba(255, 255, 255, 0.15);">
+                <div class="text-secondary small fw-bold text-uppercase mb-2 d-flex align-items-center justify-content-between">
+                    <span><i class="fa-solid fa-wand-magic-sparkles text-warning me-1"></i> Quick Demo Fill:</span>
+                    <span class="text-white-50 small font-monospace">1-Click</span>
+                </div>
+                <div class="demo-grid">
+                    <button type="button" class="demo-pill-btn" onclick="fillDemo('Customer', '9876543210', 'Customer@123')">
+                        <span>👤 Customer</span>
+                        <i class="fa-solid fa-arrow-turn-down text-info small"></i>
+                    </button>
+                    <button type="button" class="demo-pill-btn" onclick="fillDemo('Seller', '9822334455', 'Seller@123')">
+                        <span>🏪 Seller</span>
+                        <i class="fa-solid fa-arrow-turn-down text-warning small"></i>
+                    </button>
+                    <button type="button" class="demo-pill-btn" onclick="fillDemo('Rider', '9811223344', 'Rider@123')">
+                        <span>🛵 Rider</span>
+                        <i class="fa-solid fa-arrow-turn-down text-success small"></i>
+                    </button>
+                    <button type="button" class="demo-pill-btn" onclick="fillDemo('Admin', 'admin', 'Admin@123')">
+                        <span>👑 Admin</span>
+                        <i class="fa-solid fa-arrow-turn-down text-danger small"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Registration Links -->
+            <div class="text-center pt-2 border-top border-secondary border-opacity-25">
+                <span class="text-secondary small d-block mb-2">New to ShopNext platform?</span>
+                <div class="d-flex justify-content-center align-items-center gap-2 flex-wrap small">
+                    <a asp-controller="Customer" asp-action="Register" class="text-info text-decoration-none fw-semibold">Customer Sign Up</a>
+                    <span class="text-secondary opacity-50">•</span>
+                    <a asp-controller="Vendor" asp-action="Register" class="text-warning text-decoration-none fw-semibold">Become a Seller</a>
+                    <span class="text-secondary opacity-50">•</span>
+                    <a asp-controller="Rider" asp-action="Register" class="text-success text-decoration-none fw-semibold">Join Rider Fleet</a>
+                </div>
+            </div>
+        </form>
+
     </div>
 </div>
 
@@ -138,22 +351,25 @@
 <script>
     function setLoginRole(role, btnEl) {
         document.getElementById('selectedRoleInput').value = role;
-        document.querySelectorAll('.role-tab-btn').forEach(b => {
-            b.className = 'btn btn-sm flex-fill rounded-2 role-tab-btn text-secondary';
-        });
+        const badge = document.getElementById('activeRoleLabelBadge');
+        if (badge) badge.innerText = role;
 
+        document.querySelectorAll('.role-tab-btn').forEach(b => {
+            b.classList.remove('active');
+        });
+        if (btnEl) {
+            btnEl.classList.add('active');
+        }
+
+        const idInp = document.getElementById('loginIdentifier');
         if (role === 'Customer') {
-            btnEl.className = 'btn btn-sm flex-fill rounded-2 role-tab-btn active btn-primary fw-bold';
-            document.getElementById('loginIdentifier').placeholder = 'e.g. 9876543210 or customer@shopnext.com';
+            idInp.placeholder = 'e.g. 9876543210 or customer@shopnext.com';
         } else if (role === 'Seller') {
-            btnEl.className = 'btn btn-sm flex-fill rounded-2 role-tab-btn active btn-warning fw-bold text-dark';
-            document.getElementById('loginIdentifier').placeholder = 'e.g. 9822334455 or techmart@shopnext.com';
+            idInp.placeholder = 'e.g. 9822334455 or techmart@shopnext.com';
         } else if (role === 'Rider') {
-            btnEl.className = 'btn btn-sm flex-fill rounded-2 role-tab-btn active btn-success fw-bold';
-            document.getElementById('loginIdentifier').placeholder = 'e.g. 9811223344 (Registered Rider Phone)';
+            idInp.placeholder = 'e.g. 9811223344 (Registered Phone)';
         } else if (role === 'Admin') {
-            btnEl.className = 'btn btn-sm flex-fill rounded-2 role-tab-btn active btn-danger fw-bold';
-            document.getElementById('loginIdentifier').placeholder = 'e.g. admin or admin@shopnext.com';
+            idInp.placeholder = 'e.g. admin or admin@shopnext.com';
         }
 
         const forgotLink = document.getElementById('forgotPasswordLink');
