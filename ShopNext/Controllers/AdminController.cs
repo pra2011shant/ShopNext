@@ -3671,16 +3671,26 @@ namespace ShopNext.Controllers
                 };
             }
 
+            await _auditService.LogAsync("Evidence_Viewed", "OrderEvidence", orderId, $"Admin inspected evidence package for Order #{orderId}", 1, "Admin", "Admin", HttpContext.Connection.RemoteIpAddress?.ToString());
+
+            string currentDecision = order.ReturnStatus == "Approved" ? "Return Approved" : (order.ReturnStatus == "Rejected" ? "Return Rejected" : (order.ReturnStatus == "Under_Verification" ? "Under Investigation" : "Pending Decision"));
+
             var outbound = evidences.Where(e => e.EvidenceType == "PackingPhoto" || e.EvidenceType == "OriginalProductPhoto" || e.EvidenceType == "DeliveryPhoto").Select(e => new
             {
                 id = e.Id,
+                evidenceCode = $"EV{e.Id:D4}",
                 type = e.EvidenceType,
                 title = e.Title,
                 photoUrl = e.PhotoUrl,
                 description = e.Description,
                 role = e.UploadedByRole,
-                uploadedBy = e.UploadedByName,
-                date = e.UploadedDate.ToString("dd MMM yyyy, hh:mm tt"),
+                uploadedBy = e.UploadedByName ?? "Merchant Packaging Station",
+                uploadedAt = e.UploadedDate.ToString("dd MMM yyyy, hh:mm tt"),
+                viewedBy = "Admin",
+                viewedAt = DateTime.Now.ToString("dd MMM yyyy, hh:mm tt"),
+                decision = currentDecision,
+                decisionBy = "Admin",
+                decisionNotes = order.ReturnVerificationNotes ?? "Under Review",
                 isVerified = e.IsVerified,
                 evidenceStatus = e.IsVerified ? "Verified Dispatch Evidence" : "Submitted Evidence",
                 originalFileAvailable = true,
@@ -3691,13 +3701,19 @@ namespace ShopNext.Controllers
             var inbound = evidences.Where(e => e.EvidenceType == "CustomerReturnPhoto" || e.EvidenceType == "Customer_Unboxing_Video" || e.EvidenceType == "Inbound_Customer_Claim" || e.EvidenceType == "ReturnPickupPhoto" || e.EvidenceType == "SellerEvidence" || e.EvidenceType == "RiderEvidence").Select(e => new
             {
                 id = e.Id,
+                evidenceCode = $"EV{e.Id:D4}",
                 type = e.EvidenceType,
                 title = e.Title,
                 photoUrl = e.PhotoUrl,
                 description = e.Description,
                 role = e.UploadedByRole,
-                uploadedBy = e.UploadedByName,
-                date = e.UploadedDate.ToString("dd MMM yyyy, hh:mm tt"),
+                uploadedBy = e.UploadedByName ?? (e.UploadedByRole == "Customer" ? "Customer" : "Rider"),
+                uploadedAt = e.UploadedDate.ToString("dd MMM yyyy, hh:mm tt"),
+                viewedBy = "Admin",
+                viewedAt = DateTime.Now.ToString("dd MMM yyyy, hh:mm tt"),
+                decision = currentDecision,
+                decisionBy = "Admin",
+                decisionNotes = order.ReturnVerificationNotes ?? "Under Review",
                 isVerified = e.IsVerified,
                 evidenceStatus = e.IsVerified ? "Verified Evidence (QC Passed)" : "Customer-Submitted Evidence (Unverified)",
                 originalFileAvailable = true,

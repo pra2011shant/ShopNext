@@ -7501,6 +7501,65 @@
                         </div>
                     </div>
 
+                    <!-- POINT 77: EVIDENCE AUDIT TRAIL (IMMUTABLE FORENSIC ACTION LEDGER) -->
+                    <div class="p-3 rounded-4 mb-3" style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(168, 85, 247, 0.35); box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
+                        <div class="d-flex justify-content-between align-items-center mb-2.5 pb-2 border-bottom border-secondary border-opacity-25 flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge px-2.5 py-1 rounded-pill fw-bold" style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(192, 132, 252, 0.35);">
+                                    <i class="fa-solid fa-fingerprint me-1"></i> EVIDENCE AUDIT TRAIL
+                                </span>
+                                <span class="font-monospace fw-bold text-warning fs-6" id="evidAuditCode">EV1001</span>
+                            </div>
+                            <div class="small text-secondary">
+                                <i class="fa-solid fa-shield-halved text-success me-1"></i> Immutable Chain of Custody &amp; Inspection Record
+                            </div>
+                        </div>
+                        
+                        <div class="row g-2">
+                            <!-- Uploaded Action -->
+                            <div class="col-md-4">
+                                <div class="p-2.5 rounded-3 h-100" style="background: rgba(30, 41, 59, 0.65); border-left: 3px solid #38bdf8;">
+                                    <div class="d-flex align-items-center gap-1.5 mb-1 text-secondary small fw-bold text-uppercase">
+                                        <i class="fa-solid fa-cloud-arrow-up text-info"></i>
+                                        <span>Uploaded Action</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-white fw-bold small" id="evidAuditUploadedBy">Customer</span>
+                                        <span class="text-info font-monospace small" id="evidAuditUploadedAt">10:35 AM</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Viewed Action -->
+                            <div class="col-md-4">
+                                <div class="p-2.5 rounded-3 h-100" style="background: rgba(30, 41, 59, 0.65); border-left: 3px solid #f59e0b;">
+                                    <div class="d-flex align-items-center gap-1.5 mb-1 text-secondary small fw-bold text-uppercase">
+                                        <i class="fa-solid fa-eye text-warning"></i>
+                                        <span>Viewed Action</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-white fw-bold small" id="evidAuditViewedBy">Admin</span>
+                                        <span class="text-warning font-monospace small" id="evidAuditViewedAt">11:02 AM</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Decision Action -->
+                            <div class="col-md-4">
+                                <div class="p-2.5 rounded-3 h-100" style="background: rgba(30, 41, 59, 0.65); border-left: 3px solid #22c55e;">
+                                    <div class="d-flex align-items-center gap-1.5 mb-1 text-secondary small fw-bold text-uppercase">
+                                        <i class="fa-solid fa-gavel text-success"></i>
+                                        <span>Decision Record</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-2 py-0.5 rounded-pill small fw-bold" id="evidAuditDecision">Return Approved</span>
+                                        <span class="text-secondary font-monospace small" id="evidAuditDecisionBy">Admin</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Admin Resolution Notes Bar -->
                     <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--card-border);">
                         <label class="form-label text-secondary small fw-bold mb-1"><i class="fa-solid fa-clipboard-check text-success me-1"></i> Admin Investigation &amp; Resolution Remarks</label>
@@ -14020,7 +14079,7 @@
         outStrip.innerHTML = "";
         if (outboundList.length > 0) {
             const first = outboundList[0];
-            selectOutboundEvidence(first.photoUrl, first.title, first.uploadedBy || first.role, first.date, first.description, first.type);
+            selectOutboundEvidence(first);
 
             outboundList.forEach((ev, idx) => {
                 const thumb = document.createElement("div");
@@ -14030,7 +14089,7 @@
                 thumb.onclick = function() {
                     Array.from(outStrip.children).forEach(c => c.className = "rounded-2 overflow-hidden border border-secondary border-opacity-40 cursor-pointer flex-shrink-0");
                     thumb.className = "rounded-2 overflow-hidden border border-info border-2 cursor-pointer flex-shrink-0";
-                    selectOutboundEvidence(ev.photoUrl, ev.title, ev.uploadedBy || ev.role, ev.date, ev.description, ev.type);
+                    selectOutboundEvidence(ev);
                 };
                 outStrip.appendChild(thumb);
             });
@@ -14042,7 +14101,7 @@
         inStrip.innerHTML = "";
         if (inboundList.length > 0) {
             const first = inboundList[0];
-            selectInboundEvidence(first.photoUrl, first.title, first.uploadedBy || first.role, first.date, first.description, first.type);
+            selectInboundEvidence(first);
 
             inboundList.forEach((ev, idx) => {
                 const thumb = document.createElement("div");
@@ -14052,29 +14111,57 @@
                 thumb.onclick = function() {
                     Array.from(inStrip.children).forEach(c => c.className = "rounded-2 overflow-hidden border border-secondary border-opacity-40 cursor-pointer flex-shrink-0");
                     thumb.className = "rounded-2 overflow-hidden border border-danger border-2 cursor-pointer flex-shrink-0";
-                    selectInboundEvidence(ev.photoUrl, ev.title, ev.uploadedBy || ev.role, ev.date, ev.description, ev.type);
+                    selectInboundEvidence(ev);
                 };
                 inStrip.appendChild(thumb);
             });
         }
     }
 
-    function selectOutboundEvidence(url, title, uploader, date, desc, type) {
-        document.getElementById("evidMainOutboundImg").src = url;
-        document.getElementById("evidOutboundTitle").innerText = title;
-        document.getElementById("evidOutboundUploader").innerText = `Uploaded by ${uploader}`;
-        document.getElementById("evidOutboundDate").innerText = date;
-        document.getElementById("evidOutboundDesc").innerText = desc || "Verified outbound photo.";
-        document.getElementById("outboundActiveBadge").innerText = type.replace(/Photo/g, '');
+    function selectOutboundEvidence(ev) {
+        document.getElementById("evidMainOutboundImg").src = ev.photoUrl;
+        document.getElementById("evidOutboundTitle").innerText = ev.title;
+        document.getElementById("evidOutboundUploader").innerText = `Uploaded by ${ev.uploadedBy || ev.role}`;
+        document.getElementById("evidOutboundDate").innerText = ev.uploadedAt || ev.date;
+        document.getElementById("evidOutboundDesc").innerText = ev.description || "Verified outbound photo.";
+        document.getElementById("outboundActiveBadge").innerText = (ev.type || '').replace(/Photo/g, '');
+
+        // Point 77 Audit Trail
+        updateEvidenceAuditTrail(ev);
     }
 
-    function selectInboundEvidence(url, title, uploader, date, desc, type) {
-        document.getElementById("evidMainInboundImg").src = url;
-        document.getElementById("evidInboundTitle").innerText = title;
-        document.getElementById("evidInboundUploader").innerText = `Uploaded by ${uploader}`;
-        document.getElementById("evidInboundDate").innerText = date;
-        document.getElementById("evidInboundDesc").innerText = desc || "Reported inbound condition photo.";
-        document.getElementById("inboundActiveBadge").innerText = type.replace(/Photo/g, '');
+    function selectInboundEvidence(ev) {
+        document.getElementById("evidMainInboundImg").src = ev.photoUrl;
+        document.getElementById("evidInboundTitle").innerText = ev.title;
+        document.getElementById("evidInboundUploader").innerText = `Uploaded by ${ev.uploadedBy || ev.role}`;
+        document.getElementById("evidInboundDate").innerText = ev.uploadedAt || ev.date;
+        document.getElementById("evidInboundDesc").innerText = ev.description || "Reported inbound condition photo.";
+        document.getElementById("inboundActiveBadge").innerText = (ev.type || '').replace(/Photo/g, '');
+
+        // Point 77 Audit Trail
+        updateEvidenceAuditTrail(ev);
+    }
+
+    function updateEvidenceAuditTrail(ev) {
+        if (!ev) return;
+        document.getElementById("evidAuditCode").innerText = ev.evidenceCode || `EV${String(ev.id || '1001').padStart(4, '0')}`;
+        document.getElementById("evidAuditUploadedBy").innerText = ev.uploadedBy || ev.role || "Customer";
+        document.getElementById("evidAuditUploadedAt").innerText = ev.uploadedAt || ev.date || "10:35 AM";
+        document.getElementById("evidAuditViewedBy").innerText = ev.viewedBy || "Admin";
+        document.getElementById("evidAuditViewedAt").innerText = ev.viewedAt || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        const decBadge = document.getElementById("evidAuditDecision");
+        const decText = ev.decision || "Under Review";
+        decBadge.innerText = decText;
+        if (decText.includes("Approved") || decText.includes("Accepted")) {
+            decBadge.className = "badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-2 py-0.5 rounded-pill small fw-bold";
+        } else if (decText.includes("Rejected")) {
+            decBadge.className = "badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2 py-0.5 rounded-pill small fw-bold";
+        } else {
+            decBadge.className = "badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-30 px-2 py-0.5 rounded-pill small fw-bold";
+        }
+        
+        document.getElementById("evidAuditDecisionBy").innerText = `By: ${ev.decisionBy || 'Admin'}`;
     }
 
     function toggleUploadEvidenceCollapse() {
