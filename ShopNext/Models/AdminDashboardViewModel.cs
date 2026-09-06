@@ -87,6 +87,15 @@ namespace ShopNext.Models
 
         // Point 80: Smart Risk Dashboard (7-Pillar Risk Monitoring KPIs)
         public SmartRiskDashboardDto SmartRiskDashboard { get; set; } = new SmartRiskDashboardDto();
+
+        // Point 92: Admin Payment Reconciliation Dashboard
+        public PaymentReconciliationSummaryDto PaymentReconciliation { get; set; } = new PaymentReconciliationSummaryDto();
+
+        // Point 99: Failed Delivery Management
+        public List<FailedDeliveryLog> FailedDeliveryLogsList { get; set; } = new List<FailedDeliveryLog>();
+
+        // Special: Complete Admin Action Audit Log (Who -> What -> When -> Where)
+        public List<AuditLog> AuditLogsList { get; set; } = new List<AuditLog>();
     }
 
     public class SmartRiskDashboardDto

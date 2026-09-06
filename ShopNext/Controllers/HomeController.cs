@@ -13,11 +13,16 @@ namespace ShopNext.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly IShopNextService _service;
+        private readonly IAdvancedEcommerceService _advancedService;
 
-        public HomeController(ILogger<HomeController> logger, IShopNextService service)
+        public HomeController(
+            ILogger<HomeController> logger, 
+            IShopNextService service,
+            IAdvancedEcommerceService advancedService)
         {
             _logger = logger;
             _service = service;
+            _advancedService = advancedService;
         }
 
         // GET: /Home/Index
@@ -596,6 +601,292 @@ namespace ShopNext.Controllers
                 items = result
             });
         }
+
+        // ==========================================
+        // POINT 81: PRODUCT COMPARISON
+        // ==========================================
+        [HttpGet]
+        public async Task<IActionResult> Compare(string? ids)
+        {
+            int[] productIds = Array.Empty<int>();
+            if (!string.IsNullOrWhiteSpace(ids))
+            {
+                productIds = ids.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => int.TryParse(s.Trim(), out int id) ? id : 0)
+                    .Where(id => id > 0)
+                    .Distinct()
+                    .ToArray();
+            }
+
+            if (productIds.Length == 0)
+            {
+                var sample = await _service.GetAllProductsAsync();
+                productIds = sample.Take(3).Select(p => p.Id).ToArray();
+            }
+
+            var vm = await _advancedService.GetProductComparisonAsync(productIds);
+            return View(vm);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetComparisonJson(string ids)
+        {
+            int[] productIds = ids.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => int.TryParse(s.Trim(), out int id) ? id : 0)
+                .Where(id => id > 0)
+                .ToArray();
+
+            var vm = await _advancedService.GetProductComparisonAsync(productIds);
+            return Json(new { success = true, data = vm });
+        }
+
+        // ==========================================
+        // POINT 82: RECENTLY SEARCHED PRODUCTS
+        // ==========================================
+        [HttpGet]
+        public async Task<IActionResult> GetSearchHistory()
+        {
+            int customerId = GetCurrentCustomerId();
+            string? ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+            var history = await _advancedService.GetSearchHistoryAsync(customerId, ip, 10);
+            return Json(new { success = true, data = history });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RecordSearch([FromBody] RecordSearchRequest req)
+        {
+            if (req == null || string.IsNullOrWhiteSpace(req.Term))
+            {
+                return Json(new { success = false });
+            }
+
+            int customerId = GetCurrentCustomerId();
+            string? ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+            await _advancedService.RecordSearchAsync(req.Term, customerId, req.Category, req.ResultCount, ip);
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ClearSearchHistory()
+        {
+            int customerId = GetCurrentCustomerId();
+            string? ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+            await _advancedService.ClearSearchHistoryAsync(customerId, ip);
+            return Json(new { success = true, message = "Search history cleared." });
+        }
+
+        // ==========================================
+        // POINT 83: SMART RECOMMENDATIONS
+        // ==========================================
+        [HttpGet]
+        public async Task<IActionResult> GetSmartRecommendations(int productId)
+        {
+            var recs = await _advancedService.GetSmartRecommendationsAsync(productId, 6);
+            return Json(new { success = true, data = recs });
+        }
+
+        // ==========================================
+        // POINT 84: PRODUCT Q&A
+        // ==========================================
+        [HttpGet]
+        public async Task<IActionResult> GetProductQuestions(int productId)
+        {
+            var list = await _advancedService.GetProductQuestionsAsync(productId);
+            return Json(new { success = true, data = list });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AskProductQuestion([FromBody] AskQuestionRequest req)
+        {
+            int customerId = GetCurrentCustomerId();
+            if (customerId <= 0)
+            {
+                return Json(new { success = false, message = "Please login to ask a question." });
+            }
+
+            if (req == null || req.ProductId <= 0 || string.IsNullOrWhiteSpace(req.Question))
+            {
+                return Json(new { success = false, message = "Please enter a valid question." });
+            }
+
+            var q = await _advancedService.AskQuestionAsync(req.ProductId, customerId, req.Question);
+            return Json(new { success = true, message = "Question posted successfully! Sellers and community members will respond soon.", questionId = q.Id });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AnswerProductQuestion([FromBody] AnswerQuestionRequest req)
+        {
+            int userId = GetCurrentCustomerId();
+            string role = User.IsInRole("Admin") ? "Admin" : (User.IsInRole("Vendor") ? "Seller" : "Customer");
+
+            if (req == null || req.QuestionId <= 0 || string.IsNullOrWhiteSpace(req.Answer))
+            {
+                return Json(new { success = false, message = "Please enter a valid answer." });
+            }
+
+            var a = await _advancedService.AnswerQuestionAsync(req.QuestionId, userId > 0 ? userId : 1, role, req.Answer);
+            return Json(new { success = true, message = "Answer submitted successfully.", answerId = a.Id });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpvoteQuestion(int questionId)
+        {
+            await _advancedService.UpvoteQuestionAsync(questionId);
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MarkAnswerHelpful(int answerId)
+        {
+            await _advancedService.MarkAnswerHelpfulAsync(answerId);
+            return Json(new { success = true });
+        }
+
+        // ==========================================
+        // POINT 85: SELLER & SUPPORT CHAT
+        // ==========================================
+        [HttpGet]
+        public async Task<IActionResult> GetChatMessages(string threadId)
+        {
+            int currentUserId = GetCurrentCustomerId();
+            var messages = await _advancedService.GetChatMessagesAsync(threadId, currentUserId);
+            return Json(new { success = true, data = messages });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SendChatMessage([FromBody] SendChatRequest req)
+        {
+            int currentUserId = GetCurrentCustomerId();
+            string role = User.IsInRole("Admin") ? "Admin" : (User.IsInRole("Vendor") ? "Seller" : "Customer");
+
+            if (req == null || string.IsNullOrWhiteSpace(req.ThreadId) || string.IsNullOrWhiteSpace(req.Message))
+            {
+                return Json(new { success = false, message = "Message cannot be empty." });
+            }
+
+            var msg = await _advancedService.SendChatMessageAsync(
+                req.ThreadId, 
+                currentUserId > 0 ? currentUserId : 1, 
+                role, 
+                req.Message, 
+                req.RecipientId, 
+                req.OrderId, 
+                req.ProductId, 
+                req.ShopId, 
+                req.AttachmentUrl);
+
+            return Json(new { success = true, message = "Message sent.", messageId = msg.Id });
+        }
+
+        // ==========================================
+        // POINT 86 & 87: PRICE DROP & STOCK ALERTS
+        // ==========================================
+        [HttpPost]
+        public async Task<IActionResult> SubscribePriceDrop([FromBody] PriceDropRequest req)
+        {
+            int customerId = GetCurrentCustomerId();
+            if (customerId <= 0)
+            {
+                return Json(new { success = false, message = "Please sign in to set a price drop alert." });
+            }
+
+            var alert = await _advancedService.SubscribePriceDropAsync(customerId, req.ProductId, req.CurrentPrice, req.TargetPrice);
+            return Json(new { success = true, message = "Price drop alert activated! We'll notify you as soon as the price drops." });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SubscribeStockAlert([FromBody] StockAlertRequest req)
+        {
+            int customerId = GetCurrentCustomerId();
+            var alert = await _advancedService.SubscribeStockAlertAsync(customerId, req.ProductId, req.Email, req.Phone);
+            return Json(new { success = true, message = "Back-in-stock notification enabled! You'll be notified when fresh stock arrives." });
+        }
+
+        // ==========================================
+        // POINT 95: GST TAX INVOICE PRINT / PDF
+        // ==========================================
+        [HttpGet]
+        public async Task<IActionResult> Invoice(int id)
+        {
+            var order = await _service.GetOrderByIdAsync(id);
+            if (order == null)
+            {
+                return NotFound("Order not found.");
+            }
+
+            var taxBreakdown = await _advancedService.GetOrderTaxInvoiceDetailsAsync(id);
+            ViewBag.TaxBreakdown = taxBreakdown;
+
+            return View("Invoice", order);
+        }
+
+        // ==========================================
+        // POINT 97 & 98: DELIVERY SLOTS & PINCODE CHECK
+        // ==========================================
+        [HttpGet]
+        public async Task<IActionResult> GetDeliverySlots(string pincode)
+        {
+            var slots = await _advancedService.GetAvailableDeliverySlotsAsync(pincode);
+            return Json(new { success = true, data = slots });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> CheckPincode(string pincode)
+        {
+            var result = await _advancedService.CheckPincodeServiceabilityAsync(pincode);
+            return Json(new { success = true, data = result });
+        }
+
+        private int GetCurrentCustomerId()
+        {
+            var claim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (int.TryParse(claim, out int id)) return id;
+            return 0;
+        }
+    }
+
+    public class RecordSearchRequest
+    {
+        public string Term { get; set; } = string.Empty;
+        public string? Category { get; set; }
+        public int ResultCount { get; set; }
+    }
+
+    public class AskQuestionRequest
+    {
+        public int ProductId { get; set; }
+        public string Question { get; set; } = string.Empty;
+    }
+
+    public class AnswerQuestionRequest
+    {
+        public int QuestionId { get; set; }
+        public string Answer { get; set; } = string.Empty;
+    }
+
+    public class SendChatRequest
+    {
+        public string ThreadId { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
+        public int? RecipientId { get; set; }
+        public int? OrderId { get; set; }
+        public int? ProductId { get; set; }
+        public int? ShopId { get; set; }
+        public string? AttachmentUrl { get; set; }
+    }
+
+    public class PriceDropRequest
+    {
+        public int ProductId { get; set; }
+        public decimal CurrentPrice { get; set; }
+        public decimal? TargetPrice { get; set; }
+    }
+
+    public class StockAlertRequest
+    {
+        public int ProductId { get; set; }
+        public string? Email { get; set; }
+        public string? Phone { get; set; }
     }
 
     // DTO Classes

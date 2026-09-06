@@ -1,0 +1,153 @@
+@model ShopNext.Models.ProductComparisonViewModel
+@{
+    ViewData["Title"] = "Product Comparison";
+}
+
+<div class="container py-4">
+    <!-- Breadcrumb & Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1 small">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-secondary text-decoration-none">Home</a></li>
+                    <li class="breadcrumb-item active text-warning" aria-current="page">Product Comparison</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold text-white mb-0">
+                <i class="fa-solid fa-code-compare text-warning me-2"></i> Side-by-Side Product Comparison
+            </h2>
+            <p class="text-secondary small mb-0">Compare features, specifications, pricing, and ratings across 2 to 4 products.</p>
+        </div>
+        <div>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-light rounded-pill px-4 btn-sm">
+                <i class="fa-solid fa-plus me-1.5"></i> Add More Products
+            </a>
+        </div>
+    </div>
+
+    @if (Model.Products == null || !Model.Products.Any())
+    {
+        <div class="text-center py-5 glass-card rounded-4 p-5" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.1);">
+            <div class="p-4 rounded-circle bg-dark bg-opacity-50 text-warning d-inline-block mb-3 fs-1" style="width: 90px; height: 90px;">
+                <i class="fa-solid fa-scale-balanced"></i>
+            </div>
+            <h4 class="text-white fw-bold">No Products Selected for Comparison</h4>
+            <p class="text-secondary small mb-4">Choose 2 to 4 products from the store catalog to see how they stack up side-by-side.</p>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-warning rounded-pill px-4 py-2 fw-bold text-dark shadow-sm">
+                <i class="fa-solid fa-bag-shopping me-2"></i> Browse Products
+            </a>
+        </div>
+    }
+    else
+    {
+        <!-- Comparison Matrix Table -->
+        <div class="table-responsive glass-card rounded-4 p-3 shadow-lg" style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255, 255, 255, 0.1);">
+            <table class="table table-dark table-bordered align-middle mb-0" style="border-color: rgba(255,255,255,0.08);">
+                <thead>
+                    <tr style="background: rgba(30, 41, 59, 0.7);">
+                        <th style="width: 22%; min-width: 180px;" class="text-secondary fw-bold text-uppercase small">
+                            Specification Attribute
+                        </th>
+                        @foreach (var p in Model.Products)
+                        {
+                            <th style="width: @(78 / Model.Products.Count)%; min-width: 220px;" class="text-center p-3">
+                                <div class="position-relative">
+                                    @if (p.ProductId == Model.BestPriceProductId)
+                                    {
+                                        <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 rounded-pill px-2.5 py-1 mb-2 d-inline-block small">
+                                            <i class="fa-solid fa-tag me-1"></i> Best Price
+                                        </span>
+                                    }
+                                    else if (p.ProductId == Model.HighestRatingProductId)
+                                    {
+                                        <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-30 rounded-pill px-2.5 py-1 mb-2 d-inline-block small">
+                                            <i class="fa-solid fa-star me-1"></i> Top Rated
+                                        </span>
+                                    }
+                                    
+                                    <div class="d-flex justify-content-center mb-2">
+                                        <img src="@p.ImageUrl" class="rounded-3 shadow-sm" style="width: 110px; height: 110px; object-fit: cover; background: #000; border: 1px solid rgba(255,255,255,0.1);" alt="@p.ProductName" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100';" />
+                                    </div>
+                                    <h6 class="text-white fw-bold mb-1 text-truncate" title="@p.ProductName">@p.ProductName</h6>
+                                    <div class="text-secondary small mb-2">@p.Brand &bull; <span class="text-info">@p.Category</span></div>
+                                    <div class="fs-4 fw-bold text-success font-monospace mb-2">₹@p.Price.ToString("N0")</div>
+
+                                    <div class="d-grid gap-1">
+                                        <a asp-controller="Home" asp-action="ProductDetails" asp-route-id="@p.ProductId" class="btn btn-outline-info btn-sm rounded-pill py-1.5 fw-semibold">
+                                            <i class="fa-solid fa-eye me-1"></i> View Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Price Row -->
+                    <tr>
+                        <td class="fw-bold text-light bg-dark bg-opacity-40"><i class="fa-solid fa-indian-rupee-sign text-success me-2"></i> Price (INR)</td>
+                        @foreach (var p in Model.Products)
+                        {
+                            <td class="text-center font-monospace fw-bold @(p.ProductId == Model.BestPriceProductId ? "text-success bg-success bg-opacity-10" : "text-white")">
+                                ₹@p.Price.ToString("N2")
+                                @if (p.Mrp.HasValue && p.Mrp.Value > p.Price)
+                                {
+                                    <div class="text-secondary small font-monospace text-decoration-line-through">₹@p.Mrp.Value.ToString("N2")</div>
+                                }
+                            </td>
+                        }
+                    </tr>
+
+                    <!-- Customer Rating Row -->
+                    <tr>
+                        <td class="fw-bold text-light bg-dark bg-opacity-40"><i class="fa-solid fa-star text-warning me-2"></i> Customer Rating</td>
+                        @foreach (var p in Model.Products)
+                        {
+                            <td class="text-center">
+                                <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30 px-3 py-1.5 rounded-pill fw-bold">
+                                    <i class="fa-solid fa-star me-1"></i> @p.Rating.ToString("0.0") / 5.0
+                                </span>
+                                <div class="text-secondary small mt-1 font-monospace">(@p.ReviewCount verified reviews)</div>
+                            </td>
+                        }
+                    </tr>
+
+                    <!-- Stock Availability Row -->
+                    <tr>
+                        <td class="fw-bold text-light bg-dark bg-opacity-40"><i class="fa-solid fa-boxes-stacked text-info me-2"></i> Stock Availability</td>
+                        @foreach (var p in Model.Products)
+                        {
+                            <td class="text-center">
+                                @if (p.Stock > 0)
+                                {
+                                    <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30 px-2.5 py-1 rounded-pill">
+                                        <i class="fa-solid fa-circle-check me-1"></i> In Stock (@p.Stock)
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill">
+                                        <i class="fa-solid fa-circle-xmark me-1"></i> Out of Stock
+                                    </span>
+                                }
+                            </td>
+                        }
+                    </tr>
+
+                    <!-- Dynamic Specifications -->
+                    @foreach (var key in Model.AllSpecificationKeys)
+                    {
+                        <tr>
+                            <td class="fw-bold text-light bg-dark bg-opacity-40">@key</td>
+                            @foreach (var p in Model.Products)
+                            {
+                                string val = p.Specifications.ContainsKey(key) ? p.Specifications[key] : "—";
+                                <td class="text-center text-secondary small">@val</td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

@@ -1,0 +1,138 @@
+@model ShopNext.Models.Order
+@{
+    ViewData["Title"] = "Payment Recovery - #" + Model.Id;
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-9">
+            <!-- Payment Failed Recovery Card -->
+            <div class="glass-card rounded-4 p-4 p-md-5 shadow-lg" style="background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(239, 68, 68, 0.4);">
+                <div class="text-center mb-4">
+                    <div class="p-3.5 rounded-circle bg-danger bg-opacity-20 text-danger d-inline-block mb-3 fs-1" style="width: 85px; height: 85px;">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                    </div>
+                    <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 rounded-pill px-3 py-1 mb-2 font-monospace">
+                        POINT 91 &bull; PAYMENT RECOVERY
+                    </span>
+                    <h3 class="fw-bold text-white mb-1">Payment Interrupted / Failed</h3>
+                    <p class="text-secondary small mb-0">Don't worry! Your cart items and order (#ORD@Model.Id) are saved.</p>
+                </div>
+
+                <!-- Order Summary Breakdown -->
+                <div class="p-3.5 rounded-3 bg-dark border border-secondary border-opacity-30 mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-secondary small fw-bold">Order Number:</span>
+                        <span class="text-info fw-bold font-monospace">#ORD@Model.Id</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-secondary small fw-bold">Merchant:</span>
+                        <span class="text-white">@(Model.Shop?.ShopName ?? "Verified Partner")</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-secondary small fw-bold">Items in Order:</span>
+                        <span class="text-white">@(Model.OrderItems?.Count ?? 1) Products</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center border-top border-secondary border-opacity-25 pt-2 mt-2">
+                        <span class="text-light fw-bold fs-6">Payable Amount:</span>
+                        <span class="text-success fw-bold font-monospace fs-4">₹@Model.TotalAmount.ToString("N2")</span>
+                    </div>
+                </div>
+
+                <!-- Retry Payment Modes Selection -->
+                <h6 class="fw-bold text-white mb-3"><i class="fa-solid fa-credit-card text-warning me-2"></i> Select Payment Method to Complete Order:</h6>
+                
+                <div class="row g-2.5 mb-4">
+                    <div class="col-6">
+                        <div class="form-check p-3 rounded-3 bg-dark border border-secondary border-opacity-35 cursor-pointer h-100">
+                            <input class="form-check-input ms-1" type="radio" name="retryPayMode" id="modeUpi" value="UPI" checked>
+                            <label class="form-check-label text-white fw-bold small ms-2" for="modeUpi">
+                                <i class="fa-solid fa-mobile-screen-button text-success me-1"></i> Instant UPI / QR
+                                <div class="text-secondary fw-normal" style="font-size: 0.72rem;">GPay, PhonePe, Paytm, BHIM</div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-check p-3 rounded-3 bg-dark border border-secondary border-opacity-35 cursor-pointer h-100">
+                            <input class="form-check-input ms-1" type="radio" name="retryPayMode" id="modeCard" value="Card">
+                            <label class="form-check-label text-white fw-bold small ms-2" for="modeCard">
+                                <i class="fa-solid fa-credit-card text-info me-1"></i> Debit / Credit Card
+                                <div class="text-secondary fw-normal" style="font-size: 0.72rem;">Visa, Mastercard, RuPay</div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-check p-3 rounded-3 bg-dark border border-secondary border-opacity-35 cursor-pointer h-100">
+                            <input class="form-check-input ms-1" type="radio" name="retryPayMode" id="modeNetBanking" value="NetBanking">
+                            <label class="form-check-label text-white fw-bold small ms-2" for="modeNetBanking">
+                                <i class="fa-solid fa-building-columns text-warning me-1"></i> Net Banking
+                                <div class="text-secondary fw-normal" style="font-size: 0.72rem;">All Indian Major Banks</div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-check p-3 rounded-3 bg-dark border border-secondary border-opacity-35 cursor-pointer h-100">
+                            <input class="form-check-input ms-1" type="radio" name="retryPayMode" id="modeCod" value="COD">
+                            <label class="form-check-label text-white fw-bold small ms-2" for="modeCod">
+                                <i class="fa-solid fa-money-bill-wave text-success me-1"></i> Cash on Delivery
+                                <div class="text-secondary fw-normal" style="font-size: 0.72rem;">Pay at your doorstep</div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Complete Action Buttons -->
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-warning py-3 rounded-pill fw-bold text-dark fs-6 shadow-sm" id="btnRetryPayment" onclick="executeRetryPayment(@Model.Id, @Model.TotalAmount)">
+                        <i class="fa-solid fa-rotate-right me-2"></i> Complete Payment Now
+                    </button>
+                    <a asp-controller="Customer" asp-action="MyOrders" class="btn btn-outline-secondary py-2 rounded-pill small">
+                        View All Orders
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function executeRetryPayment(orderId, amount) {
+        const mode = document.querySelector('input[name="retryPayMode"]:checked')?.value || 'UPI';
+        const btn = document.getElementById("btnRetryPayment");
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Processing Secure Gateway...';
+
+        const fakeTxnId = "RETRY-" + Date.now().toString().slice(-8);
+
+        $.ajax({
+            url: '@Url.Action("SubmitPaymentRetry", "Customer")',
+            type: 'POST',
+            data: {
+                orderId: orderId,
+                paymentMode: mode,
+                transactionId: fakeTxnId,
+                paidAmount: amount
+            },
+            headers: {
+                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+            },
+            success: function(res) {
+                if (res.success) {
+                    alert(res.message);
+                    window.location.href = '@Url.Action("OrderSuccess", "Home")?orderId=' + orderId;
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-rotate-right me-2"></i> Complete Payment Now';
+                    alert(res.message || "Payment retry unsuccessful.");
+                }
+            },
+            error: function() {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-rotate-right me-2"></i> Complete Payment Now';
+                alert("Connection error executing payment retry.");
+            }
+        });
+    }
+</script>
+}

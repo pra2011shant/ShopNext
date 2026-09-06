@@ -22,13 +22,20 @@ namespace ShopNext.Controllers
         private readonly ILogger<CustomerController> _logger;
         private readonly IAuditService _auditService;
         private readonly ShopNextDbContext _context;
+        private readonly IAdvancedEcommerceService _advancedService;
 
-        public CustomerController(IShopNextService service, ILogger<CustomerController> logger, IAuditService auditService, ShopNextDbContext context)
+        public CustomerController(
+            IShopNextService service, 
+            ILogger<CustomerController> logger, 
+            IAuditService auditService, 
+            ShopNextDbContext context,
+            IAdvancedEcommerceService advancedService)
         {
             _service = service;
             _logger = logger;
             _auditService = auditService;
             _context = context;
+            _advancedService = advancedService;
         }
 
         private bool IsCustomerLoggedIn(out int customerId, out string customerName)
@@ -1136,6 +1143,80 @@ namespace ShopNext.Controllers
 
             int unread = notifications.Count(n => !n.IsRead);
             return Json(new { success = true, notifications = dtoList, unreadCount = unread });
+        }
+
+        // ==========================================
+        // POINT 89: GIFT CARD & DIGITAL WALLET
+        // ==========================================
+        [HttpGet]
+        public async Task<IActionResult> Wallet()
+        {
+            if (!IsCustomerLoggedIn(out int customerId, out _))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var vm = await _advancedService.GetWalletDashboardAsync(customerId);
+            return View(vm);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RedeemGiftCard(string cardCode, string pin)
+        {
+            if (!IsCustomerLoggedIn(out int customerId, out _))
+            {
+                return Json(new { success = false, message = "Please log in to redeem gift cards." });
+            }
+
+            var result = await _advancedService.RedeemGiftCardAsync(customerId, cardCode, pin);
+            return Json(new { success = result.Success, message = result.Message, amount = result.RedeemedAmount });
+        }
+
+        // ==========================================
+        // POINT 90: LOYALTY & REWARD POINTS REDEMPTION
+        // ==========================================
+        [HttpPost]
+        public async Task<IActionResult> RedeemRewardPoints(int points, int orderId)
+        {
+            if (!IsCustomerLoggedIn(out int customerId, out _))
+            {
+                return Json(new { success = false, message = "Please log in to redeem points." });
+            }
+
+            var result = await _advancedService.RedeemRewardPointsAsync(customerId, points, orderId);
+            return Json(new { success = result.Success, message = result.Message, discount = result.DiscountValue });
+        }
+
+        // ==========================================
+        // POINT 91: PAYMENT FAILURE RECOVERY & RETRY
+        // ==========================================
+        [HttpGet]
+        public async Task<IActionResult> RetryPayment(int orderId)
+        {
+            if (!IsCustomerLoggedIn(out int customerId, out _))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var order = await _advancedService.GetFailedPaymentOrderAsync(orderId, customerId);
+            if (order == null)
+            {
+                return NotFound("Order not found.");
+            }
+
+            return View(order);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SubmitPaymentRetry(int orderId, string paymentMode, string transactionId, decimal paidAmount)
+        {
+            if (!IsCustomerLoggedIn(out int customerId, out _))
+            {
+                return Json(new { success = false, message = "Please sign in to proceed." });
+            }
+
+            var res = await _advancedService.RetryOrderPaymentAsync(orderId, paymentMode, transactionId, paidAmount);
+            return Json(new { success = res.Success, message = res.Message });
         }
     }
 }

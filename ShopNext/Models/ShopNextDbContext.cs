@@ -28,6 +28,23 @@ namespace ShopNext.Models
         public DbSet<OrderEvidence> OrderEvidences { get; set; }
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
+        // Advanced Features (Points 81-100)
+        public DbSet<SearchHistory> SearchHistories { get; set; }
+        public DbSet<ProductQuestion> ProductQuestions { get; set; }
+        public DbSet<ProductAnswer> ProductAnswers { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
+        public DbSet<PriceDropAlert> PriceDropAlerts { get; set; }
+        public DbSet<StockAlert> StockAlerts { get; set; }
+        public DbSet<WalletAccount> WalletAccounts { get; set; }
+        public DbSet<WalletTransaction> WalletTransactions { get; set; }
+        public DbSet<GiftCard> GiftCards { get; set; }
+        public DbSet<RewardPointsAccount> RewardPointsAccounts { get; set; }
+        public DbSet<RewardPointsTransaction> RewardPointsTransactions { get; set; }
+        public DbSet<StockReservation> StockReservations { get; set; }
+        public DbSet<PincodeServiceability> PincodeServiceabilities { get; set; }
+        public DbSet<FailedDeliveryLog> FailedDeliveryLogs { get; set; }
+        public DbSet<DeliveryProof> DeliveryProofs { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

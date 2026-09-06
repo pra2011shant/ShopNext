@@ -29,8 +29,9 @@ namespace ShopNext.Controllers
         private readonly IFlashSaleService _flashSaleService;
         private readonly IInventoryProtectionService _inventoryProtectionService;
         private readonly ISaleFraudMonitoringService _saleFraudService;
+        private readonly IAdvancedEcommerceService _advancedService;
 
-        public AdminController(IShopNextService service, ShopNextDbContext context, IAuditService auditService, ICustomerRiskService riskService, IAddressRiskService addressRiskService, IMultiAccountDetectionService multiAccountService, ICodAbuseService codAbuseService, ISaleCampaignService saleCampaignService, IFlashSaleService flashSaleService, IInventoryProtectionService inventoryProtectionService, ISaleFraudMonitoringService saleFraudService)
+        public AdminController(IShopNextService service, ShopNextDbContext context, IAuditService auditService, ICustomerRiskService riskService, IAddressRiskService addressRiskService, IMultiAccountDetectionService multiAccountService, ICodAbuseService codAbuseService, ISaleCampaignService saleCampaignService, IFlashSaleService flashSaleService, IInventoryProtectionService inventoryProtectionService, ISaleFraudMonitoringService saleFraudService, IAdvancedEcommerceService advancedService)
         {
             _service = service;
             _context = context;
@@ -43,6 +44,7 @@ namespace ShopNext.Controllers
             _flashSaleService = flashSaleService;
             _inventoryProtectionService = inventoryProtectionService;
             _saleFraudService = saleFraudService;
+            _advancedService = advancedService;
         }
 
         private bool IsAdminLoggedIn()
@@ -659,7 +661,10 @@ namespace ShopNext.Controllers
                 AvailableCampaignReports = await _saleCampaignService.GetAllCampaignReportsSummaryAsync(),
                 SaleFraudSummary = await _saleFraudService.GetSaleFraudDashboardSummaryAsync(),
                 SaleFraudAlertsList = await _saleFraudService.GetSuspiciousActivitiesAsync(),
-                SmartRiskDashboard = smartRisk
+                SmartRiskDashboard = smartRisk,
+                PaymentReconciliation = await _advancedService.GetPaymentReconciliationSummaryAsync(),
+                FailedDeliveryLogsList = await _advancedService.GetFailedDeliveryLogsAsync(),
+                AuditLogsList = await _advancedService.GetAuditLogsAsync(100)
             };
 
             ViewBag.PendingShops = pendingShops;
@@ -4979,6 +4984,81 @@ namespace ShopNext.Controllers
             byte[] buffer = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
             string fileName = $"Sale_Fraud_Audit_Report_{DateTime.Now:yyyyMMdd_HHmm}.csv";
             return File(buffer, "text/csv", fileName);
+        }
+
+        #endregion
+
+        #region Points 81-100: Advanced Admin Operations (Audit Logs, Reconciliation, Failed Delivery)
+
+        // GET: /Admin/GetAuditLogsJson
+        [HttpGet]
+        public async Task<IActionResult> GetAuditLogsJson(string? module, string? userEmail, int limit = 100)
+        {
+            if (!IsAdminLoggedIn())
+                return Unauthorized();
+
+            var logs = await _advancedService.GetAuditLogsAsync(limit, module, userEmail);
+            return Json(new { success = true, data = logs });
+        }
+
+        // GET: /Admin/GetPaymentReconciliationJson
+        [HttpGet]
+        public async Task<IActionResult> GetPaymentReconciliationJson(DateTime? fromDate, DateTime? toDate, string? status)
+        {
+            if (!IsAdminLoggedIn())
+                return Unauthorized();
+
+            var list = await _advancedService.GetPaymentReconciliationListAsync(fromDate, toDate, status);
+            var summary = await _advancedService.GetPaymentReconciliationSummaryAsync();
+            return Json(new { success = true, summary = summary, data = list });
+        }
+
+        // GET: /Admin/GetFailedDeliveryLogsJson
+        [HttpGet]
+        public async Task<IActionResult> GetFailedDeliveryLogsJson(string? status)
+        {
+            if (!IsAdminLoggedIn())
+                return Unauthorized();
+
+            var list = await _advancedService.GetFailedDeliveryLogsAsync(status);
+            return Json(new { success = true, data = list });
+        }
+
+        public class RescheduleDeliveryRequest
+        {
+            public int FailedLogId { get; set; }
+            public DateTime NewDate { get; set; }
+            public string NewSlot { get; set; } = "Morning (09:00 AM - 01:00 PM)";
+            public string? Notes { get; set; }
+        }
+
+        // POST: /Admin/RescheduleFailedDelivery
+        [HttpPost]
+        public async Task<IActionResult> RescheduleFailedDelivery([FromBody] RescheduleDeliveryRequest req)
+        {
+            if (!IsAdminLoggedIn())
+                return Unauthorized();
+
+            if (req == null || req.FailedLogId <= 0)
+                return Json(new { success = false, message = "Invalid request." });
+
+            var result = await _advancedService.RescheduleFailedDeliveryAsync(req.FailedLogId, req.NewDate, req.NewSlot, req.Notes);
+            
+            // Record Audit Log
+            await _advancedService.RecordAuditLogAsync(
+                userId: 1,
+                userName: "Platform Administrator",
+                userEmail: "admin@shopnext.com",
+                role: "Admin",
+                action: "RESCHEDULE_DELIVERY",
+                module: "Order Delivery",
+                targetEntity: "FailedDeliveryLog",
+                entityId: req.FailedLogId.ToString(),
+                details: $"Delivery rescheduled to {req.NewDate:dd MMM yyyy} {req.NewSlot}. Notes: {req.Notes}",
+                ipAddress: HttpContext.Connection.RemoteIpAddress?.ToString()
+            );
+
+            return Json(new { success = result, message = result ? "Delivery rescheduled successfully." : "Failed to reschedule delivery." });
         }
 
         #endregion

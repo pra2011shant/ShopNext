@@ -1,0 +1,234 @@
+@model ShopNext.Models.WalletDashboardViewModel
+@{
+    ViewData["Title"] = "My Wallet & Gift Cards";
+}
+
+<div class="container py-4">
+    <!-- Breadcrumb & Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1 small">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-secondary text-decoration-none">Home</a></li>
+                    <li class="breadcrumb-item"><a asp-controller="Customer" asp-action="Account" class="text-secondary text-decoration-none">My Account</a></li>
+                    <li class="breadcrumb-item active text-warning" aria-current="page">Wallet &amp; Rewards</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold text-white mb-0">
+                <i class="fa-solid fa-wallet text-warning me-2"></i> ShopNext Wallet &amp; Gift Cards
+            </h2>
+            <p class="text-secondary small mb-0">Instant refund credits, gift card balances, loyalty points, and checkout cashbacks.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-warning rounded-pill px-3.5 py-2 fw-bold text-dark shadow-sm" data-bs-toggle="modal" data-bs-target="#redeemGiftCardModal">
+                <i class="fa-solid fa-gift me-1.5"></i> Redeem Gift Card
+            </button>
+        </div>
+    </div>
+
+    <!-- Top 4 Wallet Balances Summary -->
+    <div class="row g-3 mb-4">
+        <!-- 1. Total Wallet Balance -->
+        <div class="col-xl-3 col-sm-6">
+            <div class="p-3.5 rounded-4 h-100 shadow-sm" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(6, 182, 212, 0.15) 100%), rgba(15, 23, 42, 0.85); border: 1px solid rgba(16, 185, 129, 0.4);">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="text-success small fw-bold text-uppercase">Total Available Balance</span>
+                    <div class="p-2 rounded-3 bg-success bg-opacity-20 text-success fs-5">
+                        <i class="fa-solid fa-wallet"></i>
+                    </div>
+                </div>
+                <div class="fs-2 fw-bold text-white font-monospace mb-1" id="dispTotalBalance">₹@Model.TotalBalance.ToString("N2")</div>
+                <div class="text-light text-opacity-75 small">100% usable on any order</div>
+            </div>
+        </div>
+
+        <!-- 2. Refund Wallet -->
+        <div class="col-xl-3 col-sm-6">
+            <div class="p-3.5 rounded-4 h-100 shadow-sm" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.1);">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="text-info small fw-bold text-uppercase">Instant Refund Wallet</span>
+                    <div class="p-2 rounded-3 bg-info bg-opacity-20 text-info fs-5">
+                        <i class="fa-solid fa-arrow-rotate-left"></i>
+                    </div>
+                </div>
+                <div class="fs-2 fw-bold text-white font-monospace mb-1" id="dispRefundBalance">₹@Model.RefundWalletBalance.ToString("N2")</div>
+                <div class="text-secondary small">Direct refund credits</div>
+            </div>
+        </div>
+
+        <!-- 3. Gift Card Balance -->
+        <div class="col-xl-3 col-sm-6">
+            <div class="p-3.5 rounded-4 h-100 shadow-sm" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.1);">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="text-warning small fw-bold text-uppercase">Gift Card Balance</span>
+                    <div class="p-2 rounded-3 bg-warning bg-opacity-20 text-warning fs-5">
+                        <i class="fa-solid fa-gift"></i>
+                    </div>
+                </div>
+                <div class="fs-2 fw-bold text-white font-monospace mb-1" id="dispGiftBalance">₹@Model.GiftCardBalance.ToString("N2")</div>
+                <div class="text-secondary small">Vouchers &amp; Gift codes</div>
+            </div>
+        </div>
+
+        <!-- 4. Loyalty Reward Points -->
+        <div class="col-xl-3 col-sm-6">
+            <div class="p-3.5 rounded-4 h-100 shadow-sm" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.1);">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="text-purple small fw-bold text-uppercase" style="color: #c084fc;">Reward Points</span>
+                    <div class="p-2 rounded-3 bg-purple bg-opacity-20 text-purple fs-5" style="color: #c084fc;">
+                        <i class="fa-solid fa-coins"></i>
+                    </div>
+                </div>
+                <div class="fs-2 fw-bold text-white font-monospace mb-1" id="dispRewardPoints">@Model.RewardPoints.ToString("N0") <small class="fs-6 text-secondary fw-normal">Pts</small></div>
+                <div class="text-secondary small">Worth <strong class="text-success font-monospace">₹@Model.RewardPointsCashValue.ToString("N2")</strong> at checkout</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Passbook & Transactions History -->
+    <div class="glass-card rounded-4 p-4 shadow-lg mb-4" style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255, 255, 255, 0.1);">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2 pb-2 border-bottom border-secondary border-opacity-25">
+            <div>
+                <h5 class="fw-bold text-white mb-0"><i class="fa-solid fa-receipt text-info me-2"></i> Passbook &amp; Transaction History</h5>
+                <small class="text-secondary">Immutable ledger of all wallet credits, order payments, and refunds.</small>
+            </div>
+        </div>
+
+        @if (Model.RecentTransactions == null || !Model.RecentTransactions.Any())
+        {
+            <div class="text-center py-5">
+                <div class="p-3 rounded-circle bg-dark bg-opacity-50 text-secondary d-inline-block mb-3 fs-2">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                </div>
+                <div class="text-white fw-bold">No Transaction History Yet</div>
+                <small class="text-secondary">Any refund credits, gift card redemptions, or wallet deductions will appear here.</small>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle mb-0">
+                    <thead>
+                        <tr class="text-secondary small text-uppercase">
+                            <th>Transaction &amp; Category</th>
+                            <th>Description / Reference</th>
+                            <th>Date &amp; Time</th>
+                            <th style="text-align: right;">Amount</th>
+                            <th style="text-align: right;">Balance After</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var txn in Model.RecentTransactions)
+                        {
+                            bool isCredit = txn.TransactionType.Equals("Credit", StringComparison.OrdinalIgnoreCase);
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2.5">
+                                        <div class="p-2 rounded-3 @(isCredit ? "bg-success bg-opacity-20 text-success" : "bg-danger bg-opacity-20 text-danger") fs-6">
+                                            <i class="fa-solid @(isCredit ? "fa-arrow-down-left" : "fa-arrow-up-right")"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-white">@txn.SourceCategory</div>
+                                            <span class="badge @(isCredit ? "bg-success bg-opacity-25 text-success" : "bg-danger bg-opacity-25 text-danger") rounded-pill px-2 py-0.5" style="font-size: 10px;">
+                                                @txn.TransactionType
+                                            </span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-light small">@txn.Description</div>
+                                    @if (!string.IsNullOrWhiteSpace(txn.ReferenceCode))
+                                    {
+                                        <small class="text-secondary font-monospace" style="font-size: 11px;">Ref: @txn.ReferenceCode</small>
+                                    }
+                                </td>
+                                <td class="text-secondary small font-monospace">@txn.DateFormatted</td>
+                                <td style="text-align: right;" class="font-monospace fw-bold @(isCredit ? "text-success" : "text-danger") fs-6">
+                                    @(isCredit ? "+" : "-")₹@txn.Amount.ToString("N2")
+                                </td>
+                                <td style="text-align: right;" class="font-monospace text-white fw-semibold">
+                                    ₹@txn.BalanceAfter.ToString("N2")
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Redeem Gift Card Modal -->
+<div class="modal fade" id="redeemGiftCardModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-white" style="background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 20px;">
+            <div class="modal-header border-bottom border-secondary border-opacity-25 p-3.5">
+                <h5 class="modal-title fw-bold text-warning"><i class="fa-solid fa-gift me-2"></i> Redeem Gift Card</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-light">Gift Card Code *</label>
+                    <input type="text" id="inputGiftCardCode" class="form-control bg-dark text-white border-secondary font-monospace text-uppercase" placeholder="e.g. GIFT-2026-X89Y" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-light">4-Digit Card PIN *</label>
+                    <input type="password" id="inputGiftCardPin" maxlength="4" class="form-control bg-dark text-white border-secondary font-monospace" placeholder="1234" />
+                </div>
+                <div class="p-3 rounded-3 bg-black bg-opacity-40 border border-secondary border-opacity-20 text-secondary small">
+                    <i class="fa-solid fa-shield-halved text-info me-1.5"></i> The full card balance will instantly credit to your ShopNext Gift Card Wallet and never expires.
+                </div>
+            </div>
+            <div class="modal-footer border-top border-secondary border-opacity-25 p-3">
+                <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning rounded-pill px-4 fw-bold text-dark" id="btnConfirmRedeemGiftCard" onclick="submitRedeemGiftCard()">
+                    <i class="fa-solid fa-check me-1.5"></i> Apply to Wallet
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function submitRedeemGiftCard() {
+        const code = document.getElementById("inputGiftCardCode").value.trim();
+        const pin = document.getElementById("inputGiftCardPin").value.trim();
+        const btn = document.getElementById("btnConfirmRedeemGiftCard");
+
+        if (!code) {
+            alert("Please enter a valid Gift Card code.");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1.5"></i> Verifying...';
+
+        $.ajax({
+            url: '@Url.Action("RedeemGiftCard", "Customer")',
+            type: 'POST',
+            data: { cardCode: code, pin: pin },
+            headers: {
+                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+            },
+            success: function(res) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-check me-1.5"></i> Apply to Wallet';
+
+                if (res.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('redeemGiftCardModal'))?.hide();
+                    alert(res.message);
+                    location.reload();
+                } else {
+                    alert(res.message || "Failed to redeem Gift Card.");
+                }
+            },
+            error: function() {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-check me-1.5"></i> Apply to Wallet';
+                alert("Connection error redeeming gift card.");
+            }
+        });
+    }
+</script>
+}
