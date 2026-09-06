@@ -443,6 +443,12 @@ namespace ShopNext.Controllers
             return View();
         }
 
+        // GET: /Home/DeliveryPolicy (Point 73: Hyperlocal Delivery Policy)
+        public IActionResult DeliveryPolicy()
+        {
+            return View();
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

@@ -1,0 +1,255 @@
+@{
+    ViewData["Title"] = "Hyperlocal Delivery Policy - ShopNext";
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+    .delivery-hero {
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(30, 58, 138, 0.9) 100%), url('https://images.unsplash.com/photo-1616401784845-180882ba9ba8?w=1600') center/cover;
+        border-radius: 24px;
+        padding: 4rem 2rem;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    }
+    .delivery-card {
+        background: rgba(30, 41, 59, 0.65);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 2.2rem;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+    .delivery-card:hover {
+        border-color: rgba(56, 189, 248, 0.35);
+        transform: translateY(-2px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+    }
+    .gradient-badge {
+        background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
+        color: white;
+        padding: 0.35rem 0.9rem;
+        border-radius: 50rem;
+        font-weight: 600;
+        font-size: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .section-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        flex-shrink: 0;
+    }
+    .speed-pill {
+        padding: 1.2rem;
+        border-radius: 14px;
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        height: 100%;
+        transition: all 0.3s ease;
+    }
+    .speed-pill:hover {
+        border-color: #38bdf8;
+    }
+</style>
+
+<div class="container py-5 font-outfit">
+    <!-- Hero Banner -->
+    <div class="delivery-hero text-center text-white mb-5">
+        <span class="gradient-badge mb-3">
+            <i class="fa-solid fa-truck-fast"></i> Lightning Fast Hyperlocal Fulfillment
+        </span>
+        <h1 class="display-4 fw-bold mb-3">Delivery & Shipping Policy</h1>
+        <p class="lead text-light opacity-75 max-w-700 mx-auto" style="max-width: 740px;">
+            ShopNext aapke aas-paas ke verified local stores aur regional fulfillment hubs se ultra-fast, secure doorstep delivery deliver karta hai. Yahan hamari complete delivery guidelines hain.
+        </p>
+        <div class="d-flex justify-content-center gap-3 mt-4 text-muted small">
+            <span><i class="fa-solid fa-bolt me-1 text-warning"></i> 30-45 Mins Hyperlocal Express</span>
+            <span>&bull;</span>
+            <span><i class="fa-solid fa-shield-halved me-1 text-success"></i> 100% OTP Verified Handover</span>
+        </div>
+    </div>
+
+    <!-- 1. Delivery Speeds & Timelines -->
+    <div class="delivery-card mb-4">
+        <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="section-icon bg-info bg-opacity-20 text-info">
+                <i class="fa-solid fa-stopwatch"></i>
+            </div>
+            <div>
+                <h4 class="fw-bold text-white mb-0">1. Delivery Time & Speeds</h4>
+                <small class="text-muted">Estimated fulfillment windows across locations</small>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="speed-pill">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-warning bg-opacity-25 text-warning fw-bold"><i class="fa-solid fa-bolt me-1"></i> Express 30-45 Mins</span>
+                        <span class="text-muted small">&lt; 5 KM Radius</span>
+                    </div>
+                    <h6 class="fw-bold text-white mb-1">Hyperlocal Store Express</h6>
+                    <p class="text-muted small mb-0">Aapke nearby neighborhood stores se instant grocery, essentials, aur gadgets direct rider dwara dispatch hote hain.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="speed-pill">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-primary bg-opacity-25 text-primary fw-bold"><i class="fa-solid fa-sun me-1"></i> Same Day</span>
+                        <span class="text-muted small">City Wide</span>
+                    </div>
+                    <h6 class="fw-bold text-white mb-1">Same-Day City Delivery</h6>
+                    <p class="text-muted small mb-0">Dopahar 2:00 PM se pehle place kiye gaye orders usi din shaam 8:00 PM tak doorstep par deliver ho jate hain.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="speed-pill">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-success bg-opacity-25 text-success fw-bold"><i class="fa-solid fa-truck me-1"></i> Standard 1-3 Days</span>
+                        <span class="text-muted small">Regional Hub</span>
+                    </div>
+                    <h6 class="fw-bold text-white mb-1">Standard Regional Shipping</h6>
+                    <p class="text-muted small mb-0">Regional warehouses se aane wale electronics aur fashion items 24-72 hours ke andar safe transit me deliver hote hain.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Delivery Charges & COD Rules -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="delivery-card h-100">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="section-icon bg-success bg-opacity-20 text-success">
+                        <i class="fa-solid fa-tag"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold text-white mb-0">2. Delivery Charges</h4>
+                        <small class="text-muted">Simple & transparent shipping fees</small>
+                    </div>
+                </div>
+                <ul class="text-light opacity-90 small ps-3 mb-0">
+                    <li class="mb-2"><strong>FREE Delivery:</strong> Sabhi orders jo <strong>₹499 ya usse upar</strong> hain, unpar delivery 100% FREE hai.</li>
+                    <li class="mb-2"><strong>Standard Shipping Fee:</strong> ₹499 se kam ke cart value par flat nominal fee <strong>₹29 - ₹49</strong> lagti hai.</li>
+                    <li class="mb-2"><strong>Zero Hidden Charges:</strong> Checkout par jo total amount dikhta hai, rider ko wahi exact amount dena hota hai (No extra handling charges).</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="delivery-card h-100">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="section-icon bg-warning bg-opacity-20 text-warning">
+                        <i class="fa-solid fa-money-bill-wave"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold text-white mb-0">3. Cash on Delivery (COD) Rules</h4>
+                        <small class="text-muted">Policy for cash payments at doorstep</small>
+                    </div>
+                </div>
+                <ul class="text-light opacity-90 small ps-3 mb-0">
+                    <li class="mb-2"><strong>COD Limit:</strong> Cash on Delivery <strong>₹25,000</strong> tak ke orders par available hai. High-value orders par prepaid checkout recommended hai.</li>
+                    <li class="mb-2"><strong>Exact Cash / Doorstep QR:</strong> Customer cash de sakta hai ya rider ke mobile QR par on-the-spot UPI se pay kar sakta hai.</li>
+                    <li class="mb-2"><strong>Fair Play Policy:</strong> Repeated fake doorstep rejections karne par account ka COD option temporarily restrict kiya ja sakta hai.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. OTP Handover & Delivery Attempts -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="delivery-card h-100">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="section-icon bg-primary bg-opacity-20 text-primary">
+                        <i class="fa-solid fa-key"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold text-white mb-0">4. Secure OTP Delivery</h4>
+                        <small class="text-muted">Mandatory verification for safe handover</small>
+                    </div>
+                </div>
+                <p class="text-light opacity-90 small mb-2">
+                    Galat recipient ya parcel theft se protect karne ke liye, high-value orders par <strong>4-Digit Delivery OTP</strong> customer ke registered mobile par SMS dwara bheja jata hai:
+                </p>
+                <div class="p-2.5 bg-black bg-opacity-30 rounded-3 border border-secondary border-opacity-30 small text-muted">
+                    <span>Rider ko OTP share karne ke baad hi box handover complete hota hai. Delivery se pehle OTP anjaan vyakti ko kabhie share na karein.</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="delivery-card h-100">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="section-icon bg-info bg-opacity-20 text-info">
+                        <i class="fa-solid fa-rotate"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold text-white mb-0">5. Delivery Attempts & Failed Delivery</h4>
+                        <small class="text-muted">What happens if you miss delivery</small>
+                    </div>
+                </div>
+                <ul class="text-light opacity-90 small ps-3 mb-0">
+                    <li class="mb-2"><strong>2 Guaranteed Attempts:</strong> Agar pehle attempt me customer available na ho, to system automatic next morning <strong>Attempt 2</strong> schedule karta hai.</li>
+                    <li class="mb-2"><strong>Proactive Alerts:</strong> Failed attempt ke baad customer ko SMS/WhatsApp milta hai jisme direct rider call link aur re-slotting option rehta hai.</li>
+                    <li class="mb-2"><strong>RTO (Return to Hub):</strong> 2 consecutive failed attempts ke baad parcel seller hub ko return ho jata hai aur prepaid amount turant refund ho jata hai.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Reverse Return Pickup & Rider Complaints -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="delivery-card h-100">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="section-icon bg-warning bg-opacity-20 text-warning">
+                        <i class="fa-solid fa-truck-ramp-box"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold text-white mb-0">6. Return Pickup Rules</h4>
+                        <small class="text-muted">Hassle-free reverse collection</small>
+                    </div>
+                </div>
+                <ul class="text-light opacity-90 small ps-3 mb-0">
+                    <li class="mb-2">Return approve hone ke baad <strong>24 - 48 ghante</strong> me assigned rider aapke address se product collect karega.</li>
+                    <li class="mb-2">Agar rider pickup miss kare, to <strong>Point 66 Automatic Re-Pickup</strong> system new senior rider ko priority task route kar deta hai.</li>
+                    <li class="mb-2">Rider pickup ke samay package ka serial number scan karega aur digital receipt issue karega.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="delivery-card h-100">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="section-icon bg-danger bg-opacity-20 text-danger">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold text-white mb-0">7. Rider Grievance & Complaints</h4>
+                        <small class="text-muted">Zero tolerance for misconduct</small>
+                    </div>
+                </div>
+                <p class="text-light opacity-90 small mb-2">
+                    Agar delivery partner misbehave kare, extra cash maange, ya bina aaye fake attempt mark kare, to aap <strong>My Orders -> [Report Issue]</strong> par 1-click complaint raise kar sakte hain:
+                </p>
+                <div class="p-2.5 bg-black bg-opacity-30 rounded-3 border border-danger border-opacity-30 small text-danger">
+                    <span>Admin rider ke live GPS breadcrumbs audit karke immediate disciplinary action aur instant task re-dispatch karta hai.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
