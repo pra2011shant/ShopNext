@@ -16,7 +16,9 @@ namespace ShopNext.Services
         // In-memory campaign state with thread-safe access
         private static readonly object _lock = new object();
         private static readonly List<AdminSaleCampaignDto> _inMemoryCampaigns = new List<AdminSaleCampaignDto>();
+        private static readonly List<AdminSellerSaleParticipationDto> _inMemoryParticipations = new List<AdminSellerSaleParticipationDto>();
         private static int _nextId = 101;
+        private static int _nextParticipationId = 201;
 
         static SaleCampaignService()
         {
@@ -221,6 +223,120 @@ namespace ShopNext.Services
                         new CampaignCategoryDiscountDto { CategoryName = "Beauty & Care", DiscountPercentage = 45, IconClass = "fa-sparkles", BadgeColor = "primary" }
                     }
                 });
+
+                // Point 55 Seed Data (Matching Prompt: Samsung Mobile ☑, Laptop ☐, Headphone ☑)
+                if (!_inMemoryParticipations.Any())
+                {
+                    _inMemoryParticipations.Add(new AdminSellerSaleParticipationDto
+                    {
+                        Id = 1,
+                        ProductId = 1,
+                        ProductName = "Samsung Mobile",
+                        ProductImage = "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=200",
+                        Category = "Mobiles",
+                        ShopId = 1,
+                        ShopName = "Samsung Official Flagship Store",
+                        CampaignId = 1,
+                        CampaignName = "🔥 Mega Shopping Sale",
+                        RegularPrice = 40000,
+                        SalePrice = 32999,
+                        AllocatedSaleStock = 50,
+                        IsParticipating = true, // ☑ Participate in Mega Sale
+                        ApprovalStatus = "Approved",
+                        AdminRemarks = "Approved for Mega Sale flagship spotlight banner.",
+                        SubmittedDate = now.AddDays(-2).ToString("dd MMM yyyy"),
+                        ApprovedDate = now.AddDays(-1).ToString("dd MMM yyyy"),
+                        ApprovedBy = "Super Admin"
+                    });
+
+                    _inMemoryParticipations.Add(new AdminSellerSaleParticipationDto
+                    {
+                        Id = 2,
+                        ProductId = 2,
+                        ProductName = "Laptop",
+                        ProductImage = "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=200",
+                        Category = "Electronics",
+                        ShopId = 2,
+                        ShopName = "TechTrend Electronics",
+                        CampaignId = 1,
+                        CampaignName = "🔥 Mega Shopping Sale",
+                        RegularPrice = 85000,
+                        SalePrice = 85000,
+                        AllocatedSaleStock = 0,
+                        IsParticipating = false, // ☐ Participate (Opted out)
+                        ApprovalStatus = "OptedOut",
+                        AdminRemarks = "Seller opted out from sale pricing.",
+                        SubmittedDate = now.AddDays(-2).ToString("dd MMM yyyy"),
+                        ApprovedDate = null,
+                        ApprovedBy = null
+                    });
+
+                    _inMemoryParticipations.Add(new AdminSellerSaleParticipationDto
+                    {
+                        Id = 3,
+                        ProductId = 3,
+                        ProductName = "Headphone",
+                        ProductImage = "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=200",
+                        Category = "Electronics",
+                        ShopId = 3,
+                        ShopName = "AudioPhile India",
+                        CampaignId = 1,
+                        CampaignName = "🔥 Mega Shopping Sale",
+                        RegularPrice = 29990,
+                        SalePrice = 22999,
+                        AllocatedSaleStock = 40,
+                        IsParticipating = true, // ☑ Participate in Mega Sale
+                        ApprovalStatus = "Pending",
+                        AdminRemarks = "Awaiting Admin final review and discount verification.",
+                        SubmittedDate = now.ToString("dd MMM yyyy"),
+                        ApprovedDate = null,
+                        ApprovedBy = null
+                    });
+
+                    _inMemoryParticipations.Add(new AdminSellerSaleParticipationDto
+                    {
+                        Id = 4,
+                        ProductId = 4,
+                        ProductName = "Apple AirPods Pro",
+                        ProductImage = "https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=200",
+                        Category = "Electronics",
+                        ShopId = 4,
+                        ShopName = "Apple Authorized Reseller",
+                        CampaignId = 1,
+                        CampaignName = "🔥 Mega Shopping Sale",
+                        RegularPrice = 24900,
+                        SalePrice = 18499,
+                        AllocatedSaleStock = 30,
+                        IsParticipating = true, // ☑ Participate in Mega Sale
+                        ApprovalStatus = "Approved",
+                        AdminRemarks = "Approved with 26% festival discount.",
+                        SubmittedDate = now.AddDays(-3).ToString("dd MMM yyyy"),
+                        ApprovedDate = now.AddDays(-2).ToString("dd MMM yyyy"),
+                        ApprovedBy = "Super Admin"
+                    });
+
+                    _inMemoryParticipations.Add(new AdminSellerSaleParticipationDto
+                    {
+                        Id = 5,
+                        ProductId = 5,
+                        ProductName = "Smart 4K QLED TV (55-Inch)",
+                        ProductImage = "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=200",
+                        Category = "Electronics",
+                        ShopId = 5,
+                        ShopName = "VisionWorld Appliances",
+                        CampaignId = 1,
+                        CampaignName = "🔥 Mega Shopping Sale",
+                        RegularPrice = 55000,
+                        SalePrice = 44999,
+                        AllocatedSaleStock = 15,
+                        IsParticipating = true, // ☑ Participate in Mega Sale
+                        ApprovalStatus = "Pending",
+                        AdminRemarks = "Seller requested 18% special festival discount.",
+                        SubmittedDate = now.ToString("dd MMM yyyy"),
+                        ApprovedDate = null,
+                        ApprovedBy = null
+                    });
+                }
             }
         }
 
@@ -590,5 +706,178 @@ namespace ShopNext.Services
 
             return list;
         }
+
+        #region Point 55: Seller Sale Participation Methods
+
+        public Task<List<AdminSellerSaleParticipationDto>> GetAllSellerSaleParticipationsAsync(int? campaignId = null, int? shopId = null)
+        {
+            lock (_lock)
+            {
+                var query = _inMemoryParticipations.AsEnumerable();
+                if (campaignId.HasValue && campaignId.Value > 0)
+                {
+                    query = query.Where(p => p.CampaignId == campaignId.Value);
+                }
+                if (shopId.HasValue && shopId.Value > 0)
+                {
+                    query = query.Where(p => p.ShopId == shopId.Value);
+                }
+
+                return Task.FromResult(query.OrderBy(p => p.ApprovalStatus == "Pending" ? 0 : 1).ThenBy(p => p.Id).ToList());
+            }
+        }
+
+        public async Task<AdminSellerSaleParticipationDto?> UpdateSellerProductParticipationAsync(int participationId, bool isParticipating, decimal? salePrice, int? allocatedStock, string? notes)
+        {
+            AdminSellerSaleParticipationDto? item;
+            lock (_lock)
+            {
+                item = _inMemoryParticipations.FirstOrDefault(p => p.Id == participationId);
+                if (item != null)
+                {
+                    item.IsParticipating = isParticipating;
+                    if (salePrice.HasValue && salePrice.Value > 0)
+                    {
+                        item.SalePrice = salePrice.Value;
+                    }
+                    if (allocatedStock.HasValue && allocatedStock.Value >= 0)
+                    {
+                        item.AllocatedSaleStock = allocatedStock.Value;
+                    }
+
+                    if (!isParticipating)
+                    {
+                        item.ApprovalStatus = "OptedOut";
+                        item.AdminRemarks = "Seller opted out from sale participation.";
+                    }
+                    else if (item.ApprovalStatus == "OptedOut")
+                    {
+                        item.ApprovalStatus = "Pending";
+                        item.AdminRemarks = "Seller re-opted into sale; pending Admin review.";
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(notes))
+                    {
+                        item.AdminRemarks = notes.Trim();
+                    }
+                }
+            }
+
+            if (item != null)
+            {
+                await _auditService.LogAsync(
+                    action: "UpdateSellerSaleParticipation",
+                    details: $"Seller updated participation for '{item.ProductName}'. Participating: {isParticipating}, Price: ₹{item.SalePrice:N0}, Status: {item.ApprovalStatus}",
+                    userId: 1,
+                    userRole: "Seller"
+                );
+            }
+
+            return item;
+        }
+
+        public async Task<AdminSellerSaleParticipationDto?> ApproveSellerParticipationAsync(int participationId, string? remarks, string adminName)
+        {
+            AdminSellerSaleParticipationDto? item;
+            lock (_lock)
+            {
+                item = _inMemoryParticipations.FirstOrDefault(p => p.Id == participationId);
+                if (item != null)
+                {
+                    item.IsParticipating = true;
+                    item.ApprovalStatus = "Approved";
+                    item.ApprovedDate = DateTime.Now.ToString("dd MMM yyyy, hh:mm tt");
+                    item.ApprovedBy = string.IsNullOrWhiteSpace(adminName) ? "Admin" : adminName;
+                    item.AdminRemarks = string.IsNullOrWhiteSpace(remarks) ? "Approved for Campaign Sale spotlight." : remarks.Trim();
+                }
+            }
+
+            if (item != null)
+            {
+                await _auditService.LogAsync(
+                    action: "ApproveSellerSaleParticipation",
+                    details: $"Admin '{adminName}' approved '{item.ProductName}' ({item.ShopName}) for campaign '{item.CampaignName}'. Sale Price: ₹{item.SalePrice:N0}",
+                    userId: 1,
+                    userRole: "Admin"
+                );
+            }
+
+            return item;
+        }
+
+        public async Task<AdminSellerSaleParticipationDto?> RejectSellerParticipationAsync(int participationId, string? reason, string adminName)
+        {
+            AdminSellerSaleParticipationDto? item;
+            lock (_lock)
+            {
+                item = _inMemoryParticipations.FirstOrDefault(p => p.Id == participationId);
+                if (item != null)
+                {
+                    item.ApprovalStatus = "Rejected";
+                    item.AdminRemarks = string.IsNullOrWhiteSpace(reason) ? "Participation request rejected by Admin." : reason.Trim();
+                    item.ApprovedBy = adminName;
+                }
+            }
+
+            if (item != null)
+            {
+                await _auditService.LogAsync(
+                    action: "RejectSellerSaleParticipation",
+                    details: $"Admin rejected '{item.ProductName}' ({item.ShopName}) from campaign '{item.CampaignName}'. Reason: {item.AdminRemarks}",
+                    userId: 1,
+                    userRole: "Admin"
+                );
+            }
+
+            return item;
+        }
+
+        public async Task<AdminSellerSaleParticipationDto> OptInProductForSaleAsync(int productId, int shopId, int campaignId, decimal salePrice, int allocatedStock)
+        {
+            var product = await _context.Products.FindAsync(productId);
+            var shop = await _context.Shops.FindAsync(shopId);
+            var campaign = _inMemoryCampaigns.FirstOrDefault(c => c.Id == campaignId);
+
+            string prodName = product?.ProductName ?? $"Product #{productId}";
+            string shopName = shop?.ShopName ?? $"Shop #{shopId}";
+            string campName = campaign?.CampaignName ?? "🔥 Mega Shopping Sale";
+            decimal regPrice = product?.Price ?? (salePrice > 0 ? salePrice * 1.25m : 1000);
+
+            var newEntry = new AdminSellerSaleParticipationDto
+            {
+                Id = _nextParticipationId++,
+                ProductId = productId,
+                ProductName = prodName,
+                ProductImage = product?.ImageUrl ?? "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=200",
+                Category = product?.Category ?? "General",
+                ShopId = shopId,
+                ShopName = shopName,
+                CampaignId = campaignId,
+                CampaignName = campName,
+                RegularPrice = regPrice,
+                SalePrice = salePrice > 0 ? salePrice : regPrice * 0.8m,
+                AllocatedSaleStock = allocatedStock > 0 ? allocatedStock : 20,
+                IsParticipating = true, // ☑ Participate
+                ApprovalStatus = "Pending", // Seller submitted -> Pending Admin Approval
+                AdminRemarks = "Newly submitted by seller for Admin approval.",
+                SubmittedDate = DateTime.Now.ToString("dd MMM yyyy")
+            };
+
+            lock (_lock)
+            {
+                _inMemoryParticipations.Add(newEntry);
+            }
+
+            await _auditService.LogAsync(
+                action: "SellerOptInProductForSale",
+                details: $"Seller '{shopName}' opted in product '{prodName}' for campaign '{campName}'. Proposed Sale Price: ₹{newEntry.SalePrice:N0}",
+                userId: shopId,
+                userRole: "Seller"
+            );
+
+            return newEntry;
+        }
+
+        #endregion
     }
 }

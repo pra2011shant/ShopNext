@@ -73,6 +73,9 @@ namespace ShopNext.Models
 
         // Point 54: Sale Inventory Protection & Concurrency Handling
         public InventoryProtectionDashboardDto InventoryProtection { get; set; } = new InventoryProtectionDashboardDto();
+
+        // Point 55: Seller Sale Participation & Admin Approval Workflow
+        public List<AdminSellerSaleParticipationDto> SellerSaleParticipationsList { get; set; } = new List<AdminSellerSaleParticipationDto>();
     }
 
     /// <summary>
@@ -1021,6 +1024,62 @@ namespace ShopNext.Models
         public int FlashSaleId { get; set; }
         public int Quantity { get; set; } = 1;
         public int CustomerId { get; set; } = 1;
+    }
+
+    #endregion
+
+    #region Point 55: Seller Sale Participation & Admin Approval DTOs
+
+    /// <summary>
+    /// Point 55: Seller Sale Participation & Admin Approval DTO
+    /// Example from Prompt:
+    /// Seller Products:
+    /// - Samsung Mobile: ☑ Participate in Mega Sale (Approved)
+    /// - Laptop: ☐ Participate (Opted Out)
+    /// - Headphone: ☑ Participate (Pending Approval / Approved)
+    /// Admin final approval de sakta hai.
+    /// </summary>
+    public class AdminSellerSaleParticipationDto
+    {
+        public int Id { get; set; }
+        public int ProductId { get; set; }
+        public string ProductName { get; set; } = string.Empty; // "Samsung Mobile", "Dell XPS Laptop", "Sony Headphone"
+        public string ProductImage { get; set; } = string.Empty;
+        public string Category { get; set; } = "Mobiles";
+        public int ShopId { get; set; }
+        public string ShopName { get; set; } = "Samsung Official Flagship Store";
+        public int CampaignId { get; set; } = 1;
+        public string CampaignName { get; set; } = "🔥 Mega Shopping Sale";
+        public decimal RegularPrice { get; set; } = 40000;
+        public decimal SalePrice { get; set; } = 32999;
+        public decimal DiscountPct => RegularPrice > 0 ? Math.Max(0, Math.Round(((RegularPrice - SalePrice) / RegularPrice) * 100, 1)) : 0;
+        public int AllocatedSaleStock { get; set; } = 50;
+        public bool IsParticipating { get; set; } = true; // ☑ Participate in Mega Sale (true/false)
+        public string ApprovalStatus { get; set; } = "Approved"; // "Approved", "Pending", "Rejected", "OptedOut"
+        public string StatusBadgeClass => ApprovalStatus == "Approved" ? "bg-success" : (ApprovalStatus == "Pending" ? "bg-warning" : (ApprovalStatus == "Rejected" ? "bg-danger" : "bg-secondary"));
+        public string AdminRemarks { get; set; } = "Approved for Mega Sale banner placement.";
+        public string SubmittedDate { get; set; } = "05 Sep 2026";
+        public string? ApprovedDate { get; set; } = "06 Sep 2026";
+        public string? ApprovedBy { get; set; } = "Super Admin";
+    }
+
+    public class UpdateSellerSaleParticipationRequest
+    {
+        public int ParticipationId { get; set; }
+        public int ProductId { get; set; }
+        public int ShopId { get; set; } = 1;
+        public int CampaignId { get; set; } = 1;
+        public bool IsParticipating { get; set; }
+        public decimal? SalePrice { get; set; }
+        public int? AllocatedStock { get; set; }
+        public string? Remarks { get; set; }
+    }
+
+    public class AdminSaleParticipationApprovalRequest
+    {
+        public int ParticipationId { get; set; }
+        public bool Approve { get; set; } = true;
+        public string? Remarks { get; set; }
     }
 
     #endregion

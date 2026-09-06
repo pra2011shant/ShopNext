@@ -2958,6 +2958,248 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- ========================================== -->
+                <!-- POINT 55: SELLER SALE PARTICIPATION & ADMIN APPROVAL -->
+                <!-- Example: Samsung Mobile ☑, Laptop ☐, Headphone ☑ -->
+                <!-- ========================================== -->
+                <div class="mt-5 pt-4 border-top border-secondary border-opacity-25" id="section-seller-participation">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold font-monospace fs-6">
+                                    <i class="fa-solid fa-store me-1 text-dark"></i> 🏪 SELLER SALE PARTICIPATION
+                                </span>
+                                <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill small">
+                                    Point 55: Seller Opt-In &amp; Admin Final Approval
+                                </span>
+                            </div>
+                            <h4 class="fw-bold text-white mb-0">Seller Products Campaign Opt-In &amp; Approval Governance</h4>
+                            <p class="text-secondary small mb-0 mt-1">
+                                Sellers decide which products participate in Mega Sales (☑ Participate vs ☐ Opt Out). Admin reviews discounts and grants final approval.
+                            </p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-info btn-sm rounded-pill px-3 py-2 fw-semibold" onclick="refreshSellerParticipations()">
+                                <i class="fa-solid fa-arrows-rotate me-1"></i> Refresh List
+                            </button>
+                            <button type="button" class="btn btn-warning btn-sm rounded-pill px-3.5 py-2 fw-bold text-dark shadow-sm" onclick="openOptInDemoModal()">
+                                <i class="fa-solid fa-plus me-1"></i> + New Seller Product Opt-In
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 4 Mini Metric Badges for Participation -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3 col-6">
+                            <div class="p-3 rounded-3 bg-dark border border-secondary border-opacity-25">
+                                <div class="text-secondary small fw-semibold">Total Submitted Items</div>
+                                <div class="text-white fw-bold fs-4 mt-0.5" id="countPartTotal">@Model.SellerSaleParticipationsList.Count</div>
+                                <div class="text-secondary small" style="font-size: 0.72rem;">Across all sellers</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="p-3 rounded-3 bg-dark border border-success border-opacity-30">
+                                <div class="text-success small fw-semibold">☑ Approved (Live in Sale)</div>
+                                <div class="text-success fw-bold fs-4 mt-0.5" id="countPartApproved">@Model.SellerSaleParticipationsList.Count(x => x.ApprovalStatus == "Approved")</div>
+                                <div class="text-secondary small" style="font-size: 0.72rem;"><i class="fa-solid fa-circle-check text-success me-1"></i> Admin Approved</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="p-3 rounded-3 bg-dark border border-warning border-opacity-30">
+                                <div class="text-warning small fw-semibold">⏳ Pending Admin Approval</div>
+                                <div class="text-warning fw-bold fs-4 mt-0.5" id="countPartPending">@Model.SellerSaleParticipationsList.Count(x => x.ApprovalStatus == "Pending")</div>
+                                <div class="text-secondary small" style="font-size: 0.72rem;"><i class="fa-solid fa-clock text-warning me-1"></i> Requires Review</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="p-3 rounded-3 bg-dark border border-secondary border-opacity-25">
+                                <div class="text-secondary small fw-semibold">☐ Opted Out / Excluded</div>
+                                <div class="text-secondary fw-bold fs-4 mt-0.5" id="countPartOptedOut">@Model.SellerSaleParticipationsList.Count(x => x.ApprovalStatus == "OptedOut" || !x.IsParticipating)</div>
+                                <div class="text-secondary small" style="font-size: 0.72rem;"><i class="fa-solid fa-ban text-secondary me-1"></i> Regular Price Only</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filter Bar & Search -->
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-warning text-dark fw-bold seller-part-filter-btn" onclick="filterSellerParticipation('all', this)">
+                                All Products (@Model.SellerSaleParticipationsList.Count)
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary text-light seller-part-filter-btn" onclick="filterSellerParticipation('pending', this)">
+                                ⏳ Pending Approval (@Model.SellerSaleParticipationsList.Count(x => x.ApprovalStatus == "Pending"))
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary text-light seller-part-filter-btn" onclick="filterSellerParticipation('approved', this)">
+                                ✅ Approved (@Model.SellerSaleParticipationsList.Count(x => x.ApprovalStatus == "Approved"))
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary text-light seller-part-filter-btn" onclick="filterSellerParticipation('optedout', this)">
+                                ☐ Opted Out (@Model.SellerSaleParticipationsList.Count(x => x.ApprovalStatus == "OptedOut" || !x.IsParticipating))
+                            </button>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary rounded-pill px-3" 
+                                   style="width: 220px;" placeholder="Search seller or product..." onkeyup="searchSellerParticipation(this.value)" />
+                        </div>
+                    </div>
+
+                    <!-- Seller Participation Table matching Prompt Example -->
+                    <div class="table-responsive" style="border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                        <table class="table table-dark table-hover align-middle mb-0 text-nowrap" id="tableSellerParticipation">
+                            <thead class="bg-dark" style="border-bottom: 1px solid rgba(255,255,255,0.12);">
+                                <tr class="text-secondary small text-uppercase">
+                                    <th>Product Details</th>
+                                    <th>Seller / Store</th>
+                                    <th>Target Campaign</th>
+                                    <th>Regular vs Sale Price</th>
+                                    <th>Sale Stock</th>
+                                    <th>Seller Decision</th>
+                                    <th>Admin Approval Status</th>
+                                    <th>Admin Remarks</th>
+                                    <th style="text-align: center;">Admin Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sellerParticipationTableBody">
+                                @foreach (var item in Model.SellerSaleParticipationsList)
+                                {
+                                    <tr class="seller-part-row" id="part-row-@item.Id" 
+                                        data-status="@item.ApprovalStatus.ToLower()" 
+                                        data-participating="@(item.IsParticipating ? "true" : "false")"
+                                        data-name="@item.ProductName" 
+                                        data-shop="@item.ShopName">
+                                        <!-- Product Details -->
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2.5">
+                                                <img src="@item.ProductImage" alt="@item.ProductName" 
+                                                     class="rounded-3 border border-secondary border-opacity-30" 
+                                                     style="width: 44px; height: 44px; object-fit: cover;" 
+                                                     onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100'" />
+                                                <div>
+                                                    <div class="text-white fw-bold">@item.ProductName</div>
+                                                    <span class="badge bg-secondary bg-opacity-30 text-secondary small" style="font-size: 0.7rem;">@item.Category</span>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <!-- Seller / Store -->
+                                        <td>
+                                            <div class="text-light fw-semibold small">@item.ShopName</div>
+                                            <div class="text-secondary small" style="font-size: 0.7rem;">Verified Merchant</div>
+                                        </td>
+
+                                        <!-- Target Campaign -->
+                                        <td>
+                                            <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill small">
+                                                @item.CampaignName
+                                            </span>
+                                        </td>
+
+                                        <!-- Regular vs Sale Price -->
+                                        <td>
+                                            <div class="d-flex align-items-center gap-1.5 font-monospace">
+                                                <span class="text-decoration-line-through text-secondary small">₹@item.RegularPrice.ToString("N0")</span>
+                                                <i class="fa-solid fa-arrow-right text-secondary small" style="font-size: 0.65rem;"></i>
+                                                <span class="text-warning fw-bold fs-6">₹@item.SalePrice.ToString("N0")</span>
+                                            </div>
+                                            @if (item.DiscountPct > 0)
+                                            {
+                                                <div class="text-success small fw-bold" style="font-size: 0.72rem;">@item.DiscountPct% OFF</div>
+                                            }
+                                        </td>
+
+                                        <!-- Sale Stock -->
+                                        <td class="font-monospace">
+                                            @if (item.IsParticipating && item.AllocatedSaleStock > 0)
+                                            {
+                                                <span class="badge bg-info bg-opacity-20 text-info px-2.5 py-1 rounded-pill">
+                                                    @item.AllocatedSaleStock Units
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-secondary small">&mdash;</span>
+                                            }
+                                        </td>
+
+                                        <!-- Seller Decision (Prompt Checkbox) -->
+                                        <td>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="part-check-@item.Id" 
+                                                       @(item.IsParticipating ? "checked" : "") 
+                                                       onchange="toggleSellerParticipationCheck(@item.Id, this.checked)" />
+                                                <label class="form-check-label @(item.IsParticipating ? "text-success fw-bold" : "text-secondary") small" for="part-check-@item.Id" id="part-check-label-@item.Id">
+                                                    @(item.IsParticipating ? "☑ Participate in Mega Sale" : "☐ Not Participating")
+                                                </label>
+                                            </div>
+                                        </td>
+
+                                        <!-- Admin Approval Status -->
+                                        <td id="part-status-cell-@item.Id">
+                                            @if (item.ApprovalStatus == "Approved")
+                                            {
+                                                <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                    <i class="fa-solid fa-circle-check me-1"></i> Approved (Live in Sale)
+                                                </span>
+                                            }
+                                            else if (item.ApprovalStatus == "Pending")
+                                            {
+                                                <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                    <i class="fa-solid fa-clock me-1"></i> Pending Admin Approval
+                                                </span>
+                                            }
+                                            else if (item.ApprovalStatus == "Rejected")
+                                            {
+                                                <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                    <i class="fa-solid fa-circle-xmark me-1"></i> Rejected
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                    <i class="fa-solid fa-ban me-1"></i> Opted Out
+                                                </span>
+                                            }
+                                        </td>
+
+                                        <!-- Admin Remarks -->
+                                        <td>
+                                            <small class="text-secondary font-monospace" id="part-remarks-@item.Id" style="font-size: 0.75rem;">
+                                                @item.AdminRemarks
+                                            </small>
+                                        </td>
+
+                                        <!-- Admin Actions -->
+                                        <td style="text-align: center;">
+                                            <div class="d-inline-flex gap-1.5 justify-content-center" id="part-actions-@item.Id">
+                                                @if (item.ApprovalStatus == "Pending" || item.ApprovalStatus == "Rejected" || item.ApprovalStatus == "OptedOut")
+                                                {
+                                                    <!-- [Approve] -->
+                                                    <button type="button" class="btn btn-outline-success btn-sm px-2.5 py-1 rounded-3 fw-bold" 
+                                                            onclick="approveSellerParticipation(@item.Id, '@item.ProductName')" title="Grant Admin Approval">
+                                                        <i class="fa-solid fa-check me-1"></i> Approve
+                                                    </button>
+                                                }
+                                                @if (item.ApprovalStatus == "Pending" || item.ApprovalStatus == "Approved")
+                                                {
+                                                    <!-- [Reject] -->
+                                                    <button type="button" class="btn btn-outline-danger btn-sm px-2.5 py-1 rounded-3" 
+                                                            onclick="rejectSellerParticipation(@item.Id, '@item.ProductName')" title="Reject Participation">
+                                                        <i class="fa-solid fa-xmark me-1"></i> Reject
+                                                    </button>
+                                                }
+                                                <!-- [Edit Deal] -->
+                                                <button type="button" class="btn btn-outline-secondary btn-sm px-2 py-1 rounded-3" 
+                                                        onclick="openEditSellerDealModal(@item.Id, '@item.ProductName', @item.RegularPrice, @item.SalePrice, @item.AllocatedSaleStock)" title="Edit Pricing & Stock">
+                                                    <i class="fa-solid fa-sliders"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -8277,6 +8519,122 @@
                 <button type="button" class="btn btn-secondary px-3 py-2" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-warning px-3 py-2 fw-bold" onclick="openEditCampaignModalFromView()" id="btnEditFromView">
                     <i class="fa-solid fa-pen-to-square me-1"></i> Edit Campaign
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- POINT 55: EDIT SELLER DEAL MODAL -->
+<div class="modal fade" id="editSellerDealModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-content-glass">
+            <div class="modal-header border-secondary border-opacity-25 pb-3">
+                <div class="d-flex align-items-center gap-2.5">
+                    <div class="p-2 rounded-3 bg-warning text-dark fs-5 fw-bold">
+                        <i class="fa-solid fa-sliders"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold text-white mb-0">Configure Seller Sale Deal</h5>
+                        <small class="text-secondary" id="modalEditSellerProdName">Samsung Mobile</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="modalEditSellerPartId" value="0" />
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label class="form-label text-secondary small fw-bold">Regular MRP (₹)</label>
+                        <input type="number" id="modalEditSellerRegPrice" class="form-control bg-dark text-white border-secondary font-monospace" readonly />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label text-warning small fw-bold">Campaign Sale Price (₹) *</label>
+                        <input type="number" id="modalEditSellerSalePrice" class="form-control bg-dark text-warning border-warning border-opacity-50 font-monospace fw-bold fs-5" />
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-info small fw-bold">Allocated Sale Stock (Units) *</label>
+                    <input type="number" id="modalEditSellerStock" class="form-control bg-dark text-info border-info border-opacity-50 font-monospace" value="50" min="1" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-bold">Admin Remarks / Deal Notes</label>
+                    <textarea id="modalEditSellerNotes" class="form-control bg-dark text-white border-secondary" rows="2" placeholder="Approved for Mega Sale featured banner."></textarea>
+                </div>
+                <div class="form-check form-switch p-3 rounded-3 bg-dark border border-secondary border-opacity-25">
+                    <input class="form-check-input" type="checkbox" id="modalEditSellerParticipatingCheck" checked />
+                    <label class="form-check-label text-white fw-bold small" for="modalEditSellerParticipatingCheck">
+                        <i class="fa-solid fa-check-circle text-success me-1"></i> Participate in Mega Sale
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-secondary border-opacity-25 p-3">
+                <button type="button" class="btn btn-secondary px-3 py-2 rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning px-4 py-2 fw-bold text-dark rounded-pill" id="btnSubmitEditSellerDeal" onclick="submitEditSellerDeal()">
+                    <i class="fa-solid fa-save me-1"></i> Save Deal Settings
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- POINT 55: NEW SELLER OPT-IN DEMO MODAL -->
+<div class="modal fade" id="sellerOptInDemoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-content-glass">
+            <div class="modal-header border-secondary border-opacity-25 pb-3">
+                <div class="d-flex align-items-center gap-2.5">
+                    <div class="p-2 rounded-3 bg-warning text-dark fs-5 fw-bold">
+                        <i class="fa-solid fa-store"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold text-white mb-0">+ Submit Product for Mega Sale</h5>
+                        <small class="text-secondary">Seller opt-in workflow simulation</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-bold">Select Product</label>
+                    <select id="modalOptInProductSelect" class="form-select bg-dark text-white border-secondary" onchange="onOptInProductSelect(this)">
+                        <option value="1" data-price="40000" data-name="Samsung Mobile" selected>Samsung Mobile Galaxy S24 (₹40,000)</option>
+                        <option value="2" data-price="85000" data-name="Dell XPS Laptop">Dell XPS 15 Laptop (₹85,000)</option>
+                        <option value="3" data-price="29990" data-name="Sony Headphone">Sony WH-1000XM5 Headphone (₹29,990)</option>
+                        <option value="4" data-price="24900" data-name="Apple AirPods Pro">Apple AirPods Pro (₹24,900)</option>
+                        <option value="5" data-price="55000" data-name="Smart 4K QLED TV">Smart 4K QLED TV (₹55,000)</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-bold">Target Sale Campaign</label>
+                    <select id="modalOptInCampaignSelect" class="form-select bg-dark text-white border-secondary">
+                        <option value="1" selected>🔥 Mega Shopping Sale (Starts in 2 Days)</option>
+                        <option value="2">🌙 Midnight Super Flash Sale</option>
+                        <option value="3">⚡ Diwali Grand Festival Sale</option>
+                    </select>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label class="form-label text-secondary small fw-bold">Regular Price (₹)</label>
+                        <input type="number" id="modalOptInRegPrice" class="form-control bg-dark text-white border-secondary font-monospace" value="40000" readonly />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label text-warning small fw-bold">Proposed Sale Price (₹) *</label>
+                        <input type="number" id="modalOptInSalePrice" class="form-control bg-dark text-warning border-warning border-opacity-50 font-monospace fw-bold" value="32999" />
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-info small fw-bold">Allocated Units for Sale *</label>
+                    <input type="number" id="modalOptInStock" class="form-control bg-dark text-info border-info border-opacity-50 font-monospace" value="50" min="1" />
+                </div>
+                <div class="p-3 rounded-3 bg-dark border border-secondary border-opacity-25 small text-secondary">
+                    <i class="fa-solid fa-info-circle text-info me-1"></i> When submitted, the product goes into <strong class="text-warning">⏳ Pending Admin Approval</strong> status until reviewed.
+                </div>
+            </div>
+            <div class="modal-footer border-top border-secondary border-opacity-25 p-3">
+                <button type="button" class="btn btn-secondary px-3 py-2 rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning px-4 py-2 fw-bold text-dark rounded-pill" onclick="submitOptInDemo()">
+                    <i class="fa-solid fa-paper-plane me-1"></i> Submit for Admin Review
                 </button>
             </div>
         </div>
@@ -14829,6 +15187,293 @@
         initScheduledSaleLiveCountdown();
         initFlashSaleLiveCountdowns();
     });
+
+    // ==========================================
+    // POINT 55: SELLER SALE PARTICIPATION & ADMIN APPROVAL
+    // ==========================================
+    function toggleSellerParticipationCheck(id, isChecked) {
+        $.ajax({
+            url: '@Url.Action("ToggleSellerSaleParticipation", "Admin")',
+            type: 'POST',
+            data: { id: id, isParticipating: isChecked },
+            success: function(res) {
+                if (res && res.success) {
+                    showToast(res.message);
+                    const label = document.getElementById(`part-check-label-${id}`);
+                    const row = document.getElementById(`part-row-${id}`);
+                    const statusCell = document.getElementById(`part-status-cell-${id}`);
+                    
+                    if (label) {
+                        label.innerText = isChecked ? "☑ Participate in Mega Sale" : "☐ Not Participating";
+                        label.className = `form-check-label ${isChecked ? "text-success fw-bold" : "text-secondary"} small`;
+                    }
+                    if (row) {
+                        row.setAttribute('data-participating', isChecked ? 'true' : 'false');
+                        row.setAttribute('data-status', isChecked ? 'pending' : 'optedout');
+                    }
+                    if (statusCell && res.data) {
+                        statusCell.innerHTML = isChecked
+                            ? '<span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-30 px-2.5 py-1 rounded-pill"><i class="fa-solid fa-clock me-1"></i> Pending Admin Approval</span>'
+                            : '<span class="badge bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-30 px-2.5 py-1 rounded-pill"><i class="fa-solid fa-ban me-1"></i> Opted Out</span>';
+                    }
+                    refreshParticipationCounters();
+                } else {
+                    showToast(res ? res.message : "Error updating participation.", true);
+                }
+            },
+            error: function() {
+                showToast("Connection error updating participation.", true);
+            }
+        });
+    }
+
+    function approveSellerParticipation(id, prodName) {
+        $.ajax({
+            url: '@Url.Action("ApproveSellerSaleParticipation", "Admin")',
+            type: 'POST',
+            data: { id: id, remarks: "Approved for Mega Sale banner placement." },
+            success: function(res) {
+                if (res && res.success) {
+                    showToast(res.message);
+                    const statusCell = document.getElementById(`part-status-cell-${id}`);
+                    const row = document.getElementById(`part-row-${id}`);
+                    const remarks = document.getElementById(`part-remarks-${id}`);
+                    const actions = document.getElementById(`part-actions-${id}`);
+                    const check = document.getElementById(`part-check-${id}`);
+                    const label = document.getElementById(`part-check-label-${id}`);
+
+                    if (check) check.checked = true;
+                    if (label) {
+                        label.innerText = "☑ Participate in Mega Sale";
+                        label.className = "form-check-label text-success fw-bold small";
+                    }
+                    if (row) {
+                        row.setAttribute('data-status', 'approved');
+                        row.setAttribute('data-participating', 'true');
+                    }
+                    if (statusCell) {
+                        statusCell.innerHTML = '<span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-2.5 py-1 rounded-pill"><i class="fa-solid fa-circle-check me-1"></i> Approved (Live in Sale)</span>';
+                    }
+                    if (remarks) remarks.innerText = "Approved for Mega Sale banner placement.";
+                    if (actions) {
+                        actions.innerHTML = `
+                            <button type="button" class="btn btn-outline-danger btn-sm px-2.5 py-1 rounded-3" onclick="rejectSellerParticipation(${id}, '${prodName}')" title="Reject Participation">
+                                <i class="fa-solid fa-xmark me-1"></i> Reject
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm px-2 py-1 rounded-3" onclick="openEditSellerDealModal(${id}, '${prodName}', 40000, 32999, 50)" title="Edit Pricing & Stock">
+                                <i class="fa-solid fa-sliders"></i>
+                            </button>`;
+                    }
+                    refreshParticipationCounters();
+                } else {
+                    showToast(res ? res.message : "Error approving participation.", true);
+                }
+            },
+            error: function() {
+                showToast("Connection error approving participation.", true);
+            }
+        });
+    }
+
+    function rejectSellerParticipation(id, prodName) {
+        $.ajax({
+            url: '@Url.Action("RejectSellerSaleParticipation", "Admin")',
+            type: 'POST',
+            data: { id: id, reason: "Participation rejected by Admin." },
+            success: function(res) {
+                if (res && res.success) {
+                    showToast(res.message, true);
+                    const statusCell = document.getElementById(`part-status-cell-${id}`);
+                    const row = document.getElementById(`part-row-${id}`);
+                    const remarks = document.getElementById(`part-remarks-${id}`);
+                    const actions = document.getElementById(`part-actions-${id}`);
+
+                    if (row) row.setAttribute('data-status', 'rejected');
+                    if (statusCell) {
+                        statusCell.innerHTML = '<span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill"><i class="fa-solid fa-circle-xmark me-1"></i> Rejected</span>';
+                    }
+                    if (remarks) remarks.innerText = "Participation rejected by Admin.";
+                    if (actions) {
+                        actions.innerHTML = `
+                            <button type="button" class="btn btn-outline-success btn-sm px-2.5 py-1 rounded-3 fw-bold" onclick="approveSellerParticipation(${id}, '${prodName}')" title="Grant Admin Approval">
+                                <i class="fa-solid fa-check me-1"></i> Approve
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm px-2 py-1 rounded-3" onclick="openEditSellerDealModal(${id}, '${prodName}', 40000, 32999, 50)" title="Edit Pricing & Stock">
+                                <i class="fa-solid fa-sliders"></i>
+                            </button>`;
+                    }
+                    refreshParticipationCounters();
+                } else {
+                    showToast(res ? res.message : "Error rejecting participation.", true);
+                }
+            },
+            error: function() {
+                showToast("Connection error rejecting participation.", true);
+            }
+        });
+    }
+
+    function openEditSellerDealModal(id, prodName, regPrice, salePrice, stock) {
+        document.getElementById("modalEditSellerPartId").value = id;
+        document.getElementById("modalEditSellerProdName").innerText = prodName;
+        document.getElementById("modalEditSellerRegPrice").value = regPrice || 0;
+        document.getElementById("modalEditSellerSalePrice").value = salePrice || regPrice || 0;
+        document.getElementById("modalEditSellerStock").value = stock || 50;
+        document.getElementById("modalEditSellerParticipatingCheck").checked = true;
+        document.getElementById("modalEditSellerNotes").value = "Approved for Mega Sale featured spotlight.";
+
+        new bootstrap.Modal(document.getElementById('editSellerDealModal')).show();
+    }
+
+    function submitEditSellerDeal() {
+        const id = parseInt(document.getElementById("modalEditSellerPartId").value) || 0;
+        const salePrice = parseFloat(document.getElementById("modalEditSellerSalePrice").value) || 0;
+        const stock = parseInt(document.getElementById("modalEditSellerStock").value) || 0;
+        const isPart = document.getElementById("modalEditSellerParticipatingCheck").checked;
+        const notes = document.getElementById("modalEditSellerNotes").value;
+        const btn = document.getElementById("btnSubmitEditSellerDeal");
+
+        if (salePrice <= 0) {
+            showToast("Please enter a valid sale price (> 0).", true);
+            return;
+        }
+
+        if (btn) btn.disabled = true;
+
+        $.ajax({
+            url: '@Url.Action("ToggleSellerSaleParticipation", "Admin")',
+            type: 'POST',
+            data: {
+                id: id,
+                isParticipating: isPart,
+                salePrice: salePrice,
+                allocatedStock: stock,
+                notes: notes
+            },
+            success: function(res) {
+                if (btn) btn.disabled = false;
+                bootstrap.Modal.getInstance(document.getElementById('editSellerDealModal'))?.hide();
+                if (res && res.success) {
+                    showToast(res.message);
+                    setTimeout(() => { location.reload(); }, 600);
+                } else {
+                    showToast(res ? res.message : "Error saving deal.", true);
+                }
+            },
+            error: function() {
+                if (btn) btn.disabled = false;
+                showToast("Connection error saving deal.", true);
+            }
+        });
+    }
+
+    function onOptInProductSelect(selectEl) {
+        const opt = selectEl.options[selectEl.selectedIndex];
+        if (opt) {
+            const price = parseFloat(opt.getAttribute("data-price")) || 1000;
+            document.getElementById("modalOptInRegPrice").value = price;
+            document.getElementById("modalOptInSalePrice").value = Math.round(price * 0.8);
+        }
+    }
+
+    function openOptInDemoModal() {
+        new bootstrap.Modal(document.getElementById('sellerOptInDemoModal')).show();
+    }
+
+    function submitOptInDemo() {
+        const sel = document.getElementById("modalOptInProductSelect");
+        const prodId = parseInt(sel.value) || 1;
+        const opt = sel.options[sel.selectedIndex];
+        const prodName = opt ? opt.getAttribute("data-name") : "Product";
+        const salePrice = parseFloat(document.getElementById("modalOptInSalePrice").value) || 0;
+        const stock = parseInt(document.getElementById("modalOptInStock").value) || 20;
+
+        bootstrap.Modal.getInstance(document.getElementById('sellerOptInDemoModal'))?.hide();
+        showToast(`☑ Product '${prodName}' submitted for Mega Sale! (Pending Admin Review)`);
+        setTimeout(() => { location.reload(); }, 600);
+    }
+
+    function filterSellerParticipation(filter, btnEl) {
+        document.querySelectorAll('.seller-part-filter-btn').forEach(b => {
+            b.classList.remove('btn-warning', 'text-dark', 'fw-bold');
+            b.classList.add('btn-outline-secondary', 'text-light');
+        });
+        if (btnEl) {
+            btnEl.classList.remove('btn-outline-secondary', 'text-light');
+            btnEl.classList.add('btn-warning', 'text-dark', 'fw-bold');
+        }
+
+        const rows = document.querySelectorAll('.seller-part-row');
+        rows.forEach(r => {
+            const status = r.getAttribute('data-status');
+            const isPart = r.getAttribute('data-participating') === 'true';
+
+            if (filter === 'all') {
+                r.style.display = '';
+            } else if (filter === 'pending') {
+                r.style.display = (status === 'pending') ? '' : 'none';
+            } else if (filter === 'approved') {
+                r.style.display = (status === 'approved') ? '' : 'none';
+            } else if (filter === 'optedout') {
+                r.style.display = (status === 'optedout' || !isPart) ? '' : 'none';
+            }
+        });
+    }
+
+    function searchSellerParticipation(query) {
+        const q = (query || '').toLowerCase().trim();
+        const rows = document.querySelectorAll('.seller-part-row');
+        rows.forEach(r => {
+            const name = (r.getAttribute('data-name') || '').toLowerCase();
+            const shop = (r.getAttribute('data-shop') || '').toLowerCase();
+            const text = r.innerText.toLowerCase();
+            if (!q || name.includes(q) || shop.includes(q) || text.includes(q)) {
+                r.style.display = '';
+            } else {
+                r.style.display = 'none';
+            }
+        });
+    }
+
+    function refreshParticipationCounters() {
+        const rows = document.querySelectorAll('.seller-part-row');
+        let total = rows.length;
+        let approved = 0;
+        let pending = 0;
+        let optedOut = 0;
+
+        rows.forEach(r => {
+            const s = r.getAttribute('data-status');
+            const isP = r.getAttribute('data-participating') === 'true';
+            if (s === 'approved') approved++;
+            else if (s === 'pending') pending++;
+            else if (s === 'optedout' || !isP) optedOut++;
+        });
+
+        const cTotal = document.getElementById("countPartTotal");
+        const cApp = document.getElementById("countPartApproved");
+        const cPend = document.getElementById("countPartPending");
+        const cOpt = document.getElementById("countPartOptedOut");
+
+        if (cTotal) cTotal.innerText = total;
+        if (cApp) cApp.innerText = approved;
+        if (cPend) cPend.innerText = pending;
+        if (cOpt) cOpt.innerText = optedOut;
+    }
+
+    function refreshSellerParticipations() {
+        $.ajax({
+            url: '@Url.Action("GetSellerSaleParticipations", "Admin")',
+            type: 'GET',
+            success: function(res) {
+                showToast("Seller participation list refreshed! 🏪");
+                refreshParticipationCounters();
+            },
+            error: function() {
+                showToast("Connection error refreshing participations.", true);
+            }
+        });
+    }
 
     // ==========================================
     // TOAST NOTIFICATIONS

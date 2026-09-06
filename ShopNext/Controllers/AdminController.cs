@@ -620,7 +620,8 @@ namespace ShopNext.Controllers
                 CodAbuseList = await _codAbuseService.GetCodAbuseAnalyticsAsync(),
                 SaleCampaignsList = await _saleCampaignService.GetAllCampaignsAsync(),
                 FlashSalesList = await _flashSaleService.GetAllFlashSalesAsync(),
-                InventoryProtection = await _inventoryProtectionService.GetDashboardSummaryAsync()
+                InventoryProtection = await _inventoryProtectionService.GetDashboardSummaryAsync(),
+                SellerSaleParticipationsList = await _saleCampaignService.GetAllSellerSaleParticipationsAsync()
             };
 
             ViewBag.PendingShops = pendingShops;
@@ -4474,6 +4475,99 @@ namespace ShopNext.Controllers
 
             var summary = await _inventoryProtectionService.GetDashboardSummaryAsync();
             return Json(new { success = true, data = summary });
+        }
+
+        #endregion
+
+        #region Point 55: Seller Sale Participation & Admin Approval Endpoints
+
+        // ==========================================
+        // POINT 55: SELLER SALE PARTICIPATION & ADMIN APPROVAL
+        // Sellers opt-in products (Samsung Mobile ☑, Laptop ☐, Headphone ☑); Admin approves
+        // ==========================================
+
+        // POST: /Admin/ApproveSellerSaleParticipation
+        [HttpPost]
+        public async Task<IActionResult> ApproveSellerSaleParticipation(int id, string? remarks)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            var item = await _saleCampaignService.ApproveSellerParticipationAsync(id, remarks, User.Identity?.Name ?? "Super Admin");
+            if (item == null)
+            {
+                return Json(new { success = false, message = "Participation request not found." });
+            }
+
+            return Json(new
+            {
+                success = true,
+                message = $"✅ Approved '{item.ProductName}' from {item.ShopName} for {item.CampaignName}!",
+                data = item
+            });
+        }
+
+        // POST: /Admin/RejectSellerSaleParticipation
+        [HttpPost]
+        public async Task<IActionResult> RejectSellerSaleParticipation(int id, string? reason)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            var item = await _saleCampaignService.RejectSellerParticipationAsync(id, reason, User.Identity?.Name ?? "Super Admin");
+            if (item == null)
+            {
+                return Json(new { success = false, message = "Participation request not found." });
+            }
+
+            return Json(new
+            {
+                success = true,
+                message = $"❌ Rejected sale participation for '{item.ProductName}'.",
+                data = item
+            });
+        }
+
+        // POST: /Admin/ToggleSellerSaleParticipation
+        [HttpPost]
+        public async Task<IActionResult> ToggleSellerSaleParticipation(int id, bool isParticipating, decimal? salePrice, int? allocatedStock, string? notes)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            var item = await _saleCampaignService.UpdateSellerProductParticipationAsync(id, isParticipating, salePrice, allocatedStock, notes);
+            if (item == null)
+            {
+                return Json(new { success = false, message = "Participation item not found." });
+            }
+
+            return Json(new
+            {
+                success = true,
+                message = isParticipating
+                    ? $"☑ '{item.ProductName}' set to participate in {item.CampaignName}."
+                    : $"☐ '{item.ProductName}' opted out from {item.CampaignName}.",
+                data = item
+            });
+        }
+
+        // GET: /Admin/GetSellerSaleParticipations
+        [HttpGet]
+        public async Task<IActionResult> GetSellerSaleParticipations(int? campaignId, int? shopId)
+        {
+            if (!IsAdminLoggedIn())
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
+            }
+
+            var list = await _saleCampaignService.GetAllSellerSaleParticipationsAsync(campaignId, shopId);
+            return Json(new { success = true, data = list });
         }
 
         #endregion
