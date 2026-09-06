@@ -31,56 +31,65 @@ namespace ShopNext.Controllers
         // GET: /Home/Index
         public async Task<IActionResult> Index(decimal? lat, decimal? lng, string? search)
         {
-            var shops = await _service.GetAllShopsAsync();
-            var approvedShops = shops.Where(s => s.IsApproved).ToList();
-
-            if (!string.IsNullOrWhiteSpace(search))
+            try
             {
-                var query = search.Trim().ToLower();
-                approvedShops = approvedShops.Where(s => 
-                    s.ShopName.ToLower().Contains(query) || 
-                    s.Category.ToLower().Contains(query) ||
-                    (s.City != null && s.City.ToLower().Contains(query))
-                ).ToList();
-                ViewBag.SearchQuery = search;
-            }
+                var shops = await _service.GetAllShopsAsync();
+                var approvedShops = shops.Where(s => s.IsApproved).ToList();
 
-            var allProducts = (await _service.GetAllProductsAsync()).ToList();
-
-            var shopDtos = approvedShops.Select(s =>
-            {
-                var sProducts = allProducts.Where(p => p.ShopId == s.Id).ToList();
-
-                double dist = -1.0;
-                if (lat.HasValue && lng.HasValue)
+                if (!string.IsNullOrWhiteSpace(search))
                 {
-                    dist = CalculateDistance((double)lat.Value, (double)lng.Value, (double)s.Latitude, (double)s.Longitude);
+                    var query = search.Trim().ToLower();
+                    approvedShops = approvedShops.Where(s => 
+                        s.ShopName.ToLower().Contains(query) || 
+                        s.Category.ToLower().Contains(query) ||
+                        (s.City != null && s.City.ToLower().Contains(query))
+                    ).ToList();
+                    ViewBag.SearchQuery = search;
                 }
 
-                return new ShopWithDistanceDto
+                var allProducts = (await _service.GetAllProductsAsync()).ToList();
+
+                var shopDtos = approvedShops.Select(s =>
                 {
-                    Shop = s,
-                    Distance = dist,
-                    Rating = 4.8,
-                    TotalProducts = sProducts.Count,
-                    TotalOrders = 45,
-                    Location = !string.IsNullOrWhiteSpace(s.City) ? s.City : (!string.IsNullOrWhiteSpace(s.Address) ? s.Address : "Patna"),
-                    ReviewCount = 18
-                };
-            }).ToList();
+                    var sProducts = allProducts.Where(p => p.ShopId == s.Id).ToList();
 
-            if (lat.HasValue && lng.HasValue)
-            {
-                shopDtos = shopDtos.OrderBy(x => x.Distance).ToList();
-                ViewBag.Latitude = lat.Value;
-                ViewBag.Longitude = lng.Value;
+                    double dist = -1.0;
+                    if (lat.HasValue && lng.HasValue)
+                    {
+                        dist = CalculateDistance((double)lat.Value, (double)lng.Value, (double)s.Latitude, (double)s.Longitude);
+                    }
+
+                    return new ShopWithDistanceDto
+                    {
+                        Shop = s,
+                        Distance = dist,
+                        Rating = 4.8,
+                        TotalProducts = sProducts.Count,
+                        TotalOrders = 45,
+                        Location = !string.IsNullOrWhiteSpace(s.City) ? s.City : (!string.IsNullOrWhiteSpace(s.Address) ? s.Address : "Patna"),
+                        ReviewCount = 18
+                    };
+                }).ToList();
+
+                if (lat.HasValue && lng.HasValue)
+                {
+                    shopDtos = shopDtos.OrderBy(x => x.Distance).ToList();
+                    ViewBag.Latitude = lat.Value;
+                    ViewBag.Longitude = lng.Value;
+                }
+
+                ViewBag.SortedShops = shopDtos;
+
+                // Point 41: Active promotional offers for "🔥 Today's Deals"
+                var activeOffers = await _service.GetActiveOffersAsync();
+                ViewBag.TodaysDeals = activeOffers.ToList();
             }
-
-            ViewBag.SortedShops = shopDtos;
-
-            // Point 41: Active promotional offers for "🔥 Today's Deals"
-            var activeOffers = await _service.GetActiveOffersAsync();
-            ViewBag.TodaysDeals = activeOffers.ToList();
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading Home/Index data");
+                ViewBag.SortedShops = new List<ShopWithDistanceDto>();
+                ViewBag.TodaysDeals = new List<Offer>();
+            }
 
             return View();
         }

@@ -14,10 +14,16 @@ namespace ShopNext.Data
         {
             try
             {
+                if (!await context.Database.CanConnectAsync())
+                {
+                    System.Diagnostics.Debug.WriteLine("DbInitializer: Database connection could not be established. Skipping seed.");
+                    return;
+                }
+
                 // 1. Ensure basic schema is established
                 await context.Database.EnsureCreatedAsync();
 
-                // 2. Safe Column Self-Healer: Add any newly introduced columns to existing SQL Server tables
+                // 2. Safe Column Self-Healer: Add any newly introduced columns to existing SQL Server tables in a single batch
                 await ApplySafeSchemaMigrationsAsync(context);
 
                 // 3. Seed Core Default Master Records
@@ -31,126 +37,113 @@ namespace ShopNext.Data
 
         private static async Task ApplySafeSchemaMigrationsAsync(ShopNextDbContext context)
         {
-            var columnMigrationQueries = new[]
+            try
             {
-                // Users Table Migrations
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'DeviceFingerprintHash') ALTER TABLE Users ADD DeviceFingerprintHash NVARCHAR(255) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'IsAccountSuspended') ALTER TABLE Users ADD IsAccountSuspended BIT NOT NULL DEFAULT 0;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'IsReturnDisabled') ALTER TABLE Users ADD IsReturnDisabled BIT NOT NULL DEFAULT 0;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'RegistrationIpMasked') ALTER TABLE Users ADD RegistrationIpMasked NVARCHAR(100) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'RestrictFirstOrderCoupons') ALTER TABLE Users ADD RestrictFirstOrderCoupons BIT NOT NULL DEFAULT 0;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'RestrictionAppliedDate') ALTER TABLE Users ADD RestrictionAppliedDate DATETIME2 NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'RestrictionLevel') ALTER TABLE Users ADD RestrictionLevel NVARCHAR(50) NOT NULL DEFAULT 'Normal';",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'RestrictionReason') ALTER TABLE Users ADD RestrictionReason NVARCHAR(MAX) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'SuspendedUntilDate') ALTER TABLE Users ADD SuspendedUntilDate DATETIME2 NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'RiskScore') ALTER TABLE Users ADD RiskScore INT NOT NULL DEFAULT 15;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'RiskLevel') ALTER TABLE Users ADD RiskLevel NVARCHAR(50) NOT NULL DEFAULT 'Low';",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'RiskFactorsJson') ALTER TABLE Users ADD RiskFactorsJson NVARCHAR(MAX) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'IsCodDisabled') ALTER TABLE Users ADD IsCodDisabled BIT NOT NULL DEFAULT 0;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'IsFlaggedForReview') ALTER TABLE Users ADD IsFlaggedForReview BIT NOT NULL DEFAULT 0;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'RiskLastEvaluatedDate') ALTER TABLE Users ADD RiskLastEvaluatedDate DATETIME2 NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'ProfilePhoto') ALTER TABLE Users ADD ProfilePhoto NVARCHAR(MAX) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'Gender') ALTER TABLE Users ADD Gender NVARCHAR(50) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'DateOfBirth') ALTER TABLE Users ADD DateOfBirth DATETIME2 NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'CreatedAt') ALTER TABLE Users ADD CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE();",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'CreatedDate') ALTER TABLE Users ADD CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE();",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'UpdatedDate') ALTER TABLE Users ADD UpdatedDate DATETIME2 NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'IsActive') ALTER TABLE Users ADD IsActive BIT NOT NULL DEFAULT 1;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'IsDeleted') ALTER TABLE Users ADD IsDeleted BIT NOT NULL DEFAULT 0;",
+                string batchScript = @"
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'DeviceFingerprintHash') ALTER TABLE Users ADD DeviceFingerprintHash NVARCHAR(255) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'IsAccountSuspended') ALTER TABLE Users ADD IsAccountSuspended BIT NOT NULL DEFAULT 0;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'IsReturnDisabled') ALTER TABLE Users ADD IsReturnDisabled BIT NOT NULL DEFAULT 0;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'RegistrationIpMasked') ALTER TABLE Users ADD RegistrationIpMasked NVARCHAR(100) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'RestrictFirstOrderCoupons') ALTER TABLE Users ADD RestrictFirstOrderCoupons BIT NOT NULL DEFAULT 0;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'RestrictionAppliedDate') ALTER TABLE Users ADD RestrictionAppliedDate DATETIME2 NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'RestrictionLevel') ALTER TABLE Users ADD RestrictionLevel NVARCHAR(50) NOT NULL DEFAULT 'Normal';
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'RestrictionReason') ALTER TABLE Users ADD RestrictionReason NVARCHAR(MAX) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'SuspendedUntilDate') ALTER TABLE Users ADD SuspendedUntilDate DATETIME2 NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'RiskScore') ALTER TABLE Users ADD RiskScore INT NOT NULL DEFAULT 15;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'RiskLevel') ALTER TABLE Users ADD RiskLevel NVARCHAR(50) NOT NULL DEFAULT 'Low';
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'RiskFactorsJson') ALTER TABLE Users ADD RiskFactorsJson NVARCHAR(MAX) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'IsCodDisabled') ALTER TABLE Users ADD IsCodDisabled BIT NOT NULL DEFAULT 0;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'IsFlaggedForReview') ALTER TABLE Users ADD IsFlaggedForReview BIT NOT NULL DEFAULT 0;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'RiskLastEvaluatedDate') ALTER TABLE Users ADD RiskLastEvaluatedDate DATETIME2 NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'ProfilePhoto') ALTER TABLE Users ADD ProfilePhoto NVARCHAR(MAX) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'Gender') ALTER TABLE Users ADD Gender NVARCHAR(50) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'DateOfBirth') ALTER TABLE Users ADD DateOfBirth DATETIME2 NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'CreatedAt') ALTER TABLE Users ADD CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE();
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'CreatedDate') ALTER TABLE Users ADD CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE();
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'UpdatedDate') ALTER TABLE Users ADD UpdatedDate DATETIME2 NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'IsActive') ALTER TABLE Users ADD IsActive BIT NOT NULL DEFAULT 1;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'IsDeleted') ALTER TABLE Users ADD IsDeleted BIT NOT NULL DEFAULT 0;
 
-                // Orders Table Migrations
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'DeliveredByRiderName') ALTER TABLE Orders ADD DeliveredByRiderName NVARCHAR(100) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'DeliveryOtp') ALTER TABLE Orders ADD DeliveryOtp NVARCHAR(10) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'IsOtpVerified') ALTER TABLE Orders ADD IsOtpVerified BIT NOT NULL DEFAULT 0;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'OtpVerifiedDate') ALTER TABLE Orders ADD OtpVerifiedDate DATETIME2 NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'ReturnStatus') ALTER TABLE Orders ADD ReturnStatus NVARCHAR(50) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'ReturnVerificationNotes') ALTER TABLE Orders ADD ReturnVerificationNotes NVARCHAR(MAX) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'ReturnRequestedDate') ALTER TABLE Orders ADD ReturnRequestedDate DATETIME2 NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'ReturnVerifiedDate') ALTER TABLE Orders ADD ReturnVerifiedDate DATETIME2 NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'ShopName') ALTER TABLE Orders ADD ShopName NVARCHAR(200) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'PaymentMode') ALTER TABLE Orders ADD PaymentMode NVARCHAR(50) NOT NULL DEFAULT 'COD';",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'PaymentStatus') ALTER TABLE Orders ADD PaymentStatus NVARCHAR(50) NOT NULL DEFAULT 'Pending';",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'CancelReason') ALTER TABLE Orders ADD CancelReason NVARCHAR(500) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'ReturnReason') ALTER TABLE Orders ADD ReturnReason NVARCHAR(500) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'DeliveredDate') ALTER TABLE Orders ADD DeliveredDate DATETIME2 NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'DeliveryAddress') ALTER TABLE Orders ADD DeliveryAddress NVARCHAR(MAX) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'CreatedDate') ALTER TABLE Orders ADD CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE();",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'UpdatedDate') ALTER TABLE Orders ADD UpdatedDate DATETIME2 NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'IsActive') ALTER TABLE Orders ADD IsActive BIT NOT NULL DEFAULT 1;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'IsDeleted') ALTER TABLE Orders ADD IsDeleted BIT NOT NULL DEFAULT 0;",
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'DeliveredByRiderName') ALTER TABLE Orders ADD DeliveredByRiderName NVARCHAR(100) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'DeliveryOtp') ALTER TABLE Orders ADD DeliveryOtp NVARCHAR(10) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'IsOtpVerified') ALTER TABLE Orders ADD IsOtpVerified BIT NOT NULL DEFAULT 0;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'OtpVerifiedDate') ALTER TABLE Orders ADD OtpVerifiedDate DATETIME2 NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'ReturnStatus') ALTER TABLE Orders ADD ReturnStatus NVARCHAR(50) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'ReturnVerificationNotes') ALTER TABLE Orders ADD ReturnVerificationNotes NVARCHAR(MAX) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'ReturnRequestedDate') ALTER TABLE Orders ADD ReturnRequestedDate DATETIME2 NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'ReturnVerifiedDate') ALTER TABLE Orders ADD ReturnVerifiedDate DATETIME2 NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'ShopName') ALTER TABLE Orders ADD ShopName NVARCHAR(200) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'PaymentMode') ALTER TABLE Orders ADD PaymentMode NVARCHAR(50) NOT NULL DEFAULT 'COD';
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'PaymentStatus') ALTER TABLE Orders ADD PaymentStatus NVARCHAR(50) NOT NULL DEFAULT 'Pending';
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'CancelReason') ALTER TABLE Orders ADD CancelReason NVARCHAR(500) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'ReturnReason') ALTER TABLE Orders ADD ReturnReason NVARCHAR(500) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'DeliveredDate') ALTER TABLE Orders ADD DeliveredDate DATETIME2 NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'DeliveryAddress') ALTER TABLE Orders ADD DeliveryAddress NVARCHAR(MAX) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'CreatedDate') ALTER TABLE Orders ADD CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE();
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'UpdatedDate') ALTER TABLE Orders ADD UpdatedDate DATETIME2 NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'IsActive') ALTER TABLE Orders ADD IsActive BIT NOT NULL DEFAULT 1;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'IsDeleted') ALTER TABLE Orders ADD IsDeleted BIT NOT NULL DEFAULT 0;
 
-                // Products Table Migrations
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'ImageFront') ALTER TABLE Products ADD ImageFront NVARCHAR(MAX) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'ImageBack') ALTER TABLE Products ADD ImageBack NVARCHAR(MAX) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'ImageSide') ALTER TABLE Products ADD ImageSide NVARCHAR(MAX) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'ImagePackaging') ALTER TABLE Products ADD ImagePackaging NVARCHAR(MAX) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'HasVariants') ALTER TABLE Products ADD HasVariants BIT NOT NULL DEFAULT 0;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'IsApproved') ALTER TABLE Products ADD IsApproved BIT NOT NULL DEFAULT 1;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'ApprovalStatus') ALTER TABLE Products ADD ApprovalStatus NVARCHAR(50) NOT NULL DEFAULT 'Approved';",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'RejectionReason') ALTER TABLE Products ADD RejectionReason NVARCHAR(MAX) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'ApprovedDate') ALTER TABLE Products ADD ApprovedDate DATETIME2 NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'Mrp') ALTER TABLE Products ADD Mrp DECIMAL(18,2) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'Discount') ALTER TABLE Products ADD Discount DECIMAL(18,2) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'Sku') ALTER TABLE Products ADD Sku NVARCHAR(100) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'StockStatus') ALTER TABLE Products ADD StockStatus NVARCHAR(50) NOT NULL DEFAULT 'InStock';",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'CreatedDate') ALTER TABLE Products ADD CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE();",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'UpdatedDate') ALTER TABLE Products ADD UpdatedDate DATETIME2 NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'IsActive') ALTER TABLE Products ADD IsActive BIT NOT NULL DEFAULT 1;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'IsDeleted') ALTER TABLE Products ADD IsDeleted BIT NOT NULL DEFAULT 0;",
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'ImageFront') ALTER TABLE Products ADD ImageFront NVARCHAR(MAX) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'ImageBack') ALTER TABLE Products ADD ImageBack NVARCHAR(MAX) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'ImageSide') ALTER TABLE Products ADD ImageSide NVARCHAR(MAX) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'ImagePackaging') ALTER TABLE Products ADD ImagePackaging NVARCHAR(MAX) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'HasVariants') ALTER TABLE Products ADD HasVariants BIT NOT NULL DEFAULT 0;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'IsApproved') ALTER TABLE Products ADD IsApproved BIT NOT NULL DEFAULT 1;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'ApprovalStatus') ALTER TABLE Products ADD ApprovalStatus NVARCHAR(50) NOT NULL DEFAULT 'Approved';
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'RejectionReason') ALTER TABLE Products ADD RejectionReason NVARCHAR(MAX) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'ApprovedDate') ALTER TABLE Products ADD ApprovedDate DATETIME2 NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'Mrp') ALTER TABLE Products ADD Mrp DECIMAL(18,2) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'Discount') ALTER TABLE Products ADD Discount DECIMAL(18,2) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'Sku') ALTER TABLE Products ADD Sku NVARCHAR(100) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'StockStatus') ALTER TABLE Products ADD StockStatus NVARCHAR(50) NOT NULL DEFAULT 'InStock';
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'CreatedDate') ALTER TABLE Products ADD CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE();
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'UpdatedDate') ALTER TABLE Products ADD UpdatedDate DATETIME2 NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'IsActive') ALTER TABLE Products ADD IsActive BIT NOT NULL DEFAULT 1;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'IsDeleted') ALTER TABLE Products ADD IsDeleted BIT NOT NULL DEFAULT 0;
 
-                // Shops Table Migrations
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Shops') AND name = 'OpeningTime') ALTER TABLE Shops ADD OpeningTime NVARCHAR(50) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Shops') AND name = 'ClosingTime') ALTER TABLE Shops ADD ClosingTime NVARCHAR(50) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Shops') AND name = 'IsApproved') ALTER TABLE Shops ADD IsApproved BIT NOT NULL DEFAULT 1;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Shops') AND name = 'Rating') ALTER TABLE Shops ADD Rating FLOAT NOT NULL DEFAULT 4.8;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Shops') AND name = 'ImageUrl') ALTER TABLE Shops ADD ImageUrl NVARCHAR(MAX) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Shops') AND name = 'BannerUrl') ALTER TABLE Shops ADD BannerUrl NVARCHAR(MAX) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Shops') AND name = 'GstNumber') ALTER TABLE Shops ADD GstNumber NVARCHAR(50) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Shops') AND name = 'PanNumber') ALTER TABLE Shops ADD PanNumber NVARCHAR(50) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Shops') AND name = 'Latitude') ALTER TABLE Shops ADD Latitude DECIMAL(18,8) NOT NULL DEFAULT 25.5941;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Shops') AND name = 'Longitude') ALTER TABLE Shops ADD Longitude DECIMAL(18,8) NOT NULL DEFAULT 85.1376;",
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Shops') AND name = 'OpeningTime') ALTER TABLE Shops ADD OpeningTime NVARCHAR(50) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Shops') AND name = 'ClosingTime') ALTER TABLE Shops ADD ClosingTime NVARCHAR(50) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Shops') AND name = 'IsApproved') ALTER TABLE Shops ADD IsApproved BIT NOT NULL DEFAULT 1;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Shops') AND name = 'Rating') ALTER TABLE Shops ADD Rating FLOAT NOT NULL DEFAULT 4.8;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Shops') AND name = 'ImageUrl') ALTER TABLE Shops ADD ImageUrl NVARCHAR(MAX) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Shops') AND name = 'BannerUrl') ALTER TABLE Shops ADD BannerUrl NVARCHAR(MAX) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Shops') AND name = 'GstNumber') ALTER TABLE Shops ADD GstNumber NVARCHAR(50) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Shops') AND name = 'PanNumber') ALTER TABLE Shops ADD PanNumber NVARCHAR(50) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Shops') AND name = 'Latitude') ALTER TABLE Shops ADD Latitude DECIMAL(18,8) NOT NULL DEFAULT 25.5941;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Shops') AND name = 'Longitude') ALTER TABLE Shops ADD Longitude DECIMAL(18,8) NOT NULL DEFAULT 85.1376;
 
-                // Riders Table Migrations
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Riders') AND name = 'VehicleType') ALTER TABLE Riders ADD VehicleType NVARCHAR(50) NOT NULL DEFAULT 'Bike';",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Riders') AND name = 'VehicleNumber') ALTER TABLE Riders ADD VehicleNumber NVARCHAR(50) NOT NULL DEFAULT 'BR-01-AB-1234';",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Riders') AND name = 'IsOnline') ALTER TABLE Riders ADD IsOnline BIT NOT NULL DEFAULT 1;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Riders') AND name = 'CurrentLatitude') ALTER TABLE Riders ADD CurrentLatitude DECIMAL(18,8) NOT NULL DEFAULT 25.5941;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Riders') AND name = 'CurrentLongitude') ALTER TABLE Riders ADD CurrentLongitude DECIMAL(18,8) NOT NULL DEFAULT 85.1376;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Riders') AND name = 'TotalDeliveries') ALTER TABLE Riders ADD TotalDeliveries INT NOT NULL DEFAULT 50;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Riders') AND name = 'Rating') ALTER TABLE Riders ADD Rating FLOAT NOT NULL DEFAULT 4.9;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Riders') AND name = 'Password') ALTER TABLE Riders ADD Password NVARCHAR(255) NULL;",
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Riders') AND name = 'VehicleType') ALTER TABLE Riders ADD VehicleType NVARCHAR(50) NOT NULL DEFAULT 'Bike';
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Riders') AND name = 'VehicleNumber') ALTER TABLE Riders ADD VehicleNumber NVARCHAR(50) NOT NULL DEFAULT 'BR-01-AB-1234';
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Riders') AND name = 'IsOnline') ALTER TABLE Riders ADD IsOnline BIT NOT NULL DEFAULT 1;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Riders') AND name = 'CurrentLatitude') ALTER TABLE Riders ADD CurrentLatitude DECIMAL(18,8) NOT NULL DEFAULT 25.5941;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Riders') AND name = 'CurrentLongitude') ALTER TABLE Riders ADD CurrentLongitude DECIMAL(18,8) NOT NULL DEFAULT 85.1376;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Riders') AND name = 'TotalDeliveries') ALTER TABLE Riders ADD TotalDeliveries INT NOT NULL DEFAULT 50;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Riders') AND name = 'Rating') ALTER TABLE Riders ADD Rating FLOAT NOT NULL DEFAULT 4.9;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Riders') AND name = 'Password') ALTER TABLE Riders ADD Password NVARCHAR(255) NULL;
 
-                // Reviews Table Migrations
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Reviews') AND name = 'IsHidden') ALTER TABLE Reviews ADD IsHidden BIT NOT NULL DEFAULT 0;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Reviews') AND name = 'ModerationReason') ALTER TABLE Reviews ADD ModerationReason NVARCHAR(500) NULL;",
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Reviews') AND name = 'IsHidden') ALTER TABLE Reviews ADD IsHidden BIT NOT NULL DEFAULT 0;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Reviews') AND name = 'ModerationReason') ALTER TABLE Reviews ADD ModerationReason NVARCHAR(500) NULL;
 
-                // Complaints Table Migrations
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Complaints') AND name = 'TicketNumber') ALTER TABLE Complaints ADD TicketNumber NVARCHAR(50) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Complaints') AND name = 'Subject') ALTER TABLE Complaints ADD Subject NVARCHAR(200) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Complaints') AND name = 'EscalationLevel') ALTER TABLE Complaints ADD EscalationLevel INT NOT NULL DEFAULT 1;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Complaints') AND name = 'EscalationStage') ALTER TABLE Complaints ADD EscalationStage NVARCHAR(50) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Complaints') AND name = 'IsHighValueOrder') ALTER TABLE Complaints ADD IsHighValueOrder BIT NOT NULL DEFAULT 0;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Complaints') AND name = 'OrderAmount') ALTER TABLE Complaints ADD OrderAmount DECIMAL(18,2) NOT NULL DEFAULT 0;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Complaints') AND name = 'EscalationReason') ALTER TABLE Complaints ADD EscalationReason NVARCHAR(MAX) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Complaints') AND name = 'ComplainantRole') ALTER TABLE Complaints ADD ComplainantRole NVARCHAR(50) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Complaints') AND name = 'ReasonCategory') ALTER TABLE Complaints ADD ReasonCategory NVARCHAR(100) NULL;",
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Complaints') AND name = 'TicketNumber') ALTER TABLE Complaints ADD TicketNumber NVARCHAR(50) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Complaints') AND name = 'Subject') ALTER TABLE Complaints ADD Subject NVARCHAR(200) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Complaints') AND name = 'EscalationLevel') ALTER TABLE Complaints ADD EscalationLevel INT NOT NULL DEFAULT 1;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Complaints') AND name = 'EscalationStage') ALTER TABLE Complaints ADD EscalationStage NVARCHAR(50) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Complaints') AND name = 'IsHighValueOrder') ALTER TABLE Complaints ADD IsHighValueOrder BIT NOT NULL DEFAULT 0;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Complaints') AND name = 'OrderAmount') ALTER TABLE Complaints ADD OrderAmount DECIMAL(18,2) NOT NULL DEFAULT 0;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Complaints') AND name = 'EscalationReason') ALTER TABLE Complaints ADD EscalationReason NVARCHAR(MAX) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Complaints') AND name = 'ComplainantRole') ALTER TABLE Complaints ADD ComplainantRole NVARCHAR(50) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Complaints') AND name = 'ReasonCategory') ALTER TABLE Complaints ADD ReasonCategory NVARCHAR(100) NULL;
 
-                // AuditLogs Table Migrations
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AuditLogs') AND name = 'EntityName') ALTER TABLE AuditLogs ADD EntityName NVARCHAR(100) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AuditLogs') AND name = 'UserRole') ALTER TABLE AuditLogs ADD UserRole NVARCHAR(50) NULL;",
-                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AuditLogs') AND name = 'UserName') ALTER TABLE AuditLogs ADD UserName NVARCHAR(100) NULL;"
-            };
-
-            foreach (var q in columnMigrationQueries)
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AuditLogs') AND name = 'EntityName') ALTER TABLE AuditLogs ADD EntityName NVARCHAR(100) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AuditLogs') AND name = 'UserRole') ALTER TABLE AuditLogs ADD UserRole NVARCHAR(50) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AuditLogs') AND name = 'UserName') ALTER TABLE AuditLogs ADD UserName NVARCHAR(100) NULL;
+                ";
+                await context.Database.ExecuteSqlRawAsync(batchScript);
+            }
+            catch (Exception ex)
             {
-                try
-                {
-                    await context.Database.ExecuteSqlRawAsync(q);
-                }
-                catch
-                {
-                    // Ignore already migrated columns
-                }
+                System.Diagnostics.Debug.WriteLine($"ApplySafeSchemaMigrationsAsync warning: {ex.Message}");
             }
         }
 
