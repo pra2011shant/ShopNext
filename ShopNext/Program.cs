@@ -22,7 +22,13 @@ builder.Services.AddAntiforgery(options =>
 
 // 1. SQL Server connection string registration
 builder.Services.AddDbContext<ShopNextDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), sqlOptions =>
+    {
+        sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
+            errorNumbersToAdd: null);
+    }));
 
 // 2. Register Services (SOLID - Dependency Inversion & Interface Segregation)
 builder.Services.AddScoped<ShopNextService>();
