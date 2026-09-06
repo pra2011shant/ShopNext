@@ -14,15 +14,18 @@ namespace ShopNext.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly IShopNextService _service;
         private readonly IAdvancedEcommerceService _advancedService;
+        private readonly ILocalizationService _locService;
 
         public HomeController(
             ILogger<HomeController> logger, 
             IShopNextService service,
-            IAdvancedEcommerceService advancedService)
+            IAdvancedEcommerceService advancedService,
+            ILocalizationService locService)
         {
             _logger = logger;
             _service = service;
             _advancedService = advancedService;
+            _locService = locService;
         }
 
         // GET: /Home/Index
@@ -835,6 +838,60 @@ namespace ShopNext.Controllers
         {
             var result = await _advancedService.CheckPincodeServiceabilityAsync(pincode);
             return Json(new { success = true, data = result });
+        }
+
+        // ==========================================
+        // POINT 173: MULTI-LANGUAGE & LOCALIZATION
+        // ==========================================
+        [HttpGet]
+        public IActionResult SetLanguage(string culture, string? returnUrl = null)
+        {
+            if (string.IsNullOrWhiteSpace(culture)) culture = "en";
+
+            Response.Cookies.Append("ShopNext_Language", culture, new Microsoft.AspNetCore.Http.CookieOptions
+            {
+                Expires = DateTimeOffset.Now.AddYears(1),
+                HttpOnly = false,
+                SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax,
+                IsEssential = true
+            });
+
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public IActionResult SetLanguageJson(string culture)
+        {
+            if (string.IsNullOrWhiteSpace(culture)) culture = "en";
+
+            Response.Cookies.Append("ShopNext_Language", culture, new Microsoft.AspNetCore.Http.CookieOptions
+            {
+                Expires = DateTimeOffset.Now.AddYears(1),
+                HttpOnly = false,
+                SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax,
+                IsEssential = true
+            });
+
+            return Json(new { success = true, culture = culture });
+        }
+
+        [HttpGet]
+        public IActionResult GetSupportedLanguagesJson()
+        {
+            var list = _locService.GetSupportedLanguages();
+            return Json(new { success = true, data = list });
+        }
+
+        [HttpGet]
+        public IActionResult GetTranslationsJson(string culture)
+        {
+            var dict = _locService.GetAllStringsForCulture(culture);
+            return Json(new { success = true, culture = culture, data = dict });
         }
 
         private int GetCurrentCustomerId()

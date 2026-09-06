@@ -38,23 +38,23 @@
                 <div class="collapse navbar-collapse" id="navbarContent">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index" data-i18n="Nav_Home">
                                 <i class="fa-solid fa-house me-1 text-primary"></i> Home
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Products">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Products" data-i18n="Nav_Marketplace">
                                 <i class="fa-solid fa-basket-shopping me-1 text-info"></i> Marketplace
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index" asp-fragment="shopsGrid">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index" asp-fragment="shopsGrid" data-i18n="Nav_Shops">
                                 <i class="fa-solid fa-store me-1 text-warning"></i> Explore Shops
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link position-relative" asp-area="" asp-controller="Home" asp-action="Cart" id="layoutCartLink">
-                                <i class="fa-solid fa-cart-shopping me-1 text-success"></i> Cart 
+                                <i class="fa-solid fa-cart-shopping me-1 text-success"></i> <span data-i18n="Nav_Cart">Cart</span> 
                                 <span class="badge bg-danger rounded-pill ms-1" id="navCartCount" style="display: none;">0</span>
                             </a>
                         </li>
@@ -63,12 +63,12 @@
                         @if (isCustLoggedIn)
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Customer" asp-action="MyOrders">
+                                <a class="nav-link" asp-controller="Customer" asp-action="MyOrders" data-i18n="Nav_MyOrders">
                                     <i class="fa-solid fa-bag-shopping me-1 text-info"></i> My Orders
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Customer" asp-action="Account" asp-route-tab="wishlist">
+                                <a class="nav-link" asp-controller="Customer" asp-action="Account" asp-route-tab="wishlist" data-i18n="Nav_Wishlist">
                                     <i class="fa-solid fa-heart me-1 text-danger"></i> Wishlist
                                 </a>
                             </li>
@@ -78,12 +78,12 @@
                         @if (isAdminLoggedIn)
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-warning fw-semibold" asp-controller="Admin" asp-action="Dashboard">
+                                <a class="nav-link text-warning fw-semibold" asp-controller="Admin" asp-action="Dashboard" data-i18n="Nav_AdminConsole">
                                     <i class="fa-solid fa-sliders me-1"></i> Admin Console
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-light" asp-controller="DatabaseSetup" asp-action="Index">
+                                <a class="nav-link text-light" asp-controller="DatabaseSetup" asp-action="Index" data-i18n="Nav_SqlHub">
                                     <i class="fa-solid fa-database me-1 text-info"></i> SQL Hub
                                 </a>
                             </li>
@@ -93,12 +93,12 @@
                         @if (isShopLoggedIn)
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-info" asp-controller="Vendor" asp-action="Products">
+                                <a class="nav-link text-info" asp-controller="Vendor" asp-action="Products" data-i18n="Nav_MyProducts">
                                     <i class="fa-solid fa-boxes-stacked me-1"></i> My Products
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-success" asp-controller="Vendor" asp-action="Orders">
+                                <a class="nav-link text-success" asp-controller="Vendor" asp-action="Orders" data-i18n="Nav_ShopOrders">
                                     <i class="fa-solid fa-clipboard-list me-1"></i> Shop Orders
                                 </a>
                             </li>
@@ -108,7 +108,7 @@
                         @if (isRiderLoggedIn)
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-success" asp-controller="Rider" asp-action="Dashboard">
+                                <a class="nav-link text-success" asp-controller="Rider" asp-action="Dashboard" data-i18n="Nav_DeliveryDashboard">
                                     <i class="fa-solid fa-motorcycle me-1"></i> Delivery Dashboard
                                 </a>
                             </li>
@@ -116,10 +116,31 @@
                     </ul>
 
                     <ul class="navbar-nav ms-auto align-items-lg-center">
+                        <!-- Multi-Language Selector (Point 173) -->
+                        <li class="nav-item dropdown me-lg-2 my-1 my-lg-0">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center gap-1.5 px-3 py-1.5 rounded-pill border border-secondary border-opacity-30 bg-dark bg-opacity-40 text-light shadow-sm" href="#" id="langDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.88rem;">
+                                <span id="activeLangFlag" style="font-size: 1.1rem;">🌐</span>
+                                <span id="activeLangName" class="fw-semibold font-monospace">English</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg p-2" aria-labelledby="langDropdown" style="background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255,255,255,0.12); backdrop-filter: blur(16px); min-width: 200px; border-radius: 16px;">
+                                <li><h6 class="dropdown-header text-uppercase text-secondary small fw-bold"><i class="fa-solid fa-language me-1 text-primary"></i> <span data-i18n="Lang_Select">Select Language</span></h6></li>
+                                <li><a class="dropdown-item lang-dropdown-item rounded-3 py-1.5 d-flex align-items-center justify-content-between text-light" href="javascript:void(0)" data-lang="en" onclick="switchLanguage('en')"><span>🇬🇧 English</span><span class="badge bg-secondary bg-opacity-25 text-light small">Default</span></a></li>
+                                <li><a class="dropdown-item lang-dropdown-item rounded-3 py-1.5 d-flex align-items-center justify-content-between text-light" href="javascript:void(0)" data-lang="hi" onclick="switchLanguage('hi')"><span>🇮🇳 हिन्दी</span><span class="badge bg-success bg-opacity-25 text-success small">Hindi</span></a></li>
+                                <li><a class="dropdown-item lang-dropdown-item rounded-3 py-1.5 d-flex align-items-center justify-content-between text-light" href="javascript:void(0)" data-lang="hi-Latn" onclick="switchLanguage('hi-Latn')"><span>🇮🇳 Hinglish</span><span class="badge bg-warning bg-opacity-25 text-warning small">Popular</span></a></li>
+                                <li><a class="dropdown-item lang-dropdown-item rounded-3 py-1.5 d-flex align-items-center justify-content-between text-light" href="javascript:void(0)" data-lang="bn" onclick="switchLanguage('bn')"><span>🇮🇳 বাংলা</span><span class="badge bg-info bg-opacity-25 text-info small">Bengali</span></a></li>
+                                <li><a class="dropdown-item lang-dropdown-item rounded-3 py-1.5 d-flex align-items-center justify-content-between text-light" href="javascript:void(0)" data-lang="mr" onclick="switchLanguage('mr')"><span>🇮🇳 मराठी</span><span class="badge bg-secondary bg-opacity-25 text-light small">Marathi</span></a></li>
+                                <li><a class="dropdown-item lang-dropdown-item rounded-3 py-1.5 d-flex align-items-center justify-content-between text-light" href="javascript:void(0)" data-lang="ta" onclick="switchLanguage('ta')"><span>🇮🇳 தமிழ்</span><span class="badge bg-secondary bg-opacity-25 text-light small">Tamil</span></a></li>
+                                <li><a class="dropdown-item lang-dropdown-item rounded-3 py-1.5 d-flex align-items-center justify-content-between text-light" href="javascript:void(0)" data-lang="te" onclick="switchLanguage('te')"><span>🇮🇳 తెలుగు</span><span class="badge bg-secondary bg-opacity-25 text-light small">Telugu</span></a></li>
+                                <li><a class="dropdown-item lang-dropdown-item rounded-3 py-1.5 d-flex align-items-center justify-content-between text-light" href="javascript:void(0)" data-lang="gu" onclick="switchLanguage('gu')"><span>🇮🇳 ગુજરાતી</span><span class="badge bg-secondary bg-opacity-25 text-light small">Gujarati</span></a></li>
+                                <li><a class="dropdown-item lang-dropdown-item rounded-3 py-1.5 d-flex align-items-center justify-content-between text-light" href="javascript:void(0)" data-lang="kn" onclick="switchLanguage('kn')"><span>🇮🇳 ಕನ್ನಡ</span><span class="badge bg-secondary bg-opacity-25 text-light small">Kannada</span></a></li>
+                                <li><a class="dropdown-item lang-dropdown-item rounded-3 py-1.5 d-flex align-items-center justify-content-between text-light" href="javascript:void(0)" data-lang="pa" onclick="switchLanguage('pa')"><span>🇮🇳 ਪੰਜਾਬੀ</span><span class="badge bg-secondary bg-opacity-25 text-light small">Punjabi</span></a></li>
+                            </ul>
+                        </li>
+
                         @if (!isShopLoggedIn && !isAdminLoggedIn)
                         {
                             <li class="nav-item me-lg-2 my-1 my-lg-0">
-                                <a class="btn btn-warning btn-sm px-3 py-2 fw-bold text-dark rounded-pill d-inline-flex align-items-center shadow-sm" asp-controller="Vendor" asp-action="Register" id="navBecomeSellerBtn">
+                                <a class="btn btn-warning btn-sm px-3 py-2 fw-bold text-dark rounded-pill d-inline-flex align-items-center shadow-sm" asp-controller="Vendor" asp-action="Register" id="navBecomeSellerBtn" data-i18n="Nav_BecomeSeller">
                                     <i class="fa-solid fa-store me-1 text-primary"></i> Become a Seller
                                 </a>
                             </li>
@@ -133,14 +154,15 @@
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end unified-dropdown" aria-labelledby="customerDropdown">
                                     <li><span class="dropdown-header">Customer Account</span></li>
-                                    <li><a class="dropdown-item" asp-controller="Customer" asp-action="Account" asp-route-tab="profile"><i class="fa-solid fa-id-card text-primary"></i>My Profile</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Customer" asp-action="Account" asp-route-tab="orders"><i class="fa-solid fa-box text-info"></i>My Orders</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Customer" asp-action="Account" asp-route-tab="wishlist"><i class="fa-solid fa-heart text-danger"></i>Wishlist</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Customer" asp-action="Account" asp-route-tab="addresses"><i class="fa-solid fa-location-dot text-success"></i>My Addresses</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Customer" asp-action="Account" asp-route-tab="coupons"><i class="fa-solid fa-ticket text-warning"></i>Coupons & Offers</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Home" asp-action="Cart"><i class="fa-solid fa-cart-shopping text-warning"></i>My Cart</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Customer" asp-action="Account" asp-route-tab="profile" data-i18n="Nav_MyProfile"><i class="fa-solid fa-id-card text-primary"></i>My Profile</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Customer" asp-action="Account" asp-route-tab="orders" data-i18n="Nav_MyOrders"><i class="fa-solid fa-box text-info"></i>My Orders</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Customer" asp-action="Account" asp-route-tab="wishlist" data-i18n="Nav_Wishlist"><i class="fa-solid fa-heart text-danger"></i>Wishlist</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Customer" asp-action="Account" asp-route-tab="addresses" data-i18n="Nav_MyAddresses"><i class="fa-solid fa-location-dot text-success"></i>My Addresses</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Customer" asp-action="Account" asp-route-tab="coupons" data-i18n="Nav_Coupons"><i class="fa-solid fa-ticket text-warning"></i>Coupons & Offers</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Customer" asp-action="Wallet" data-i18n="Nav_Wallet"><i class="fa-solid fa-wallet text-success"></i>Digital Wallet</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Home" asp-action="Cart" data-i18n="Nav_Cart"><i class="fa-solid fa-cart-shopping text-warning"></i>My Cart</a></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item text-danger" asp-controller="Customer" asp-action="Logout"><i class="fa-solid fa-arrow-right-from-bracket"></i>Logout Account</a></li>
+                                    <li><a class="dropdown-item text-danger" asp-controller="Customer" asp-action="Logout" data-i18n="Nav_Logout"><i class="fa-solid fa-arrow-right-from-bracket"></i>Logout Account</a></li>
                                 </ul>
                             </li>
                         }
@@ -316,6 +338,7 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/localization.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
     <script>
