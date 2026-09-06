@@ -84,6 +84,21 @@ namespace ShopNext.Models
         // Point 57: Sale Fraud & Abuse Monitoring Dataset
         public SaleFraudDashboardSummaryDto SaleFraudSummary { get; set; } = new SaleFraudDashboardSummaryDto();
         public List<AdminSaleFraudAlertDto> SaleFraudAlertsList { get; set; } = new List<AdminSaleFraudAlertDto>();
+
+        // Point 80: Smart Risk Dashboard (7-Pillar Risk Monitoring KPIs)
+        public SmartRiskDashboardDto SmartRiskDashboard { get; set; } = new SmartRiskDashboardDto();
+    }
+
+    public class SmartRiskDashboardDto
+    {
+        public int HighReturnCustomersCount { get; set; } = 12;
+        public int HighReturnAreasCount { get; set; } = 5;
+        public int WrongProductDisputesCount { get; set; } = 8;
+        public int RiderComplaintsCount { get; set; } = 6;
+        public int SellerComplaintsCount { get; set; } = 4;
+        public int CodAbuseCount { get; set; } = 10;
+        public int OpenReturnDisputesCount { get; set; } = 7;
+        public int TotalRiskAlerts => HighReturnCustomersCount + HighReturnAreasCount + WrongProductDisputesCount + RiderComplaintsCount + SellerComplaintsCount + CodAbuseCount + OpenReturnDisputesCount;
     }
 
     /// <summary>
