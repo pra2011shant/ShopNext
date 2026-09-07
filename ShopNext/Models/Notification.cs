@@ -1,7 +1,13 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShopNext.Models
 {
+    /// <summary>
+    /// Database Table Mapping: dbo.Notifications
+    /// Description: System & transactional alerts for Customers, Sellers, and Fleet Riders.
+    /// </summary>
+    [Table("Notifications")]
     public class Notification : BaseModel
     {
         public int Id { get; set; }

@@ -1,7 +1,13 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShopNext.Models
 {
+    /// <summary>
+    /// Database Table Mapping: dbo.OrderItems
+    /// Description: Line items for customer orders including quantity, SKU, serial number tracking, and return condition matching.
+    /// </summary>
+    [Table("OrderItems")]
     public class OrderItem : BaseModel
     {
         public int Id { get; set; }

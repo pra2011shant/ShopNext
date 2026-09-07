@@ -4,6 +4,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShopNext.Models
 {
+    /// <summary>
+    /// Database Table Mapping: dbo.Complaints
+    /// Description: Multi-party dispute tickets, 3-way arbitration statements, support escalation tiers, and chat threads.
+    /// </summary>
+    [Table("Complaints")]
     public class Complaint : BaseModel
     {
         [Key]

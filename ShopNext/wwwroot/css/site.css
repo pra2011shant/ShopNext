@@ -627,43 +627,194 @@ p, span, li, td, th {
 }
 
 /* ==========================================================================
-   TABLES & DATA GRIDS
+   TABLES & ENTERPRISE DATA GRIDS (Senior UI/UX Design System)
    ========================================================================== */
-.table-custom {
+.table-responsive {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 1.5rem;
+}
+
+.table-responsive::-webkit-scrollbar {
+  height: 6px;
+}
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+/* Master Table Modern Styling */
+.table, .table-custom, .table-modern {
   width: 100%;
+  margin-bottom: 0;
+  vertical-align: middle;
   border-collapse: separate;
   border-spacing: 0;
-  background: #ffffff;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  border: 1px solid var(--border-color);
-}
-
-.table-custom thead th {
-  background: #f8fafc;
-  color: var(--text-secondary);
-  font-weight: 700;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 0.85rem 1rem;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.table-custom tbody td {
-  padding: 0.9rem 1rem;
-  vertical-align: middle;
-  border-bottom: 1px solid var(--border-color);
+  background-color: var(--card-bg);
   color: var(--text-main);
   font-size: 0.92rem;
 }
 
-.table-custom tbody tr:last-child td {
+.table > :not(caption) > * > * {
+  padding: 0.95rem 1.15rem;
+  border-bottom-width: 1px;
+  border-bottom-color: var(--border-color);
+  background-color: transparent;
+}
+
+/* Modern Column Headers */
+.table thead th, .table-custom thead th, .table-modern thead th {
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%) !important;
+  color: #475569 !important;
+  font-weight: 700;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.9rem 1.15rem;
+  border-top: none;
+  border-bottom: 2px solid #e2e8f0 !important;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* Row Hover & Interactive Feedback */
+.table-hover > tbody > tr:hover, .table-custom tbody tr:hover, .table-modern tbody tr:hover {
+  background-color: #f8fafc !important;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.table tbody tr td, .table-custom tbody td, .table-modern tbody td {
+  color: var(--text-secondary);
+  font-weight: 500;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.table tbody tr:last-child td, .table-custom tbody tr:last-child td, .table-modern tbody tr:last-child td {
   border-bottom: none;
 }
 
-.table-custom tbody tr:hover {
-  background-color: #f8fafc;
+/* Dark Mode / Glass Dashboard Tables */
+.table-dark-glass {
+  background: rgba(15, 23, 42, 0.75) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 16px;
+  color: #e2e8f0 !important;
+}
+
+.table-dark-glass thead th {
+  background: rgba(0, 0, 0, 0.4) !important;
+  color: #94a3b8 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.table-dark-glass tbody td {
+  color: #cbd5e1 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.table-dark-glass tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Monetary, Numeric & Identifier Typography */
+.font-mono, .table-id-cell, .table-price-cell, .table-date-cell {
+  font-family: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.88rem;
+  letter-spacing: -0.01em;
+}
+
+.table-id-cell {
+  font-weight: 700;
+  color: var(--primary-color);
+  background: rgba(37, 99, 235, 0.07);
+  padding: 3px 8px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.table-price-cell {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Micro Action Buttons in Data Rows */
+.action-btn-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-action-sm {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  border: 1px solid var(--border-color);
+  background: #ffffff;
+  color: var(--text-secondary);
+}
+
+.btn-action-sm:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.btn-action-sm.btn-action-view:hover {
+  background: var(--primary-color);
+  color: #ffffff;
+  border-color: var(--primary-color);
+}
+
+.btn-action-sm.btn-action-edit:hover {
+  background: var(--warning-color);
+  color: #ffffff;
+  border-color: var(--warning-color);
+}
+
+.btn-action-sm.btn-action-delete:hover {
+  background: var(--danger-color);
+  color: #ffffff;
+  border-color: var(--danger-color);
+}
+
+/* Empty Table States */
+.table-empty-container {
+  padding: 3.5rem 1.5rem;
+  text-align: center;
+}
+
+.table-empty-container i {
+  font-size: 2.8rem;
+  color: #cbd5e1;
+  margin-bottom: 1rem;
+}
+
+.table-empty-container h6 {
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 0.25rem;
+}
+
+.table-empty-container p {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  max-width: 320px;
+  margin: 0 auto;
 }
 
 /* ==========================================================================

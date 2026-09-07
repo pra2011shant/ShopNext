@@ -1,8 +1,14 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShopNext.Models
 {
+    /// <summary>
+    /// Database Table Mapping: dbo.Brands
+    /// Description: Brand catalogue, official manufacturer logos, category classification, and brand ratings.
+    /// </summary>
+    [Table("Brands")]
     public class Brand : BaseModel
     {
         public int Id { get; set; }

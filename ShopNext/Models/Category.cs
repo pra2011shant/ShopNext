@@ -1,8 +1,14 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShopNext.Models
 {
+    /// <summary>
+    /// Database Table Mapping: dbo.Categories
+    /// Description: Product hierarchy categories with visual icon identifiers, descriptions, and sort priorities.
+    /// </summary>
+    [Table("Categories")]
     public class Category : BaseModel
     {
         public int Id { get; set; }

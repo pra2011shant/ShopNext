@@ -1,7 +1,13 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShopNext.Models
 {
+    /// <summary>
+    /// Database Table Mapping: dbo.CustomerAddresses
+    /// Description: Customer shipping and billing delivery addresses, geolocation landmarks, and default selections.
+    /// </summary>
+    [Table("CustomerAddresses")]
     public class CustomerAddress : BaseModel
     {
         public int Id { get; set; }

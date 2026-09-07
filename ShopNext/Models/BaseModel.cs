@@ -2,6 +2,10 @@ using System;
 
 namespace ShopNext.Models
 {
+    /// <summary>
+    /// Base Entity Class for all ShopNext Database Models.
+    /// Provides standardized audit trail fields: CreatedDate, CreatedById, UpdatedDate, UpdatedById, IsDeleted (Soft-delete), and IsActive.
+    /// </summary>
     public abstract class BaseModel
     {
         public string? Remark { get; set; }

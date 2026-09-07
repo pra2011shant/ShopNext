@@ -1,7 +1,13 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShopNext.Models
 {
+    /// <summary>
+    /// Database Table Mapping: dbo.Shops
+    /// Description: Merchant shops and physical store locations, including geolocation, bank settlement, and approval status.
+    /// </summary>
+    [Table("Shops")]
     public class Shop : BaseModel
     {
         public int Id { get; set; }

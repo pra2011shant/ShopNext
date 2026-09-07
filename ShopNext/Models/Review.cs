@@ -1,7 +1,13 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShopNext.Models
 {
+    /// <summary>
+    /// Database Table Mapping: dbo.Reviews
+    /// Description: Customer product and shop ratings, comments, feedback moderation, and visibility flags.
+    /// </summary>
+    [Table("Reviews")]
     public class Review : BaseModel
     {
         public int Id { get; set; }

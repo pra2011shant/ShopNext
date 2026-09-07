@@ -19,10 +19,21 @@ namespace ShopNext.Controllers
             _context = context;
         }
 
+        private string GetMasterSqlFilePath()
+        {
+            string primaryPath = Path.Combine(_env.ContentRootPath, "Database", "ShopNext_Complete_Schema_And_Stored_Procedures.sql");
+            if (System.IO.File.Exists(primaryPath))
+            {
+                return primaryPath;
+            }
+
+            return Path.Combine(_env.WebRootPath, "sql", "ShopNext_Complete_DB_Setup.sql");
+        }
+
         // GET: /DatabaseSetup
         public async Task<IActionResult> Index()
         {
-            string sqlFilePath = Path.Combine(_env.WebRootPath, "sql", "ShopNext_Complete_DB_Setup.sql");
+            string sqlFilePath = GetMasterSqlFilePath();
             string sqlContent = "SQL master script not found.";
 
             if (System.IO.File.Exists(sqlFilePath))
@@ -31,7 +42,7 @@ namespace ShopNext.Controllers
             }
 
             ViewData["SqlContent"] = sqlContent;
-            ViewData["ScriptPath"] = "/sql/ShopNext_Complete_DB_Setup.sql";
+            ViewData["ScriptPath"] = Path.GetFileName(sqlFilePath);
             ViewData["CanConnect"] = await _context.Database.CanConnectAsync();
             return View();
         }
@@ -43,10 +54,10 @@ namespace ShopNext.Controllers
         {
             try
             {
-                string sqlFilePath = Path.Combine(_env.WebRootPath, "sql", "ShopNext_Complete_DB_Setup.sql");
+                string sqlFilePath = GetMasterSqlFilePath();
                 if (!System.IO.File.Exists(sqlFilePath))
                 {
-                    TempData["ErrorMessage"] = "Master SQL script file not found at wwwroot/sql/ShopNext_Complete_DB_Setup.sql";
+                    TempData["ErrorMessage"] = "Master SQL script file not found in Database or wwwroot/sql directory.";
                     return RedirectToAction("Index");
                 }
 

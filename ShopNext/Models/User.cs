@@ -1,7 +1,13 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShopNext.Models
 {
+    /// <summary>
+    /// Database Table Mapping: dbo.Users
+    /// Description: Core platform users including Customers, Admins, Sellers, and Fleet Riders.
+    /// </summary>
+    [Table("Users")]
     public class User : BaseModel
     {
         public int Id { get; set; }

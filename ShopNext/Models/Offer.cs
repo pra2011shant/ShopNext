@@ -5,9 +5,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace ShopNext.Models
 {
     /// <summary>
-    /// Point 41: Offers & Today's Deals Entity
+    /// Database Table Mapping: dbo.Offers
+    /// Description: Point 41: Offers & Today's Deals Entity
     /// Fields: Product, MRP, Selling Price, Discount, Start Date, End Date, Status
     /// </summary>
+    [Table("Offers")]
     public class Offer : BaseModel
     {
         public int Id { get; set; }

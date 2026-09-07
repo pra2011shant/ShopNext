@@ -1,7 +1,13 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShopNext.Models
 {
+    /// <summary>
+    /// Database Table Mapping: dbo.ProductVariants
+    /// Description: SKU-level variants for products including size, color, price adjustments, and individual inventory counts.
+    /// </summary>
+    [Table("ProductVariants")]
     public class ProductVariant : BaseModel
     {
         public int Id { get; set; }

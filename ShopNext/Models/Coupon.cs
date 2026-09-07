@@ -1,7 +1,13 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShopNext.Models
 {
+    /// <summary>
+    /// Database Table Mapping: dbo.Coupons
+    /// Description: Promotional discount codes, flat/percentage discounts, minimum order thresholds, and usage counters.
+    /// </summary>
+    [Table("Coupons")]
     public class Coupon : BaseModel
     {
         public int Id { get; set; }

@@ -1,8 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShopNext.Models
 {
+    /// <summary>
+    /// Database Table Mapping: dbo.Orders
+    /// Description: Core customer order transactions, fulfillment states, delivery OTP tracking, and return/dispute workflows.
+    /// </summary>
+    [Table("Orders")]
     public class Order : BaseModel
     {
         public int Id { get; set; }

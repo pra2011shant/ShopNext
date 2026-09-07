@@ -3,6 +3,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShopNext.Models
 {
+    /// <summary>
+    /// Database Table Mapping: dbo.Riders
+    /// Description: Delivery fleet riders, vehicle registrations, live GPS coordinates, and availability status.
+    /// </summary>
+    [Table("Riders")]
     public class Rider : BaseModel
     {
         public int Id { get; set; }

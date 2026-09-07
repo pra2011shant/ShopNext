@@ -1,8 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShopNext.Models
 {
+    /// <summary>
+    /// Database Table Mapping: dbo.Products
+    /// Description: Master catalogue of store products, SKU inventory, multi-angle imagery, and approval workflow status.
+    /// </summary>
+    [Table("Products")]
     public class Product : BaseModel
     {
         public int Id { get; set; }

@@ -3,6 +3,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShopNext.Models
 {
+    /// <summary>
+    /// Database Table Mapping: dbo.AuditLogs
+    /// Description: System-wide immutable security audit log tracking user actions, IP addresses, entity mutations, and exceptions.
+    /// </summary>
     [Table("AuditLogs")]
     public class AuditLog : BaseModel
     {

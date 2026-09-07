@@ -177,34 +177,6 @@
         box-shadow: 0 12px 30px rgba(79, 70, 229, 0.5);
         color: #ffffff;
     }
-
-    .demo-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 6px;
-    }
-
-    .demo-pill-btn {
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        padding: 0.45rem 0.6rem;
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: #e2e8f0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        text-align: left;
-    }
-
-    .demo-pill-btn:hover {
-        background: rgba(255, 255, 255, 0.1);
-        border-color: rgba(99, 102, 241, 0.4);
-        color: #ffffff;
-    }
 </style>
 
 <div class="login-wrapper">
@@ -302,34 +274,8 @@
 
             <!-- Submit Button -->
             <button type="submit" class="btn-submit-login mb-4" id="loginSubmitBtn">
-                <i class="fa-solid fa-right-to-bracket"></i> Secure Sign In
+                <i class="fa-solid fa-shield-halved"></i> Secure Sign In
             </button>
-
-            <!-- 1-Click Fast Fill Matrix (100% Inside Frame) -->
-            <div class="p-3 rounded-4 mb-4" style="background: rgba(0, 0, 0, 0.4); border: 1px dashed rgba(255, 255, 255, 0.15);">
-                <div class="text-secondary small fw-bold text-uppercase mb-2 d-flex align-items-center justify-content-between">
-                    <span><i class="fa-solid fa-wand-magic-sparkles text-warning me-1"></i> Quick Demo Fill:</span>
-                    <span class="text-white-50 small font-monospace">1-Click</span>
-                </div>
-                <div class="demo-grid">
-                    <button type="button" class="demo-pill-btn" onclick="fillDemo('Customer', '9876543210', 'Customer@123')">
-                        <span>👤 Customer</span>
-                        <i class="fa-solid fa-arrow-turn-down text-info small"></i>
-                    </button>
-                    <button type="button" class="demo-pill-btn" onclick="fillDemo('Seller', '9822334455', 'Seller@123')">
-                        <span>🏪 Seller</span>
-                        <i class="fa-solid fa-arrow-turn-down text-warning small"></i>
-                    </button>
-                    <button type="button" class="demo-pill-btn" onclick="fillDemo('Rider', '9811223344', 'Rider@123')">
-                        <span>🛵 Rider</span>
-                        <i class="fa-solid fa-arrow-turn-down text-success small"></i>
-                    </button>
-                    <button type="button" class="demo-pill-btn" onclick="fillDemo('Admin', 'admin', 'Admin@123')">
-                        <span>👑 Admin</span>
-                        <i class="fa-solid fa-arrow-turn-down text-danger small"></i>
-                    </button>
-                </div>
-            </div>
 
             <!-- Registration Links -->
             <div class="text-center pt-2 border-top border-secondary border-opacity-25">
@@ -388,13 +334,6 @@
             pwd.type = 'password';
             icon.className = 'fa-solid fa-eye';
         }
-    }
-
-    function fillDemo(role, id, pwd) {
-        const btn = Array.from(document.querySelectorAll('.role-tab-btn')).find(b => b.innerText.includes(role));
-        if (btn) setLoginRole(role, btn);
-        document.getElementById('loginIdentifier').value = id;
-        document.getElementById('loginPassword').value = pwd;
     }
 </script>
 }

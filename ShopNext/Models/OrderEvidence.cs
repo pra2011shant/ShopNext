@@ -1,7 +1,13 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShopNext.Models
 {
+    /// <summary>
+    /// Database Table Mapping: dbo.OrderEvidences
+    /// Description: Photographic & metadata evidence for parcel packing, delivery verification, and anti-fraud return audits.
+    /// </summary>
+    [Table("OrderEvidences")]
     public class OrderEvidence : BaseModel
     {
         public int Id { get; set; }
