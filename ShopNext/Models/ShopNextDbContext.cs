@@ -45,9 +45,33 @@ namespace ShopNext.Models
         public DbSet<FailedDeliveryLog> FailedDeliveryLogs { get; set; }
         public DbSet<DeliveryProof> DeliveryProofs { get; set; }
 
+        // System Monitoring & Comprehensive Auditing (Phase 1)
+        public DbSet<LoginHistory> LoginHistories { get; set; }
+        public DbSet<UserSession> UserSessions { get; set; }
+        public DbSet<UserActivity> UserActivities { get; set; }
+        public DbSet<EntityChangeLog> EntityChangeLogs { get; set; }
+        public DbSet<SoftDeleteLog> SoftDeleteLogs { get; set; }
+        public DbSet<EntityViewLog> EntityViewLogs { get; set; }
+        public DbSet<SecurityThreatAlert> SecurityThreatAlerts { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // System Monitoring Performance Indexes
+            modelBuilder.Entity<LoginHistory>().HasIndex(l => l.UserId);
+            modelBuilder.Entity<LoginHistory>().HasIndex(l => l.LoginTime);
+            modelBuilder.Entity<LoginHistory>().HasIndex(l => l.SessionId);
+            modelBuilder.Entity<UserSession>().HasIndex(s => s.SessionId).IsUnique();
+            modelBuilder.Entity<UserSession>().HasIndex(s => s.IsActive);
+            modelBuilder.Entity<UserActivity>().HasIndex(a => a.UserId);
+            modelBuilder.Entity<UserActivity>().HasIndex(a => a.Timestamp);
+            modelBuilder.Entity<UserActivity>().HasIndex(a => new { a.Module, a.Action });
+            modelBuilder.Entity<EntityChangeLog>().HasIndex(c => new { c.EntityName, c.EntityId });
+            modelBuilder.Entity<EntityChangeLog>().HasIndex(c => c.Timestamp);
+            modelBuilder.Entity<SoftDeleteLog>().HasIndex(d => new { d.EntityName, d.EntityId });
+            modelBuilder.Entity<EntityViewLog>().HasIndex(v => new { v.EntityName, v.EntityId });
+            modelBuilder.Entity<SecurityThreatAlert>().HasIndex(a => a.IsResolved);
 
             modelBuilder.Entity<Coupon>().Property(c => c.DiscountValue).HasPrecision(18, 2);
             modelBuilder.Entity<Coupon>().Property(c => c.MinOrderAmount).HasPrecision(18, 2);

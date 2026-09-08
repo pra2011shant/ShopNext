@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShopNext.Helpers;
 using ShopNext.Models;
+using ShopNext.Services;
 using System;
 using System.Linq;
 using System.Security.Cryptography;
@@ -20,10 +21,22 @@ namespace ShopNext.Controllers
     public class AccountController : Controller
     {
         private readonly ShopNextDbContext _context;
+        private readonly ISystemMonitoringService _monitoringService;
 
-        public AccountController(ShopNextDbContext context)
+        public AccountController(ShopNextDbContext context, ISystemMonitoringService monitoringService)
         {
             _context = context;
+            _monitoringService = monitoringService;
+        }
+
+        private string GetClientIpAddress()
+        {
+            return HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+        }
+
+        private string GetUserAgent()
+        {
+            return Request.Headers["User-Agent"].ToString() ?? "Mozilla/5.0";
         }
 
         // GET: /Account/AccessDenied
@@ -54,9 +67,12 @@ namespace ShopNext.Controllers
         {
             role = NormalizeRole(role);
             identifier = identifier?.Trim() ?? string.Empty;
+            string clientIp = GetClientIpAddress();
+            string userAgent = GetUserAgent();
 
             if (string.IsNullOrWhiteSpace(identifier) || string.IsNullOrWhiteSpace(password))
             {
+                await _monitoringService.RecordLoginFailureAsync(identifier, role, clientIp, userAgent, "Missing credentials");
                 ViewBag.Error = "Please enter your login ID and password.";
                 ViewBag.Role = role;
                 ViewBag.ReturnUrl = returnUrl;
@@ -109,24 +125,32 @@ namespace ShopNext.Controllers
 
             if (!authenticated)
             {
+                await _monitoringService.RecordLoginFailureAsync(identifier, role, clientIp, userAgent, "Invalid credentials or inactive account");
                 ViewBag.Error = "Login ID, password, or account type is incorrect.";
                 ViewBag.Role = role;
                 ViewBag.ReturnUrl = returnUrl;
                 return View();
             }
 
+            // Create active monitored session
+            string sessionId = Guid.NewGuid().ToString("N");
+            await _monitoringService.RecordLoginAsync(accountId, name ?? role, role, clientIp, userAgent, sessionId);
+
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, accountId.ToString()),
                 new Claim(ClaimTypes.Name, name ?? role),
                 new Claim(ClaimTypes.Role, role),
-                new Claim("UserRole", role)
+                new Claim("UserRole", role),
+                new Claim("SessionId", sessionId)
             };
 
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)),
                 new AuthenticationProperties { IsPersistent = true, ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7) });
+
+            Response.Cookies.Append("ShopNext_SessionId", sessionId, new CookieOptions { HttpOnly = true, Expires = DateTimeOffset.Now.AddDays(7) });
 
             if (role == "Customer")
             {
@@ -309,9 +333,21 @@ namespace ShopNext.Controllers
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
+            string? sessionId = User.FindFirst("SessionId")?.Value;
+            if (string.IsNullOrWhiteSpace(sessionId) && Request.Cookies.TryGetValue("ShopNext_SessionId", out var cookieSessionId))
+            {
+                sessionId = cookieSessionId;
+            }
+
+            if (!string.IsNullOrWhiteSpace(sessionId))
+            {
+                await _monitoringService.RecordLogoutAsync(sessionId);
+            }
+
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
             // Clean legacy cookies for complete safety
+            Response.Cookies.Delete("ShopNext_SessionId");
             Response.Cookies.Delete("AdminAuth");
             Response.Cookies.Delete("ShopId");
             Response.Cookies.Delete("ShopName");

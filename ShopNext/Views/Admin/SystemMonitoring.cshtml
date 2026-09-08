@@ -1,0 +1,932 @@
+@model ShopNext.Models.SystemMonitoringDashboardViewModel
+@{
+    ViewData["Title"] = "System Monitoring & Full Audit Command Center";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .monitoring-card {
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .monitoring-card:hover {
+        border-color: rgba(99, 102, 241, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5);
+    }
+    .kpi-badge {
+        font-size: 0.75rem;
+        padding: 4px 10px;
+        border-radius: 9999px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+    }
+    .live-pulse {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: #10b981;
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        animation: pulse-green 2s infinite;
+        display: inline-block;
+        margin-right: 6px;
+    }
+    @@keyframes pulse-green {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+    .diff-old {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        padding: 4px 8px;
+        border-radius: 6px;
+        text-decoration: line-through;
+        font-family: monospace;
+    }
+    .diff-new {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-weight: bold;
+        font-family: monospace;
+    }
+    .nav-tabs .nav-link {
+        color: #94a3b8;
+        border: none;
+        border-bottom: 2px solid transparent;
+        padding: 12px 20px;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+    .nav-tabs .nav-link:hover {
+        color: #f1f5f9;
+        border-color: rgba(99, 102, 241, 0.4);
+    }
+    .nav-tabs .nav-link.active {
+        color: #818cf8;
+        background: transparent;
+        border-bottom: 2px solid #6366f1;
+    }
+    .role-badge-Admin { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .role-badge-Seller { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .role-badge-Customer { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .role-badge-Rider { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .role-badge-System { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
+    
+    .table-monitoring {
+        width: 100%;
+        color: #e2e8f0;
+        border-collapse: separate;
+        border-spacing: 0 6px;
+    }
+    .table-monitoring thead th {
+        background: rgba(30, 41, 59, 0.6);
+        color: #94a3b8;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 12px 16px;
+        border: none;
+    }
+    .table-monitoring tbody tr {
+        background: rgba(30, 41, 59, 0.4);
+        transition: background 0.2s;
+    }
+    .table-monitoring tbody tr:hover {
+        background: rgba(51, 65, 85, 0.6);
+    }
+    .table-monitoring td {
+        padding: 14px 16px;
+        vertical-align: middle;
+        border-top: 1px solid rgba(255, 255, 255, 0.04);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    .table-monitoring td:first-child { border-left: 1px solid rgba(255, 255, 255, 0.04); border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
+    .table-monitoring td:last-child { border-right: 1px solid rgba(255, 255, 255, 0.04); border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
+</style>
+
+<div class="container-fluid py-4 px-lg-5">
+    <!-- Header Section -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="live-pulse"></span>
+                <span class="badge bg-indigo-900 text-indigo-300 border border-indigo-500/30">SYSTEM TELEMETRY ENGINE v3.0</span>
+                <span class="text-secondary small">| Server Time: @DateTime.Now.ToString("dd MMM yyyy, hh:mm:ss tt")</span>
+            </div>
+            <h1 class="h3 fw-bold text-white mb-0">
+                <i class="fas fa-shield-halved text-primary me-2"></i> System Monitoring & Enterprise Audit Center
+            </h1>
+            <p class="text-secondary small mb-0">Live connected sessions, user activities, before/after mutations, delete tracking, seen logs, and security alarms.</p>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="window.location.reload();">
+                <i class="fas fa-rotate me-1"></i> Refresh Live Feed
+            </button>
+            
+            <div class="dropdown">
+                <button class="btn btn-primary btn-sm rounded-pill px-3 dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-file-export me-1"></i> Export Data
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg" aria-labelledby="exportDropdown">
+                    <li><a class="dropdown-item" href="/Admin/ExportMonitoringData?type=Sessions"><i class="fas fa-network-wired me-2 text-info"></i> Export Active Sessions (.CSV)</a></li>
+                    <li><a class="dropdown-item" href="/Admin/ExportMonitoringData?type=Logins"><i class="fas fa-key me-2 text-success"></i> Export Login History (.CSV)</a></li>
+                    <li><a class="dropdown-item" href="/Admin/ExportMonitoringData?type=Activities"><i class="fas fa-stream me-2 text-warning"></i> Export Activity Stream (.CSV)</a></li>
+                    <li><a class="dropdown-item" href="/Admin/ExportMonitoringData?type=AuditDiffs"><i class="fas fa-code-compare me-2 text-primary"></i> Export Before/After Diffs (.CSV)</a></li>
+                </ul>
+            </div>
+
+            <a href="/Admin/Dashboard" class="btn btn-outline-light btn-sm rounded-pill px-3">
+                <i class="fas fa-gauge me-1"></i> Back to Main Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Top KPI Overview Metrics -->
+    <div class="row g-3 mb-4">
+        <!-- Total Users & Breakdown -->
+        <div class="col-xl-3 col-md-6">
+            <div class="monitoring-card p-3 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <span class="text-secondary text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.05em;">Total Platform Users</span>
+                        <h2 class="fw-bold text-white mb-0 mt-1">@Model.TotalUsers</h2>
+                    </div>
+                    <div class="p-2 rounded-3" style="background: rgba(99, 102, 241, 0.15); color: #818cf8;">
+                        <i class="fas fa-users fs-5"></i>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 flex-wrap pt-2 border-top border-secondary border-opacity-10 small">
+                    <span class="text-muted"><i class="fas fa-user-tag text-success me-1"></i>Customers: <strong>@Model.TotalCustomers</strong></span>
+                    <span class="text-muted"><i class="fas fa-store text-primary me-1"></i>Sellers: <strong>@Model.TotalSellers</strong></span>
+                    <span class="text-muted"><i class="fas fa-motorcycle text-warning me-1"></i>Riders: <strong>@Model.TotalRiders</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Online / Active Sessions -->
+        <div class="col-xl-3 col-md-6">
+            <div class="monitoring-card p-3 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <div class="d-flex align-items-center">
+                            <span class="live-pulse"></span>
+                            <span class="text-secondary text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.05em;">Online Users Now</span>
+                        </div>
+                        <h2 class="fw-bold text-success mb-0 mt-1">@Model.OnlineUsers <span class="fs-6 text-muted fw-normal">/ @Model.TotalUsers</span></h2>
+                    </div>
+                    <div class="p-2 rounded-3" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">
+                        <i class="fas fa-signal fs-5"></i>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-10 small">
+                    <span class="text-muted">Offline users: <strong>@Model.OfflineUsers</strong></span>
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20">Live Connected</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Logins & Failures -->
+        <div class="col-xl-3 col-md-6">
+            <div class="monitoring-card p-3 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <span class="text-secondary text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.05em;">Today's Logins & Auth</span>
+                        <h2 class="fw-bold text-white mb-0 mt-1">@Model.TodayLogins</h2>
+                    </div>
+                    <div class="p-2 rounded-3" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24;">
+                        <i class="fas fa-key fs-5"></i>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-10 small">
+                    <span class="text-muted">Failed attempts: <strong class="@(Model.FailedLoginAttempts > 0 ? "text-danger" : "text-success")">@Model.FailedLoginAttempts</strong></span>
+                    @if (Model.FailedLoginAttempts > 3)
+                    {
+                        <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30">Security Alert</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary bg-opacity-20 text-secondary">Normal</span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Activities & Orders -->
+        <div class="col-xl-3 col-md-6">
+            <div class="monitoring-card p-3 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <span class="text-secondary text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.05em;">Today's Operations</span>
+                        <h2 class="fw-bold text-white mb-0 mt-1">@Model.TodayActivities <span class="fs-6 text-muted fw-normal">events</span></h2>
+                    </div>
+                    <div class="p-2 rounded-3" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa;">
+                        <i class="fas fa-bolt fs-5"></i>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-10 small">
+                    <span class="text-muted">Orders today: <strong class="text-info">@Model.TodayOrders</strong></span>
+                    <span class="text-muted">Last event: <strong>@Model.LastActivityTime?.ToString("hh:mm tt")</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Threat Banner (If Any Unresolved Alerts) -->
+    @if (Model.SecurityAlerts != null && Model.SecurityAlerts.Any(a => !a.IsResolved))
+    {
+        var unresolved = Model.SecurityAlerts.Where(a => !a.IsResolved).ToList();
+        <div class="alert alert-danger bg-danger bg-opacity-10 border border-danger border-opacity-30 rounded-3 mb-4 p-3 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <div class="p-2 bg-danger bg-opacity-20 text-danger rounded-circle">
+                    <i class="fas fa-triangle-exclamation fs-4"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold text-danger mb-1">🚨 @unresolved.Count Active Security Threat Alert(s) Detected!</h6>
+                    <p class="mb-0 text-secondary small">
+                        @string.Join(" • ", unresolved.Take(2).Select(u => $"{u.Title} ({u.Severity})"))
+                    </p>
+                </div>
+            </div>
+            <button class="btn btn-sm btn-danger rounded-pill px-3" onclick="$('#security-tab').tab('show');">
+                <i class="fas fa-shield-virus me-1"></i> Inspect Threats
+            </button>
+        </div>
+    }
+
+    <!-- Tabbed Navigation Panels -->
+    <div class="monitoring-card p-4">
+        <ul class="nav nav-tabs border-bottom border-secondary border-opacity-20 mb-4" id="monitoringTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="sessions-tab" data-bs-toggle="tab" data-bs-target="#tab-sessions" type="button" role="tab">
+                    <i class="fas fa-network-wired me-2 text-success"></i> 🟢 Active Sessions <span class="badge bg-success bg-opacity-20 text-success ms-1">@Model.ActiveSessions.Count</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="activities-tab" data-bs-toggle="tab" data-bs-target="#tab-activities" type="button" role="tab">
+                    <i class="fas fa-stream me-2 text-primary"></i> 👤 Activity Stream <span class="badge bg-primary bg-opacity-20 text-primary ms-1">@Model.RecentActivities.Count</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="logins-tab" data-bs-toggle="tab" data-bs-target="#tab-logins" type="button" role="tab">
+                    <i class="fas fa-key me-2 text-warning"></i> 🔐 Login History <span class="badge bg-warning bg-opacity-20 text-warning ms-1">@Model.RecentLogins.Count</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="diffs-tab" data-bs-toggle="tab" data-bs-target="#tab-diffs" type="button" role="tab">
+                    <i class="fas fa-code-compare me-2 text-info"></i> 🔄 Before/After Diffs <span class="badge bg-info bg-opacity-20 text-info ms-1">@Model.RecentAuditDiffs.Count</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="deletes-tab" data-bs-toggle="tab" data-bs-target="#tab-deletes" type="button" role="tab">
+                    <i class="fas fa-trash-can-arrow-up me-2 text-danger"></i> 🗑️ Delete & Restore Hub <span class="badge bg-danger bg-opacity-20 text-danger ms-1">@Model.DeletedRecords.Count</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="views-tab" data-bs-toggle="tab" data-bs-target="#tab-views" type="button" role="tab">
+                    <i class="fas fa-eye me-2 text-secondary"></i> 👀 Viewed Tracking <span class="badge bg-secondary bg-opacity-20 text-secondary ms-1">@Model.RecentViewLogs.Count</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="security-tab" data-bs-toggle="tab" data-bs-target="#tab-security" type="button" role="tab">
+                    <i class="fas fa-shield-virus me-2 text-danger"></i> 🚨 Security Alerts <span class="badge bg-danger text-white ms-1">@(Model.SecurityAlerts?.Count(a => !a.IsResolved) ?? 0)</span>
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="monitoringTabsContent">
+            
+            <!-- 1. ACTIVE SESSIONS TAB -->
+            <div class="tab-pane fade show active" id="tab-sessions" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="text-white fw-bold mb-0"><i class="fas fa-satellite-dish text-success me-2"></i> Live Connected User Sessions</h5>
+                    <span class="text-muted small">Heartbeat sync active (last seen within 30 minutes)</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table-monitoring">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Device & OS</th>
+                                <th>IP Address</th>
+                                <th>Login Time</th>
+                                <th>Last Seen</th>
+                                <th>Last Page & Action</th>
+                                <th>Control Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.ActiveSessions == null || !Model.ActiveSessions.Any())
+                            {
+                                <tr>
+                                    <td colspan="8" class="text-center py-4 text-muted">No active sessions at the moment.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                foreach (var session in Model.ActiveSessions)
+                                {
+                                    <tr id="session-row-@session.SessionId">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar me-2 bg-secondary bg-opacity-25 rounded-circle p-2 text-center" style="width: 36px; height: 36px;">
+                                                    <i class="fas fa-user text-light small"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold text-white">@session.UserName</div>
+                                                    <span class="text-muted small font-monospace">ID: @(session.UserId?.ToString() ?? "N/A")</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="kpi-badge role-badge-@session.Role">@session.Role</span>
+                                        </td>
+                                        <td>
+                                            <div><i class="fas fa-@(session.Device?.ToLower() == "mobile" ? "mobile-screen" : "desktop") text-secondary me-1"></i> @session.Browser</div>
+                                            <div class="text-muted small">@session.OperatingSystem</div>
+                                        </td>
+                                        <td>
+                                            <span class="font-monospace text-secondary small">@session.IpAddress</span>
+                                        </td>
+                                        <td>
+                                            <div class="text-white small">@session.LoginTime.ToString("dd MMM, hh:mm tt")</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20">
+                                                <i class="fas fa-clock me-1"></i> @session.LastSeenTime.ToString("hh:mm:ss tt")
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="text-truncate text-light small" style="max-width: 200px;" title="@session.LastPageVisited">
+                                                <i class="fas fa-link text-muted me-1"></i> @session.LastPageVisited
+                                            </div>
+                                            <div class="text-muted small">@session.LastAction</div>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="forceLogout('@session.SessionId', '@session.UserName')">
+                                                    <i class="fas fa-power-off me-1"></i> Force Logout
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 2. USER ACTIVITY STREAM TAB -->
+            <div class="tab-pane fade" id="tab-activities" role="tabpanel">
+                <!-- Filters -->
+                <form method="get" action="/Admin/SystemMonitoring" class="row g-2 mb-4">
+                    <div class="col-md-3">
+                        <input type="text" name="search" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-25" placeholder="Search user, entity, description..." value="@Model.SearchQuery" />
+                    </div>
+                    <div class="col-md-3">
+                        <select name="roleFilter" class="form-select form-select-sm bg-dark text-white border-secondary border-opacity-25">
+                            <option value="">-- All Roles --</option>
+                            <option value="Admin" selected="@(Model.RoleFilter == "Admin")">Admin</option>
+                            <option value="Seller" selected="@(Model.RoleFilter == "Seller")">Seller</option>
+                            <option value="Customer" selected="@(Model.RoleFilter == "Customer")">Customer</option>
+                            <option value="Rider" selected="@(Model.RoleFilter == "Rider")">Rider</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="moduleFilter" class="form-select form-select-sm bg-dark text-white border-secondary border-opacity-25">
+                            <option value="">-- All Modules --</option>
+                            <option value="Product" selected="@(Model.ModuleFilter == "Product")">Product</option>
+                            <option value="Order" selected="@(Model.ModuleFilter == "Order")">Order</option>
+                            <option value="Seller" selected="@(Model.ModuleFilter == "Seller")">Seller</option>
+                            <option value="Rider" selected="@(Model.ModuleFilter == "Rider")">Rider</option>
+                            <option value="Security" selected="@(Model.ModuleFilter == "Security")">Security</option>
+                            <option value="Payment" selected="@(Model.ModuleFilter == "Payment")">Payment</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3 flex-grow-1"><i class="fas fa-filter me-1"></i> Apply Filter</button>
+                        <a href="/Admin/SystemMonitoring" class="btn btn-outline-secondary btn-sm rounded-pill px-3"><i class="fas fa-times"></i></a>
+                    </div>
+                </form>
+
+                <div class="table-responsive">
+                    <table class="table-monitoring">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>User & Role</th>
+                                <th>Action</th>
+                                <th>Module & Entity</th>
+                                <th>Description / Details</th>
+                                <th>Device & IP</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.RecentActivities == null || !Model.RecentActivities.Any())
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">No activity records found.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                foreach (var act in Model.RecentActivities)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="text-white small">@act.Timestamp.ToString("dd MMM yyyy")</div>
+                                            <div class="text-muted small">@act.Timestamp.ToString("hh:mm:ss tt")</div>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold text-light">@act.UserName</div>
+                                            <span class="kpi-badge role-badge-@act.Role">@act.Role</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary bg-opacity-15 text-primary border border-primary border-opacity-25 font-monospace">@act.Action</span>
+                                        </td>
+                                        <td>
+                                            <div class="text-info fw-semibold small">@act.Module</div>
+                                            <div class="text-muted small">@(act.Entity ?? "—")</div>
+                                        </td>
+                                        <td>
+                                            <div class="text-light small">@act.Description</div>
+                                        </td>
+                                        <td>
+                                            <div class="text-muted small"><i class="fas fa-desktop me-1"></i> @act.Device (@act.Browser)</div>
+                                            <span class="font-monospace text-secondary small">@act.IpAddress</span>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 3. LOGIN HISTORY TAB -->
+            <div class="tab-pane fade" id="tab-logins" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table-monitoring">
+                        <thead>
+                            <tr>
+                                <th>Auth Time</th>
+                                <th>User & Role</th>
+                                <th>Status</th>
+                                <th>Device & Browser</th>
+                                <th>Operating System</th>
+                                <th>IP Address</th>
+                                <th>Session Duration</th>
+                                <th>Failure Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.RecentLogins == null || !Model.RecentLogins.Any())
+                            {
+                                <tr>
+                                    <td colspan="8" class="text-center py-4 text-muted">No login history recorded.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                foreach (var login in Model.RecentLogins)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="text-white small">@login.LoginTime.ToString("dd MMM yyyy")</div>
+                                            <div class="text-muted small">@login.LoginTime.ToString("hh:mm:ss tt")</div>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold text-light">@login.UserName</div>
+                                            <span class="kpi-badge role-badge-@login.Role">@login.Role</span>
+                                        </td>
+                                        <td>
+                                            @if (login.IsSuccessful)
+                                            {
+                                                <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30">
+                                                    <i class="fas fa-circle-check me-1"></i> Success
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30">
+                                                    <i class="fas fa-circle-xmark me-1"></i> Failed
+                                                </span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <i class="fas fa-globe text-secondary me-1"></i> @login.Browser (@login.Device)
+                                        </td>
+                                        <td>
+                                            <i class="fab fa-windows text-secondary me-1"></i> @login.OperatingSystem
+                                        </td>
+                                        <td>
+                                            <span class="font-monospace text-secondary small">@login.IpAddress</span>
+                                        </td>
+                                        <td>
+                                            @if (login.LogoutTime.HasValue)
+                                            {
+                                                var duration = login.LogoutTime.Value - login.LoginTime;
+                                                <span class="text-muted small">@($"{(int)duration.TotalMinutes} mins")</span>
+                                            }
+                                            else if (login.IsActiveSession)
+                                            {
+                                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20">Still Active</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted small">—</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <span class="text-danger small">@(login.FailureReason ?? "—")</span>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 4. BEFORE / AFTER DATA DIFF INSPECTOR TAB -->
+            <div class="tab-pane fade" id="tab-diffs" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="text-white fw-bold mb-0"><i class="fas fa-code-compare text-info me-2"></i> Field-Level Mutation & Delta Tracking</h5>
+                    <span class="text-muted small">Tracks old value vs new value on every entity update</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table-monitoring">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Entity & ID</th>
+                                <th>Field Modified</th>
+                                <th>Before (Old Value)</th>
+                                <th>After (New Value)</th>
+                                <th>Mutated By</th>
+                                <th>IP Address</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.RecentAuditDiffs == null || !Model.RecentAuditDiffs.Any())
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">No entity diff logs recorded yet.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                foreach (var diff in Model.RecentAuditDiffs)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="text-white small">@diff.Timestamp.ToString("dd MMM yyyy")</div>
+                                            <div class="text-muted small">@diff.Timestamp.ToString("hh:mm:ss tt")</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-25">@diff.EntityName</span>
+                                            <span class="text-white fw-bold small ms-1">#@diff.EntityId</span>
+                                        </td>
+                                        <td>
+                                            <span class="fw-semibold text-warning small font-monospace">@diff.FieldName</span>
+                                        </td>
+                                        <td>
+                                            <span class="diff-old">@(string.IsNullOrWhiteSpace(diff.OldValue) ? "(empty)" : diff.OldValue)</span>
+                                        </td>
+                                        <td>
+                                            <span class="diff-new">@(string.IsNullOrWhiteSpace(diff.NewValue) ? "(empty)" : diff.NewValue)</span>
+                                        </td>
+                                        <td>
+                                            <div class="text-light small fw-bold">@diff.ChangedByUserName</div>
+                                            <span class="kpi-badge role-badge-@diff.ChangedByUserRole">@diff.ChangedByUserRole</span>
+                                        </td>
+                                        <td>
+                                            <span class="font-monospace text-secondary small">@diff.IpAddress</span>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 5. SOFT DELETE & RESTORE HUB TAB -->
+            <div class="tab-pane fade" id="tab-deletes" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="text-white fw-bold mb-0"><i class="fas fa-trash-can-arrow-up text-danger me-2"></i> Soft-Deleted Entities & Instant Restore Hub</h5>
+                    <span class="text-muted small">Non-destructive soft-delete audit trail</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table-monitoring">
+                        <thead>
+                            <tr>
+                                <th>Deleted At</th>
+                                <th>Entity</th>
+                                <th>Record Title</th>
+                                <th>Deleted By</th>
+                                <th>Reason</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.DeletedRecords == null || !Model.DeletedRecords.Any())
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">No deleted records in the audit trash bin.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                foreach (var del in Model.DeletedRecords)
+                                {
+                                    <tr id="delete-row-@del.Id">
+                                        <td>
+                                            <div class="text-white small">@del.DeletedAt.ToString("dd MMM yyyy")</div>
+                                            <div class="text-muted small">@del.DeletedAt.ToString("hh:mm tt")</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary bg-opacity-20 text-light border border-secondary border-opacity-30">@del.EntityName #@del.EntityId</span>
+                                        </td>
+                                        <td>
+                                            <div class="text-white fw-bold small">@del.EntityTitle</div>
+                                        </td>
+                                        <td>
+                                            <div class="text-light small">@del.DeletedByUserName</div>
+                                            <span class="kpi-badge role-badge-@del.DeletedByUserRole">@del.DeletedByUserRole</span>
+                                        </td>
+                                        <td>
+                                            <span class="text-muted small">@del.Reason</span>
+                                        </td>
+                                        <td>
+                                            @if (del.IsRestored)
+                                            {
+                                                <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30">
+                                                    <i class="fas fa-check me-1"></i> Restored by @del.RestoredBy
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30">
+                                                    <i class="fas fa-trash me-1"></i> Deleted
+                                                </span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (!del.IsRestored)
+                                            {
+                                                <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3" onclick="restoreRecord(@del.Id, '@del.EntityName', '@del.EntityTitle')">
+                                                    <i class="fas fa-rotate-left me-1"></i> Restore Record
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted small">Already Active</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 6. SEEN / VIEWED TRACKING TAB -->
+            <div class="tab-pane fade" id="views-tab" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="text-white fw-bold mb-0"><i class="fas fa-eye text-secondary me-2"></i> Seen & Viewed Record Tracking</h5>
+                    <span class="text-muted small">Tracks who inspected an order, notification, or dispute</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table-monitoring">
+                        <thead>
+                            <tr>
+                                <th>Viewed At</th>
+                                <th>Entity Viewed</th>
+                                <th>Viewed By User</th>
+                                <th>User Role</th>
+                                <th>IP Address</th>
+                                <th>Telemetry Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.RecentViewLogs == null || !Model.RecentViewLogs.Any())
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">No viewed tracking logs recorded yet.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                foreach (var v in Model.RecentViewLogs)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="text-white small">@v.ViewedAt.ToString("dd MMM yyyy")</div>
+                                            <div class="text-muted small">@v.ViewedAt.ToString("hh:mm:ss tt")</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info bg-opacity-20 text-info border border-info border-opacity-30">@v.EntityName #@v.EntityId</span>
+                                        </td>
+                                        <td>
+                                            <span class="text-white fw-bold small">@v.ViewedByUserName</span>
+                                        </td>
+                                        <td>
+                                            <span class="kpi-badge role-badge-@v.ViewedByUserRole">@v.ViewedByUserRole</span>
+                                        </td>
+                                        <td>
+                                            <span class="font-monospace text-secondary small">@v.IpAddress</span>
+                                        </td>
+                                        <td>
+                                            <span class="text-muted small">@(v.ExtraInfo ?? "Inspection view")</span>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 7. SECURITY THREAT ALERTS TAB -->
+            <div class="tab-pane fade" id="tab-security" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="text-white fw-bold mb-0"><i class="fas fa-shield-virus text-danger me-2"></i> Security Threat Detection Center</h5>
+                    <span class="text-muted small">Automated threat alerts triggered by brute-force or abuse telemetry</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table-monitoring">
+                        <thead>
+                            <tr>
+                                <th>Detected At</th>
+                                <th>Severity</th>
+                                <th>Alert Type & Title</th>
+                                <th>Description</th>
+                                <th>Target / IP</th>
+                                <th>Status</th>
+                                <th>Resolution Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.SecurityAlerts == null || !Model.SecurityAlerts.Any())
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-success"><i class="fas fa-circle-check me-2"></i> All systems secure. No active threat alerts detected.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                foreach (var alert in Model.SecurityAlerts)
+                                {
+                                    <tr id="alert-row-@alert.Id">
+                                        <td>
+                                            <div class="text-white small">@alert.DetectedAt.ToString("dd MMM yyyy")</div>
+                                            <div class="text-muted small">@alert.DetectedAt.ToString("hh:mm tt")</div>
+                                        </td>
+                                        <td>
+                                            @if (alert.Severity == "Critical" || alert.Severity == "High")
+                                            {
+                                                <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-40">@alert.Severity</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-40">@alert.Severity</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="text-white fw-bold small">@alert.Title</div>
+                                            <span class="font-monospace text-secondary small">@alert.AlertType</span>
+                                        </td>
+                                        <td>
+                                            <span class="text-light small">@alert.Description</span>
+                                        </td>
+                                        <td>
+                                            <div class="text-white small">@(alert.AffectedUserName ?? "N/A")</div>
+                                            <span class="font-monospace text-secondary small">@alert.IpAddress</span>
+                                        </td>
+                                        <td>
+                                            @if (alert.IsResolved)
+                                            {
+                                                <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30">
+                                                    <i class="fas fa-check me-1"></i> Resolved by @alert.ResolvedBy
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30">
+                                                    <i class="fas fa-triangle-exclamation me-1"></i> Unresolved
+                                                </span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (!alert.IsResolved)
+                                            {
+                                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" onclick="resolveAlert(@alert.Id)">
+                                                    <i class="fas fa-check-double me-1"></i> Mark Resolved
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted small">Resolved</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@Html.AntiForgeryToken()
+
+@section Scripts {
+<script>
+    function getCsrfToken() {
+        return $('input[name="__RequestVerificationToken"]').val() || '';
+    }
+
+    function forceLogout(sessionId, userName) {
+        if (!confirm(`Are you sure you want to force-terminate the active session for '${userName}'?`)) {
+            return;
+        }
+
+        $.ajax({
+            url: '/Admin/ForceLogout',
+            type: 'POST',
+            data: { sessionId: sessionId },
+            headers: { 'RequestVerificationToken': getCsrfToken() },
+            success: function(response) {
+                if (response.success) {
+                    $(`#session-row-${sessionId}`).fadeOut(300, function() { $(this).remove(); });
+                    alert(response.message);
+                } else {
+                    alert(response.message);
+                }
+            },
+            error: function() {
+                alert('Error contacting server to force logout.');
+            }
+        });
+    }
+
+    function restoreRecord(logId, entityName, title) {
+        if (!confirm(`Restore deleted ${entityName} '${title}' back to active status?`)) {
+            return;
+        }
+
+        $.ajax({
+            url: '/Admin/RestoreDeletedRecord',
+            type: 'POST',
+            data: { softDeleteLogId: logId },
+            headers: { 'RequestVerificationToken': getCsrfToken() },
+            success: function(response) {
+                alert(response.message);
+                if (response.success) {
+                    window.location.reload();
+                }
+            },
+            error: function() {
+                alert('Error restoring record.');
+            }
+        });
+    }
+
+    function resolveAlert(alertId) {
+        $.ajax({
+            url: '/Admin/ResolveSecurityAlert',
+            type: 'POST',
+            data: { alertId: alertId },
+            headers: { 'RequestVerificationToken': getCsrfToken() },
+            success: function(response) {
+                alert(response.message);
+                if (response.success) {
+                    window.location.reload();
+                }
+            },
+            error: function() {
+                alert('Error resolving security alert.');
+            }
+        });
+    }
+</script>
+}

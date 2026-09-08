@@ -551,6 +551,201 @@ BEGIN
 END;
 GO
 
+-- 1.19 LOGIN HISTORIES TABLE
+IF OBJECT_ID('dbo.LoginHistories', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.LoginHistories (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        UserId INT NULL,
+        UserName NVARCHAR(200) NOT NULL,
+        Role NVARCHAR(50) NOT NULL DEFAULT 'Customer',
+        LoginTime DATETIME2 NOT NULL DEFAULT GETDATE(),
+        LogoutTime DATETIME2 NULL,
+        LastActivityTime DATETIME2 NOT NULL DEFAULT GETDATE(),
+        IpAddress NVARCHAR(100) NULL,
+        Browser NVARCHAR(100) NULL,
+        Device NVARCHAR(100) NULL,
+        OperatingSystem NVARCHAR(100) NULL,
+        SessionId NVARCHAR(150) NULL,
+        IsSuccessful BIT NOT NULL DEFAULT 1,
+        FailureReason NVARCHAR(500) NULL,
+        IsActiveSession BIT NOT NULL DEFAULT 1,
+        IsForceLoggedOut BIT NOT NULL DEFAULT 0,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
+-- 1.20 USER SESSIONS TABLE
+IF OBJECT_ID('dbo.UserSessions', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.UserSessions (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        SessionId NVARCHAR(150) NOT NULL,
+        UserId INT NULL,
+        UserName NVARCHAR(200) NOT NULL,
+        Role NVARCHAR(50) NOT NULL DEFAULT 'Customer',
+        IpAddress NVARCHAR(100) NULL,
+        Device NVARCHAR(100) NULL DEFAULT 'Desktop',
+        Browser NVARCHAR(100) NULL DEFAULT 'Chrome',
+        OperatingSystem NVARCHAR(100) NULL DEFAULT 'Windows',
+        LoginTime DATETIME2 NOT NULL DEFAULT GETDATE(),
+        LastSeenTime DATETIME2 NOT NULL DEFAULT GETDATE(),
+        LastPageVisited NVARCHAR(250) NULL DEFAULT '/',
+        LastAction NVARCHAR(250) NULL DEFAULT 'Page View',
+        IsActive BIT NOT NULL DEFAULT 1,
+        ExpiryTime DATETIME2 NULL,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0
+    );
+END;
+GO
+
+-- 1.21 USER ACTIVITIES TABLE
+IF OBJECT_ID('dbo.UserActivities', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.UserActivities (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        UserId INT NULL,
+        UserName NVARCHAR(200) NOT NULL,
+        Role NVARCHAR(50) NOT NULL DEFAULT 'Customer',
+        Action NVARCHAR(100) NOT NULL,
+        Module NVARCHAR(100) NOT NULL,
+        Entity NVARCHAR(100) NULL,
+        EntityId INT NULL,
+        Description NVARCHAR(2000) NULL,
+        Timestamp DATETIME2 NOT NULL DEFAULT GETDATE(),
+        IpAddress NVARCHAR(100) NULL,
+        Device NVARCHAR(100) NULL,
+        Browser NVARCHAR(100) NULL,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
+-- 1.22 ENTITY CHANGE LOGS (BEFORE/AFTER DIFFS) TABLE
+IF OBJECT_ID('dbo.EntityChangeLogs', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.EntityChangeLogs (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        EntityName NVARCHAR(100) NOT NULL,
+        EntityId INT NOT NULL,
+        Action NVARCHAR(100) NOT NULL DEFAULT 'UPDATE',
+        FieldName NVARCHAR(100) NULL,
+        OldValue NVARCHAR(2000) NULL,
+        NewValue NVARCHAR(2000) NULL,
+        ChangedByUserId INT NULL,
+        ChangedByUserName NVARCHAR(200) NULL,
+        ChangedByUserRole NVARCHAR(50) NULL,
+        Timestamp DATETIME2 NOT NULL DEFAULT GETDATE(),
+        IpAddress NVARCHAR(100) NULL,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
+-- 1.23 SOFT DELETE LOGS TABLE
+IF OBJECT_ID('dbo.SoftDeleteLogs', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.SoftDeleteLogs (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        EntityName NVARCHAR(100) NOT NULL,
+        EntityId INT NOT NULL,
+        EntityTitle NVARCHAR(250) NULL,
+        DeletedByUserId INT NULL,
+        DeletedByUserName NVARCHAR(200) NULL,
+        DeletedByUserRole NVARCHAR(50) NULL,
+        DeletedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+        IpAddress NVARCHAR(100) NULL,
+        Reason NVARCHAR(1000) NULL,
+        SnapshotDataJson NVARCHAR(MAX) NULL,
+        IsRestored BIT NOT NULL DEFAULT 0,
+        RestoredAt DATETIME2 NULL,
+        RestoredBy NVARCHAR(200) NULL,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
+-- 1.24 ENTITY VIEW LOGS TABLE
+IF OBJECT_ID('dbo.EntityViewLogs', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.EntityViewLogs (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        EntityName NVARCHAR(100) NOT NULL,
+        EntityId INT NOT NULL,
+        ViewedByUserId INT NULL,
+        ViewedByUserName NVARCHAR(200) NOT NULL,
+        ViewedByUserRole NVARCHAR(50) NOT NULL DEFAULT 'Admin',
+        ViewedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+        IpAddress NVARCHAR(100) NULL,
+        ExtraInfo NVARCHAR(500) NULL,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
+-- 1.25 SECURITY THREAT ALERTS TABLE
+IF OBJECT_ID('dbo.SecurityThreatAlerts', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.SecurityThreatAlerts (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        AlertType NVARCHAR(100) NOT NULL,
+        Severity NVARCHAR(50) NOT NULL DEFAULT 'Medium',
+        Title NVARCHAR(250) NOT NULL,
+        Description NVARCHAR(2000) NULL,
+        AffectedUserId INT NULL,
+        AffectedUserName NVARCHAR(200) NULL,
+        IpAddress NVARCHAR(100) NULL,
+        DetectedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+        IsResolved BIT NOT NULL DEFAULT 0,
+        ResolvedAt DATETIME2 NULL,
+        ResolvedBy NVARCHAR(200) NULL,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
 -- ==============================================================================
 -- 2. HIGH-PERFORMANCE INDEXES FOR ULTRA-FAST QUERIES
 -- ==============================================================================
@@ -573,6 +768,26 @@ GO
 
 IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Shops_IsApproved_IsActive')
     CREATE NONCLUSTERED INDEX IX_Shops_IsApproved_IsActive ON dbo.Shops(IsApproved, IsActive, IsDeleted);
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_LoginHistories_UserId')
+    CREATE NONCLUSTERED INDEX IX_LoginHistories_UserId ON dbo.LoginHistories(UserId, LoginTime);
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_UserSessions_SessionId')
+    CREATE UNIQUE NONCLUSTERED INDEX IX_UserSessions_SessionId ON dbo.UserSessions(SessionId);
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_UserActivities_Timestamp')
+    CREATE NONCLUSTERED INDEX IX_UserActivities_Timestamp ON dbo.UserActivities(Timestamp DESC);
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_EntityChangeLogs_Entity')
+    CREATE NONCLUSTERED INDEX IX_EntityChangeLogs_Entity ON dbo.EntityChangeLogs(EntityName, EntityId);
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_SecurityThreatAlerts_IsResolved')
+    CREATE NONCLUSTERED INDEX IX_SecurityThreatAlerts_IsResolved ON dbo.SecurityThreatAlerts(IsResolved, DetectedAt DESC);
 GO
 
 -- ==============================================================================
@@ -603,44 +818,19 @@ BEGIN
     SELECT 
         p.Id, p.ShopId, p.ProductName, p.Category, p.SubCategory, p.Brand,
         p.Description, p.Price, p.Mrp, p.Discount, p.Stock, p.Sku,
-        p.StockStatus, p.ImageUrl, p.HasVariants, p.IsApproved, p.ApprovalStatus
+        p.StockStatus, p.ImageUrl, p.Rating, p.ReviewsCount, p.CreatedDate
     FROM dbo.Products p WITH (NOLOCK)
-    WHERE p.ShopId = @ShopId 
-      AND p.IsDeleted = 0 
-      AND p.IsActive = 1 
-      AND p.IsApproved = 1
-    ORDER BY p.Id DESC;
+    WHERE p.ShopId = @ShopId AND p.IsDeleted = 0 AND p.IsActive = 1
+    ORDER BY p.ProductName ASC;
 END;
 GO
 
--- 3.3 SP: Get Customer Lifetime History & Metrics (Point 33 & 36)
-CREATE OR ALTER PROCEDURE dbo.sp_GetCustomerHistoryMetrics
+-- 3.3 SP: Get Customer Profile Summary & Order History
+CREATE OR ALTER PROCEDURE dbo.sp_GetCustomerOrderHistory
     @CustomerId INT
 AS
 BEGIN
     SET NOCOUNT ON;
-
-    -- Aggregate KPI counts
-    SELECT 
-        u.Id AS CustomerId,
-        u.Name AS CustomerName,
-        u.Email,
-        u.PhoneNumber,
-        u.IsActive,
-        u.RiskScore,
-        u.RiskLevel,
-        u.IsCodDisabled,
-        u.IsFlaggedForReview,
-        COUNT(o.Id) AS TotalOrders,
-        SUM(CASE WHEN o.OrderStatus IN ('Delivered', 'Completed') THEN 1 ELSE 0 END) AS DeliveredOrders,
-        SUM(CASE WHEN o.OrderStatus = 'Cancelled' THEN 1 ELSE 0 END) AS CancelledOrders,
-        SUM(CASE WHEN o.OrderStatus IN ('Returned', 'Return_Requested', 'Approved') OR o.ReturnStatus IN ('Returned', 'Approved', 'Product_Swapped_Fraud') THEN 1 ELSE 0 END) AS ReturnedOrders,
-        SUM(CASE WHEN o.PaymentStatus = 'Refunded' OR o.ReturnStatus = 'Approved' THEN 1 ELSE 0 END) AS RefundedOrders,
-        ISNULL(SUM(CASE WHEN o.OrderStatus <> 'Cancelled' THEN o.TotalAmount ELSE 0 END), 0) AS TotalAmount
-    FROM dbo.Users u WITH (NOLOCK)
-    LEFT JOIN dbo.Orders o WITH (NOLOCK) ON o.CustomerId = u.Id AND o.IsDeleted = 0
-    WHERE u.Id = @CustomerId
-    GROUP BY u.Id, u.Name, u.Email, u.PhoneNumber, u.IsActive, u.RiskScore, u.RiskLevel, u.IsCodDisabled, u.IsFlaggedForReview;
 
     -- Recent Orders List
     SELECT TOP 20
@@ -705,6 +895,25 @@ BEGIN
     WHERE o.IsDeleted = 0
     GROUP BY ca.Pincode, ca.City
     ORDER BY ReturnRate DESC;
+END;
+GO
+
+-- 3.6 SP: System Monitoring Overview & Telemetry Stats
+CREATE OR ALTER PROCEDURE dbo.sp_GetMonitoringOverviewStats
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @Today DATE = CAST(GETDATE() AS DATE);
+    DECLARE @ActiveCutoff DATETIME2 = DATEADD(minute, -30, GETDATE());
+
+    SELECT 
+        (SELECT COUNT(*) FROM dbo.Users WITH (NOLOCK) WHERE IsDeleted = 0) AS TotalUsers,
+        (SELECT COUNT(*) FROM dbo.UserSessions WITH (NOLOCK) WHERE IsActive = 1 AND LastSeenTime >= @ActiveCutoff) AS OnlineUsers,
+        (SELECT COUNT(*) FROM dbo.LoginHistories WITH (NOLOCK) WHERE CAST(LoginTime AS DATE) = @Today AND IsSuccessful = 1) AS TodayLogins,
+        (SELECT COUNT(*) FROM dbo.LoginHistories WITH (NOLOCK) WHERE CAST(LoginTime AS DATE) = @Today AND IsSuccessful = 0) AS FailedLoginAttempts,
+        (SELECT COUNT(*) FROM dbo.Orders WITH (NOLOCK) WHERE CAST(CreatedDate AS DATE) = @Today AND IsDeleted = 0) AS TodayOrders,
+        (SELECT COUNT(*) FROM dbo.UserActivities WITH (NOLOCK) WHERE CAST(Timestamp AS DATE) = @Today) AS TodayActivities;
 END;
 GO
 
@@ -835,7 +1044,61 @@ BEGIN
 END;
 GO
 
--- 4.9 Data integrity reconciliation
+-- 4.8 Coupons
+IF NOT EXISTS (SELECT 1 FROM dbo.Coupons)
+BEGIN
+    INSERT INTO dbo.Coupons (Code, Description, DiscountType, DiscountValue, MinOrderAmount, MaxDiscountAmount, StartDate, ExpiryDate, UsageLimit, UsedCount, IsActive, IsDeleted)
+    VALUES 
+    ('WELCOME100', 'Flat ₹100 Off on your first order above ₹499', 'Flat', 100.00, 499.00, 100.00, GETDATE(), DATEADD(month, 3, GETDATE()), 1000, 245, 1, 0),
+    ('FESTIVE20', '20% Mega Festival Discount up to ₹1,000', 'Percent', 20.00, 999.00, 1000.00, GETDATE(), DATEADD(month, 2, GETDATE()), 500, 120, 1, 0),
+    ('FREEDEL', 'Free Delivery on all orders above ₹299', 'Flat', 49.00, 299.00, 49.00, GETDATE(), DATEADD(month, 6, GETDATE()), 2000, 680, 1, 0);
+END;
+GO
+
+-- 4.9 System Monitoring Initial Seed Data
+IF NOT EXISTS (SELECT 1 FROM dbo.UserSessions)
+BEGIN
+    INSERT INTO dbo.UserSessions (SessionId, UserId, UserName, Role, IpAddress, Device, Browser, OperatingSystem, LoginTime, LastSeenTime, LastPageVisited, LastAction, IsActive, CreatedDate)
+    VALUES
+    (REPLACE(NEWID(), '-', ''), 1, 'Platform Administrator', 'Admin', '192.168.1.100', 'Desktop', 'Chrome', 'Windows 11', DATEADD(minute, -45, GETDATE()), DATEADD(minute, -1, GETDATE()), '/Admin/SystemMonitoring', 'Dashboard Audit Inspection', 1, GETDATE()),
+    (REPLACE(NEWID(), '-', ''), 2, 'Patna Central Grocery', 'Seller', '192.168.1.105', 'Desktop', 'Edge', 'Windows 10', DATEADD(minute, -30, GETDATE()), DATEADD(minute, -3, GETDATE()), '/Vendor/Orders', 'Packed Order #1024', 1, GETDATE()),
+    (REPLACE(NEWID(), '-', ''), 1, 'Rider Ajay', 'Rider', '192.168.1.110', 'Mobile', 'Chrome Mobile', 'Android 14', DATEADD(minute, -20, GETDATE()), DATEADD(minute, -2, GETDATE()), '/Rider/Dashboard', 'GPS Route Navigation', 1, GETDATE());
+END;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.LoginHistories)
+BEGIN
+    INSERT INTO dbo.LoginHistories (UserId, UserName, Role, LoginTime, LastActivityTime, IpAddress, Browser, Device, OperatingSystem, IsSuccessful, IsActiveSession, CreatedDate)
+    VALUES
+    (1, 'Platform Administrator', 'Admin', DATEADD(hour, -3, GETDATE()), DATEADD(minute, -1, GETDATE()), '192.168.1.100', 'Chrome', 'Desktop', 'Windows 11', 1, 1, GETDATE()),
+    (2, 'Patna Central Grocery', 'Seller', DATEADD(hour, -2, GETDATE()), DATEADD(minute, -3, GETDATE()), '192.168.1.105', 'Edge', 'Desktop', 'Windows 10', 1, 1, GETDATE()),
+    (1, 'Rider Ajay', 'Rider', DATEADD(hour, -1, GETDATE()), DATEADD(minute, -2, GETDATE()), '192.168.1.110', 'Chrome Mobile', 'Mobile', 'Android 14', 1, 1, GETDATE()),
+    (NULL, 'unknown_attacker', 'Admin', DATEADD(minute, -35, GETDATE()), DATEADD(minute, -35, GETDATE()), '203.0.113.55', 'Firefox', 'Desktop', 'Linux', 0, 0, GETDATE());
+END;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.UserActivities)
+BEGIN
+    INSERT INTO dbo.UserActivities (UserId, UserName, Role, Action, Module, Entity, EntityId, Description, Timestamp, IpAddress, Device, Browser, CreatedDate, IsActive)
+    VALUES
+    (1, 'Platform Administrator', 'Admin', 'APPROVE', 'Seller', 'Shop #1', 1, 'Admin approved store registration for Patna Central Grocery', DATEADD(hour, -2, GETDATE()), '192.168.1.100', 'Desktop', 'Chrome', GETDATE(), 1),
+    (2, 'Patna Central Grocery', 'Seller', 'CREATE', 'Product', 'Product #101', 101, 'Seller added new catalog item Fresh Organic Apples', DATEADD(hour, -1, GETDATE()), '192.168.1.105', 'Desktop', 'Edge', GETDATE(), 1),
+    (2, 'Patna Central Grocery', 'Seller', 'STATUS_CHANGE', 'Order', 'Order #1024', 1024, 'Seller packed order #1024 and requested Rider dispatch', DATEADD(minute, -25, GETDATE()), '192.168.1.105', 'Desktop', 'Edge', GETDATE(), 1),
+    (1, 'Rider Ajay', 'Rider', 'ASSIGN', 'Order', 'Order #1024', 1024, 'Rider accepted delivery trip for Order #1024', DATEADD(minute, -15, GETDATE()), '192.168.1.110', 'Mobile', 'Chrome Mobile', GETDATE(), 1);
+END;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.EntityChangeLogs)
+BEGIN
+    INSERT INTO dbo.EntityChangeLogs (EntityName, EntityId, Action, FieldName, OldValue, NewValue, ChangedByUserId, ChangedByUserName, ChangedByUserRole, Timestamp, IpAddress, CreatedDate, IsActive)
+    VALUES
+    ('Order', 1024, 'UPDATE', 'OrderStatus', 'Accepted', 'Packed', 2, 'Patna Central Grocery', 'Seller', DATEADD(minute, -25, GETDATE()), '192.168.1.105', GETDATE(), 1),
+    ('Order', 1024, 'UPDATE', 'RiderId', '(null)', '1 (Rider Ajay)', 1, 'System Dispatcher', 'System', DATEADD(minute, -15, GETDATE()), '127.0.0.1', GETDATE(), 1),
+    ('Product', 101, 'UPDATE', 'Price', '₹120.00', '₹99.00', 2, 'Patna Central Grocery', 'Seller', DATEADD(minute, -50, GETDATE()), '192.168.1.105', GETDATE(), 1);
+END;
+GO
+
+-- 4.10 Data integrity reconciliation
 -- Keep inventory status derived from quantity so checkout and dashboards agree.
 UPDATE dbo.Products
 SET StockStatus = CASE
@@ -885,17 +1148,5 @@ BEGIN
 END;
 GO
 
--- 4.8 Coupons
-IF NOT EXISTS (SELECT 1 FROM dbo.Coupons)
-BEGIN
-    INSERT INTO dbo.Coupons (Code, Description, DiscountType, DiscountValue, MinOrderAmount, MaxDiscountAmount, StartDate, ExpiryDate, UsageLimit, UsedCount, IsActive, IsDeleted)
-    VALUES 
-    ('WELCOME100', 'Flat ₹100 Off on your first order above ₹499', 'Flat', 100.00, 499.00, 100.00, GETDATE(), DATEADD(month, 3, GETDATE()), 1000, 245, 1, 0),
-    ('FESTIVE20', '20% Mega Festival Discount up to ₹1,000', 'Percent', 20.00, 999.00, 1000.00, GETDATE(), DATEADD(month, 2, GETDATE()), 500, 120, 1, 0),
-    ('FREEDEL', 'Free Delivery on all orders above ₹299', 'Flat', 49.00, 299.00, 49.00, GETDATE(), DATEADD(month, 6, GETDATE()), 2000, 680, 1, 0);
-END;
-GO
-
 PRINT 'ShopNext SQL Server Master Schema, Stored Procedures & Seed Data Successfully Deployed!';
 GO
-

@@ -452,6 +452,149 @@ namespace ShopNext.Data
                 context.PincodeServiceabilities.AddRange(pincodes);
                 await context.SaveChangesAsync();
             }
+
+            // 8. Seed System Monitoring Initial Records
+            if (!await context.UserSessions.AnyAsync())
+            {
+                var sessions = new List<UserSession>
+                {
+                    new UserSession
+                    {
+                        SessionId = Guid.NewGuid().ToString("N"),
+                        UserId = 1,
+                        UserName = "Platform Administrator",
+                        Role = "Admin",
+                        IpAddress = "192.168.1.100",
+                        Device = "Desktop",
+                        Browser = "Chrome",
+                        OperatingSystem = "Windows 11",
+                        LoginTime = DateTime.Now.AddMinutes(-45),
+                        LastSeenTime = DateTime.Now.AddMinutes(-1),
+                        LastPageVisited = "/Admin/SystemMonitoring",
+                        LastAction = "Dashboard Audit Inspection",
+                        IsActive = true,
+                        CreatedDate = DateTime.Now
+                    },
+                    new UserSession
+                    {
+                        SessionId = Guid.NewGuid().ToString("N"),
+                        UserId = 2,
+                        UserName = "Patna Central Grocery",
+                        Role = "Seller",
+                        IpAddress = "192.168.1.105",
+                        Device = "Desktop",
+                        Browser = "Edge",
+                        OperatingSystem = "Windows 10",
+                        LoginTime = DateTime.Now.AddMinutes(-30),
+                        LastSeenTime = DateTime.Now.AddMinutes(-3),
+                        LastPageVisited = "/Vendor/Orders",
+                        LastAction = "Packed Order #1024",
+                        IsActive = true,
+                        CreatedDate = DateTime.Now
+                    },
+                    new UserSession
+                    {
+                        SessionId = Guid.NewGuid().ToString("N"),
+                        UserId = 1,
+                        UserName = "Rider Ajay",
+                        Role = "Rider",
+                        IpAddress = "192.168.1.110",
+                        Device = "Mobile",
+                        Browser = "Chrome Mobile",
+                        OperatingSystem = "Android 14",
+                        LoginTime = DateTime.Now.AddMinutes(-20),
+                        LastSeenTime = DateTime.Now.AddMinutes(-2),
+                        LastPageVisited = "/Rider/Dashboard",
+                        LastAction = "GPS Route Navigation",
+                        IsActive = true,
+                        CreatedDate = DateTime.Now
+                    }
+                };
+                context.UserSessions.AddRange(sessions);
+                await context.SaveChangesAsync();
+            }
+
+            if (!await context.LoginHistories.AnyAsync())
+            {
+                var logins = new List<LoginHistory>
+                {
+                    new LoginHistory { UserId = 1, UserName = "Platform Administrator", Role = "Admin", LoginTime = DateTime.Now.AddHours(-3), LastActivityTime = DateTime.Now.AddMinutes(-1), IpAddress = "192.168.1.100", Browser = "Chrome", Device = "Desktop", OperatingSystem = "Windows 11", IsSuccessful = true, IsActiveSession = true, CreatedDate = DateTime.Now },
+                    new LoginHistory { UserId = 2, UserName = "Patna Central Grocery", Role = "Seller", LoginTime = DateTime.Now.AddHours(-2), LastActivityTime = DateTime.Now.AddMinutes(-3), IpAddress = "192.168.1.105", Browser = "Edge", Device = "Desktop", OperatingSystem = "Windows 10", IsSuccessful = true, IsActiveSession = true, CreatedDate = DateTime.Now },
+                    new LoginHistory { UserId = 1, UserName = "Rider Ajay", Role = "Rider", LoginTime = DateTime.Now.AddHours(-1), LastActivityTime = DateTime.Now.AddMinutes(-2), IpAddress = "192.168.1.110", Browser = "Chrome Mobile", Device = "Mobile", OperatingSystem = "Android 14", IsSuccessful = true, IsActiveSession = true, CreatedDate = DateTime.Now },
+                    new LoginHistory { UserId = null, UserName = "unknown_attacker", Role = "Admin", LoginTime = DateTime.Now.AddMinutes(-35), LastActivityTime = DateTime.Now.AddMinutes(-35), IpAddress = "203.0.113.55", Browser = "Firefox", Device = "Desktop", OperatingSystem = "Linux", IsSuccessful = false, FailureReason = "Invalid password", IsActiveSession = false, CreatedDate = DateTime.Now }
+                };
+                context.LoginHistories.AddRange(logins);
+                await context.SaveChangesAsync();
+            }
+
+            if (!await context.UserActivities.AnyAsync())
+            {
+                var activities = new List<UserActivity>
+                {
+                    new UserActivity { UserId = 1, UserName = "Platform Administrator", Role = "Admin", Action = "APPROVE", Module = "Seller", Entity = "Shop #1", EntityId = 1, Description = "Admin approved store registration for 'Patna Central Grocery'", Timestamp = DateTime.Now.AddHours(-2), IpAddress = "192.168.1.100", Device = "Desktop", Browser = "Chrome", CreatedDate = DateTime.Now },
+                    new UserActivity { UserId = 2, UserName = "Patna Central Grocery", Role = "Seller", Action = "CREATE", Module = "Product", Entity = "Product #101", EntityId = 101, Description = "Seller added new catalog item 'Fresh Organic Apples'", Timestamp = DateTime.Now.AddHours(-1), IpAddress = "192.168.1.105", Device = "Desktop", Browser = "Edge", CreatedDate = DateTime.Now },
+                    new UserActivity { UserId = 2, UserName = "Patna Central Grocery", Role = "Seller", Action = "STATUS_CHANGE", Module = "Order", Entity = "Order #1024", EntityId = 1024, Description = "Seller packed order #1024 and requested Rider dispatch", Timestamp = DateTime.Now.AddMinutes(-25), IpAddress = "192.168.1.105", Device = "Desktop", Browser = "Edge", CreatedDate = DateTime.Now },
+                    new UserActivity { UserId = 1, UserName = "Rider Ajay", Role = "Rider", Action = "ASSIGN", Module = "Order", Entity = "Order #1024", EntityId = 1024, Description = "Rider accepted delivery trip for Order #1024", Timestamp = DateTime.Now.AddMinutes(-15), IpAddress = "192.168.1.110", Device = "Mobile", Browser = "Chrome Mobile", CreatedDate = DateTime.Now }
+                };
+                context.UserActivities.AddRange(activities);
+                await context.SaveChangesAsync();
+            }
+
+            if (!await context.EntityChangeLogs.AnyAsync())
+            {
+                var diffs = new List<EntityChangeLog>
+                {
+                    new EntityChangeLog { EntityName = "Order", EntityId = 1024, Action = "UPDATE", FieldName = "OrderStatus", OldValue = "Accepted", NewValue = "Packed", ChangedByUserId = 2, ChangedByUserName = "Patna Central Grocery", ChangedByUserRole = "Seller", Timestamp = DateTime.Now.AddMinutes(-25), IpAddress = "192.168.1.105", CreatedDate = DateTime.Now },
+                    new EntityChangeLog { EntityName = "Order", EntityId = 1024, Action = "UPDATE", FieldName = "RiderId", OldValue = "(null)", NewValue = "1 (Rider Ajay)", ChangedByUserId = 1, ChangedByUserName = "System Dispatcher", ChangedByUserRole = "System", Timestamp = DateTime.Now.AddMinutes(-15), IpAddress = "127.0.0.1", CreatedDate = DateTime.Now },
+                    new EntityChangeLog { EntityName = "Product", EntityId = 101, Action = "UPDATE", FieldName = "Price", OldValue = "₹120.00", NewValue = "₹99.00", ChangedByUserId = 2, ChangedByUserName = "Patna Central Grocery", ChangedByUserRole = "Seller", Timestamp = DateTime.Now.AddMinutes(-50), IpAddress = "192.168.1.105", CreatedDate = DateTime.Now }
+                };
+                context.EntityChangeLogs.AddRange(diffs);
+                await context.SaveChangesAsync();
+            }
+
+            if (!await context.SoftDeleteLogs.AnyAsync())
+            {
+                var deletes = new List<SoftDeleteLog>
+                {
+                    new SoftDeleteLog { EntityName = "Product", EntityId = 99, EntityTitle = "Expired Seasonal Mango Juice", DeletedByUserId = 2, DeletedByUserName = "Patna Central Grocery", DeletedByUserRole = "Seller", Reason = "Seasonal item out of production", DeletedAt = DateTime.Now.AddDays(-1), IpAddress = "192.168.1.105", IsRestored = false, CreatedDate = DateTime.Now }
+                };
+                context.SoftDeleteLogs.AddRange(deletes);
+                await context.SaveChangesAsync();
+            }
+
+            if (!await context.EntityViewLogs.AnyAsync())
+            {
+                var views = new List<EntityViewLog>
+                {
+                    new EntityViewLog { EntityName = "Order", EntityId = 1024, ViewedByUserId = 1, ViewedByUserName = "Platform Administrator", ViewedByUserRole = "Admin", ViewedAt = DateTime.Now.AddMinutes(-10), IpAddress = "192.168.1.100", ExtraInfo = "Admin verified order fulfillment", CreatedDate = DateTime.Now },
+                    new EntityViewLog { EntityName = "Order", EntityId = 1024, ViewedByUserId = 2, ViewedByUserName = "Patna Central Grocery", ViewedByUserRole = "Seller", ViewedAt = DateTime.Now.AddMinutes(-26), IpAddress = "192.168.1.105", ExtraInfo = "Seller opened order dispatch drawer", CreatedDate = DateTime.Now },
+                    new EntityViewLog { EntityName = "Order", EntityId = 1024, ViewedByUserId = 1, ViewedByUserName = "Rider Ajay", ViewedByUserRole = "Rider", ViewedAt = DateTime.Now.AddMinutes(-16), IpAddress = "192.168.1.110", ExtraInfo = "Rider accepted delivery route", CreatedDate = DateTime.Now }
+                };
+                context.EntityViewLogs.AddRange(views);
+                await context.SaveChangesAsync();
+            }
+
+            if (!await context.SecurityThreatAlerts.AnyAsync())
+            {
+                var alerts = new List<SecurityThreatAlert>
+                {
+                    new SecurityThreatAlert
+                    {
+                        AlertType = "FailedLogins",
+                        Severity = "High",
+                        Title = "Repeated Failed Login Attempts on Admin Gateway",
+                        Description = "Multiple unauthorized login attempts detected from IP 203.0.113.55 targeting identifier 'unknown_attacker'.",
+                        AffectedUserId = null,
+                        AffectedUserName = "unknown_attacker",
+                        IpAddress = "203.0.113.55",
+                        DetectedAt = DateTime.Now.AddMinutes(-35),
+                        IsResolved = false,
+                        CreatedDate = DateTime.Now
+                    }
+                };
+                context.SecurityThreatAlerts.AddRange(alerts);
+                await context.SaveChangesAsync();
+            }
         }
     }
 }

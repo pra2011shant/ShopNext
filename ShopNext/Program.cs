@@ -49,6 +49,7 @@ builder.Services.AddScoped<IFlashSaleService, FlashSaleService>();
 builder.Services.AddScoped<IInventoryProtectionService, InventoryProtectionService>();
 builder.Services.AddScoped<ISaleFraudMonitoringService, SaleFraudMonitoringService>();
 builder.Services.AddScoped<IAdvancedEcommerceService, AdvancedEcommerceService>();
+builder.Services.AddScoped<ISystemMonitoringService, SystemMonitoringService>();
 builder.Services.AddSingleton<ILocalizationService, LocalizationService>();
 builder.Services.AddHostedService<CampaignSchedulerBackgroundService>();
 

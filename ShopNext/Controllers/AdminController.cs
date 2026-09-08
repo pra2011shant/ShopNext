@@ -30,8 +30,9 @@ namespace ShopNext.Controllers
         private readonly IInventoryProtectionService _inventoryProtectionService;
         private readonly ISaleFraudMonitoringService _saleFraudService;
         private readonly IAdvancedEcommerceService _advancedService;
+        private readonly ISystemMonitoringService _monitoringService;
 
-        public AdminController(IShopNextService service, ShopNextDbContext context, IAuditService auditService, ICustomerRiskService riskService, IAddressRiskService addressRiskService, IMultiAccountDetectionService multiAccountService, ICodAbuseService codAbuseService, ISaleCampaignService saleCampaignService, IFlashSaleService flashSaleService, IInventoryProtectionService inventoryProtectionService, ISaleFraudMonitoringService saleFraudService, IAdvancedEcommerceService advancedService)
+        public AdminController(IShopNextService service, ShopNextDbContext context, IAuditService auditService, ICustomerRiskService riskService, IAddressRiskService addressRiskService, IMultiAccountDetectionService multiAccountService, ICodAbuseService codAbuseService, ISaleCampaignService saleCampaignService, IFlashSaleService flashSaleService, IInventoryProtectionService inventoryProtectionService, ISaleFraudMonitoringService saleFraudService, IAdvancedEcommerceService advancedService, ISystemMonitoringService monitoringService)
         {
             _service = service;
             _context = context;
@@ -45,6 +46,7 @@ namespace ShopNext.Controllers
             _inventoryProtectionService = inventoryProtectionService;
             _saleFraudService = saleFraudService;
             _advancedService = advancedService;
+            _monitoringService = monitoringService;
         }
 
         private bool IsAdminLoggedIn()
@@ -5059,6 +5061,120 @@ namespace ShopNext.Controllers
             );
 
             return Json(new { success = result, message = result ? "Delivery rescheduled successfully." : "Failed to reschedule delivery." });
+        }
+
+        #endregion
+
+        #region System Monitoring & Full Audit Command Center (Phase 1 & 2)
+
+        // GET: /Admin/SystemMonitoring
+        [HttpGet]
+        public async Task<IActionResult> SystemMonitoring(string? roleFilter = null, string? moduleFilter = null, string? search = null)
+        {
+            if (!IsAdminLoggedIn())
+                return RedirectToAction("Login", "Account", new { role = "Admin" });
+
+            // Record Admin view activity
+            await _monitoringService.LogEntityViewAsync(
+                entityName: "SystemMonitoringCenter",
+                entityId: 1,
+                userId: 1,
+                userName: User.Identity?.Name ?? "Platform Administrator",
+                userRole: "Admin",
+                ipAddress: HttpContext.Connection.RemoteIpAddress?.ToString(),
+                extraInfo: "Admin inspected real-time system monitoring console");
+
+            var model = await _monitoringService.GetMonitoringDashboardStatsAsync(roleFilter, moduleFilter, search);
+            return View(model);
+        }
+
+        // POST: /Admin/ForceLogout
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForceLogout(string sessionId)
+        {
+            if (!IsAdminLoggedIn())
+                return Unauthorized();
+
+            if (string.IsNullOrWhiteSpace(sessionId))
+                return Json(new { success = false, message = "Session ID is required." });
+
+            string adminName = User.Identity?.Name ?? "Admin";
+            bool result = await _monitoringService.ForceLogoutSessionAsync(sessionId, adminName);
+            return Json(new { success = result, message = result ? "Session terminated successfully." : "Session not found or already inactive." });
+        }
+
+        // POST: /Admin/LogoutAllSessions
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LogoutAllSessions(int userId, string role)
+        {
+            if (!IsAdminLoggedIn())
+                return Unauthorized();
+
+            string adminName = User.Identity?.Name ?? "Admin";
+            bool result = await _monitoringService.LogoutAllUserSessionsAsync(userId, role, adminName);
+            return Json(new { success = result, message = result ? "All sessions terminated for user." : "Failed to terminate sessions." });
+        }
+
+        // POST: /Admin/RestoreDeletedRecord
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RestoreDeletedRecord(int softDeleteLogId)
+        {
+            if (!IsAdminLoggedIn())
+                return Unauthorized();
+
+            string adminName = User.Identity?.Name ?? "Admin";
+            bool result = await _monitoringService.RestoreDeletedRecordAsync(softDeleteLogId, adminName);
+            return Json(new { success = result, message = result ? "Record restored successfully." : "Failed to restore record or already restored." });
+        }
+
+        // POST: /Admin/ResolveSecurityAlert
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResolveSecurityAlert(int alertId)
+        {
+            if (!IsAdminLoggedIn())
+                return Unauthorized();
+
+            string adminName = User.Identity?.Name ?? "Admin";
+            bool result = await _monitoringService.ResolveSecurityAlertAsync(alertId, adminName);
+            return Json(new { success = result, message = result ? "Security alert marked as resolved." : "Alert not found." });
+        }
+
+        // GET: /Admin/ExportMonitoringData
+        [HttpGet]
+        public async Task<IActionResult> ExportMonitoringData(string type = "Sessions")
+        {
+            if (!IsAdminLoggedIn())
+                return RedirectToAction("Login", "Account", new { role = "Admin" });
+
+            byte[] csvBytes = await _monitoringService.ExportToCsvAsync(type);
+            string fileName = $"ShopNext_{type}_Export_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            return File(csvBytes, "text/csv", fileName);
+        }
+
+        // GET: /Admin/GetActiveSessionsJson
+        [HttpGet]
+        public async Task<IActionResult> GetActiveSessionsJson()
+        {
+            if (!IsAdminLoggedIn())
+                return Unauthorized();
+
+            var sessions = await _monitoringService.GetActiveSessionsAsync();
+            return Json(new { success = true, data = sessions });
+        }
+
+        // GET: /Admin/GetRecentActivitiesJson
+        [HttpGet]
+        public async Task<IActionResult> GetRecentActivitiesJson(string? module = null, string? role = null, string? search = null)
+        {
+            if (!IsAdminLoggedIn())
+                return Unauthorized();
+
+            var activities = await _monitoringService.GetRecentActivitiesAsync(100, module, role, null, search);
+            return Json(new { success = true, data = activities });
         }
 
         #endregion
