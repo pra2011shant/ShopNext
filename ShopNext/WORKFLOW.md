@@ -17,16 +17,16 @@ sequenceDiagram
 
     Customer->>UI: Browse Products & Add to Cart
     UI->>Engine: Reserve Stock for 10 Mins (Token Issued)
-    Engine->>DB: Apply Stock Hold Lock
+    Engine->>DB: Apply Stock Hold Lock (dbo.StockReservations)
     Customer->>UI: Select Delivery Slot & Apply Coupon
     Engine->>Engine: Strict Server Coupon Validation (Expiry, Min Order, User Limit)
     Customer->>UI: Select Payment Mode (UPI / Card / NetBanking / COD)
     
     alt Payment Successful
         UI->>Engine: Confirm Order & Payment
-        Engine->>DB: Deduct Permanent Inventory, Commit Order
+        Engine->>DB: Deduct Permanent Inventory, Commit Order (dbo.Orders)
         Engine->>Engine: Calculate GST (CGST/SGST or IGST) & Generate Tax Invoice
-        Engine->>Engine: Award Loyalty Points (1 Pt / ₹100)
+        Engine->>Engine: Award Loyalty Points (1 Pt / ₹100) (dbo.RewardPoints)
         Engine->>Rider: Auto-Assign Nearest Rider via GPS
         UI-->>Customer: Order Confirmation + Live Map Tracking
     else Payment Failed
@@ -37,7 +37,40 @@ sequenceDiagram
 
 ---
 
-## 2. 🌐 Point 173: Multi-Language & Localization Architecture
+## 2. 🛡️ System Monitoring, Live Sessions & Diff Audit Lifecycle (Point 174)
+
+```mermaid
+graph TD
+    A[User Action: Login / Browse / Edit / Delete] --> B[HTTP Request + Cookie Auth Token]
+    
+    B --> C{Action Type}
+    
+    C -->|Authentication| D[AccountController / Login / Logout]
+    D --> D1[Record dbo.LoginHistories: IP, Device, Browser, Status]
+    D --> D2[Upsert dbo.UserSessions: Token, IsActive=1, Heartbeat]
+    
+    C -->|Normal Activity / API| E[ISystemMonitoringService: LogActivityAsync]
+    E --> E1[Record dbo.UserActivities: Controller, Action, Method, Payload]
+    E --> E2[Update UserSession: LastSeenTime = GETDATE()]
+
+    C -->|Record Update| F[Entity Update Interceptor]
+    F --> F1[Compute JSON Diff: OldValues vs NewValues]
+    F --> F2[Save to dbo.EntityChangeLogs: EntityName, RecordId, ChangedBy, JSON Diff]
+
+    C -->|Record Delete| G[Soft Delete Engine]
+    G --> G1[Set Target Entity: IsDeleted = 1]
+    G --> G2[Save to dbo.SoftDeleteLogs: EntityName, RecordId, DeletedBy, OriginalJson]
+
+    H[Admin Command Center: /Admin/SystemMonitoring] --> I1[View Real-Time Telemetry Counters]
+    H --> I2[Inspect Live User Sessions & 1-Click Force Logout]
+    H --> I3[Inspect Entity Diffs with Before vs After Highlighting]
+    H --> I4[1-Click Restore Soft-Deleted Records from Recycle Bin]
+    H --> I5[Acknowledge Threat Alerts & Export Audit CSV]
+```
+
+---
+
+## 3. 🌐 Point 173: Multi-Language & Localization Architecture
 
 ```mermaid
 graph TD
@@ -62,7 +95,7 @@ graph TD
 
 ---
 
-## 3. 🚚 Hyperlocal Dispatch & Proof of Delivery (POD)
+## 4. 🚚 Hyperlocal Dispatch & Proof of Delivery (POD)
 
 ```mermaid
 sequenceDiagram
@@ -81,19 +114,20 @@ sequenceDiagram
     Map-->>Customer: Real-time Rider Route Telemetry (Lat/Lng)
     Rider->>Customer: Arrives at Customer Doorstep
     Customer->>Rider: Provides 4-Digit Delivery OTP
-    Rider->>Server: Submit OTP + Geotag Location (Lat/Lng) + Timestamp
+    Rider->>Server: Submit OTP + Geotag Location (Lat/Lng) + Timestamp (dbo.DeliveryProofs)
     
     alt OTP Matched
         Server->>Server: Verify POD & Mark Order 'Delivered'
         Server->>Customer: Delivery Verified SMS & Digital Invoice
     else 3 Failed Delivery Attempts
+        Server->>Server: Log Failed Attempt (dbo.FailedDeliveryLogs)
         Server->>Server: Auto-Schedule Return to Merchant (RTO)
     end
 ```
 
 ---
 
-## 4. 🛡️ Return, Swap Fraud Prevention & 3-Party Grievance
+## 5. 🛡️ Return, Swap Fraud Prevention & 3-Party Grievance
 
 ```mermaid
 graph TD
@@ -120,7 +154,7 @@ graph TD
 
 ---
 
-## 5. 🧠 AI Customer Risk Score & Fraud Monitoring Engine
+## 6. 🧠 AI Customer Risk Score & Fraud Monitoring Engine
 
 ```mermaid
 graph TD
@@ -141,7 +175,7 @@ graph TD
 
 ---
 
-## 6. ⚡ High-Concurrency Flash Sale & Zero-Oversell Protection
+## 7. ⚡ High-Concurrency Flash Sale & Zero-Oversell Protection
 
 ```mermaid
 sequenceDiagram
@@ -157,7 +191,7 @@ sequenceDiagram
     
     alt Stock Available
         Lock->>Lock: Decrement Memory Hold Counter (Atomically)
-        Lock->>DB: Reserve Item for 5 Minutes
+        Lock->>DB: Reserve Item for 5 Minutes (dbo.StockReservations)
         Lock-->>Buyers: Slot Granted $\rightarrow$ Proceed to Immediate Checkout
     else Stock Exhausted
         Lock-->>Buyers: Flash Sale Sold Out Banner
