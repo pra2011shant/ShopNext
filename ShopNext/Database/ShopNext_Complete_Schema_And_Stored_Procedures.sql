@@ -746,6 +746,352 @@ BEGIN
 END;
 GO
 
+-- 1.26 SEARCH HISTORIES TABLE (Point 82)
+IF OBJECT_ID('dbo.SearchHistories', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.SearchHistories (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        CustomerId INT NULL,
+        SearchTerm NVARCHAR(200) NOT NULL,
+        Category NVARCHAR(100) NULL,
+        ResultCount INT NOT NULL DEFAULT 0,
+        ClientIp NVARCHAR(100) NULL,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
+-- 1.27 PRODUCT QUESTIONS TABLE (Point 84)
+IF OBJECT_ID('dbo.ProductQuestions', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.ProductQuestions (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        ProductId INT NOT NULL,
+        CustomerId INT NOT NULL,
+        QuestionText NVARCHAR(1000) NOT NULL,
+        IsApproved BIT NOT NULL DEFAULT 1,
+        Upvotes INT NOT NULL DEFAULT 0,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
+-- 1.28 PRODUCT ANSWERS TABLE (Point 84)
+IF OBJECT_ID('dbo.ProductAnswers', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.ProductAnswers (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        QuestionId INT NOT NULL,
+        ResponderId INT NOT NULL,
+        AnswerText NVARCHAR(2000) NOT NULL,
+        ResponderRole NVARCHAR(50) NOT NULL DEFAULT 'Seller',
+        IsVerifiedSellerAnswer BIT NOT NULL DEFAULT 1,
+        HelpfulCount INT NOT NULL DEFAULT 0,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
+-- 1.29 CHAT MESSAGES TABLE (Point 85)
+IF OBJECT_ID('dbo.ChatMessages', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.ChatMessages (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        ThreadId NVARCHAR(100) NOT NULL,
+        SenderId INT NOT NULL,
+        SenderRole NVARCHAR(50) NOT NULL DEFAULT 'Customer',
+        RecipientId INT NULL,
+        OrderId INT NULL,
+        ProductId INT NULL,
+        ShopId INT NULL,
+        MessageText NVARCHAR(2000) NOT NULL,
+        AttachmentUrl NVARCHAR(500) NULL,
+        IsRead BIT NOT NULL DEFAULT 0,
+        ReadAt DATETIME2 NULL,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
+-- 1.30 PRICE DROP ALERTS TABLE (Point 86)
+IF OBJECT_ID('dbo.PriceDropAlerts', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.PriceDropAlerts (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        CustomerId INT NOT NULL,
+        ProductId INT NOT NULL,
+        SubscribedPrice DECIMAL(18,2) NOT NULL,
+        TargetPrice DECIMAL(18,2) NULL,
+        IsNotified BIT NOT NULL DEFAULT 0,
+        NotifiedAt DATETIME2 NULL,
+        TriggerPrice DECIMAL(18,2) NULL,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
+-- 1.31 STOCK ALERTS TABLE (Point 87)
+IF OBJECT_ID('dbo.StockAlerts', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.StockAlerts (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        CustomerId INT NOT NULL,
+        ProductId INT NOT NULL,
+        CustomerEmail NVARCHAR(200) NULL,
+        CustomerPhone NVARCHAR(20) NULL,
+        IsNotified BIT NOT NULL DEFAULT 0,
+        NotifiedAt DATETIME2 NULL,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
+-- 1.32 WALLET ACCOUNTS TABLE (Point 89)
+IF OBJECT_ID('dbo.WalletAccounts', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.WalletAccounts (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        CustomerId INT NOT NULL,
+        MainBalance DECIMAL(18,2) NOT NULL DEFAULT 0,
+        RefundWalletBalance DECIMAL(18,2) NOT NULL DEFAULT 0,
+        GiftCardBalance DECIMAL(18,2) NOT NULL DEFAULT 0,
+        IsLocked BIT NOT NULL DEFAULT 0,
+        LockReason NVARCHAR(MAX) NULL,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
+-- 1.33 WALLET TRANSACTIONS TABLE (Point 89)
+IF OBJECT_ID('dbo.WalletTransactions', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.WalletTransactions (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        WalletAccountId INT NOT NULL,
+        TransactionType NVARCHAR(50) NOT NULL DEFAULT 'Credit',
+        SourceCategory NVARCHAR(50) NOT NULL DEFAULT 'Refund',
+        Amount DECIMAL(18,2) NOT NULL DEFAULT 0,
+        BalanceAfter DECIMAL(18,2) NOT NULL DEFAULT 0,
+        Description NVARCHAR(500) NOT NULL DEFAULT '',
+        RelatedOrderId INT NULL,
+        ReferenceCode NVARCHAR(100) NULL,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
+-- 1.34 GIFT CARDS TABLE (Point 89)
+IF OBJECT_ID('dbo.GiftCards', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.GiftCards (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        CardCode NVARCHAR(50) NOT NULL,
+        Pin NVARCHAR(20) NOT NULL DEFAULT '1234',
+        InitialAmount DECIMAL(18,2) NOT NULL DEFAULT 0,
+        CurrentBalance DECIMAL(18,2) NOT NULL DEFAULT 0,
+        ExpiryDate DATETIME2 NOT NULL DEFAULT DATEADD(year, 1, GETDATE()),
+        IsRedeemed BIT NOT NULL DEFAULT 0,
+        RedeemedByCustomerId INT NULL,
+        RedeemedAt DATETIME2 NULL,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
+-- 1.35 REWARD POINTS TABLE (Point 90)
+IF OBJECT_ID('dbo.RewardPoints', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.RewardPoints (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        CustomerId INT NOT NULL,
+        CurrentPoints INT NOT NULL DEFAULT 0,
+        LifetimeEarnedPoints INT NOT NULL DEFAULT 0,
+        LifetimeRedeemedPoints INT NOT NULL DEFAULT 0,
+        Tier NVARCHAR(50) NOT NULL DEFAULT 'Silver',
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
+-- 1.36 REWARD POINTS TRANSACTIONS TABLE (Point 90)
+IF OBJECT_ID('dbo.RewardPointsTransactions', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.RewardPointsTransactions (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        RewardPointsAccountId INT NOT NULL,
+        TransactionType NVARCHAR(50) NOT NULL DEFAULT 'Earned',
+        Points INT NOT NULL DEFAULT 0,
+        PointsBalanceAfter INT NOT NULL DEFAULT 0,
+        Description NVARCHAR(500) NOT NULL DEFAULT '',
+        RelatedOrderId INT NULL,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
+-- 1.37 STOCK RESERVATIONS TABLE (Point 94)
+IF OBJECT_ID('dbo.StockReservations', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.StockReservations (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        ReservationToken NVARCHAR(100) NOT NULL,
+        CustomerId INT NOT NULL,
+        ProductId INT NOT NULL,
+        Quantity INT NOT NULL DEFAULT 1,
+        ExpiresAt DATETIME2 NOT NULL DEFAULT DATEADD(minute, 10, GETDATE()),
+        IsCommitted BIT NOT NULL DEFAULT 0,
+        IsReleased BIT NOT NULL DEFAULT 0,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
+-- 1.38 PINCODE SERVICEABILITY TABLE (Point 97)
+IF OBJECT_ID('dbo.PincodeServiceabilities', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.PincodeServiceabilities (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        Pincode NVARCHAR(10) NOT NULL,
+        City NVARCHAR(100) NOT NULL DEFAULT 'Patna',
+        State NVARCHAR(100) NOT NULL DEFAULT 'Bihar',
+        IsServiceable BIT NOT NULL DEFAULT 1,
+        IsCodAvailable BIT NOT NULL DEFAULT 1,
+        EstimatedDeliveryDays INT NOT NULL DEFAULT 2,
+        IsExpressAvailable BIT NOT NULL DEFAULT 1,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
+-- 1.39 FAILED DELIVERY LOGS TABLE (Point 99)
+IF OBJECT_ID('dbo.FailedDeliveryLogs', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.FailedDeliveryLogs (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        OrderId INT NOT NULL,
+        RiderId INT NULL,
+        AttemptNumber INT NOT NULL DEFAULT 1,
+        FailureReason NVARCHAR(100) NOT NULL DEFAULT 'Customer Unavailable',
+        RiderRemarks NVARCHAR(1000) NULL,
+        DoorstepPhotoUrl NVARCHAR(500) NULL,
+        GeoLatitude FLOAT NULL,
+        GeoLongitude FLOAT NULL,
+        NextAction NVARCHAR(50) NOT NULL DEFAULT 'Auto Re-Attempt Scheduled',
+        RescheduledDate DATETIME2 NULL,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
+-- 1.40 DELIVERY PROOFS TABLE (Point 100)
+IF OBJECT_ID('dbo.DeliveryProofs', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.DeliveryProofs (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        OrderId INT NOT NULL,
+        RiderId INT NULL,
+        HandoverOtp NVARCHAR(10) NOT NULL DEFAULT '',
+        IsOtpVerified BIT NOT NULL DEFAULT 1,
+        DeliveryTimestamp DATETIME2 NOT NULL DEFAULT GETDATE(),
+        SignatureOrPhotoUrl NVARCHAR(500) NULL,
+        HandoverLatitude FLOAT NULL,
+        HandoverLongitude FLOAT NULL,
+        ReceivedByName NVARCHAR(100) NOT NULL DEFAULT '',
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END;
+GO
+
 -- ==============================================================================
 -- 2. HIGH-PERFORMANCE INDEXES FOR ULTRA-FAST QUERIES
 -- ==============================================================================
@@ -818,7 +1164,10 @@ BEGIN
     SELECT 
         p.Id, p.ShopId, p.ProductName, p.Category, p.SubCategory, p.Brand,
         p.Description, p.Price, p.Mrp, p.Discount, p.Stock, p.Sku,
-        p.StockStatus, p.ImageUrl, p.Rating, p.ReviewsCount, p.CreatedDate
+        p.StockStatus, p.ImageUrl, p.HasVariants, p.IsApproved, p.ApprovalStatus,
+        ISNULL((SELECT AVG(CAST(r.Rating AS FLOAT)) FROM dbo.Reviews r WITH (NOLOCK) WHERE r.ProductId = p.Id AND r.IsDeleted = 0), 4.5) AS Rating,
+        ISNULL((SELECT COUNT(*) FROM dbo.Reviews r WITH (NOLOCK) WHERE r.ProductId = p.Id AND r.IsDeleted = 0), 0) AS ReviewsCount,
+        p.CreatedDate
     FROM dbo.Products p WITH (NOLOCK)
     WHERE p.ShopId = @ShopId AND p.IsDeleted = 0 AND p.IsActive = 1
     ORDER BY p.ProductName ASC;

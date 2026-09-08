@@ -76,6 +76,8 @@ namespace ShopNext.Models
             modelBuilder.Entity<Coupon>().Property(c => c.DiscountValue).HasPrecision(18, 2);
             modelBuilder.Entity<Coupon>().Property(c => c.MinOrderAmount).HasPrecision(18, 2);
             modelBuilder.Entity<Coupon>().Property(c => c.MaxDiscountAmount).HasPrecision(18, 2);
+            modelBuilder.Entity<Complaint>().Property(c => c.OrderAmount).HasPrecision(18, 2);
+            modelBuilder.Entity<PriceDropAlert>().Property(a => a.TriggerPrice).HasPrecision(18, 2);
             modelBuilder.Entity<Order>().Property(o => o.TotalAmount).HasPrecision(18, 2);
             modelBuilder.Entity<OrderItem>().Property(i => i.UnitPrice).HasPrecision(18, 2);
             modelBuilder.Entity<OrderItem>().Property(i => i.TotalPrice).HasPrecision(18, 2);
