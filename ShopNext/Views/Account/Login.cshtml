@@ -190,7 +190,7 @@
             <h2 class="fw-bold text-white mb-1" style="font-size: 1.75rem; letter-spacing: -0.02em;">
                 Sign In to <span style="background: linear-gradient(135deg, #60a5fa 0%, #c084fc 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">ShopNext</span>
             </h2>
-            <p class="text-secondary small mb-0">Select your role to access your dedicated workspace</p>
+            <p class="small mb-0" style="color: #cbd5e1;">Select your role to access your dedicated workspace</p>
         </div>
 
         @if (ViewBag.Error != null)
@@ -214,39 +214,11 @@
             <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
             <input type="hidden" name="role" id="selectedRoleInput" value="@selectedRole" />
 
-            <!-- Quick Demo Credentials 1-Click Fill -->
-            <div class="mb-3 p-2.5 rounded-3 border border-white border-opacity-10" style="background: rgba(255, 255, 255, 0.03);">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="text-secondary small fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">
-                        <i class="fa-solid fa-bolt text-warning me-1"></i> 1-Click Demo Logins
-                    </span>
-                    <span class="text-secondary" style="font-size: 0.7rem;">Click to auto-fill</span>
-                </div>
-                <div class="d-grid gap-1" style="grid-template-columns: repeat(2, 1fr);">
-                    <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2 text-start small d-flex align-items-center justify-content-between" style="font-size: 0.78rem; border-radius: 8px;" onclick="quickFill('Admin', 'admin@shopnext.com', 'Admin@123')">
-                        <span><i class="fa-solid fa-crown me-1"></i> Admin</span>
-                        <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25" style="font-size: 0.65rem;">admin</span>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-warning py-1 px-2 text-start small d-flex align-items-center justify-content-between" style="font-size: 0.78rem; border-radius: 8px;" onclick="quickFill('Seller', 'techmart@shopnext.com', 'Seller@123')">
-                        <span><i class="fa-solid fa-store me-1"></i> Seller</span>
-                        <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25" style="font-size: 0.65rem;">techmart</span>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-success py-1 px-2 text-start small d-flex align-items-center justify-content-between" style="font-size: 0.78rem; border-radius: 8px;" onclick="quickFill('Rider', '9811223344', 'Rider@123')">
-                        <span><i class="fa-solid fa-motorcycle me-1"></i> Rider</span>
-                        <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25" style="font-size: 0.65rem;">9811223344</span>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 text-start small d-flex align-items-center justify-content-between" style="font-size: 0.78rem; border-radius: 8px;" onclick="quickFill('Customer', 'customer@shopnext.com', 'Customer@123')">
-                        <span><i class="fa-solid fa-user me-1"></i> Customer</span>
-                        <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25" style="font-size: 0.65rem;">pooja</span>
-                    </button>
-                </div>
-            </div>
-
             <!-- 100% Contained Responsive Role Grid -->
-            <div class="mb-3">
-                <label class="form-label text-secondary small fw-bold text-uppercase mb-2 d-flex align-items-center justify-content-between">
+            <div class="mb-4">
+                <label class="form-label small fw-bold text-uppercase mb-2 d-flex align-items-center justify-content-between" style="color: #cbd5e1; letter-spacing: 0.05em;">
                     <span><i class="fa-solid fa-id-badge text-info me-1"></i> Choose Account Role</span>
-                    <span class="badge bg-secondary bg-opacity-30 text-light px-2 py-0.5 rounded-pill" id="activeRoleLabelBadge">@selectedRole</span>
+                    <span class="badge bg-secondary bg-opacity-40 text-white px-2.5 py-1 rounded-pill" id="activeRoleLabelBadge">@selectedRole</span>
                 </label>
                 <div class="role-grid-container">
                     <button type="button" class="role-tab-btn role-customer @(selectedRole == "Customer" ? "active" : "")" onclick="setLoginRole('Customer', this)">
@@ -306,13 +278,13 @@
             </button>
 
             <!-- Registration Links -->
-            <div class="text-center pt-2 border-top border-secondary border-opacity-25">
-                <span class="text-secondary small d-block mb-2">New to ShopNext platform?</span>
+            <div class="text-center pt-3 border-top border-white border-opacity-10">
+                <span class="small d-block mb-2" style="color: #94a3b8;">New to ShopNext platform?</span>
                 <div class="d-flex justify-content-center align-items-center gap-2 flex-wrap small">
                     <a asp-controller="Customer" asp-action="Register" class="text-info text-decoration-none fw-semibold">Customer Sign Up</a>
-                    <span class="text-secondary opacity-50">•</span>
+                    <span class="text-white opacity-25">•</span>
                     <a asp-controller="Vendor" asp-action="Register" class="text-warning text-decoration-none fw-semibold">Become a Seller</a>
-                    <span class="text-secondary opacity-50">•</span>
+                    <span class="text-white opacity-25">•</span>
                     <a asp-controller="Rider" asp-action="Register" class="text-success text-decoration-none fw-semibold">Join Rider Fleet</a>
                 </div>
             </div>
@@ -349,20 +321,6 @@
         const forgotLink = document.getElementById('forgotPasswordLink');
         if (forgotLink) {
             forgotLink.href = '/Account/ForgotPassword?role=' + encodeURIComponent(role);
-        }
-    }
-
-    function quickFill(role, identifier, password) {
-        const btn = document.querySelector('.role-tab-btn.role-' + role.toLowerCase());
-        setLoginRole(role, btn);
-        document.getElementById('loginIdentifier').value = identifier;
-        document.getElementById('loginPassword').value = password;
-        
-        // Gentle flash animation on the submit button
-        const submitBtn = document.getElementById('loginSubmitBtn');
-        if (submitBtn) {
-            submitBtn.style.transform = 'scale(1.03)';
-            setTimeout(() => { submitBtn.style.transform = ''; }, 200);
         }
     }
 
