@@ -33,6 +33,15 @@ BEGIN
         IsCodDisabled BIT NOT NULL DEFAULT 0,
         IsFlaggedForReview BIT NOT NULL DEFAULT 0,
         RiskLastEvaluatedDate DATETIME2 NULL,
+        DeviceFingerprintHash NVARCHAR(255) NULL,
+        IsAccountSuspended BIT NOT NULL DEFAULT 0,
+        IsReturnDisabled BIT NOT NULL DEFAULT 0,
+        RegistrationIpMasked NVARCHAR(100) NULL,
+        RestrictFirstOrderCoupons BIT NOT NULL DEFAULT 0,
+        RestrictionAppliedDate DATETIME2 NULL,
+        RestrictionLevel NVARCHAR(50) NOT NULL DEFAULT 'Normal',
+        RestrictionReason NVARCHAR(MAX) NULL,
+        SuspendedUntilDate DATETIME2 NULL,
         
         -- BaseModel Audit Fields
         Remark NVARCHAR(MAX) NULL,
@@ -138,6 +147,29 @@ BEGIN
         IsActive BIT NOT NULL DEFAULT 1,
         
         CONSTRAINT FK_Products_Shops FOREIGN KEY (ShopId) REFERENCES dbo.Shops(Id) ON DELETE CASCADE
+    );
+END;
+GO
+
+-- 1.3.1 PRODUCT VARIANTS TABLE
+IF OBJECT_ID('dbo.ProductVariants', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.ProductVariants (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        ProductId INT NOT NULL FOREIGN KEY REFERENCES dbo.Products(Id) ON DELETE CASCADE,
+        Size NVARCHAR(50) NULL,
+        Color NVARCHAR(50) NULL,
+        Price DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+        Stock INT NOT NULL DEFAULT 0,
+        Sku NVARCHAR(100) NULL,
+        ImageUrl NVARCHAR(MAX) NULL,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
     );
 END;
 GO

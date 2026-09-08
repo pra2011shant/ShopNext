@@ -126,6 +126,70 @@ namespace ShopNext.Controllers
             return RedirectToAction("Login");
         }
 
+        // GET: /Admin/Sellers
+        [HttpGet]
+        public IActionResult Sellers()
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            return Redirect("/Admin/Dashboard#sellers-tab");
+        }
+
+        // GET: /Admin/Products
+        [HttpGet]
+        public IActionResult Products()
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            return Redirect("/Admin/Dashboard#products-tab");
+        }
+
+        // GET: /Admin/Orders
+        [HttpGet]
+        public IActionResult Orders()
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            return Redirect("/Admin/Dashboard#orders-tab");
+        }
+
+        // GET: /Admin/Customers
+        [HttpGet]
+        public IActionResult Customers()
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            return Redirect("/Admin/Dashboard#customers-tab");
+        }
+
+        // GET: /Admin/Riders
+        [HttpGet]
+        public IActionResult Riders()
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            return Redirect("/Admin/Dashboard#riders-tab");
+        }
+
+        // GET: /Admin/Approvals
+        [HttpGet]
+        public IActionResult Approvals()
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            return Redirect("/Admin/Dashboard#approvals-tab");
+        }
+
+        // GET: /Admin/Coupons
+        [HttpGet]
+        public IActionResult Coupons()
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            return Redirect("/Admin/Dashboard#coupons-tab");
+        }
+
+        // GET: /Admin/Categories
+        [HttpGet]
+        public IActionResult Categories()
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            return Redirect("/Admin/Dashboard#categories-tab");
+        }
+
         // GET: /Admin/Dashboard
         [HttpGet]
         public async Task<IActionResult> Dashboard()

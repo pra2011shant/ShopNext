@@ -135,6 +135,11 @@ namespace ShopNext.Data
                     IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Complaints') AND name = 'ComplainantRole') ALTER TABLE Complaints ADD ComplainantRole NVARCHAR(50) NULL;
                     IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Complaints') AND name = 'ReasonCategory') ALTER TABLE Complaints ADD ReasonCategory NVARCHAR(100) NULL;
 
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('ProductVariants') AND name = 'Size') ALTER TABLE ProductVariants ADD Size NVARCHAR(50) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('ProductVariants') AND name = 'Color') ALTER TABLE ProductVariants ADD Color NVARCHAR(50) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('ProductVariants') AND name = 'Sku') ALTER TABLE ProductVariants ADD Sku NVARCHAR(100) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('ProductVariants') AND name = 'ImageUrl') ALTER TABLE ProductVariants ADD ImageUrl NVARCHAR(MAX) NULL;
+
                     IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AuditLogs') AND name = 'EntityName') ALTER TABLE AuditLogs ADD EntityName NVARCHAR(100) NULL;
                     IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AuditLogs') AND name = 'UserRole') ALTER TABLE AuditLogs ADD UserRole NVARCHAR(50) NULL;
                     IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AuditLogs') AND name = 'UserName') ALTER TABLE AuditLogs ADD UserName NVARCHAR(100) NULL;
