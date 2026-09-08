@@ -93,12 +93,20 @@ if ($sqlConn -ne $null) {
 }
 
 # 5. Launch App and Test HTTP Endpoints
-Write-Host "`n[Test 5/5] Launching ShopNext Dev Server and Testing Endpoints..." -ForegroundColor Yellow
-
 $port = 5219
-$serverProcess = Start-Process -FilePath "dotnet" -ArgumentList "run --urls=http://localhost:$port" -PassThru -NoNewWindow
+$dllPath = ".\bin\Debug\net8.0\ShopNext.dll"
+$serverProcess = Start-Process -FilePath "dotnet" -ArgumentList "$dllPath --urls=http://localhost:$port" -PassThru -NoNewWindow
 
-Start-Sleep -Seconds 6
+# Wait for server readiness
+$ready = $false
+for ($i = 0; $i -lt 15; $i++) {
+    Start-Sleep -Seconds 1
+    try {
+        $test = Invoke-WebRequest -Uri "http://localhost:$port/" -Method Get -TimeoutSec 2 -UseBasicParsing -ErrorAction SilentlyContinue
+        if ($test.StatusCode -eq 200) { $ready = $true; break }
+    } catch {}
+}
+
 
 $endpoints = @(
     "http://localhost:$port/",
