@@ -76,6 +76,33 @@ BEGIN
 END;
 GO
 
+-- 1.1.1 CUSTOMER ADDRESSES TABLE
+IF OBJECT_ID('dbo.CustomerAddresses', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.CustomerAddresses (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        CustomerId INT NOT NULL,
+        AddressType NVARCHAR(50) NOT NULL DEFAULT 'Home',
+        RecipientName NVARCHAR(200) NOT NULL DEFAULT '',
+        PhoneNumber NVARCHAR(50) NOT NULL DEFAULT '',
+        AddressLine NVARCHAR(500) NOT NULL DEFAULT '',
+        City NVARCHAR(100) NOT NULL DEFAULT 'New Delhi',
+        State NVARCHAR(100) NOT NULL DEFAULT 'Delhi',
+        Pincode NVARCHAR(20) NOT NULL DEFAULT '',
+        Landmark NVARCHAR(200) NULL,
+        IsDefault BIT NOT NULL DEFAULT 0,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1,
+        CONSTRAINT FK_CustomerAddresses_Users FOREIGN KEY (CustomerId) REFERENCES dbo.Users(Id) ON DELETE CASCADE
+    );
+END;
+GO
+
 -- 1.2 SHOPS TABLE
 IF OBJECT_ID('dbo.Shops', 'U') IS NULL
 BEGIN
