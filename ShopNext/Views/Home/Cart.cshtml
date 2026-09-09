@@ -707,15 +707,26 @@
                                 <small class="text-muted">Google Pay, PhonePe, Paytm, BHIM</small>
                             </div>
                         </div>
-                        <div id="upiDetailsBox" class="p-3 bg-dark rounded-3 border border-secondary mb-3" style="display: none;">
-                            <div class="text-center mb-2">
-                                <div class="badge bg-info text-dark mb-1">Scan & Pay Simulator</div>
-                                <div class="p-2 bg-white rounded-2 d-inline-block">
-                                    <i class="fa-solid fa-qrcode fa-4x text-dark"></i>
+                        <div id="upiDetailsBox" class="p-3 bg-dark rounded-3 border border-secondary border-opacity-30 mb-3" style="display: none;">
+                            <div class="text-center mb-3">
+                                <div class="badge bg-primary bg-opacity-25 text-primary px-3 py-1 rounded-pill mb-2 fw-semibold">
+                                    <i class="fa-solid fa-qrcode me-1"></i> Scan with Any UPI App (PhonePe, GPay, Paytm)
                                 </div>
-                                <div class="text-light small mt-1">UPI ID: <code>shopnext.merchant@upi</code></div>
+                                <div class="p-2 bg-white rounded-3 d-inline-block shadow-sm" style="width: 170px; height: 170px;">
+                                    <img id="dynamicUpiQrImg" src="https://api.qrserver.com/v1/create-qr-code/?size=154x154&data=upi://pay?pa=shopnext.merchant@upi&pn=ShopNext+Store&cu=INR" alt="UPI QR Code" style="width: 100%; height: 100%; object-fit: contain;" />
+                                </div>
+                                <div class="text-light small mt-2">
+                                    Pay to VPA: <code class="text-info bg-dark px-2 py-0.5 rounded border border-secondary border-opacity-25">shopnext.merchant@upi</code>
+                                </div>
+                                <div class="d-flex justify-content-center gap-2 mt-2 flex-wrap">
+                                    <span class="badge bg-secondary bg-opacity-25 text-light small"><i class="fa-solid fa-mobile-screen-button text-info me-1"></i> GPay</span>
+                                    <span class="badge bg-secondary bg-opacity-25 text-light small"><i class="fa-solid fa-bolt text-warning me-1"></i> PhonePe</span>
+                                    <span class="badge bg-secondary bg-opacity-25 text-light small"><i class="fa-solid fa-wallet text-primary me-1"></i> Paytm</span>
+                                    <span class="badge bg-secondary bg-opacity-25 text-light small"><i class="fa-solid fa-building-columns text-success me-1"></i> BHIM</span>
+                                </div>
                             </div>
-                            <input type="text" id="upiIdInput" class="form-control bg-dark text-white border-secondary form-control-sm" placeholder="Enter your UPI ID (e.g. rahul@okhdfcbank)" />
+                            <label class="form-label text-white small mb-1">Or enter your personal UPI ID:</label>
+                            <input type="text" id="upiIdInput" class="form-control bg-dark text-white border-secondary form-control-sm" placeholder="e.g. yourname@okhdfcbank or 9876543210@paytm" />
                         </div>
 
                         <!-- Option 3: Card -->

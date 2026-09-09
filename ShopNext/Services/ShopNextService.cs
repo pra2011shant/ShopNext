@@ -25,21 +25,14 @@ namespace ShopNext.Services
 
         public async Task<int> CreateUserAsync(User user)
         {
-            using var command = _context.Database.GetDbConnection().CreateCommand();
-            command.CommandText = "dbo.sp_InsertUser";
-            command.CommandType = CommandType.StoredProcedure;
+            user.CreatedAt = DateTime.Now;
+            user.CreatedDate = DateTime.Now;
+            user.IsActive = true;
+            user.IsDeleted = false;
 
-            command.Parameters.Add(new SqlParameter("@PhoneNumber", user.PhoneNumber));
-            command.Parameters.Add(new SqlParameter("@Name", user.Name));
-            command.Parameters.Add(new SqlParameter("@Remark", (object?)user.Remark ?? DBNull.Value));
-
-            if (command.Connection != null && command.Connection.State != ConnectionState.Open)
-            {
-                await command.Connection.OpenAsync();
-            }
-
-            var result = await command.ExecuteScalarAsync();
-            return Convert.ToInt32(result);
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+            return user.Id;
         }
 
         public async Task<int> RegisterCustomerAsync(User user)
@@ -280,34 +273,13 @@ namespace ShopNext.Services
 
         public async Task<int> CreateShopAsync(Shop shop)
         {
-            using var command = _context.Database.GetDbConnection().CreateCommand();
-            command.CommandText = "dbo.sp_InsertShop";
-            command.CommandType = CommandType.StoredProcedure;
+            shop.CreatedDate = DateTime.Now;
+            shop.IsActive = true;
+            shop.IsDeleted = false;
 
-            command.Parameters.Add(new SqlParameter("@ShopName", shop.ShopName));
-            command.Parameters.Add(new SqlParameter("@PhoneNumber", shop.PhoneNumber));
-            command.Parameters.Add(new SqlParameter("@Category", shop.Category));
-            command.Parameters.Add(new SqlParameter("@Latitude", shop.Latitude));
-            command.Parameters.Add(new SqlParameter("@Longitude", shop.Longitude));
-            command.Parameters.Add(new SqlParameter("@IsApproved", shop.IsApproved));
-            command.Parameters.Add(new SqlParameter("@OwnerName", (object?)shop.OwnerName ?? DBNull.Value));
-            command.Parameters.Add(new SqlParameter("@Email", (object?)shop.Email ?? DBNull.Value));
-            command.Parameters.Add(new SqlParameter("@Address", (object?)shop.Address ?? DBNull.Value));
-            command.Parameters.Add(new SqlParameter("@City", (object?)shop.City ?? DBNull.Value));
-            command.Parameters.Add(new SqlParameter("@State", (object?)shop.State ?? DBNull.Value));
-            command.Parameters.Add(new SqlParameter("@Pincode", (object?)shop.Pincode ?? DBNull.Value));
-            command.Parameters.Add(new SqlParameter("@BankAccountNumber", (object?)shop.BankAccountNumber ?? DBNull.Value));
-            command.Parameters.Add(new SqlParameter("@IfscCode", (object?)shop.IfscCode ?? DBNull.Value));
-            command.Parameters.Add(new SqlParameter("@Password", (object?)shop.Password ?? DBNull.Value));
-            command.Parameters.Add(new SqlParameter("@Remark", (object?)shop.Remark ?? DBNull.Value));
-
-            if (command.Connection != null && command.Connection.State != ConnectionState.Open)
-            {
-                await command.Connection.OpenAsync();
-            }
-
-            var result = await command.ExecuteScalarAsync();
-            return Convert.ToInt32(result);
+            _context.Shops.Add(shop);
+            await _context.SaveChangesAsync();
+            return shop.Id;
         }
 
         public async Task<Shop?> GetShopByIdAsync(int id)
@@ -571,62 +543,35 @@ namespace ShopNext.Services
             }
             await _context.SaveChangesAsync();
 
-            using var command = _context.Database.GetDbConnection().CreateCommand();
-            command.CommandText = "dbo.sp_InsertOrder";
-            command.CommandType = CommandType.StoredProcedure;
+            order.CreatedDate = DateTime.Now;
+            order.IsActive = true;
+            order.IsDeleted = false;
 
-            command.Parameters.Add(new SqlParameter("@CustomerId", order.CustomerId));
-            command.Parameters.Add(new SqlParameter("@ShopId", order.ShopId));
-            command.Parameters.Add(new SqlParameter("@TotalAmount", order.TotalAmount));
-            command.Parameters.Add(new SqlParameter("@OrderStatus", order.OrderStatus));
-            command.Parameters.Add(new SqlParameter("@PaymentMode", order.PaymentMode));
-            command.Parameters.Add(new SqlParameter("@PaymentStatus", order.PaymentStatus));
-            command.Parameters.Add(new SqlParameter("@Remark", (object?)order.Remark ?? DBNull.Value));
+            // Generate 4-digit Delivery OTP (e.g. 5824)
+            string generatedOtp = new Random().Next(1000, 9999).ToString();
+            order.DeliveryOtp = generatedOtp;
+            order.IsOtpVerified = false;
 
-            if (command.Connection != null && command.Connection.State != ConnectionState.Open)
-            {
-                await command.Connection.OpenAsync();
-            }
-
-            var orderIdResult = await command.ExecuteScalarAsync();
-            int newOrderId = Convert.ToInt32(orderIdResult);
+            _context.Orders.Add(order);
+            await _context.SaveChangesAsync();
+            int newOrderId = order.Id;
 
             foreach (var item in items)
             {
-                using var itemCmd = _context.Database.GetDbConnection().CreateCommand();
-                itemCmd.CommandText = "dbo.sp_InsertOrderItem";
-                itemCmd.CommandType = CommandType.StoredProcedure;
-
-                itemCmd.Parameters.Add(new SqlParameter("@OrderId", newOrderId));
-                itemCmd.Parameters.Add(new SqlParameter("@ProductId", item.ProductId));
-                itemCmd.Parameters.Add(new SqlParameter("@Quantity", item.Quantity));
-                itemCmd.Parameters.Add(new SqlParameter("@UnitPrice", item.UnitPrice));
-                itemCmd.Parameters.Add(new SqlParameter("@Remark", (object?)item.Remark ?? DBNull.Value));
-
-                if (itemCmd.Connection != null && itemCmd.Connection.State != ConnectionState.Open)
-                {
-                    await itemCmd.Connection.OpenAsync();
-                }
-
-                await itemCmd.ExecuteNonQueryAsync();
+                item.OrderId = newOrderId;
+                item.CreatedDate = DateTime.Now;
+                item.IsActive = true;
+                item.IsDeleted = false;
+                _context.OrderItems.Add(item);
             }
-
-            // Point 41: Generate 4-digit Delivery OTP (e.g., 5824)
-            string generatedOtp = new Random().Next(1000, 9999).ToString();
-            var createdOrder = await _context.Orders.FindAsync(newOrderId);
-            if (createdOrder != null)
-            {
-                createdOrder.DeliveryOtp = generatedOtp;
-                createdOrder.IsOtpVerified = false;
-                await _context.SaveChangesAsync();
-            }
+            await _context.SaveChangesAsync();
 
             // Create notification for customer with Delivery OTP
             _context.Notifications.Add(new Notification
             {
                 CustomerId = order.CustomerId,
                 Title = $"Order #{newOrderId} Placed Successfully! (OTP: {generatedOtp})",
-                Message = $"Your order has been placed with total ₹{order.TotalAmount:0.00}. Your Delivery OTP is {generatedOtp}. Share this OTP with the delivery rider only upon receiving your parcel.",
+                Message = $"Your order has been placed with total ₹{order.TotalAmount:N0}. Your Delivery OTP is {generatedOtp}. Share this OTP with the delivery rider only upon receiving your parcel.",
                 Type = "Order",
                 CreatedDate = DateTime.Now
             });
