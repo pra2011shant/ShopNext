@@ -18,6 +18,28 @@ ShopNext includes a dedicated **Super-Admin System Monitoring Command Center** a
 
 ---
 
+## 🎨 Universal High-Contrast UI Suite & Dark Portal Canvas
+ShopNext features a bank-grade **Dual-Mode Visual Design System** ensuring zero eye strain, 100% sharp contrast, and stunning modern aesthetics:
+- 🌌 **Seamless Dark Portal (`theme-dark-portal`)**: Merchant, Rider, and Admin workspaces run on a cohesive deep navy/slate canvas (`#090d16` to `#1e293b`), eliminating stark white background cut-offs.
+- 🔤 **High-Contrast Typography**: Ultra-crisp off-white headings (`#ffffff`) and bright silver-grey subtext (`#cbd5e1`) across all cards, sidebars, tables, and metric widgets.
+- 💡 **Vibrant Accent Glyphs**: Tailored iconography in luminous Royal Blue (`#60a5fa`), Emerald Green (`#34d399`), Amber Yellow (`#fbbf24`), and Coral Red (`#f87171`).
+- 🧹 **Clean Interactive Empty States**: Dynamic catalog and order history views automatically render action-oriented empty cards with 1-click creation shortcuts instead of confusing dummy data.
+
+---
+
+## 📍 Live GPS Auto-Detection & Interactive Map Pin-Picker (Leaflet.js)
+- 🛰️ **One-Click Geolocation**: Free browser GPS auto-detects latitude/longitude and resolves full street address, landmark, city, and pincode via OpenStreetMap Nominatim reverse geocoding.
+- 🗺️ **Draggable Map Pin**: Interactive Leaflet.js map lets customers and riders fine-tune precise doorstep delivery pins with real-time coordinate synchronization in `Cart.cshtml` and `Profile.cshtml`.
+- 💰 **Zero API Cost**: 100% free and open-source infrastructure with zero third-party billing dependencies.
+
+---
+
+## 🔒 Multi-Role Isolation & Conflict-Free Session Architecture
+- 🛡️ **Strict Claim Priority**: Active navigation bars strictly derive from authenticated `ClaimsPrincipal` (`UserRole`), preventing cross-role navbar leakage (e.g., Riders viewing Admin links).
+- 🧹 **Automatic Cross-Role Purge**: Logging into any role (Customer, Seller, Rider, Admin) instantly wipes stale legacy session cookies (`AdminAuth`, `ShopId`, `RiderId`, `CustomerId`) to guarantee zero 403 Forbidden permission barriers.
+
+---
+
 ## 🌐 Point 173: Multi-Language & Localization System
 ShopNext includes a native **Multi-Language & Localization Engine** supporting 10 Indian & international languages:
 - 🇬🇧 **English (`en`)** (Default)

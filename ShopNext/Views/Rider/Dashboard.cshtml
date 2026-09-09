@@ -348,11 +348,13 @@
     <!-- Rider Sub-Navbar -->
     <nav class="rider-nav">
         <div class="rider-brand">
-            <i class="fa-solid fa-motorcycle"></i> Rider: @riderName
+            <i class="fa-solid fa-motorcycle text-success"></i> Rider: @riderName
         </div>
-        <a asp-controller="Rider" asp-action="Logout" class="v-logout">
-            <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
-        </a>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-success bg-opacity-25 text-success border border-success px-3 py-1 rounded-pill fw-bold">
+                <i class="fa-solid fa-circle-check me-1"></i> Online & Ready
+            </span>
+        </div>
     </nav>
 
     <!-- Header and Location Status -->

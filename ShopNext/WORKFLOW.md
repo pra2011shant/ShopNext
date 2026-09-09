@@ -197,3 +197,91 @@ sequenceDiagram
         Lock-->>Buyers: Flash Sale Sold Out Banner
     end
 ```
+
+---
+
+## 8. 🔒 Multi-Role Session Isolation & Cross-Role Cookie Purge
+
+```mermaid
+graph TD
+    A[User Enters Login Credentials] --> B[AccountController.Login / Post]
+    
+    B --> C{Authentication Valid?}
+    C -->|No| D[Return Error: Invalid Credentials]
+    C -->|Yes| E[Execute Session Isolation Engine]
+    
+    E --> F[Wipe Conflicting Stale Session Cookies]
+    F --> F1[Delete 'AdminAuth' Cookie]
+    F --> F2[Delete 'ShopId' Cookie]
+    F --> F3[Delete 'RiderId' Cookie]
+    F --> F4[Delete 'CustomerId' Cookie]
+    
+    F1 & F2 & F3 & F4 --> G[Issue Fresh Role-Specific Claims Principal]
+    G --> G1[Set ClaimTypes.Role = TargetRole]
+    G --> G2[Set ClaimTypes.NameIdentifier = UserId]
+    
+    G1 & G2 --> H[Sign In With Claims & Set Role Cookie]
+    
+    H --> I{Assigned Role}
+    I -->|Admin| J1[Redirect -> /Admin/Dashboard]
+    I -->|Vendor| J2[Redirect -> /Vendor/Dashboard]
+    I -->|Rider| J3[Redirect -> /Rider/Dashboard]
+    I -->|Customer| J4[Redirect -> /Home/Index]
+    
+    J1 & J2 & J3 & J4 --> K[_Layout.cshtml Dynamic Role Navigation & theme-dark-portal Class]
+```
+
+---
+
+## 9. 📍 Live GPS Auto-Detection & Interactive Map Pin-Picker (Leaflet.js)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Customer as Customer / Rider
+    participant UI as Leaflet Map Component (Cart / Profile)
+    participant GPS as Browser Geolocation API
+    participant OSM as OpenStreetMap Nominatim Engine
+    participant Server as ShopNext Backend
+    participant DB as SQL Server (dbo.CustomerAddresses)
+
+    Customer->>UI: Clicks "Detect Current Location"
+    UI->>GPS: Request navigator.geolocation.getCurrentPosition()
+    GPS-->>UI: Returns Latitude & Longitude (WGS84)
+    UI->>UI: Pan Map View & Place Draggable Pin Marker
+    UI->>OSM: Reverse Geocode Query (nominatim.openstreetmap.org/reverse?lat=X&lon=Y)
+    OSM-->>UI: Returns Address (Road, Suburb, City, State, Postcode)
+    UI->>UI: Auto-Fill Address Inputs (Street, City, Pincode)
+    
+    opt Pin Drag / Fine Adjustment
+        Customer->>UI: Drags Map Pin to Precise Doorstep
+        UI->>OSM: Re-query Reverse Geocoding with New Coordinates
+        OSM-->>UI: Updates Form Input Values in Real-Time
+    end
+
+    Customer->>UI: Submits Order / Updates Address
+    UI->>Server: POST Geocoded Address + Latitude + Longitude
+    Server->>DB: Upsert dbo.CustomerAddresses / Update Order Geotag
+```
+
+---
+
+## 10. 🎨 Universal High-Contrast Dark Portal UI Flow
+
+```mermaid
+graph TD
+    A[User Navigates to Portal View] --> B[_Layout.cshtml View Engine]
+    
+    B --> C{Is Portal Controller?}
+    C -->|Vendor / Admin / Rider| D[Inject 'theme-dark-portal' class onto &lt;body&gt;]
+    C -->|Customer / Home| E[Standard Clean Light/Dark Adaptive Canvas]
+    
+    D --> F[CSS Cascade & High-Contrast Tokens: site.css]
+    F --> F1[Canvas: Deep Slate #090d16 with Radial Gradient]
+    F --> F2[Headings: 100% Bright White #ffffff]
+    F --> F3[Subtext & Muted: High-Contrast Light Silver #cbd5e1]
+    F --> F4[Active Glyphs: Sky Blue #60a5fa, Emerald #34d399, Amber #fbbf24]
+    
+    F1 & F2 & F3 & F4 --> G[Unified Portal Views: Zero Dark-on-Dark or Contrast Glitches]
+```
+
