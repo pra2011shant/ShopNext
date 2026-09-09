@@ -366,6 +366,7 @@ BEGIN
         Id INT IDENTITY(1,1) PRIMARY KEY,
         Title NVARCHAR(250) NOT NULL,
         ProductId INT NOT NULL,
+        Mrp DECIMAL(18,2) NOT NULL DEFAULT 0,
         SellingPrice DECIMAL(18,2) NOT NULL DEFAULT 0,
         Discount DECIMAL(18,2) NOT NULL DEFAULT 0,
         DiscountType NVARCHAR(50) NOT NULL DEFAULT 'Percentage',
