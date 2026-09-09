@@ -60,7 +60,11 @@ namespace ShopNext.Controllers
         [AllowAnonymous]
         public IActionResult Login()
         {
-            return RedirectToAction("Login", "Account", new { role = "Admin" });
+            if (IsAdminLoggedIn())
+            {
+                return RedirectToAction("Dashboard");
+            }
+            return View();
         }
 
         // POST: /Admin/Login
@@ -69,8 +73,12 @@ namespace ShopNext.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(string username, string password)
         {
+            string clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+            string userAgent = Request.Headers["User-Agent"].ToString();
+
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
             {
+                await _monitoringService.RecordLoginFailureAsync(username ?? "unknown", "Admin", clientIp, userAgent, "Missing credentials");
                 ViewBag.Error = "Please enter both Username and Password.";
                 return View();
             }
@@ -80,18 +88,23 @@ namespace ShopNext.Controllers
                 u.IsActive &&
                 !u.IsDeleted &&
                 (username.Trim().Equals("admin", StringComparison.OrdinalIgnoreCase) ||
+                 username.Trim().Equals("administrator", StringComparison.OrdinalIgnoreCase) ||
                  u.PhoneNumber == username.Trim() ||
                  u.Email == username.Trim()));
 
             if (admin != null && SecurityHelper.VerifyPassword(password, admin.Password ?? string.Empty))
             {
+                string sessionId = Guid.NewGuid().ToString("N");
+                await _monitoringService.RecordLoginAsync(admin.Id, admin.Name ?? "Platform Administrator", "Admin", clientIp, userAgent, sessionId);
+
                 // Point 46: Claims-based Identity SignIn for Admin Role
                 var claims = new List<Claim>
                 {
-                    new Claim(ClaimTypes.NameIdentifier, "1"),
-                    new Claim(ClaimTypes.Name, "Platform Administrator"),
+                    new Claim(ClaimTypes.NameIdentifier, admin.Id.ToString()),
+                    new Claim(ClaimTypes.Name, admin.Name ?? "Platform Administrator"),
                     new Claim(ClaimTypes.Role, "Admin"),
-                    new Claim("UserRole", "Admin")
+                    new Claim("UserRole", "Admin"),
+                    new Claim("SessionId", sessionId)
                 };
 
                 var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -103,6 +116,22 @@ namespace ShopNext.Controllers
                     ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
                 });
 
+                // Clear previous role cookies to avoid cross-role navbar leakage
+                Response.Cookies.Delete("ShopId");
+                Response.Cookies.Delete("ShopName");
+                Response.Cookies.Delete("CustomerId");
+                Response.Cookies.Delete("CustomerName");
+                Response.Cookies.Delete("CustomerPhone");
+                Response.Cookies.Delete("RiderId");
+                Response.Cookies.Delete("RiderName");
+
+                Response.Cookies.Append("ShopNext_SessionId", sessionId, new CookieOptions
+                {
+                    Expires = DateTimeOffset.Now.AddHours(8),
+                    HttpOnly = true,
+                    SameSite = SameSiteMode.Lax
+                });
+
                 Response.Cookies.Append("AdminAuth", "true", new CookieOptions
                 {
                     Expires = DateTimeOffset.Now.AddHours(8),
@@ -112,6 +141,7 @@ namespace ShopNext.Controllers
                 return RedirectToAction("Dashboard");
             }
 
+            await _monitoringService.RecordLoginFailureAsync(username, "Admin", clientIp, userAgent, "Invalid admin credentials");
             ViewBag.Error = "Invalid admin credentials. Please try again.";
             return View();
         }
