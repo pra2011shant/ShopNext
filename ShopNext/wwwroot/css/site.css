@@ -124,6 +124,107 @@ p, span, li, td, th {
 .fw-extrabold { font-weight: 800 !important; }
 
 /* ==========================================================================
+   GLOBAL DARK CONTAINER & GLASS CARD CONTRAST RULES
+   Ensures crystal-clear readability with high contrast on all dark backgrounds
+   ========================================================================== */
+.glass-card,
+.bg-dark,
+.bg-slate-900,
+.dark-card,
+.sticky-summary-card,
+.step-panel,
+.delivery-opt-card,
+.payment-option-card,
+.address-choice-card {
+  color: #f8fafc;
+}
+
+.glass-card h1, .glass-card h2, .glass-card h3, .glass-card h4, .glass-card h5, .glass-card h6,
+.bg-dark h1, .bg-dark h2, .bg-dark h3, .bg-dark h4, .bg-dark h5, .bg-dark h6,
+.sticky-summary-card h1, .sticky-summary-card h2, .sticky-summary-card h3, .sticky-summary-card h4, .sticky-summary-card h5, .sticky-summary-card h6 {
+  color: #ffffff !important;
+}
+
+.glass-card p, .glass-card span, .glass-card li, .glass-card label, .glass-card div,
+.bg-dark p, .bg-dark span, .bg-dark li, .bg-dark label,
+.sticky-summary-card p, .sticky-summary-card span, .sticky-summary-card li, .sticky-summary-card label {
+  color: #e2e8f0;
+}
+
+.glass-card .text-muted,
+.bg-dark .text-muted,
+.dark-card .text-muted,
+.sticky-summary-card .text-muted,
+.step-panel .text-muted,
+.modal-content.bg-dark .text-muted {
+  color: #cbd5e1 !important;
+}
+
+.glass-card .text-secondary,
+.bg-dark .text-secondary,
+.dark-card .text-secondary,
+.sticky-summary-card .text-secondary,
+.step-panel .text-secondary {
+  color: #cbd5e1 !important;
+}
+
+.glass-card .text-light,
+.bg-dark .text-light,
+.dark-card .text-light,
+.sticky-summary-card .text-light,
+.step-panel .text-light {
+  color: #ffffff !important;
+}
+
+/* ==========================================================================
+   TABLE & DATA GRID CONTRAST RULES
+   ========================================================================== */
+.table {
+  color: var(--text-main);
+  border-color: var(--border-color);
+}
+
+.glass-card .table,
+.bg-dark .table,
+.table-dark,
+.smart-cart-table {
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.glass-card .table th,
+.bg-dark .table th,
+.table-dark th,
+.smart-cart-table th {
+  color: #cbd5e1 !important;
+  font-weight: 600;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.15) !important;
+  background-color: transparent !important;
+}
+
+.glass-card .table td,
+.bg-dark .table td,
+.table-dark td,
+.smart-cart-table td {
+  color: #ffffff !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background-color: transparent !important;
+  vertical-align: middle;
+}
+
+.glass-card .table td span,
+.bg-dark .table td span,
+.smart-cart-table td span {
+  color: #ffffff !important;
+}
+
+.glass-card .table td .text-muted,
+.bg-dark .table td .text-muted,
+.smart-cart-table td .text-muted {
+  color: #cbd5e1 !important;
+}
+
+/* ==========================================================================
    NAVIGATION BAR (Top)
    ========================================================================== */
 .main-navbar {

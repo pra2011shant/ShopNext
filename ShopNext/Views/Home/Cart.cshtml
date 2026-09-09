@@ -801,35 +801,35 @@
                         <div class="row g-3 mb-4">
                             <!-- Delivery To -->
                             <div class="col-md-6">
-                                <div class="p-3 bg-dark rounded-3 border border-secondary h-100">
+                                <div class="p-3 rounded-3 border border-secondary border-opacity-50 h-100" style="background: rgba(15, 23, 42, 0.85) !important;">
                                     <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <span class="text-muted small">Deliver To:</span>
-                                        <button class="btn btn-link text-info p-0 small" onclick="goToStep(2)">Edit</button>
+                                        <span class="small fw-semibold" style="color: #cbd5e1 !important;">Deliver To:</span>
+                                        <button class="btn btn-link text-info p-0 small fw-bold text-decoration-none" onclick="goToStep(2)">Edit</button>
                                     </div>
-                                    <strong class="text-white d-block" id="sumRecipientName">-</strong>
-                                    <div class="text-muted small mb-1" id="sumPhone">-</div>
-                                    <p class="text-light small mb-0" id="sumAddress">-</p>
+                                    <strong class="text-white d-block fs-6" id="sumRecipientName">-</strong>
+                                    <div class="small mb-1 fw-medium" id="sumPhone" style="color: #cbd5e1 !important;">-</div>
+                                    <p class="small mb-0" id="sumAddress" style="color: #f1f5f9 !important;">-</p>
                                 </div>
                             </div>
 
                             <!-- Delivery Mode -->
                             <div class="col-md-6">
-                                <div class="p-3 bg-dark rounded-3 border border-secondary h-100">
+                                <div class="p-3 rounded-3 border border-secondary border-opacity-50 h-100" style="background: rgba(15, 23, 42, 0.85) !important;">
                                     <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <span class="text-muted small">Delivery Option:</span>
-                                        <button class="btn btn-link text-info p-0 small" onclick="goToStep(3)">Edit</button>
+                                        <span class="small fw-semibold" style="color: #cbd5e1 !important;">Delivery Option:</span>
+                                        <button class="btn btn-link text-info p-0 small fw-bold text-decoration-none" onclick="goToStep(3)">Edit</button>
                                     </div>
-                                    <strong class="text-success d-block" id="sumDeliverySpeed">Standard Delivery (Free | 5-7 Days)</strong>
-                                    <div class="text-muted small mt-1" id="sumInstructions">Note: No special instructions</div>
+                                    <strong class="d-block fw-bold" id="sumDeliverySpeed" style="color: #34d399 !important;">Standard Delivery (Free | 5-7 Days)</strong>
+                                    <div class="small mt-1" id="sumInstructions" style="color: #cbd5e1 !important;">Note: No special instructions</div>
                                 </div>
                             </div>
 
                             <!-- Payment Mode -->
                             <div class="col-12">
-                                <div class="p-3 bg-dark rounded-3 border border-secondary">
+                                <div class="p-3 rounded-3 border border-secondary border-opacity-50" style="background: rgba(15, 23, 42, 0.85) !important;">
                                     <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <span class="text-muted small">Payment Method:</span>
-                                        <button class="btn btn-link text-info p-0 small" onclick="goToStep(4)">Edit</button>
+                                        <span class="small fw-semibold" style="color: #cbd5e1 !important;">Payment Method:</span>
+                                        <button class="btn btn-link text-info p-0 small fw-bold text-decoration-none" onclick="goToStep(4)">Edit</button>
                                     </div>
                                     <strong class="text-white d-block fs-6" id="sumPaymentMode">Cash on Delivery (COD)</strong>
                                 </div>
@@ -837,8 +837,8 @@
                         </div>
 
                         <!-- Point 70: Checkout Policy Short Summary Notice -->
-                        <div class="p-2.5 mb-3 bg-black bg-opacity-30 rounded-3 border border-secondary border-opacity-30 text-center">
-                            <small class="text-secondary d-block" style="font-size: 0.82rem;">
+                        <div class="p-2.5 mb-3 rounded-3 border border-secondary border-opacity-40 text-center" style="background: rgba(15, 23, 42, 0.9) !important;">
+                            <small class="d-block" style="font-size: 0.82rem; color: #cbd5e1 !important;">
                                 <i class="fa-solid fa-shield-halved text-success me-1"></i> By placing this order, you agree to our 
                                 <a href="/Home/Privacy" target="_blank" class="text-info text-decoration-none fw-semibold">Return, Refund and Cancellation Policy</a> & 
                                 <a href="/Home/Privacy" target="_blank" class="text-info text-decoration-none fw-semibold">Terms of Service</a>.
@@ -863,8 +863,8 @@
 
             <!-- Right Side: Sticky Live Order Summary -->
             <div class="col-lg-5">
-                <div class="glass-card sticky-summary-card">
-                    <h5 class="text-white fw-bold mb-3">
+                <div class="glass-card sticky-summary-card" style="background: rgba(15, 23, 42, 0.95) !important; border: 1px solid rgba(255, 255, 255, 0.15) !important;">
+                    <h5 class="text-white fw-bold mb-3 d-flex align-items-center">
                         <i class="fa-solid fa-receipt me-2 text-primary"></i>Order Summary
                     </h5>
 
@@ -874,30 +874,30 @@
                     </div>
 
                     <!-- Billing Math -->
-                    <div class="pt-3 border-top border-secondary">
-                        <div class="d-flex justify-content-between text-muted small mb-2">
-                            <span>Items Subtotal:</span>
-                            <span>&#8377;<span id="sideSubtotal">0.00</span></span>
+                    <div class="pt-3 border-top border-secondary border-opacity-50">
+                        <div class="d-flex justify-content-between small mb-2" style="color: #cbd5e1 !important;">
+                            <span class="fw-semibold">Items Subtotal:</span>
+                            <span class="text-white fw-bold">&#8377;<span id="sideSubtotal">0.00</span></span>
                         </div>
-                        <div class="d-flex justify-content-between text-success small mb-2" id="sideCouponRow" style="display: none;">
-                            <span>Discount (<span id="sideCouponCode"></span>):</span>
-                            <span>-&#8377;<span id="sideCouponDiscount">0.00</span></span>
+                        <div class="d-flex justify-content-between small mb-2" id="sideCouponRow" style="display: none; color: #34d399 !important;">
+                            <span class="fw-semibold">Discount (<span id="sideCouponCode"></span>):</span>
+                            <span class="fw-bold">-&#8377;<span id="sideCouponDiscount">0.00</span></span>
                         </div>
-                        <div class="d-flex justify-content-between text-muted small mb-2">
-                            <span>Delivery Fee (<span id="sideDeliveryType">Standard</span>):</span>
-                            <span id="sideDeliveryFeeBadge" class="text-success"><span class="badge bg-success bg-opacity-25 text-success">FREE</span></span>
+                        <div class="d-flex justify-content-between small mb-2" style="color: #cbd5e1 !important;">
+                            <span class="fw-semibold">Delivery Fee (<span id="sideDeliveryType">Standard</span>):</span>
+                            <span id="sideDeliveryFeeBadge" class="fw-bold text-success"><span class="badge bg-success bg-opacity-25 text-success">FREE</span></span>
                         </div>
-                        <div class="d-flex justify-content-between text-muted small mb-3">
-                            <span>Taxes & Packaging:</span>
-                            <span>&#8377;0.00</span>
+                        <div class="d-flex justify-content-between small mb-3" style="color: #cbd5e1 !important;">
+                            <span class="fw-semibold">Taxes & Packaging:</span>
+                            <span class="text-white fw-bold">&#8377;0.00</span>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary fs-5 fw-bold text-white">
-                            <span>Total Payable:</span>
-                            <span class="text-success">&#8377;<span id="sideGrandTotal">0.00</span></span>
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top border-secondary border-opacity-50">
+                            <span class="fs-5 fw-bold text-white">Total Payable:</span>
+                            <span class="fs-4 fw-extrabold" style="color: #34d399 !important;">&#8377;<span id="sideGrandTotal">0.00</span></span>
                         </div>
                     </div>
 
-                    <div class="mt-3 p-2 bg-dark rounded-3 border border-secondary text-center small text-muted">
+                    <div class="mt-3 p-2.5 rounded-3 border border-secondary border-opacity-30 text-center small" style="background: rgba(0, 0, 0, 0.4) !important; color: #cbd5e1 !important;">
                         <i class="fa-solid fa-shield-halved text-success me-1"></i> 100% Safe & Secure Hyperlocal Checkout
                     </div>
                 </div>
@@ -1425,10 +1425,10 @@
 
             // Right Summary Line
             const sideItem = document.createElement("div");
-            sideItem.className = "d-flex justify-content-between align-items-center mb-2 small text-light";
+            sideItem.className = "d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom border-secondary border-opacity-25 small text-white";
             sideItem.innerHTML = `
-                <span class="text-truncate" style="max-width: 180px;">${item.quantity}x ${item.productName}</span>
-                <span>&#8377;${(item.price * item.quantity).toFixed(2)}</span>
+                <span class="text-truncate fw-medium text-white" style="max-width: 190px;" title="${item.productName}">${item.quantity}x ${item.productName}</span>
+                <span class="fw-bold text-white">&#8377;${(item.price * item.quantity).toFixed(2)}</span>
             `;
             sideItemsDiv.appendChild(sideItem);
         });
