@@ -233,18 +233,33 @@
                                     </a>
                                 }
                             </div>
-                            <div class="mt-2 pt-2 border-top border-secondary">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <div class="fs-5 fw-bold text-success">
-                                        &#8377;@p.Price.ToString("0.00")
-                                    </div>
-                                    <a asp-action="ProductDetails" asp-route-id="@p.Id" class="btn btn-outline-light btn-sm px-2 py-1" title="View Details">
-                                        <i class="fa-solid fa-eye me-1"></i> Details
+                            <div class="mt-2 pt-2 border-top border-secondary border-opacity-30">
+                                <!-- Clear & Bold Payable Price + MRP + Discount Badge -->
+                                <div class="d-flex align-items-baseline gap-2 mb-2 flex-wrap">
+                                    <span class="fs-4 fw-extrabold text-white" style="letter-spacing: -0.02em;">
+                                        &#8377;@p.Price.ToString("N0")
+                                    </span>
+                                    @if (p.Mrp.HasValue && p.Mrp.Value > p.Price)
+                                    {
+                                        <span class="text-secondary text-decoration-line-through small" style="font-size: 0.85rem;">
+                                            &#8377;@p.Mrp.Value.ToString("N0")
+                                        </span>
+                                        <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 rounded-pill px-2 py-0.5" style="font-size: 0.72rem; font-weight: 700;">
+                                            @{
+                                                var discountPct = Math.Round(((p.Mrp.Value - p.Price) / p.Mrp.Value) * 100);
+                                            }
+                                            @discountPct% OFF
+                                        </span>
+                                    }
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center gap-2">
+                                    <button class="btn btn-primary flex-grow-1 btn-sm py-2 fw-semibold d-flex align-items-center justify-content-center gap-1.5 shadow-sm rounded-pill" onclick="addToCart(@p.Id, '@p.ProductName.Replace("'", "\\'")', @p.Price, @p.ShopId, '@(p.Shop?.ShopName.Replace("'", "\\'") ?? "Shop")')">
+                                        <i class="fa-solid fa-cart-plus"></i> Add to Cart
+                                    </button>
+                                    <a asp-action="ProductDetails" asp-route-id="@p.Id" class="btn btn-outline-light btn-sm px-3 py-2 rounded-pill" title="View Details">
+                                        <i class="fa-solid fa-eye"></i>
                                     </a>
                                 </div>
-                                <button class="btn btn-primary w-100 btn-sm" onclick="addToCart(@p.Id, '@p.ProductName.Replace("'", "\\'")', @p.Price, @p.ShopId, '@(p.Shop?.ShopName.Replace("'", "\\'") ?? "Shop")')">
-                                    <i class="fa-solid fa-cart-plus me-1"></i> Add to Cart
-                                </button>
                             </div>
                         </div>
                     </div>
