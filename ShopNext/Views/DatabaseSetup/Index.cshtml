@@ -18,9 +18,9 @@
                 <p class="text-slate-300 mb-0 opacity-75">All tables, audit columns, relationships, and Stored Procedures consolidated into <strong>one master file</strong>.</p>
             </div>
             <div class="d-flex flex-wrap gap-2">
-                <form asp-action="RunSetup" method="post" class="d-inline">
+                <form asp-action="RunSetup" method="post" class="d-inline" id="runDbSetupForm">
                     @Html.AntiForgeryToken()
-                    <button type="submit" class="btn btn-success d-flex align-items-center gap-2 rounded-3 px-3 py-2 fw-semibold" onclick="return confirm('Do you want to run the full master database script now?');">
+                    <button type="button" class="btn btn-success d-flex align-items-center gap-2 rounded-3 px-3 py-2 fw-semibold" onclick="confirmRunDbSetup()">
                         <i class="fa-solid fa-play"></i> 1-Click Run Setup
                     </button>
                 </form>
@@ -390,10 +390,17 @@
 </div>
 
 <script>
+    async function confirmRunDbSetup() {
+        const ok = await showSweetConfirm("Run Master Database Script?", "Do you want to execute the complete database schema, tables, and stored procedures now?", "Yes, Execute Script", "Cancel", "warning");
+        if (ok) {
+            document.getElementById('runDbSetupForm').submit();
+        }
+    }
+
     function copyFullSql() {
         const code = document.getElementById('fullSqlCode').innerText;
         navigator.clipboard.writeText(code).then(() => {
-            alert("Master SQL script copied to clipboard! You can paste and run it directly in SSMS.");
+            showToast("Master SQL script copied to clipboard!", "success");
         });
     }
 </script>

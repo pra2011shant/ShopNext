@@ -33,6 +33,15 @@ BEGIN
         IsCodDisabled BIT NOT NULL DEFAULT 0,
         IsFlaggedForReview BIT NOT NULL DEFAULT 0,
         RiskLastEvaluatedDate DATETIME2 NULL,
+        DeviceFingerprintHash NVARCHAR(255) NULL,
+        IsAccountSuspended BIT NOT NULL DEFAULT 0,
+        IsReturnDisabled BIT NOT NULL DEFAULT 0,
+        RegistrationIpMasked NVARCHAR(100) NULL,
+        RestrictFirstOrderCoupons BIT NOT NULL DEFAULT 0,
+        RestrictionAppliedDate DATETIME2 NULL,
+        RestrictionLevel NVARCHAR(50) NOT NULL DEFAULT 'Normal',
+        RestrictionReason NVARCHAR(MAX) NULL,
+        SuspendedUntilDate DATETIME2 NULL,
         
         -- BaseModel Audit Fields
         Remark NVARCHAR(MAX) NULL,
@@ -64,6 +73,33 @@ BEGIN
         IsActive BIT NOT NULL DEFAULT 1
     );
     CREATE INDEX IX_PasswordResetTokens_TokenHash ON dbo.PasswordResetTokens(TokenHash);
+END;
+GO
+
+-- 1.1.1 CUSTOMER ADDRESSES TABLE
+IF OBJECT_ID('dbo.CustomerAddresses', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.CustomerAddresses (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        CustomerId INT NOT NULL,
+        AddressType NVARCHAR(50) NOT NULL DEFAULT 'Home',
+        RecipientName NVARCHAR(200) NOT NULL DEFAULT '',
+        PhoneNumber NVARCHAR(50) NOT NULL DEFAULT '',
+        AddressLine NVARCHAR(500) NOT NULL DEFAULT '',
+        City NVARCHAR(100) NOT NULL DEFAULT 'New Delhi',
+        State NVARCHAR(100) NOT NULL DEFAULT 'Delhi',
+        Pincode NVARCHAR(20) NOT NULL DEFAULT '',
+        Landmark NVARCHAR(200) NULL,
+        IsDefault BIT NOT NULL DEFAULT 0,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1,
+        CONSTRAINT FK_CustomerAddresses_Users FOREIGN KEY (CustomerId) REFERENCES dbo.Users(Id) ON DELETE CASCADE
+    );
 END;
 GO
 
@@ -138,6 +174,29 @@ BEGIN
         IsActive BIT NOT NULL DEFAULT 1,
         
         CONSTRAINT FK_Products_Shops FOREIGN KEY (ShopId) REFERENCES dbo.Shops(Id) ON DELETE CASCADE
+    );
+END;
+GO
+
+-- 1.3.1 PRODUCT VARIANTS TABLE
+IF OBJECT_ID('dbo.ProductVariants', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.ProductVariants (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        ProductId INT NOT NULL FOREIGN KEY REFERENCES dbo.Products(Id) ON DELETE CASCADE,
+        Size NVARCHAR(50) NULL,
+        Color NVARCHAR(50) NULL,
+        Price DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+        Stock INT NOT NULL DEFAULT 0,
+        Sku NVARCHAR(100) NULL,
+        ImageUrl NVARCHAR(MAX) NULL,
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
     );
 END;
 GO
@@ -285,6 +344,7 @@ BEGIN
         Name NVARCHAR(150) NOT NULL,
         Icon NVARCHAR(100) NOT NULL DEFAULT 'fa-solid fa-layer-group',
         Description NVARCHAR(500) NOT NULL DEFAULT '',
+        ImageUrl NVARCHAR(255) NULL,
         DisplayOrder INT NOT NULL DEFAULT 0,
         Remark NVARCHAR(MAX) NULL,
         CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
