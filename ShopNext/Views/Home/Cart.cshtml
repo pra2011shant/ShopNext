@@ -972,11 +972,11 @@
         if (stepNumber > 1) {
             const cart = JSON.parse(localStorage.getItem("shop_cart"));
             if (!cart || !cart.items || cart.items.length === 0) {
-                alert("Your cart is empty!");
+                showWarning("Cart is Empty", "Your shopping cart is currently empty! Add items to continue.");
                 return;
             }
             if (hasOutOfStockItems && stepNumber > 1) {
-                alert("Please remove or save out-of-stock items before proceeding.");
+                showWarning("Out of Stock Items", "Please remove or save out-of-stock items before proceeding.");
                 return;
             }
         }
@@ -986,7 +986,7 @@
             const phone = document.getElementById("custPhone").value.trim();
             const addr = document.getElementById("deliveryAddr").value.trim();
             if (!name || !phone || !addr) {
-                alert("Please select or enter your delivery address first.");
+                showWarning("Address Required", "Please select or enter your delivery address first.");
                 goToStep(2);
                 return;
             }
@@ -1041,7 +1041,7 @@
             const addr = document.getElementById("deliveryAddr").value.trim();
 
             if (!name || !phone || !addr) {
-                alert("Please select an address or add a new delivery address.");
+                showWarning("Delivery Address Needed", "Please select an address or add a new delivery address.");
                 return;
             }
         }
@@ -1239,7 +1239,7 @@
     function detectGPSLocation() {
         const badge = document.getElementById("gpsStatusBadge");
         if (!navigator.geolocation) {
-            alert("Geolocation is not supported by your browser/device.");
+            showWarning("Geolocation Unavailable", "Geolocation is not supported by your browser/device.");
             return;
         }
 
@@ -1261,7 +1261,7 @@
                     badge.className = "badge bg-danger bg-opacity-25 text-danger small";
                     badge.innerText = "Location Permission Denied";
                 }
-                alert("Mobile GPS access denied or timed out. Map opened for manual pin selection.");
+                showInfo("Manual Map Pin", "Mobile GPS access denied or timed out. Map opened for manual pin selection.");
                 initOrShowDeliveryMap(28.6139, 77.2090, 13);
             },
             { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -1378,7 +1378,7 @@
         const isDefault = document.getElementById("newAddrIsDefault").checked;
 
         if (!recipient || !phone || !line || !pincode) {
-            alert("Please fill in recipient name, phone, address line, and pincode.");
+            showWarning("Incomplete Address", "Please fill in recipient name, phone, address line, and pincode.");
             return;
         }
 
@@ -1601,7 +1601,7 @@
         }
     }
 
-    function updateQty(productId, delta) {
+    async function updateQty(productId, delta) {
         const cart = JSON.parse(localStorage.getItem("shop_cart"));
         if (!cart) return;
 
@@ -1609,7 +1609,8 @@
         if (item) {
             item.quantity += delta;
             if (item.quantity <= 0) {
-                if (confirm(`Remove "${item.productName}" from cart?`)) {
+                const ok = await showSweetConfirm("Remove Item?", `Remove "${item.productName}" from cart?`, "Yes, Remove", "Keep", "warning");
+                if (ok) {
                     cart.items = cart.items.filter(i => i.productId !== productId);
                 } else {
                     item.quantity = 1;
@@ -1629,11 +1630,13 @@
         renderCart();
     }
 
-    function clearCart() {
-        if (!confirm("Are you sure you want to clear your cart?")) return;
+    async function clearCart() {
+        const ok = await showSweetConfirm("Clear Cart?", "Are you sure you want to clear your entire cart?", "Yes, Clear Cart", "Keep Items", "warning");
+        if (!ok) return;
         localStorage.removeItem("shop_cart");
         appliedCoupon = null;
         renderCart();
+        showToast("Cart cleared", "info");
     }
 
     // ==========================================
@@ -1719,7 +1722,7 @@
         let cart = JSON.parse(localStorage.getItem("shop_cart")) || { shopId: null, shopName: null, items: [] };
 
         if (cart.shopId && cart.shopId !== item.shopId && cart.items.length > 0) {
-            const ok = confirm(`Your cart contains items from "${cart.shopName}". Clear current cart to add items from "${item.shopName}"?`);
+            const ok = await showSweetConfirm("Switch Store?", `Your cart contains items from "${cart.shopName}". Clear current cart to add items from "${item.shopName}"?`, "Yes, Switch Store", "Keep Cart", "question");
             if (!ok) return;
             cart = { shopId: item.shopId, shopName: item.shopName, items: [] };
         }
@@ -1757,10 +1760,12 @@
         renderSavedForLater();
     }
 
-    function clearSavedForLater() {
-        if (!confirm("Clear all saved items?")) return;
+    async function clearSavedForLater() {
+        const ok = await showSweetConfirm("Clear Saved Items?", "Are you sure you want to clear all saved items?", "Yes, Clear All", "Keep Items", "warning");
+        if (!ok) return;
         localStorage.removeItem("shop_saved_for_later");
         renderSavedForLater();
+        showToast("Saved items cleared", "info");
     }
 
     // ==========================================
@@ -1906,7 +1911,7 @@
         if (!cart || !cart.items || cart.items.length === 0) return;
 
         if (hasOutOfStockItems) {
-            alert("Some items in your cart are out of stock. Please remove them or save for later.");
+            showWarning("Out of Stock", "Some items in your cart are out of stock. Please remove them or save for later.");
             goToStep(1);
             return;
         }
@@ -1916,14 +1921,14 @@
         if (mode === 'UPI') {
             const upi = document.getElementById("upiIdInput").value.trim();
             if (!upi) {
-                alert("Please enter a valid UPI ID (e.g. rahul@okhdfcbank).");
+                showWarning("UPI ID Required", "Please enter a valid UPI ID (e.g. rahul@okhdfcbank).");
                 goToStep(4);
                 return;
             }
         } else if (mode === 'CARD') {
             const card = document.getElementById("cardNum").value.trim();
             if (!card || card.length < 12) {
-                alert("Please enter a valid card number.");
+                showWarning("Card Details Required", "Please enter a valid card number.");
                 goToStep(4);
                 return;
             }

@@ -923,10 +923,9 @@
         return $('input[name="__RequestVerificationToken"]').val() || '';
     }
 
-    function forceLogout(sessionId, userName) {
-        if (!confirm(`Are you sure you want to force-terminate the active session for '${userName}'?`)) {
-            return;
-        }
+    async function forceLogout(sessionId, userName) {
+        const ok = await showSweetConfirm("Terminate Session?", `Are you sure you want to force-terminate the active session for '${userName}'?`, "Yes, Force Logout", "Cancel", "warning");
+        if (!ok) return;
 
         $.ajax({
             url: '/Admin/ForceLogout',
@@ -936,21 +935,20 @@
             success: function(response) {
                 if (response.success) {
                     $(`#session-row-${sessionId}`).fadeOut(300, function() { $(this).remove(); });
-                    alert(response.message);
+                    showSuccess("Session Terminated", response.message);
                 } else {
-                    alert(response.message);
+                    showError("Action Failed", response.message);
                 }
             },
             error: function() {
-                alert('Error contacting server to force logout.');
+                showError("Server Error", 'Error contacting server to force logout.');
             }
         });
     }
 
-    function restoreRecord(logId, entityName, title) {
-        if (!confirm(`Restore deleted ${entityName} '${title}' back to active status?`)) {
-            return;
-        }
+    async function restoreRecord(logId, entityName, title) {
+        const ok = await showSweetConfirm("Restore Record?", `Restore deleted ${entityName} '${title}' back to active status?`, "Yes, Restore", "Cancel", "question");
+        if (!ok) return;
 
         $.ajax({
             url: '/Admin/RestoreDeletedRecord',
@@ -958,13 +956,14 @@
             data: { softDeleteLogId: logId },
             headers: { 'RequestVerificationToken': getCsrfToken() },
             success: function(response) {
-                alert(response.message);
                 if (response.success) {
-                    window.location.reload();
+                    showSuccess("Record Restored", response.message).then(() => window.location.reload());
+                } else {
+                    showError("Restore Failed", response.message);
                 }
             },
             error: function() {
-                alert('Error restoring record.');
+                showError("Server Error", 'Error restoring record.');
             }
         });
     }
@@ -976,13 +975,14 @@
             data: { alertId: alertId },
             headers: { 'RequestVerificationToken': getCsrfToken() },
             success: function(response) {
-                alert(response.message);
                 if (response.success) {
-                    window.location.reload();
+                    showSuccess("Alert Resolved", response.message).then(() => window.location.reload());
+                } else {
+                    showError("Action Failed", response.message);
                 }
             },
             error: function() {
-                alert('Error resolving security alert.');
+                showError("Server Error", 'Error resolving security alert.');
             }
         });
     }

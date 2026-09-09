@@ -1085,11 +1085,11 @@
     // ==========================================
     // 1. BUY AGAIN (Reorder to Cart)
     // ==========================================
-    function handleBuyAgain(orderId, shopId, shopName, productName, price, productId, imageUrl, btnElement, itemsJson) {
+    async function handleBuyAgain(orderId, shopId, shopName, productName, price, productId, imageUrl, btnElement, itemsJson) {
         let cart = JSON.parse(localStorage.getItem("shop_cart")) || { shopId: null, shopName: null, items: [] };
 
         if (cart.shopId && cart.shopId !== shopId && cart.items.length > 0) {
-            const ok = confirm(`Your cart already contains items from "${cart.shopName}". Clear cart to add from "${shopName}"?`);
+            const ok = await showSweetConfirm("Switch Store?", `Your cart already contains items from "${cart.shopName}". Clear cart to add from "${shopName}"?`, "Yes, Switch Store", "Keep Cart", "question");
             if (!ok) return;
             cart = { shopId: shopId, shopName: shopName, items: [] };
         }
@@ -1145,7 +1145,7 @@
             const originalHtml = btnElement.innerHTML;
             btnElement.classList.remove('btn-primary');
             btnElement.classList.add('btn-success');
-            btnElement.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> Added to Cart!';
+            btnElement.innerHTML = '<i class="fa-solid fa-circle-check"></i> Added!';
             btnElement.disabled = true;
 
             setTimeout(() => {
@@ -1156,8 +1156,10 @@
             }, 2500);
         }
 
-        // Show toast
-        showBuyAgainToast(addedNames[0] || productName, `#ORD${orderId}`);
+        const goToCart = await showSweetConfirm("Added to Cart!", `Added "${addedNames[0] || productName}" from Order #ORD${orderId} to your cart. Go to Cart now?`, "Go to Cart", "Keep Shopping", "success");
+        if (goToCart) {
+            window.location.href = '/Home/Cart';
+        }
     }
 
     function showBuyAgainToast(productName, orderIdText) {
@@ -1247,7 +1249,8 @@
     // 4. CONFIRM RECEIVED
     // ==========================================
     async function confirmOrderReceived(orderId) {
-        if (!confirm("Confirm that you have received this order?")) return;
+        const ok = await showSweetConfirm("Confirm Delivery?", "Confirm that you have received this order in good condition?", "Yes, Received", "Cancel", "question");
+        if (!ok) return;
         const form = new FormData();
         form.append("orderId", orderId);
 
@@ -1258,10 +1261,14 @@
                 body: form
             });
             const data = await resp.json();
-            alert(data.message);
-            if (data.success) location.reload();
+            if (data.success) {
+                await showSuccess("Order Received!", data.message || "Thank you for confirming receipt.");
+                location.reload();
+            } else {
+                showError("Confirmation Failed", data.message || "Failed to confirm order receipt.");
+            }
         } catch (e) {
-            alert("Error: " + e.message);
+            showError("Network Error", "Error: " + e.message);
         }
     }
 

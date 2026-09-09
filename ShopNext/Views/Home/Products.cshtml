@@ -294,11 +294,11 @@
         window.location = url.toString();
     }
 
-    function addToCart(productId, productName, price, shopId, shopName) {
+    async function addToCart(productId, productName, price, shopId, shopName) {
         let cart = JSON.parse(localStorage.getItem("shop_cart")) || { shopId: null, shopName: null, items: [] };
 
         if (cart.shopId && cart.shopId !== shopId && cart.items.length > 0) {
-            const ok = confirm(`Your cart already contains items from "${cart.shopName}". Would you like to clear your cart and start an order from "${shopName}"?`);
+            const ok = await showSweetConfirm("Start Order from New Shop?", `Your cart already contains items from "${cart.shopName}". Would you like to clear your cart and start an order from "${shopName}"?`, "Yes, Switch Shop", "Keep Current Cart", "question");
             if (!ok) return;
             cart = { shopId: shopId, shopName: shopName, items: [] };
         }
@@ -380,9 +380,9 @@
                 }
                 showToast(data.message);
             } else {
-                alert(data.message || "Please login to manage wishlist.");
+                showWarning("Wishlist Login Required", data.message || "Please login to manage your wishlist.");
                 if (data.message && data.message.includes("login")) {
-                    window.location.href = '/Customer/Login';
+                    setTimeout(() => { window.location.href = '/Account/Login?role=Customer'; }, 1500);
                 }
             }
         } catch (e) {

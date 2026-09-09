@@ -519,7 +519,7 @@
         let cart = JSON.parse(localStorage.getItem("shop_cart")) || { shopId: null, shopName: null, items: [] };
 
         if (cart.shopId && cart.shopId !== shopId && cart.items.length > 0) {
-            const ok = confirm(`Your cart already contains items from "${cart.shopName}". Clear existing cart to add from "${shopName}"?`);
+            const ok = await showSweetConfirm("Switch Store?", `Your cart already contains items from "${cart.shopName}". Clear existing cart to add from "${shopName}"?`, "Yes, Switch Store", "Keep Cart", "question");
             if (!ok) return;
             cart = { shopId: shopId, shopName: shopName, items: [] };
         }
@@ -550,7 +550,7 @@
             window.updateLayoutCartBadge(totalQty);
         }
 
-        alert(`${qty} x ${finalDisplayName} added to cart!`);
+        showToast(`${qty} x ${finalDisplayName} added to cart!`);
     }
 
     async function toggleWishlistDetails(productId, btn) {
@@ -581,9 +581,9 @@
                 }
                 showToast(data.message);
             } else {
-                alert(data.message || "Please login to manage wishlist.");
+                showWarning("Wishlist Login Required", data.message || "Please login to manage your wishlist.");
                 if (data.message && data.message.includes("login")) {
-                    window.location.href = '/Customer/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
+                    setTimeout(() => { window.location.href = '/Account/Login?role=Customer'; }, 1500);
                 }
             }
         } catch (e) {

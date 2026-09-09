@@ -1142,7 +1142,7 @@
         const badge = document.getElementById("accountGpsStatusBadge");
 
         if (!navigator.geolocation) {
-            alert("Geolocation is not supported on this device/browser.");
+            showWarning("Geolocation Unavailable", "Geolocation is not supported on this device/browser.");
             return;
         }
 
@@ -1287,22 +1287,25 @@
         const phone = document.getElementById("addrPhone").value.trim();
         const line = document.getElementById("addrLine").value.trim();
         const pincode = document.getElementById("addrPincode").value.trim();
+        const type = document.getElementById("addrType").value;
+        const city = document.getElementById("addrCity").value.trim() || "New Delhi";
+        const isDefault = document.getElementById("addrIsDefault").checked;
 
         if (!recipient || !phone || !line || !pincode) {
-            alert("Please fill in recipient name, phone, address line, and pincode.");
+            showWarning("Incomplete Address", "Please fill in recipient name, phone, address line, and pincode.");
             return;
         }
 
-        const payload = {
-            AddressType: document.getElementById("addrType").value,
-            RecipientName: recipient,
-            PhoneNumber: phone,
-            AddressLine: line,
-            City: document.getElementById("addrCity").value.trim() || "New Delhi",
-            State: document.getElementById("addrState") ? document.getElementById("addrState").value.trim() : "Delhi",
-            Pincode: pincode,
-            Landmark: document.getElementById("addrLandmark").value.trim(),
-            IsDefault: document.getElementById("addrIsDefault").checked
+        const newAddr = {
+            addressType: type,
+            recipientName: recipient,
+            phoneNumber: phone,
+            addressLine: line,
+            city: city,
+            state: document.getElementById("addrState") ? document.getElementById("addrState").value.trim() : "Delhi",
+            pincode: pincode,
+            landmark: document.getElementById("addrLandmark").value.trim(),
+            isDefault: isDefault
         };
 
         try {
@@ -1312,21 +1315,22 @@
                     'Content-Type': 'application/json',
                     'RequestVerificationToken': getToken()
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(newAddr)
             });
             const data = await resp.json();
             if (data.success) {
                 location.href = '/Customer/Account?tab=addresses';
             } else {
-                alert(data.message || "Failed to save address.");
+                showError("Address Save Failed", data.message || "Failed to save address.");
             }
         } catch (e) {
-            alert("Error: " + e.message);
+            showError("Network Error", "Error: " + e.message);
         }
     }
 
     async function deleteAddress(id) {
-        if (!confirm("Delete this address?")) return;
+        const ok = await showSweetConfirm("Delete Address?", "Are you sure you want to delete this saved address?", "Yes, Delete", "Cancel", "warning");
+        if (!ok) return;
         const form = new FormData();
         form.append("id", id);
 
@@ -1339,15 +1343,15 @@
             const data = await resp.json();
             if (data.success) location.reload();
         } catch (e) {
-            alert("Error: " + e.message);
+            showError("Delete Error", "Error: " + e.message);
         }
     }
 
-    function addWishlistToCart(productId, productName, price, shopId, shopName) {
+    async function addWishlistToCart(productId, productName, price, shopId, shopName) {
         let cart = JSON.parse(localStorage.getItem("shop_cart")) || { shopId: null, shopName: null, items: [] };
 
         if (cart.shopId && cart.shopId !== shopId && cart.items.length > 0) {
-            const ok = confirm(`Your cart already contains items from "${cart.shopName}". Clear cart to add from "${shopName}"?`);
+            const ok = await showSweetConfirm("Switch Store?", `Your cart already contains items from "${cart.shopName}". Clear cart to add from "${shopName}"?`, "Yes, Switch Store", "Keep Cart", "question");
             if (!ok) return;
             cart = { shopId: shopId, shopName: shopName, items: [] };
         }
@@ -1375,15 +1379,15 @@
             window.updateLayoutCartBadge(totalQty);
         }
 
-        alert(`"${productName}" added to Cart!`);
+        showToast(`"${productName}" added to Cart!`, 'success');
     }
 
     // Buy Again from Order History (Delivered order me click karne par product cart me add ho jaye)
-    function handleBuyAgainAccount(orderId, shopId, shopName, productName, price, productId, imageUrl, btnElement, itemsJson) {
+    async function handleBuyAgainAccount(orderId, shopId, shopName, productName, price, productId, imageUrl, btnElement, itemsJson) {
         let cart = JSON.parse(localStorage.getItem("shop_cart")) || { shopId: null, shopName: null, items: [] };
 
         if (cart.shopId && cart.shopId !== shopId && cart.items.length > 0) {
-            const ok = confirm(`Your cart already contains items from "${cart.shopName}". Clear cart to add from "${shopName}"?`);
+            const ok = await showSweetConfirm("Switch Store?", `Your cart already contains items from "${cart.shopName}". Clear cart to add from "${shopName}"?`, "Yes, Switch Store", "Keep Cart", "question");
             if (!ok) return;
             cart = { shopId: shopId, shopName: shopName, items: [] };
         }
@@ -1450,7 +1454,8 @@
             }, 2500);
         }
 
-        if (confirm(`Added "${addedNames[0] || productName}" from Order #ORD${orderId} to your cart! Go to Cart now?`)) {
+        const goToCart = await showSweetConfirm("Added to Cart!", `Added "${addedNames[0] || productName}" from Order #ORD${orderId} to your cart. Go to Cart now?`, "Go to Cart", "Keep Shopping", "success");
+        if (goToCart) {
             window.location.href = '/Home/Cart';
         }
     }
