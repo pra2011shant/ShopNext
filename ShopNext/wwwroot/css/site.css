@@ -1542,20 +1542,27 @@ body {
   display: none !important;
 }
 
-.goog-text-highlight {
-  background-color: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
-#goog-gt-tt, .goog-te-balloon-frame {
+/* Complete Suppression of External Google Translate Banner & Popups */
+.goog-te-banner-frame,
+.goog-te-balloon-frame,
+#goog-gt-tt,
+.goog-te-spinner-pos,
+.goog-tooltip,
+.skiptranslate,
+#google_translate_element,
+iframe.goog-te-banner-frame,
+iframe[id=":1.container"],
+iframe[id=":2.container"] {
   display: none !important;
+  visibility: hidden !important;
+  height: 0px !important;
+  width: 0px !important;
+  max-height: 0px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
-.skiptranslate:not(.allowed-translate) {
-  display: inline !important;
-}
-
-#google_translate_element {
-  display: none !important;
+body {
+  top: 0px !important;
+  position: static !important;
 }

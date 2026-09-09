@@ -523,80 +523,12 @@
         }
     };
 
-    // ==========================================
-    // GOOGLE TRANSLATE UNIVERSAL ENGINE
-    // ==========================================
-    const GOOGLE_LANG_MAP = {
-        'en': 'en',
-        'hi': 'hi',
-        'hi-Latn': 'hi',
-        'bn': 'bn',
-        'mr': 'mr',
-        'ta': 'ta',
-        'te': 'te',
-        'gu': 'gu',
-        'kn': 'kn',
-        'pa': 'pa'
-    };
-
-    let _googleTranslateLoaded = false;
-
-    window.ShopNextGoogleTranslateInit = function () {
-        try {
-            if (typeof google !== 'undefined' && google.translate && google.translate.TranslateElement) {
-                new google.translate.TranslateElement({
-                    pageLanguage: 'en',
-                    includedLanguages: 'en,hi,bn,mr,ta,te,gu,kn,pa',
-                    autoDisplay: false
-                }, 'google_translate_element');
-                _googleTranslateLoaded = true;
-
-                // Sync with currently selected language after widget loads
-                setTimeout(() => {
-                    const currentLang = getCurrentLanguage();
-                    triggerGoogleTranslate(currentLang);
-                }, 300);
-            }
-        } catch (err) {
-            console.warn('Google Translate initialization:', err);
-        }
-    };
-
-    function loadGoogleTranslateScript() {
-        if (document.getElementById('google-translate-script')) return;
-        const s = document.createElement('script');
-        s.id = 'google-translate-script';
-        s.src = '//translate.google.com/translate_a/element.js?cb=ShopNextGoogleTranslateInit';
-        s.async = true;
-        document.body.appendChild(s);
-    }
-
-    function triggerGoogleTranslate(langCode) {
-        const gtLang = GOOGLE_LANG_MAP[langCode] || 'en';
-        
-        // Update googtrans cookies
+    // Clean up any leftover Google Translate cookies
+    try {
         const domain = window.location.hostname;
-        if (gtLang === 'en') {
-            document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-            document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=${domain}; path=/;`;
-            document.cookie = `googtrans=/en/en; path=/;`;
-            document.cookie = `googtrans=/en/en; domain=${domain}; path=/;`;
-        } else {
-            document.cookie = `googtrans=/en/${gtLang}; path=/;`;
-            document.cookie = `googtrans=/en/${gtLang}; domain=${domain}; path=/;`;
-        }
-
-        // Change the select box if it is present
-        const combo = document.querySelector('.goog-te-combo');
-        if (combo) {
-            if (combo.value !== gtLang) {
-                combo.value = gtLang;
-                combo.dispatchEvent(new Event('change'));
-            }
-        } else if (gtLang !== 'en' && !_googleTranslateLoaded) {
-            loadGoogleTranslateScript();
-        }
-    }
+        document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=" + domain + "; path=/;";
+    } catch (e) { }
 
     function getCookie(name) {
         const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
@@ -717,11 +649,8 @@
         localStorage.setItem(STORAGE_KEY, langCode);
         setCookie(COOKIE_NAME, langCode, 365);
 
-        // Instant local dictionary translation
+        // Instant local dictionary translation (0 network lag, 0 external banners)
         applyTranslations(langCode);
-
-        // Universal Google Translate full-DOM auto-translation
-        triggerGoogleTranslate(langCode);
 
         // Notify server asynchronously so server-side rendered views get the new culture cookie
         try {
@@ -743,9 +672,6 @@
     document.addEventListener('DOMContentLoaded', function () {
         const lang = getCurrentLanguage();
         applyTranslations(lang);
-        
-        // Always load Google Translate engine to support full DOM translation
-        loadGoogleTranslateScript();
     });
 
     // Auto-translate newly added DOM nodes via MutationObserver

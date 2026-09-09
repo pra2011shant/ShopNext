@@ -22,10 +22,11 @@
                        currentController.Equals("Rider", StringComparison.OrdinalIgnoreCase);
 }
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="notranslate" translate="no">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="google" content="notranslate" />
     <title>@ViewData["Title"] - ShopNext</title>
     <!-- Modern Emoji Favicon & App Icon (Replaces browser default document icon) -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛍️</text></svg>" />
@@ -42,7 +43,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/ShopNext.styles.css" asp-append-version="true" />
 </head>
-<body class="@(isDarkPortal ? "theme-dark-portal" : "")">
+<body class="@(isDarkPortal ? "theme-dark-portal" : "") notranslate" translate="no">
     <!-- Top Navigation Bar -->
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark main-navbar mb-4 sticky-top">
@@ -378,9 +379,6 @@
             </div>
         </div>
     </footer>
-
-    <!-- Hidden Google Universal Auto-Translate Container -->
-    <div id="google_translate_element" style="display:none;"></div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
