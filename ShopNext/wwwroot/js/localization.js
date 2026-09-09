@@ -523,6 +523,81 @@
         }
     };
 
+    // ==========================================
+    // GOOGLE TRANSLATE UNIVERSAL ENGINE
+    // ==========================================
+    const GOOGLE_LANG_MAP = {
+        'en': 'en',
+        'hi': 'hi',
+        'hi-Latn': 'hi',
+        'bn': 'bn',
+        'mr': 'mr',
+        'ta': 'ta',
+        'te': 'te',
+        'gu': 'gu',
+        'kn': 'kn',
+        'pa': 'pa'
+    };
+
+    let _googleTranslateLoaded = false;
+
+    window.ShopNextGoogleTranslateInit = function () {
+        try {
+            if (typeof google !== 'undefined' && google.translate && google.translate.TranslateElement) {
+                new google.translate.TranslateElement({
+                    pageLanguage: 'en',
+                    includedLanguages: 'en,hi,bn,mr,ta,te,gu,kn,pa',
+                    autoDisplay: false
+                }, 'google_translate_element');
+                _googleTranslateLoaded = true;
+
+                // Sync with currently selected language after widget loads
+                setTimeout(() => {
+                    const currentLang = getCurrentLanguage();
+                    triggerGoogleTranslate(currentLang);
+                }, 300);
+            }
+        } catch (err) {
+            console.warn('Google Translate initialization:', err);
+        }
+    };
+
+    function loadGoogleTranslateScript() {
+        if (document.getElementById('google-translate-script')) return;
+        const s = document.createElement('script');
+        s.id = 'google-translate-script';
+        s.src = '//translate.google.com/translate_a/element.js?cb=ShopNextGoogleTranslateInit';
+        s.async = true;
+        document.body.appendChild(s);
+    }
+
+    function triggerGoogleTranslate(langCode) {
+        const gtLang = GOOGLE_LANG_MAP[langCode] || 'en';
+        
+        // Update googtrans cookies
+        const domain = window.location.hostname;
+        if (gtLang === 'en') {
+            document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+            document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=${domain}; path=/;`;
+            document.cookie = `googtrans=/en/en; path=/;`;
+            document.cookie = `googtrans=/en/en; domain=${domain}; path=/;`;
+        } else {
+            document.cookie = `googtrans=/en/${gtLang}; path=/;`;
+            document.cookie = `googtrans=/en/${gtLang}; domain=${domain}; path=/;`;
+        }
+
+        // Change the select box if it is present
+        const combo = document.querySelector('.goog-te-combo');
+        if (combo) {
+            if (combo.value !== gtLang) {
+                combo.value = gtLang;
+                combo.dispatchEvent(new Event('change'));
+            }
+        } else if (gtLang !== 'en' && !_googleTranslateLoaded) {
+            loadGoogleTranslateScript();
+        }
+    }
+
     function getCookie(name) {
         const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
         return match ? decodeURIComponent(match[2]) : null;
@@ -536,9 +611,9 @@
 
     function getCurrentLanguage() {
         const cookieLang = getCookie(COOKIE_NAME);
-        if (cookieLang && TRANSLATIONS[cookieLang]) return cookieLang;
+        if (cookieLang && LANGUAGES[cookieLang]) return cookieLang;
         const storedLang = localStorage.getItem(STORAGE_KEY);
-        if (storedLang && TRANSLATIONS[storedLang]) return storedLang;
+        if (storedLang && LANGUAGES[storedLang]) return storedLang;
         return 'en';
     }
 
@@ -569,10 +644,8 @@
                         el.setAttribute('placeholder', newText);
                     }
                 } else {
-                    // Update only text child or text content without destroying icons
                     const icon = el.querySelector('i');
                     if (icon) {
-                        // Find text node after icon
                         let textNode = null;
                         for (let i = 0; i < el.childNodes.length; i++) {
                             const node = el.childNodes[i];
@@ -644,12 +717,19 @@
         localStorage.setItem(STORAGE_KEY, langCode);
         setCookie(COOKIE_NAME, langCode, 365);
 
+        // Instant local dictionary translation
         applyTranslations(langCode);
+
+        // Universal Google Translate full-DOM auto-translation
+        triggerGoogleTranslate(langCode);
 
         // Notify server asynchronously so server-side rendered views get the new culture cookie
         try {
             fetch(`/Home/SetLanguageJson?culture=${encodeURIComponent(langCode)}`, { method: 'POST' });
         } catch (e) { }
+
+        // Dispatch custom language changed event for components/charts
+        window.dispatchEvent(new CustomEvent('shopnext:languageChanged', { detail: { language: langCode } }));
 
         if (notify) {
             const langName = LANGUAGES[langCode].native;
@@ -663,7 +743,23 @@
     document.addEventListener('DOMContentLoaded', function () {
         const lang = getCurrentLanguage();
         applyTranslations(lang);
+        
+        // Always load Google Translate engine to support full DOM translation
+        loadGoogleTranslateScript();
     });
+
+    // Auto-translate newly added DOM nodes via MutationObserver
+    if (window.MutationObserver) {
+        const observer = new MutationObserver(function (mutations) {
+            const currentLang = getCurrentLanguage();
+            if (currentLang !== 'en') {
+                applyTranslations(currentLang);
+            }
+        });
+        document.addEventListener('DOMContentLoaded', function () {
+            observer.observe(document.body, { childList: true, subtree: true });
+        });
+    }
 
     // Expose ShopNext i18n API to window
     window.ShopNextI18n = {

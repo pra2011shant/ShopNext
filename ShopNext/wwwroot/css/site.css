@@ -1521,3 +1521,41 @@ body.theme-dark-portal main {
   font-size: 0.92rem !important;
   font-weight: 600 !important;
 }
+
+/* ==========================================================================
+   Google Universal Auto-Translate Seamless Styling
+   ========================================================================== */
+.goog-te-banner-frame.skiptranslate,
+.goog-te-banner-frame,
+iframe.goog-te-banner-frame {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+}
+
+body {
+  top: 0px !important;
+  position: static !important;
+}
+
+.goog-tooltip, .goog-tooltip:hover {
+  display: none !important;
+}
+
+.goog-text-highlight {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+#goog-gt-tt, .goog-te-balloon-frame {
+  display: none !important;
+}
+
+.skiptranslate:not(.allowed-translate) {
+  display: inline !important;
+}
+
+#google_translate_element {
+  display: none !important;
+}
