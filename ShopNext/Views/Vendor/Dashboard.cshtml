@@ -920,28 +920,16 @@
                                 else
                                 {
                                     <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center gap-3">
-                                                <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover;" />
-                                                <div><strong class="text-white">Sample Premium Wireless Earbuds</strong><div class="text-muted small">#PRD-101</div></div>
+                                        <td colspan="5" class="text-center py-5">
+                                            <div class="py-3">
+                                                <i class="fa-solid fa-boxes-stacked fs-1 text-primary mb-3"></i>
+                                                <h5 class="text-white fw-bold">No Products in Catalog Yet</h5>
+                                                <p class="text-muted small mb-3">You haven't listed any products yet. Click below to add your first product.</p>
+                                                <button type="button" class="btn btn-primary btn-sm px-4 py-2 rounded-pill fw-bold" onclick="switchSellerTab('tab-add-product')">
+                                                    <i class="fa-solid fa-plus-circle me-1"></i> Add Product
+                                                </button>
                                             </div>
                                         </td>
-                                        <td>Electronics</td>
-                                        <td><strong class="text-white">₹2,499.00</strong></td>
-                                        <td><span class="badge bg-success bg-opacity-25 text-success border border-success px-2 py-1 rounded-pill">In Stock</span></td>
-                                        <td class="text-muted small">05 Sep 2026</td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center gap-3">
-                                                <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover;" />
-                                                <div><strong class="text-white">Smart Fitness Watch AMOLED</strong><div class="text-muted small">#PRD-102</div></div>
-                                            </div>
-                                        </td>
-                                        <td>Electronics</td>
-                                        <td><strong class="text-white">₹3,999.00</strong></td>
-                                        <td><span class="badge bg-success bg-opacity-25 text-success border border-success px-2 py-1 rounded-pill">In Stock</span></td>
-                                        <td class="text-muted small">04 Sep 2026</td>
                                     </tr>
                                 }
                             </tbody>
@@ -1254,42 +1242,42 @@
                     <!-- Inventory Summary 4 Metric Cards -->
                     <div class="row g-3 mb-4">
                         <div class="col-6 col-md-3">
-                            <div class="p-3 rounded-4 h-100" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border);">
+                            <div class="p-3 rounded-4 h-100" style="background: rgba(15, 23, 42, 0.85); border: 1px solid var(--glass-border);">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                     <span class="text-muted small fw-bold">Total Tracked</span>
                                     <i class="fa-solid fa-box text-primary"></i>
                                 </div>
-                                <div class="fs-4 fw-bold text-white" id="invCountTotal">@(Model.Products?.Count ?? 3)</div>
+                                <div class="fs-4 fw-bold text-white" id="invCountTotal">@(Model.Products?.Count ?? 0)</div>
                                 <div class="text-muted" style="font-size: 0.75rem;">Catalog items</div>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
-                            <div class="p-3 rounded-4 h-100" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3);">
+                            <div class="p-3 rounded-4 h-100" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35);">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                     <span class="text-success small fw-bold">Available (Stock &ge; 5)</span>
                                     <i class="fa-solid fa-circle-check text-success"></i>
                                 </div>
-                                <div class="fs-4 fw-bold text-success" id="invCountAvail">@(Model.AvailableStock > 0 ? Model.AvailableStock : (Model.Products?.Count(p => p.Stock >= 5) ?? 1))</div>
+                                <div class="fs-4 fw-bold text-success" id="invCountAvail">@Model.AvailableStock</div>
                                 <div class="text-muted" style="font-size: 0.75rem;">Sufficient inventory</div>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
-                            <div class="p-3 rounded-4 h-100" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.4);">
+                            <div class="p-3 rounded-4 h-100" style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.4);">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                     <span class="text-warning small fw-bold">⚠ Low Stock (&lt; 5)</span>
                                     <i class="fa-solid fa-triangle-exclamation text-warning"></i>
                                 </div>
-                                <div class="fs-4 fw-bold text-warning" id="invCountLow">@(Model.LowStock > 0 ? Model.LowStock : (Model.Products?.Count(p => p.Stock < 5 && p.Stock > 0) ?? 1))</div>
+                                <div class="fs-4 fw-bold text-warning" id="invCountLow">@Model.LowStock</div>
                                 <div class="text-warning small" style="font-size: 0.75rem;">Requires restock</div>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
-                            <div class="p-3 rounded-4 h-100" style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3);">
+                            <div class="p-3 rounded-4 h-100" style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35);">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                     <span class="text-danger small fw-bold">Out of Stock (0)</span>
                                     <i class="fa-solid fa-circle-xmark text-danger"></i>
                                 </div>
-                                <div class="fs-4 fw-bold text-danger" id="invCountOut">@(Model.OutOfStock > 0 ? Model.OutOfStock : (Model.Products?.Count(p => p.Stock <= 0) ?? 1))</div>
+                                <div class="fs-4 fw-bold text-danger" id="invCountOut">@Model.OutOfStock</div>
                                 <div class="text-danger small" style="font-size: 0.75rem;">Sales disabled</div>
                             </div>
                         </div>
@@ -1411,82 +1399,16 @@
                                 }
                                 else
                                 {
-                                    <!-- Default Example Products matching Step 23 Spec: Mobile 20 Available, Laptop 3 Low Stock, Headphone 0 Out of Stock -->
-                                    <tr class="inv-row" data-filter="available" id="invRow_demo1">
-                                        <td>
-                                            <div class="d-flex align-items-center gap-3">
-                                                <div class="rounded-3 bg-dark d-flex align-items-center justify-content-center" style="width: 46px; height: 46px; border: 1px solid var(--glass-border); color: #38bdf8;">
-                                                    <i class="fa-solid fa-mobile-screen fs-5"></i>
-                                                </div>
-                                                <div>
-                                                    <strong class="text-white inv-prod-title">Mobile</strong>
-                                                    <div class="text-muted small">Category: Electronics &bull; <span class="inv-prod-sku">SKU: SKU-MOB-020</span></div>
-                                                </div>
+                                    <tr>
+                                        <td colspan="4" class="text-center py-5">
+                                            <div class="py-3">
+                                                <i class="fa-solid fa-cubes-stacked fs-1 text-warning mb-3"></i>
+                                                <h5 class="text-white fw-bold">No Inventory Records Found</h5>
+                                                <p class="text-muted small mb-3">Add items to your catalog to track live stock thresholds and low inventory alerts.</p>
+                                                <button type="button" class="btn btn-warning text-dark btn-sm px-4 py-2 rounded-pill fw-bold" onclick="switchSellerTab('tab-add-product')">
+                                                    <i class="fa-solid fa-plus-circle me-1"></i> Add First Item
+                                                </button>
                                             </div>
-                                        </td>
-                                        <td class="text-center align-middle">
-                                            <strong class="text-white fs-6">20</strong>
-                                            <div class="text-muted small">units</div>
-                                        </td>
-                                        <td class="text-center align-middle">
-                                            <span class="badge bg-success bg-opacity-25 text-success border border-success px-3 py-2 rounded-pill fw-bold">
-                                                <i class="fa-solid fa-circle-check me-1"></i> Available
-                                            </span>
-                                        </td>
-                                        <td class="text-end align-middle">
-                                            <button class="btn btn-sm btn-outline-light rounded-pill px-3" onclick="switchSellerTab('tab-add-product')">Manage</button>
-                                        </td>
-                                    </tr>
-
-                                    <tr class="inv-row" data-filter="low" id="invRow_demo2">
-                                        <td>
-                                            <div class="d-flex align-items-center gap-3">
-                                                <div class="rounded-3 bg-dark d-flex align-items-center justify-content-center" style="width: 46px; height: 46px; border: 1px solid var(--glass-border); color: #fbbf24;">
-                                                    <i class="fa-solid fa-laptop fs-5"></i>
-                                                </div>
-                                                <div>
-                                                    <strong class="text-white inv-prod-title">Laptop</strong>
-                                                    <div class="text-muted small">Category: Electronics &bull; <span class="inv-prod-sku">SKU: SKU-LAP-003</span></div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="text-center align-middle">
-                                            <strong class="text-warning fs-6">3</strong>
-                                            <div class="text-muted small">units</div>
-                                        </td>
-                                        <td class="text-center align-middle">
-                                            <span class="badge bg-warning bg-opacity-25 text-warning border border-warning px-3 py-2 rounded-pill fw-bold">
-                                                <i class="fa-solid fa-triangle-exclamation me-1"></i> ⚠ Low Stock
-                                            </span>
-                                        </td>
-                                        <td class="text-end align-middle">
-                                            <button class="btn btn-sm btn-outline-light rounded-pill px-3" onclick="switchSellerTab('tab-add-product')">Manage</button>
-                                        </td>
-                                    </tr>
-
-                                    <tr class="inv-row" data-filter="out" id="invRow_demo3">
-                                        <td>
-                                            <div class="d-flex align-items-center gap-3">
-                                                <div class="rounded-3 bg-dark d-flex align-items-center justify-content-center" style="width: 46px; height: 46px; border: 1px solid var(--glass-border); color: #f87171;">
-                                                    <i class="fa-solid fa-headphones fs-5"></i>
-                                                </div>
-                                                <div>
-                                                    <strong class="text-white inv-prod-title">Headphone</strong>
-                                                    <div class="text-muted small">Category: Electronics &bull; <span class="inv-prod-sku">SKU: SKU-HDP-000</span></div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="text-center align-middle">
-                                            <strong class="text-danger fs-6">0</strong>
-                                            <div class="text-muted small">units</div>
-                                        </td>
-                                        <td class="text-center align-middle">
-                                            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger px-3 py-2 rounded-pill fw-bold">
-                                                <i class="fa-solid fa-circle-xmark me-1"></i> Out of Stock
-                                            </span>
-                                        </td>
-                                        <td class="text-end align-middle">
-                                            <button class="btn btn-sm btn-outline-light rounded-pill px-3" onclick="switchSellerTab('tab-add-product')">Manage</button>
                                         </td>
                                     </tr>
                                 }
@@ -1529,10 +1451,15 @@
                                 }
                                 else
                                 {
-                                    <tr><td>#ORD1045</td><td>Pooja Sharma</td><td>₹38,999.00</td><td><span class="badge-status status-pending">Placed</span></td><td>05 Sep 2026</td></tr>
-                                    <tr><td>#ORD1044</td><td>Amit Verma</td><td>₹26,490.00</td><td><span class="badge-status status-shipped">Out for Delivery</span></td><td>05 Sep 2026</td></tr>
-                                    <tr><td>#ORD1043</td><td>Vikram Singh</td><td>₹39,900.00</td><td><span class="badge-status status-delivered">Delivered</span></td><td>04 Sep 2026</td></tr>
-                                    <tr><td>#ORD1042</td><td>Neha Gupta</td><td>₹1,999.00</td><td><span class="badge-status status-return">Return Requested</span></td><td>04 Sep 2026</td></tr>
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5">
+                                            <div class="py-3">
+                                                <i class="fa-solid fa-clipboard-list fs-1 text-primary mb-3"></i>
+                                                <h5 class="text-white fw-bold">No Orders Placed Yet</h5>
+                                                <p class="text-muted small mb-0">Customer orders for your shop will appear here in real-time.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 }
                             </tbody>
                         </table>
@@ -1644,63 +1571,11 @@
                     }
                     else
                     {
-                        <!-- Default Exemplary 24. Seller Order: Order #1001, Samsung Mobile, Qty: 2, Amount: ₹50,000, Delivery Address, Status: Pending, [Accept Order] -->
-                        <div class="p-4 rounded-4 mb-3" id="orderCard_1001" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border); box-shadow: 0 10px 25px rgba(0,0,0,0.25);">
-                            <!-- Order Header -->
-                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pb-3 mb-3" style="border-bottom: 1px solid rgba(255,255,255,0.06);">
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="fs-5 fw-bold text-white"><i class="fa-solid fa-receipt text-warning me-1"></i> Order #1001</span>
-                                    <span class="badge bg-warning bg-opacity-25 text-warning border border-warning px-3 py-1 rounded-pill fw-bold" id="orderStatusBadge_1001">
-                                        <i class="fa-solid fa-hourglass-start me-1"></i> Status: Pending
-                                    </span>
-                                </div>
-                                <div class="text-muted small">
-                                    <i class="fa-regular fa-clock me-1"></i> Just now &bull; New Delivery Request
-                                </div>
-                            </div>
-
-                            <!-- Order Details Grid: Product, Qty, Amount, Delivery Address -->
-                            <div class="row g-3 align-items-center">
-                                <!-- 1. Product & Qty -->
-                                <div class="col-md-4">
-                                    <div class="text-muted small mb-1 fw-bold text-uppercase" style="letter-spacing: 0.5px;">Product &amp; Quantity</div>
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="rounded-3 bg-dark d-flex align-items-center justify-content-center flex-shrink-0" style="width: 48px; height: 48px; border: 1px solid var(--glass-border); color: #38bdf8;">
-                                            <i class="fa-solid fa-mobile-screen fs-4"></i>
-                                        </div>
-                                        <div>
-                                            <strong class="text-white d-block" style="font-size: 1.05rem;">Samsung Mobile</strong>
-                                            <span class="badge bg-primary bg-opacity-25 text-info border border-primary px-2 py-0.5 rounded-pill small mt-1">
-                                                Qty: 2
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 2. Amount -->
-                                <div class="col-md-3">
-                                    <div class="text-muted small mb-1 fw-bold text-uppercase" style="letter-spacing: 0.5px;">Total Amount</div>
-                                    <div class="fs-4 fw-bold text-success">₹50,000</div>
-                                    <div class="text-muted small">Payment: Online Paid</div>
-                                </div>
-
-                                <!-- 3. Delivery Address -->
-                                <div class="col-md-5">
-                                    <div class="text-muted small mb-1 fw-bold text-uppercase" style="letter-spacing: 0.5px;">
-                                        <i class="fa-solid fa-location-dot text-danger me-1"></i> Delivery Address
-                                    </div>
-                                    <div class="p-2.5 rounded-3 text-white-50 small" style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); line-height: 1.4;">
-                                        <strong class="text-light d-block mb-0.5">Pooja Sharma &bull; +91 98111 22334</strong>
-                                        Flat 402, Royal Palms, Sector 14, Connaught Place, New Delhi - 110001
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Action Button: [Accept Order] -->
-                            <div class="d-flex justify-content-end align-items-center gap-2 mt-3 pt-3" style="border-top: 1px solid rgba(255,255,255,0.06);">
-                                <button type="button" class="btn btn-primary px-4 py-2 rounded-pill fw-bold shadow-sm" id="btnAccept_1001" onclick="acceptSellerOrder(1001, this)" style="background: var(--primary-gradient); border: none;">
-                                    <i class="fa-solid fa-check me-1.5"></i> Accept Order
-                                </button>
+                        <div class="text-center py-5 rounded-4" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                            <div class="py-3">
+                                <i class="fa-solid fa-bell-slash fs-1 text-muted mb-3"></i>
+                                <h5 class="text-white fw-bold">No New Orders Pending</h5>
+                                <p class="text-muted small mb-0">You're all caught up! New orders placed by customers will appear here instantly.</p>
                             </div>
                         </div>
                     }
@@ -1836,8 +1711,33 @@
                         <table class="table custom-table">
                             <thead><tr><th>Order #</th><th>Customer</th><th>Total Paid</th><th>Fulfilled Date</th></tr></thead>
                             <tbody>
-                                <tr><td>#ORD1043</td><td>Vikram Singh</td><td><strong class="text-white">₹39,900.00</strong></td><td class="text-muted small">04 Sep 2026</td></tr>
-                                <tr><td>#ORD1041</td><td>Rajesh Khanna</td><td><strong class="text-white">₹19,999.00</strong></td><td class="text-muted small">03 Sep 2026</td></tr>
+                                @{
+                                    var deliveredOrders = Model.RecentOrders?.Where(o => o.OrderStatus == "Delivered" || o.OrderStatus == "Completed").ToList();
+                                }
+                                @if (deliveredOrders != null && deliveredOrders.Any())
+                                {
+                                    foreach (var dord in deliveredOrders)
+                                    {
+                                        <tr>
+                                            <td><strong class="text-white">#ORD@(dord.Id + 1000)</strong></td>
+                                            <td>@(dord.Customer?.Name ?? "Customer")</td>
+                                            <td><strong class="text-white">₹@dord.TotalAmount.ToString("N2")</strong></td>
+                                            <td class="text-muted small">@dord.CreatedDate.ToString("dd MMM yyyy")</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="4" class="text-center py-5">
+                                            <div class="py-3">
+                                                <i class="fa-solid fa-box-open fs-1 text-muted mb-3"></i>
+                                                <h5 class="text-white fw-bold">No Delivered Orders Yet</h5>
+                                                <p class="text-muted small mb-0">Completed and delivered customer orders will appear here.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
                             </tbody>
                         </table>
                     </div>
@@ -1854,24 +1754,46 @@
                         </div>
                         <span class="badge bg-warning text-dark px-3 py-1 rounded-pill">@Model.PendingReturns Pending Return</span>
                     </div>
-                    <div class="p-4 rounded-4" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div>
-                                <span class="badge bg-warning text-dark me-2">Return Requested</span>
-                                <strong class="text-white">#ORD1042 &bull; Neha Gupta</strong>
+
+                    @{
+                        var returnOrders = Model.RecentOrders?.Where(o => o.OrderStatus == "Return Requested" || o.OrderStatus == "Return Approved" || !string.IsNullOrEmpty(o.ReturnReason)).ToList();
+                    }
+
+                    @if (returnOrders != null && returnOrders.Any())
+                    {
+                        foreach (var rord in returnOrders)
+                        {
+                            var rItem = rord.OrderItems?.FirstOrDefault();
+                            <div class="p-4 rounded-4 mb-3" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <span class="badge bg-warning text-dark me-2">@rord.OrderStatus</span>
+                                        <strong class="text-white">#ORD@(rord.Id + 1000) &bull; @(rord.Customer?.Name ?? "Customer")</strong>
+                                    </div>
+                                    <span class="text-white fw-bold">₹@rord.TotalAmount.ToString("N2")</span>
+                                </div>
+                                <div class="text-muted small mb-2">Item: @(rItem?.Product?.ProductName ?? "Order Item") (x@(rItem?.Quantity ?? 1))</div>
+                                <div class="p-2 rounded-3 mb-3 bg-dark border border-secondary text-warning small">
+                                    <i class="fa-solid fa-circle-info me-1"></i> Return Reason: <strong>@(string.IsNullOrEmpty(rord.ReturnReason) ? "Customer requested return" : rord.ReturnReason)</strong>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a asp-controller="Vendor" asp-action="Orders" class="btn btn-outline-success btn-sm px-3 rounded-pill fw-bold">
+                                        <i class="fa-solid fa-check me-1"></i> Approve Return & Schedule Pickup
+                                    </a>
+                                </div>
                             </div>
-                            <span class="text-white fw-bold">₹1,999.00</span>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-5 rounded-4" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                            <div class="py-3">
+                                <i class="fa-solid fa-rotate-left fs-1 text-muted mb-3"></i>
+                                <h5 class="text-white fw-bold">No Return Requests</h5>
+                                <p class="text-muted small mb-0">No active customer return requests found for your store.</p>
+                            </div>
                         </div>
-                        <div class="text-muted small mb-2">Item: boAt Rockerz 450 Pro (x1)</div>
-                        <div class="p-2 rounded-3 mb-3 bg-dark border border-secondary text-warning small">
-                            <i class="fa-solid fa-circle-info me-1"></i> Return Reason: <strong>Defective / Audio balance issue</strong>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <a asp-controller="Vendor" asp-action="Orders" class="btn btn-outline-success btn-sm px-3 rounded-pill fw-bold">
-                                <i class="fa-solid fa-check me-1"></i> Approve Return & Schedule Pickup
-                            </a>
-                        </div>
-                    </div>
+                    }
                 </div>
             </div>
 
