@@ -6,22 +6,24 @@
 
 <style>
     .monitoring-card {
-        background: rgba(15, 23, 42, 0.75);
+        background: #0f172a !important;
         backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 16px;
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 20px !important;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4) !important;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        color: #f8fafc !important;
     }
     .monitoring-card:hover {
-        border-color: rgba(99, 102, 241, 0.3);
-        transform: translateY(-2px);
-        box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5);
+        border-color: rgba(99, 102, 241, 0.4) !important;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
     }
     .kpi-badge {
         font-size: 0.75rem;
-        padding: 4px 10px;
+        padding: 4px 12px;
         border-radius: 9999px;
-        font-weight: 600;
+        font-weight: 700;
         letter-spacing: 0.05em;
     }
     .live-pulse {
@@ -40,110 +42,152 @@
         100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
     }
     .diff-old {
-        background: rgba(239, 68, 68, 0.15);
-        color: #f87171;
+        background: rgba(239, 68, 68, 0.18);
+        color: #fca5a5;
         padding: 4px 8px;
         border-radius: 6px;
         text-decoration: line-through;
         font-family: monospace;
+        border: 1px solid rgba(239, 68, 68, 0.3);
     }
     .diff-new {
-        background: rgba(16, 185, 129, 0.15);
-        color: #34d399;
+        background: rgba(16, 185, 129, 0.18);
+        color: #6ee7b7;
         padding: 4px 8px;
         border-radius: 6px;
         font-weight: bold;
         font-family: monospace;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .nav-tabs {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+        gap: 6px;
     }
     .nav-tabs .nav-link {
-        color: #94a3b8;
-        border: none;
-        border-bottom: 2px solid transparent;
-        padding: 12px 20px;
+        color: #94a3b8 !important;
+        background: transparent !important;
+        border: none !important;
+        border-bottom: 2px solid transparent !important;
+        padding: 12px 18px;
         font-weight: 600;
-        transition: all 0.2s;
+        font-size: 0.92rem;
+        transition: all 0.2s ease;
+        border-radius: 10px 10px 0 0 !important;
     }
     .nav-tabs .nav-link:hover {
-        color: #f1f5f9;
-        border-color: rgba(99, 102, 241, 0.4);
+        color: #ffffff !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-bottom-color: rgba(99, 102, 241, 0.5) !important;
     }
     .nav-tabs .nav-link.active {
-        color: #818cf8;
-        background: transparent;
-        border-bottom: 2px solid #6366f1;
+        color: #60a5fa !important;
+        background: rgba(59, 130, 246, 0.12) !important;
+        border-bottom: 2px solid #60a5fa !important;
+        font-weight: 700;
     }
-    .role-badge-Admin { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
-    .role-badge-Seller { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
-    .role-badge-Customer { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
-    .role-badge-Rider { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
-    .role-badge-System { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
+    .role-badge-Admin { background: rgba(239, 68, 68, 0.2) !important; color: #f87171 !important; border: 1px solid rgba(239, 68, 68, 0.4) !important; }
+    .role-badge-Seller { background: rgba(59, 130, 246, 0.2) !important; color: #60a5fa !important; border: 1px solid rgba(59, 130, 246, 0.4) !important; }
+    .role-badge-Customer { background: rgba(16, 185, 129, 0.2) !important; color: #34d399 !important; border: 1px solid rgba(16, 185, 129, 0.4) !important; }
+    .role-badge-Rider { background: rgba(245, 158, 11, 0.2) !important; color: #fbbf24 !important; border: 1px solid rgba(245, 158, 11, 0.4) !important; }
+    .role-badge-System { background: rgba(148, 163, 184, 0.2) !important; color: #cbd5e1 !important; border: 1px solid rgba(148, 163, 184, 0.4) !important; }
     
+    .table-monitoring-wrap {
+        background: #090d16;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        overflow: hidden;
+        padding: 0.5rem;
+    }
     .table-monitoring {
         width: 100%;
-        color: #e2e8f0;
+        color: #f8fafc !important;
         border-collapse: separate;
-        border-spacing: 0 6px;
+        border-spacing: 0 8px;
+        margin-bottom: 0;
     }
     .table-monitoring thead th {
-        background: rgba(30, 41, 59, 0.6);
-        color: #94a3b8;
+        background: #0b1120 !important;
+        color: #94a3b8 !important;
         font-size: 0.75rem;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        padding: 12px 16px;
-        border: none;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        padding: 14px 16px;
+        border: none !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
     }
     .table-monitoring tbody tr {
-        background: rgba(30, 41, 59, 0.4);
-        transition: background 0.2s;
+        background: rgba(30, 41, 59, 0.7) !important;
+        transition: all 0.2s ease;
+        border: 1px solid rgba(255, 255, 255, 0.08);
     }
     .table-monitoring tbody tr:hover {
-        background: rgba(51, 65, 85, 0.6);
+        background: rgba(51, 65, 85, 0.9) !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     }
     .table-monitoring td {
         padding: 14px 16px;
         vertical-align: middle;
-        border-top: 1px solid rgba(255, 255, 255, 0.04);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+        color: #f8fafc !important;
     }
-    .table-monitoring td:first-child { border-left: 1px solid rgba(255, 255, 255, 0.04); border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
-    .table-monitoring td:last-child { border-right: 1px solid rgba(255, 255, 255, 0.04); border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
+    .table-monitoring td:first-child { 
+        border-left: 1px solid rgba(255, 255, 255, 0.06) !important; 
+        border-top-left-radius: 12px; 
+        border-bottom-left-radius: 12px; 
+    }
+    .table-monitoring td:last-child { 
+        border-right: 1px solid rgba(255, 255, 255, 0.06) !important; 
+        border-top-right-radius: 12px; 
+        border-bottom-right-radius: 12px; 
+    }
+    .threat-glass-banner {
+        background: linear-gradient(135deg, rgba(220, 38, 38, 0.18) 0%, rgba(153, 27, 27, 0.12) 100%) !important;
+        border: 1px solid rgba(239, 68, 68, 0.4) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 8px 25px rgba(220, 38, 38, 0.2) !important;
+        backdrop-filter: blur(12px);
+    }
 </style>
 
 <div class="container-fluid py-4 px-lg-5">
     <!-- Header Section -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
-            <div class="d-flex align-items-center gap-2 mb-1">
+            <div class="d-flex align-items-center gap-2 mb-1.5 flex-wrap">
                 <span class="live-pulse"></span>
-                <span class="badge bg-indigo-900 text-indigo-300 border border-indigo-500/30">SYSTEM TELEMETRY ENGINE v3.0</span>
-                <span class="text-secondary small">| Server Time: @DateTime.Now.ToString("dd MMM yyyy, hh:mm:ss tt")</span>
+                <span class="badge bg-primary bg-opacity-20 text-primary border border-primary border-opacity-30 px-2.5 py-1 rounded-pill small fw-bold">
+                    <i class="fa-solid fa-satellite-dish me-1"></i> TELEMETRY ENGINE v3.0
+                </span>
+                <span class="text-secondary small font-monospace">Server Time: @DateTime.Now.ToString("dd MMM yyyy, hh:mm:ss tt")</span>
             </div>
-            <h1 class="h3 fw-bold text-white mb-0">
-                <i class="fas fa-shield-halved text-primary me-2"></i> System Monitoring & Enterprise Audit Center
+            <h1 class="h3 fw-extrabold text-white mb-1 d-flex align-items-center gap-2">
+                <i class="fa-solid fa-shield-halved text-primary"></i> System Monitoring & Enterprise Audit Center
             </h1>
             <p class="text-secondary small mb-0">Live connected sessions, user activities, before/after mutations, delete tracking, seen logs, and security alarms.</p>
         </div>
 
-        <div class="d-flex align-items-center gap-2">
-            <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="window.location.reload();">
-                <i class="fas fa-rotate me-1"></i> Refresh Live Feed
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <button type="button" class="btn btn-outline-light btn-sm rounded-pill px-3 shadow-sm fw-semibold" onclick="window.location.reload();">
+                <i class="fa-solid fa-rotate me-1 text-info"></i> Refresh Feed
             </button>
             
             <div class="dropdown">
-                <button class="btn btn-primary btn-sm rounded-pill px-3 dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-file-export me-1"></i> Export Data
+                <button class="btn btn-primary btn-sm rounded-pill px-3 dropdown-toggle fw-bold shadow-sm" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fa-solid fa-file-export me-1"></i> Export Data
                 </button>
-                <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg" aria-labelledby="exportDropdown">
-                    <li><a class="dropdown-item" href="/Admin/ExportMonitoringData?type=Sessions"><i class="fas fa-network-wired me-2 text-info"></i> Export Active Sessions (.CSV)</a></li>
-                    <li><a class="dropdown-item" href="/Admin/ExportMonitoringData?type=Logins"><i class="fas fa-key me-2 text-success"></i> Export Login History (.CSV)</a></li>
-                    <li><a class="dropdown-item" href="/Admin/ExportMonitoringData?type=Activities"><i class="fas fa-stream me-2 text-warning"></i> Export Activity Stream (.CSV)</a></li>
-                    <li><a class="dropdown-item" href="/Admin/ExportMonitoringData?type=AuditDiffs"><i class="fas fa-code-compare me-2 text-primary"></i> Export Before/After Diffs (.CSV)</a></li>
+                <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg p-2" aria-labelledby="exportDropdown" style="background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255,255,255,0.15); border-radius: 14px;">
+                    <li><a class="dropdown-item rounded-2 py-2" href="/Admin/ExportMonitoringData?type=Sessions"><i class="fa-solid fa-network-wired me-2 text-info"></i> Export Active Sessions (.CSV)</a></li>
+                    <li><a class="dropdown-item rounded-2 py-2" href="/Admin/ExportMonitoringData?type=Logins"><i class="fa-solid fa-key me-2 text-success"></i> Export Login History (.CSV)</a></li>
+                    <li><a class="dropdown-item rounded-2 py-2" href="/Admin/ExportMonitoringData?type=Activities"><i class="fa-solid fa-stream me-2 text-warning"></i> Export Activity Stream (.CSV)</a></li>
+                    <li><a class="dropdown-item rounded-2 py-2" href="/Admin/ExportMonitoringData?type=AuditDiffs"><i class="fa-solid fa-code-compare me-2 text-primary"></i> Export Before/After Diffs (.CSV)</a></li>
                 </ul>
             </div>
 
-            <a href="/Admin/Dashboard" class="btn btn-outline-light btn-sm rounded-pill px-3">
-                <i class="fas fa-gauge me-1"></i> Back to Main Dashboard
+            <a href="/Admin/Dashboard" class="btn btn-outline-info btn-sm rounded-pill px-3 fw-semibold">
+                <i class="fa-solid fa-gauge me-1"></i> Admin Dashboard
             </a>
         </div>
     </div>
@@ -158,14 +202,14 @@
                         <span class="text-secondary text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.05em;">Total Platform Users</span>
                         <h2 class="fw-bold text-white mb-0 mt-1">@Model.TotalUsers</h2>
                     </div>
-                    <div class="p-2 rounded-3" style="background: rgba(99, 102, 241, 0.15); color: #818cf8;">
-                        <i class="fas fa-users fs-5"></i>
+                    <div class="p-2.5 rounded-3" style="background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3);">
+                        <i class="fa-solid fa-users fs-5"></i>
                     </div>
                 </div>
-                <div class="d-flex gap-2 flex-wrap pt-2 border-top border-secondary border-opacity-10 small">
-                    <span class="text-muted"><i class="fas fa-user-tag text-success me-1"></i>Customers: <strong>@Model.TotalCustomers</strong></span>
-                    <span class="text-muted"><i class="fas fa-store text-primary me-1"></i>Sellers: <strong>@Model.TotalSellers</strong></span>
-                    <span class="text-muted"><i class="fas fa-motorcycle text-warning me-1"></i>Riders: <strong>@Model.TotalRiders</strong></span>
+                <div class="d-flex gap-2 flex-wrap pt-2 border-top border-secondary border-opacity-20 small">
+                    <span class="text-secondary"><i class="fa-solid fa-user-tag text-success me-1"></i>Customers: <strong class="text-white">@Model.TotalCustomers</strong></span>
+                    <span class="text-secondary"><i class="fa-solid fa-store text-primary me-1"></i>Sellers: <strong class="text-white">@Model.TotalSellers</strong></span>
+                    <span class="text-secondary"><i class="fa-solid fa-motorcycle text-warning me-1"></i>Riders: <strong class="text-white">@Model.TotalRiders</strong></span>
                 </div>
             </div>
         </div>
@@ -181,13 +225,13 @@
                         </div>
                         <h2 class="fw-bold text-success mb-0 mt-1">@Model.OnlineUsers <span class="fs-6 text-muted fw-normal">/ @Model.TotalUsers</span></h2>
                     </div>
-                    <div class="p-2 rounded-3" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">
-                        <i class="fas fa-signal fs-5"></i>
+                    <div class="p-2.5 rounded-3" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">
+                        <i class="fa-solid fa-signal fs-5"></i>
                     </div>
                 </div>
-                <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-10 small">
-                    <span class="text-muted">Offline users: <strong>@Model.OfflineUsers</strong></span>
-                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20">Live Connected</span>
+                <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-20 small">
+                    <span class="text-secondary">Offline users: <strong class="text-white">@Model.OfflineUsers</strong></span>
+                    <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-30 rounded-pill">Live Connected</span>
                 </div>
             </div>
         </div>
@@ -200,19 +244,19 @@
                         <span class="text-secondary text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.05em;">Today's Logins & Auth</span>
                         <h2 class="fw-bold text-white mb-0 mt-1">@Model.TodayLogins</h2>
                     </div>
-                    <div class="p-2 rounded-3" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24;">
-                        <i class="fas fa-key fs-5"></i>
+                    <div class="p-2.5 rounded-3" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3);">
+                        <i class="fa-solid fa-key fs-5"></i>
                     </div>
                 </div>
-                <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-10 small">
-                    <span class="text-muted">Failed attempts: <strong class="@(Model.FailedLoginAttempts > 0 ? "text-danger" : "text-success")">@Model.FailedLoginAttempts</strong></span>
+                <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-20 small">
+                    <span class="text-secondary">Failed attempts: <strong class="@(Model.FailedLoginAttempts > 0 ? "text-danger" : "text-success")">@Model.FailedLoginAttempts</strong></span>
                     @if (Model.FailedLoginAttempts > 3)
                     {
-                        <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30">Security Alert</span>
+                        <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 rounded-pill">Security Alert</span>
                     }
                     else
                     {
-                        <span class="badge bg-secondary bg-opacity-20 text-secondary">Normal</span>
+                        <span class="badge bg-secondary bg-opacity-20 text-light rounded-pill">Normal</span>
                     }
                 </div>
             </div>
@@ -226,13 +270,13 @@
                         <span class="text-secondary text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.05em;">Today's Operations</span>
                         <h2 class="fw-bold text-white mb-0 mt-1">@Model.TodayActivities <span class="fs-6 text-muted fw-normal">events</span></h2>
                     </div>
-                    <div class="p-2 rounded-3" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa;">
-                        <i class="fas fa-bolt fs-5"></i>
+                    <div class="p-2.5 rounded-3" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3);">
+                        <i class="fa-solid fa-bolt fs-5"></i>
                     </div>
                 </div>
-                <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-10 small">
-                    <span class="text-muted">Orders today: <strong class="text-info">@Model.TodayOrders</strong></span>
-                    <span class="text-muted">Last event: <strong>@Model.LastActivityTime?.ToString("hh:mm tt")</strong></span>
+                <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-20 small">
+                    <span class="text-secondary">Orders today: <strong class="text-info">@Model.TodayOrders</strong></span>
+                    <span class="text-secondary">Last event: <strong class="text-white">@Model.LastActivityTime?.ToString("hh:mm tt")</strong></span>
                 </div>
             </div>
         </div>
@@ -242,60 +286,74 @@
     @if (Model.SecurityAlerts != null && Model.SecurityAlerts.Any(a => !a.IsResolved))
     {
         var unresolved = Model.SecurityAlerts.Where(a => !a.IsResolved).ToList();
-        <div class="alert alert-danger bg-danger bg-opacity-10 border border-danger border-opacity-30 rounded-3 mb-4 p-3 d-flex align-items-center justify-content-between">
+        <div class="threat-glass-banner rounded-4 mb-4 p-3.5 d-flex align-items-center justify-content-between flex-wrap gap-3">
             <div class="d-flex align-items-center gap-3">
-                <div class="p-2 bg-danger bg-opacity-20 text-danger rounded-circle">
-                    <i class="fas fa-triangle-exclamation fs-4"></i>
+                <div class="p-2.5 bg-danger bg-opacity-25 text-danger rounded-circle border border-danger border-opacity-40 fs-4">
+                    <i class="fa-solid fa-triangle-exclamation fa-beat"></i>
                 </div>
                 <div>
-                    <h6 class="fw-bold text-danger mb-1">🚨 @unresolved.Count Active Security Threat Alert(s) Detected!</h6>
-                    <p class="mb-0 text-secondary small">
+                    <h6 class="fw-bold text-white mb-1"><i class="fa-solid fa-shield-virus text-danger me-1"></i> @unresolved.Count Active Security Threat Alert(s) Detected!</h6>
+                    <p class="mb-0 text-light opacity-75 small">
                         @string.Join(" • ", unresolved.Take(2).Select(u => $"{u.Title} ({u.Severity})"))
                     </p>
                 </div>
             </div>
-            <button class="btn btn-sm btn-danger rounded-pill px-3" onclick="$('#security-tab').tab('show');">
-                <i class="fas fa-shield-virus me-1"></i> Inspect Threats
+            <button class="btn btn-sm btn-danger rounded-pill px-4 py-2 fw-bold shadow-sm" onclick="$('#security-tab').tab('show');">
+                <i class="fa-solid fa-shield-virus me-1"></i> Inspect Threats
             </button>
         </div>
     }
 
     <!-- Tabbed Navigation Panels -->
     <div class="monitoring-card p-4">
-        <ul class="nav nav-tabs border-bottom border-secondary border-opacity-20 mb-4" id="monitoringTabs" role="tablist">
+        <ul class="nav nav-tabs mb-4 flex-wrap" id="monitoringTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="sessions-tab" data-bs-toggle="tab" data-bs-target="#tab-sessions" type="button" role="tab">
-                    <i class="fas fa-network-wired me-2 text-success"></i> 🟢 Active Sessions <span class="badge bg-success bg-opacity-20 text-success ms-1">@Model.ActiveSessions.Count</span>
+                <button class="nav-link active d-flex align-items-center gap-2" id="sessions-tab" data-bs-toggle="tab" data-bs-target="#tab-sessions" type="button" role="tab">
+                    <i class="fa-solid fa-satellite-dish text-success"></i>
+                    <span>Active Sessions</span>
+                    <span class="badge bg-success bg-opacity-25 text-success rounded-pill px-2">@Model.ActiveSessions.Count</span>
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="activities-tab" data-bs-toggle="tab" data-bs-target="#tab-activities" type="button" role="tab">
-                    <i class="fas fa-stream me-2 text-primary"></i> 👤 Activity Stream <span class="badge bg-primary bg-opacity-20 text-primary ms-1">@Model.RecentActivities.Count</span>
+                <button class="nav-link d-flex align-items-center gap-2" id="activities-tab" data-bs-toggle="tab" data-bs-target="#tab-activities" type="button" role="tab">
+                    <i class="fa-solid fa-list-check text-primary"></i>
+                    <span>Activity Stream</span>
+                    <span class="badge bg-primary bg-opacity-25 text-primary rounded-pill px-2">@Model.RecentActivities.Count</span>
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="logins-tab" data-bs-toggle="tab" data-bs-target="#tab-logins" type="button" role="tab">
-                    <i class="fas fa-key me-2 text-warning"></i> 🔐 Login History <span class="badge bg-warning bg-opacity-20 text-warning ms-1">@Model.RecentLogins.Count</span>
+                <button class="nav-link d-flex align-items-center gap-2" id="logins-tab" data-bs-toggle="tab" data-bs-target="#tab-logins" type="button" role="tab">
+                    <i class="fa-solid fa-key text-warning"></i>
+                    <span>Login History</span>
+                    <span class="badge bg-warning bg-opacity-25 text-warning rounded-pill px-2">@Model.RecentLogins.Count</span>
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="diffs-tab" data-bs-toggle="tab" data-bs-target="#tab-diffs" type="button" role="tab">
-                    <i class="fas fa-code-compare me-2 text-info"></i> 🔄 Before/After Diffs <span class="badge bg-info bg-opacity-20 text-info ms-1">@Model.RecentAuditDiffs.Count</span>
+                <button class="nav-link d-flex align-items-center gap-2" id="diffs-tab" data-bs-toggle="tab" data-bs-target="#tab-diffs" type="button" role="tab">
+                    <i class="fa-solid fa-code-compare text-info"></i>
+                    <span>Before/After Diffs</span>
+                    <span class="badge bg-info bg-opacity-25 text-info rounded-pill px-2">@Model.RecentAuditDiffs.Count</span>
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="deletes-tab" data-bs-toggle="tab" data-bs-target="#tab-deletes" type="button" role="tab">
-                    <i class="fas fa-trash-can-arrow-up me-2 text-danger"></i> 🗑️ Delete & Restore Hub <span class="badge bg-danger bg-opacity-20 text-danger ms-1">@Model.DeletedRecords.Count</span>
+                <button class="nav-link d-flex align-items-center gap-2" id="deletes-tab" data-bs-toggle="tab" data-bs-target="#tab-deletes" type="button" role="tab">
+                    <i class="fa-solid fa-trash-can-arrow-up text-danger"></i>
+                    <span>Delete & Restore Hub</span>
+                    <span class="badge bg-danger bg-opacity-25 text-danger rounded-pill px-2">@Model.DeletedRecords.Count</span>
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="views-tab" data-bs-toggle="tab" data-bs-target="#tab-views" type="button" role="tab">
-                    <i class="fas fa-eye me-2 text-secondary"></i> 👀 Viewed Tracking <span class="badge bg-secondary bg-opacity-20 text-secondary ms-1">@Model.RecentViewLogs.Count</span>
+                <button class="nav-link d-flex align-items-center gap-2" id="views-tab" data-bs-toggle="tab" data-bs-target="#tab-views" type="button" role="tab">
+                    <i class="fa-solid fa-eye text-light"></i>
+                    <span>Viewed Tracking</span>
+                    <span class="badge bg-secondary bg-opacity-25 text-light rounded-pill px-2">@Model.RecentViewLogs.Count</span>
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="security-tab" data-bs-toggle="tab" data-bs-target="#tab-security" type="button" role="tab">
-                    <i class="fas fa-shield-virus me-2 text-danger"></i> 🚨 Security Alerts <span class="badge bg-danger text-white ms-1">@(Model.SecurityAlerts?.Count(a => !a.IsResolved) ?? 0)</span>
+                <button class="nav-link d-flex align-items-center gap-2" id="security-tab" data-bs-toggle="tab" data-bs-target="#tab-security" type="button" role="tab">
+                    <i class="fa-solid fa-shield-virus text-danger"></i>
+                    <span>Security Alerts</span>
+                    <span class="badge bg-danger text-white rounded-pill px-2">@(Model.SecurityAlerts?.Count(a => !a.IsResolved) ?? 0)</span>
                 </button>
             </li>
         </ul>
@@ -305,11 +363,11 @@
             <!-- 1. ACTIVE SESSIONS TAB -->
             <div class="tab-pane fade show active" id="tab-sessions" role="tabpanel">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="text-white fw-bold mb-0"><i class="fas fa-satellite-dish text-success me-2"></i> Live Connected User Sessions</h5>
-                    <span class="text-muted small">Heartbeat sync active (last seen within 30 minutes)</span>
+                    <h5 class="text-white fw-bold mb-0"><i class="fa-solid fa-satellite-dish text-success me-2"></i> Live Connected User Sessions</h5>
+                    <span class="text-secondary small">Heartbeat sync active (last seen within 30 minutes)</span>
                 </div>
 
-                <div class="table-responsive">
+                <div class="table-responsive table-monitoring-wrap">
                     <table class="table-monitoring">
                         <thead>
                             <tr>
@@ -418,7 +476,7 @@
                     </div>
                 </form>
 
-                <div class="table-responsive">
+                <div class="table-responsive table-monitoring-wrap">
                     <table class="table-monitoring">
                         <thead>
                             <tr>
@@ -474,7 +532,7 @@
 
             <!-- 3. LOGIN HISTORY TAB -->
             <div class="tab-pane fade" id="tab-logins" role="tabpanel">
-                <div class="table-responsive">
+                <div class="table-responsive table-monitoring-wrap">
                     <table class="table-monitoring">
                         <thead>
                             <tr>
@@ -564,7 +622,7 @@
                     <span class="text-muted small">Tracks old value vs new value on every entity update</span>
                 </div>
 
-                <div class="table-responsive">
+                <div class="table-responsive table-monitoring-wrap">
                     <table class="table-monitoring">
                         <thead>
                             <tr>
@@ -628,7 +686,7 @@
                     <span class="text-muted small">Non-destructive soft-delete audit trail</span>
                 </div>
 
-                <div class="table-responsive">
+                <div class="table-responsive table-monitoring-wrap">
                     <table class="table-monitoring">
                         <thead>
                             <tr>
@@ -711,7 +769,7 @@
                     <span class="text-muted small">Tracks who inspected an order, notification, or dispute</span>
                 </div>
 
-                <div class="table-responsive">
+                <div class="table-responsive table-monitoring-wrap">
                     <table class="table-monitoring">
                         <thead>
                             <tr>
@@ -769,7 +827,7 @@
                     <span class="text-muted small">Automated threat alerts triggered by brute-force or abuse telemetry</span>
                 </div>
 
-                <div class="table-responsive">
+                <div class="table-responsive table-monitoring-wrap">
                     <table class="table-monitoring">
                         <thead>
                             <tr>
