@@ -37,8 +37,8 @@
     }
 
     body {
-        background: transparent;
-        color: var(--text-main);
+        background: #090d16 !important;
+        color: #f8fafc !important;
         font-family: 'Outfit', sans-serif;
     }
 
@@ -54,9 +54,9 @@
 
     /* Sub-nav Styling */
     .vendor-nav {
-        background: rgba(30, 41, 59, 0.45);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
         border: 1px solid var(--glass-border);
         border-radius: 16px;
         padding: 1rem 1.5rem;
@@ -66,28 +66,32 @@
         align-items: center;
         flex-wrap: wrap;
         gap: 1rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
     }
 
     .vendor-brand {
         font-weight: 800;
-        font-size: 1.4rem;
-        background: var(--primary-gradient);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        font-size: 1.35rem;
+        color: #ffffff !important;
         display: flex;
         align-items: center;
         gap: 8px;
     }
 
+    .vendor-brand i {
+        color: #3b82f6;
+    }
+
     .vendor-links {
         display: flex;
         gap: 0.5rem;
+        flex-wrap: wrap;
     }
 
     .v-link {
-        color: var(--text-muted);
+        color: #cbd5e1 !important;
         text-decoration: none;
-        padding: 0.5rem 1.25rem;
+        padding: 0.55rem 1.25rem;
         border-radius: 10px;
         font-weight: 600;
         font-size: 0.95rem;
@@ -98,27 +102,15 @@
     }
 
     .v-link:hover {
-        color: white;
-        background: rgba(255, 255, 255, 0.05);
+        color: #ffffff !important;
+        background: rgba(59, 130, 246, 0.18);
     }
 
     .v-link.active {
-        color: white;
-        background: rgba(99, 102, 241, 0.2);
-        border: 1px solid rgba(99, 102, 241, 0.3);
-    }
-
-    .v-logout {
-        color: #fca5a5;
-        border: 1px solid rgba(239, 68, 68, 0.2);
-        background: rgba(239, 68, 68, 0.05);
-    }
-
-    .v-logout:hover {
-        color: white;
-        background: #ef4444;
-        border-color: transparent;
-        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+        color: #ffffff !important;
+        background: #2563eb !important;
+        border: 1px solid #3b82f6;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
     }
 
     .dashboard-header {
@@ -130,11 +122,17 @@
         font-size: 2rem;
         letter-spacing: -0.02em;
         margin: 0;
+        color: #ffffff !important;
+    }
+
+    .dashboard-header p {
+        color: #cbd5e1 !important;
+        font-size: 0.95rem;
     }
 
     /* Order Card styling */
     .order-card {
-        background: var(--card-bg);
+        background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%) !important;
         border: 1px solid var(--glass-border);
         border-radius: 20px;
         padding: 1.5rem;
@@ -143,6 +141,8 @@
         display: flex;
         flex-direction: column;
         gap: 1rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+        color: #f8fafc;
     }
 
     .order-card:hover {
@@ -507,9 +507,6 @@
             </a>
             <a asp-controller="Vendor" asp-action="Sales" class="v-link" id="navSalesLink">
                 <i class="fa-solid fa-wallet text-success"></i> Sales
-            </a>
-            <a asp-controller="Vendor" asp-action="Logout" class="v-link v-logout" id="navLogoutBtn">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
             </a>
         </div>
     </nav>
