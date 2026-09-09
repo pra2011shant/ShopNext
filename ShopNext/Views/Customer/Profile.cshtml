@@ -4,6 +4,8 @@
     var addresses = ViewBag.Addresses as IEnumerable<ShopNext.Models.CustomerAddress> ?? Enumerable.Empty<ShopNext.Models.CustomerAddress>();
 }
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
 <style>
     .profile-card {
         background: rgba(30, 41, 59, 0.75);
@@ -190,17 +192,42 @@
 
 <!-- Modal: Add New Address -->
 <div class="modal fade" id="newAddressModal" tabindex="-1" aria-labelledby="newAddressModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-dark text-white border border-secondary">
-            <div class="modal-header border-secondary">
-                <h5 class="modal-title fw-bold" id="newAddressModalLabel"><i class="fa-solid fa-location-dot text-primary me-2"></i> Add Delivery Address</h5>
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-dark text-white border border-secondary" style="background: rgba(15, 23, 42, 0.96) !important;">
+            <div class="modal-header border-secondary border-opacity-50">
+                <h5 class="modal-title fw-bold text-white" id="newAddressModalLabel"><i class="fa-solid fa-location-dot text-primary me-2"></i> Add Delivery Address</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body p-4">
+                <!-- Live GPS Detection Banner -->
+                <div class="mb-3 p-3 rounded-3 border border-primary border-opacity-40" style="background: rgba(37, 99, 235, 0.12);">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                        <div>
+                            <strong class="text-white small d-block"><i class="fa-solid fa-location-crosshairs text-info me-1"></i> Live Mobile GPS & Interactive Map</strong>
+                            <span class="small" style="color: #cbd5e1; font-size: 0.8rem;">Apna exact live GPS address auto-fetch karein ya map par pin select karein</span>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm fw-bold px-3 shadow-sm" onclick="detectProfileGPSLocation()">
+                            <i class="fa-solid fa-crosshairs me-1"></i> Detect My Live GPS
+                        </button>
+                    </div>
+
+                    <!-- Interactive Map Container -->
+                    <div id="profileMapWrapper" style="display: none;" class="mt-2">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small text-white fw-semibold"><i class="fa-solid fa-map-pin text-danger me-1"></i> Tap map or drag pin to adjust building:</span>
+                            <span id="profileGpsStatusBadge" class="badge bg-success bg-opacity-25 text-success small">GPS Ready</span>
+                        </div>
+                        <div id="profileDeliveryMap" style="height: 220px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.2); z-index: 1;"></div>
+                        <small class="d-block mt-1" style="color: #94a3b8; font-size: 0.78rem;">
+                            <i class="fa-solid fa-circle-info text-info me-1"></i> Map pin move karne par Road, Colony, City aur Pincode automatically fill ho jayenge.
+                        </small>
+                    </div>
+                </div>
+
                 <form id="addressForm">
                     @Html.AntiForgeryToken()
                     <div class="mb-3">
-                        <label class="form-label small">Address Type</label>
+                        <label class="form-label small" style="color: #cbd5e1 !important;">Address Type</label>
                         <select id="addrType" class="form-select bg-dark text-white border-secondary">
                             <option value="Home">Home</option>
                             <option value="Work">Work / Office</option>
@@ -209,46 +236,163 @@
                     </div>
                     <div class="row g-2 mb-3">
                         <div class="col-6">
-                            <label class="form-label small">Recipient Name *</label>
+                            <label class="form-label small" style="color: #cbd5e1 !important;">Recipient Name *</label>
                             <input type="text" id="addrRecipient" class="form-control bg-dark text-white border-secondary" value="@Model.Name" required />
                         </div>
                         <div class="col-6">
-                            <label class="form-label small">Phone Number *</label>
+                            <label class="form-label small" style="color: #cbd5e1 !important;">Phone Number *</label>
                             <input type="tel" id="addrPhone" class="form-control bg-dark text-white border-secondary" value="@Model.PhoneNumber" required />
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small">Flat / House No. / Street / Area *</label>
+                        <label class="form-label small" style="color: #cbd5e1 !important;">Flat / House No. / Street / Area *</label>
                         <textarea id="addrLine" rows="2" class="form-control bg-dark text-white border-secondary" placeholder="Complete address" required></textarea>
                     </div>
                     <div class="row g-2 mb-3">
                         <div class="col-6">
-                            <label class="form-label small">City</label>
+                            <label class="form-label small" style="color: #cbd5e1 !important;">City</label>
                             <input type="text" id="addrCity" class="form-control bg-dark text-white border-secondary" value="New Delhi" />
                         </div>
                         <div class="col-6">
-                            <label class="form-label small">Pincode *</label>
+                            <label class="form-label small" style="color: #cbd5e1 !important;">Pincode *</label>
                             <input type="text" id="addrPincode" class="form-control bg-dark text-white border-secondary" placeholder="e.g. 110001" required />
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small">Landmark (Optional)</label>
+                        <label class="form-label small" style="color: #cbd5e1 !important;">Landmark (Optional)</label>
                         <input type="text" id="addrLandmark" class="form-control bg-dark text-white border-secondary" placeholder="Nearby landmark" />
                     </div>
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" id="addrIsDefault" checked>
-                        <label class="form-check-label small" for="addrIsDefault">
+                        <label class="form-check-label small" for="addrIsDefault" style="color: #cbd5e1 !important;">
                             Set as default delivery address
                         </label>
                     </div>
-                    <button type="button" onclick="saveNewAddress()" class="btn btn-gradient-sm w-100 py-2">Save Address</button>
+                    <button type="button" onclick="saveNewAddress()" class="btn btn-gradient-sm w-100 py-2 fs-6">Save Delivery Address</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
+    let profileMap = null;
+    let profileMarker = null;
+
+    function detectProfileGPSLocation() {
+        const badge = document.getElementById("profileGpsStatusBadge");
+        if (!navigator.geolocation) {
+            alert("Geolocation is not supported by your browser/device.");
+            return;
+        }
+
+        if (badge) {
+            badge.className = "badge bg-warning bg-opacity-25 text-warning small";
+            badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Detecting GPS...';
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            function (pos) {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+                initOrShowProfileMap(lat, lon, 16);
+                reverseGeocodeProfileCoordinates(lat, lon);
+            },
+            function (err) {
+                console.warn("GPS error:", err);
+                if (badge) {
+                    badge.className = "badge bg-danger bg-opacity-25 text-danger small";
+                    badge.innerText = "Permission Denied";
+                }
+                alert("Location permission denied. Map opened for manual pin selection.");
+                initOrShowProfileMap(28.6139, 77.2090, 13);
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+    }
+
+    function initOrShowProfileMap(lat, lon, zoomLevel = 16) {
+        const mapWrapper = document.getElementById("profileMapWrapper");
+        if (mapWrapper) mapWrapper.style.display = "block";
+
+        if (!profileMap) {
+            profileMap = L.map('profileDeliveryMap').setView([lat, lon], zoomLevel);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(profileMap);
+
+            profileMarker = L.marker([lat, lon], { draggable: true }).addTo(profileMap);
+
+            profileMarker.on('dragend', function (e) {
+                const pos = e.target.getLatLng();
+                reverseGeocodeProfileCoordinates(pos.lat, pos.lng);
+            });
+
+            profileMap.on('click', function (e) {
+                profileMarker.setLatLng(e.latlng);
+                reverseGeocodeProfileCoordinates(e.latlng.lat, e.latlng.lng);
+            });
+        } else {
+            profileMap.setView([lat, lon], zoomLevel);
+            if (profileMarker) profileMarker.setLatLng([lat, lon]);
+        }
+
+        setTimeout(() => {
+            if (profileMap) profileMap.invalidateSize();
+        }, 300);
+    }
+
+    async function reverseGeocodeProfileCoordinates(lat, lon) {
+        const badge = document.getElementById("profileGpsStatusBadge");
+        if (badge) {
+            badge.className = "badge bg-info bg-opacity-25 text-info small";
+            badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Resolving Address...';
+        }
+
+        try {
+            const resp = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`);
+            if (!resp.ok) throw new Error("Geocoding failed");
+            const data = await resp.json();
+
+            if (data && data.address) {
+                const addr = data.address;
+                const building = addr.building || addr.house_number || addr.amenity || "";
+                const road = addr.road || addr.street || addr.neighbourhood || addr.suburb || "";
+                const area = addr.suburb || addr.residential || addr.city_district || "";
+                const city = addr.city || addr.town || addr.village || addr.county || "New Delhi";
+                const pincode = addr.postcode || "";
+
+                let addressLine = [building, road, area].filter(Boolean).join(", ");
+                if (!addressLine) {
+                    const parts = (data.display_name || "").split(",");
+                    addressLine = parts.slice(0, 3).join(",").trim();
+                }
+
+                if (addressLine) document.getElementById("addrLine").value = addressLine;
+                if (city) document.getElementById("addrCity").value = city;
+                if (pincode) document.getElementById("addrPincode").value = pincode;
+
+                if (profileMarker) {
+                    profileMarker.bindPopup(`<b>Delivery Point</b><br>${addressLine || 'Selected Location'}`).openPopup();
+                }
+
+                if (badge) {
+                    badge.className = "badge bg-success bg-opacity-25 text-success small";
+                    badge.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> Address Auto-Filled!';
+                }
+            }
+        } catch (e) {
+            console.error("Reverse geocode error:", e);
+            if (badge) {
+                badge.className = "badge bg-warning bg-opacity-25 text-warning small";
+                badge.innerText = "Pin Selected";
+            }
+        }
+    }
+
     async function saveNewAddress() {
         const recipient = document.getElementById("addrRecipient").value.trim();
         const phone = document.getElementById("addrPhone").value.trim();

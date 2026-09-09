@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
 <style>
     :root {
@@ -516,7 +517,7 @@
                         </div>
 
                         <!-- Inline Add New Address Box -->
-                        <div id="newAddressCard" class="p-3 bg-dark rounded-3 border border-secondary mb-3" style="display: none;">
+                        <div id="newAddressCard" class="p-3 bg-dark rounded-3 border border-secondary mb-3" style="display: none; background: rgba(15, 23, 42, 0.95) !important;">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h6 class="text-white fw-bold mb-0">
                                     <i class="fa-solid fa-plus-circle text-primary me-2"></i>New Delivery Address
@@ -524,9 +525,34 @@
                                 <button type="button" class="btn-close btn-close-white small" onclick="toggleNewAddressForm()"></button>
                             </div>
 
+                            <!-- Live GPS & Map Pin Picker Banner -->
+                            <div class="mb-3 p-3 rounded-3 border border-primary border-opacity-40" style="background: rgba(37, 99, 235, 0.12);">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                                    <div>
+                                        <strong class="text-white small d-block"><i class="fa-solid fa-location-crosshairs text-info me-1"></i> Live Mobile GPS & Interactive Map</strong>
+                                        <span class="small" style="color: #cbd5e1; font-size: 0.8rem;">Apna exact live GPS address auto-fetch karein ya map par pin select karein</span>
+                                    </div>
+                                    <button type="button" class="btn btn-primary btn-sm fw-bold px-3 shadow-sm" onclick="detectGPSLocation()">
+                                        <i class="fa-solid fa-crosshairs me-1"></i> Detect My Live GPS
+                                    </button>
+                                </div>
+
+                                <!-- Interactive Map Container -->
+                                <div id="mapWrapper" style="display: none;" class="mt-2">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="small text-white fw-semibold"><i class="fa-solid fa-map-pin text-danger me-1"></i> Tap map or drag pin to your exact building:</span>
+                                        <span id="gpsStatusBadge" class="badge bg-success bg-opacity-25 text-success small">GPS Ready</span>
+                                    </div>
+                                    <div id="deliveryMap" style="height: 220px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.2); z-index: 1;"></div>
+                                    <small class="d-block mt-1" style="color: #94a3b8; font-size: 0.78rem;">
+                                        <i class="fa-solid fa-circle-info text-info me-1"></i> Map pin move karne par Road, Colony, City aur Pincode automatically fill ho jayenge.
+                                    </small>
+                                </div>
+                            </div>
+
                             <!-- Address Type Selection (Home, Office, Other) -->
                             <div class="mb-3">
-                                <label class="form-label text-light small fw-semibold">Address Type:</label>
+                                <label class="form-label small fw-semibold" style="color: #cbd5e1 !important;">Address Type:</label>
                                 <div class="d-flex gap-2">
                                     <button type="button" class="btn btn-sm btn-outline-success address-type-btn active" id="btnTypeHome" onclick="selectNewAddressType('Home')">
                                         <i class="fa-solid fa-house me-1"></i> Home
@@ -543,34 +569,34 @@
 
                             <div class="row g-2 mb-2">
                                 <div class="col-md-6">
-                                    <label class="form-label text-light small">Recipient Name *</label>
+                                    <label class="form-label small" style="color: #cbd5e1 !important;">Recipient Name *</label>
                                     <input type="text" id="newAddrRecipient" class="form-control bg-dark text-white border-secondary form-control-sm" placeholder="e.g. Rahul Sharma" value="@custName" required />
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label text-light small">Phone Number *</label>
+                                    <label class="form-label small" style="color: #cbd5e1 !important;">Phone Number *</label>
                                     <input type="tel" id="newAddrPhone" class="form-control bg-dark text-white border-secondary form-control-sm" placeholder="e.g. 9876543210" pattern="[6-9][0-9]{9}" value="@custPhone" required />
                                 </div>
                             </div>
 
                             <div class="mb-2">
-                                <label class="form-label text-light small">Street Address / House / Flat / Area *</label>
+                                <label class="form-label small" style="color: #cbd5e1 !important;">Street Address / House / Flat / Area *</label>
                                 <textarea id="newAddrLine" class="form-control bg-dark text-white border-secondary form-control-sm" rows="2" placeholder="House/Flat No., Road, Landmark" required></textarea>
                             </div>
 
                             <div class="row g-2 mb-3">
                                 <div class="col-6">
-                                    <label class="form-label text-light small">City</label>
+                                    <label class="form-label small" style="color: #cbd5e1 !important;">City</label>
                                     <input type="text" id="newAddrCity" class="form-control bg-dark text-white border-secondary form-control-sm" value="New Delhi" />
                                 </div>
                                 <div class="col-6">
-                                    <label class="form-label text-light small">Pincode *</label>
+                                    <label class="form-label small" style="color: #cbd5e1 !important;">Pincode *</label>
                                     <input type="text" id="newAddrPincode" class="form-control bg-dark text-white border-secondary form-control-sm" placeholder="e.g. 110001" required />
                                 </div>
                             </div>
 
                             <div class="form-check mb-3">
                                 <input class="form-check-input" type="checkbox" id="newAddrIsDefault" checked />
-                                <label class="form-check-label text-muted small" for="newAddrIsDefault">
+                                <label class="form-check-label small" for="newAddrIsDefault" style="color: #cbd5e1 !important;">
                                     Set as default address
                                 </label>
                             </div>
@@ -916,6 +942,8 @@
     </div>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
     let currentStep = 1;
     let savedAddressesCache = [];
@@ -923,6 +951,8 @@
     let appliedCoupon = null;
     let hasOutOfStockItems = false;
     let currentDeliveryFee = 0;
+    let deliveryMap = null;
+    let deliveryMarker = null;
 
     document.addEventListener("DOMContentLoaded", function () {
         renderCart();
@@ -1206,12 +1236,127 @@
         document.getElementById("selectedAddressType").value = addr.addressType || "Home";
     }
 
+    function detectGPSLocation() {
+        const badge = document.getElementById("gpsStatusBadge");
+        if (!navigator.geolocation) {
+            alert("Geolocation is not supported by your browser/device.");
+            return;
+        }
+
+        if (badge) {
+            badge.className = "badge bg-warning bg-opacity-25 text-warning small";
+            badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Detecting GPS Location...';
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            function (pos) {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+                initOrShowDeliveryMap(lat, lon, 16);
+                reverseGeocodeCoordinates(lat, lon);
+            },
+            function (err) {
+                console.warn("GPS error / permission denied:", err);
+                if (badge) {
+                    badge.className = "badge bg-danger bg-opacity-25 text-danger small";
+                    badge.innerText = "Location Permission Denied";
+                }
+                alert("Mobile GPS access denied or timed out. Map opened for manual pin selection.");
+                initOrShowDeliveryMap(28.6139, 77.2090, 13);
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+    }
+
+    function initOrShowDeliveryMap(lat, lon, zoomLevel = 16) {
+        const mapWrapper = document.getElementById("mapWrapper");
+        if (mapWrapper) mapWrapper.style.display = "block";
+
+        if (!deliveryMap) {
+            deliveryMap = L.map('deliveryMap').setView([lat, lon], zoomLevel);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(deliveryMap);
+
+            deliveryMarker = L.marker([lat, lon], { draggable: true }).addTo(deliveryMap);
+
+            deliveryMarker.on('dragend', function (e) {
+                const pos = e.target.getLatLng();
+                reverseGeocodeCoordinates(pos.lat, pos.lng);
+            });
+
+            deliveryMap.on('click', function (e) {
+                deliveryMarker.setLatLng(e.latlng);
+                reverseGeocodeCoordinates(e.latlng.lat, e.latlng.lng);
+            });
+        } else {
+            deliveryMap.setView([lat, lon], zoomLevel);
+            if (deliveryMarker) deliveryMarker.setLatLng([lat, lon]);
+        }
+
+        setTimeout(() => {
+            if (deliveryMap) deliveryMap.invalidateSize();
+        }, 300);
+    }
+
+    async function reverseGeocodeCoordinates(lat, lon) {
+        const badge = document.getElementById("gpsStatusBadge");
+        if (badge) {
+            badge.className = "badge bg-info bg-opacity-25 text-info small";
+            badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Resolving Address...';
+        }
+
+        try {
+            const resp = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`);
+            if (!resp.ok) throw new Error("Geocoding failed");
+            const data = await resp.json();
+
+            if (data && data.address) {
+                const addr = data.address;
+                const building = addr.building || addr.house_number || addr.amenity || "";
+                const road = addr.road || addr.street || addr.neighbourhood || addr.suburb || "";
+                const area = addr.suburb || addr.residential || addr.city_district || "";
+                const city = addr.city || addr.town || addr.village || addr.county || "New Delhi";
+                const pincode = addr.postcode || "";
+
+                let addressLine = [building, road, area].filter(Boolean).join(", ");
+                if (!addressLine) {
+                    const parts = (data.display_name || "").split(",");
+                    addressLine = parts.slice(0, 3).join(",").trim();
+                }
+
+                if (addressLine) document.getElementById("newAddrLine").value = addressLine;
+                if (city) document.getElementById("newAddrCity").value = city;
+                if (pincode) document.getElementById("newAddrPincode").value = pincode;
+
+                if (deliveryMarker) {
+                    deliveryMarker.bindPopup(`<b>Delivery Point</b><br>${addressLine || 'Selected Location'}`).openPopup();
+                }
+
+                if (badge) {
+                    badge.className = "badge bg-success bg-opacity-25 text-success small";
+                    badge.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> Address Auto-Filled!';
+                }
+            }
+        } catch (e) {
+            console.error("Reverse geocode error:", e);
+            if (badge) {
+                badge.className = "badge bg-warning bg-opacity-25 text-warning small";
+                badge.innerText = "Pin Selected";
+            }
+        }
+    }
+
     function toggleNewAddressForm() {
         const box = document.getElementById("newAddressCard");
         const isHidden = box.style.display === "none";
         box.style.display = isHidden ? "block" : "none";
         if (isHidden) {
             document.getElementById("newAddrRecipient").focus();
+            setTimeout(() => {
+                if (deliveryMap) deliveryMap.invalidateSize();
+            }, 300);
         }
     }
 
