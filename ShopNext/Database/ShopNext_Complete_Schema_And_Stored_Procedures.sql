@@ -344,6 +344,7 @@ BEGIN
         Name NVARCHAR(150) NOT NULL,
         Icon NVARCHAR(100) NOT NULL DEFAULT 'fa-solid fa-layer-group',
         Description NVARCHAR(500) NOT NULL DEFAULT '',
+        ImageUrl NVARCHAR(255) NULL,
         DisplayOrder INT NOT NULL DEFAULT 0,
         Remark NVARCHAR(MAX) NULL,
         CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),

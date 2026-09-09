@@ -139,6 +139,35 @@ namespace ShopNext.Data
                     IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('CustomerAddresses') AND name = 'AddressType') ALTER TABLE CustomerAddresses ADD AddressType NVARCHAR(50) NOT NULL DEFAULT 'Home';
                     IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('CustomerAddresses') AND name = 'IsDefault') ALTER TABLE CustomerAddresses ADD IsDefault BIT NOT NULL DEFAULT 0;
 
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Categories') AND name = 'ImageUrl') ALTER TABLE Categories ADD ImageUrl NVARCHAR(255) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Categories') AND name = 'Icon') ALTER TABLE Categories ADD Icon NVARCHAR(100) NULL DEFAULT 'fa-solid fa-layer-group';
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Categories') AND name = 'Description') ALTER TABLE Categories ADD Description NVARCHAR(500) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Categories') AND name = 'DisplayOrder') ALTER TABLE Categories ADD DisplayOrder INT NOT NULL DEFAULT 0;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Categories') AND name = 'CreatedDate') ALTER TABLE Categories ADD CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE();
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Categories') AND name = 'UpdatedDate') ALTER TABLE Categories ADD UpdatedDate DATETIME2 NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Categories') AND name = 'IsActive') ALTER TABLE Categories ADD IsActive BIT NOT NULL DEFAULT 1;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Categories') AND name = 'IsDeleted') ALTER TABLE Categories ADD IsDeleted BIT NOT NULL DEFAULT 0;
+
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Brands') AND name = 'LogoUrl') ALTER TABLE Brands ADD LogoUrl NVARCHAR(255) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Brands') AND name = 'Description') ALTER TABLE Brands ADD Description NVARCHAR(500) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Brands') AND name = 'CreatedDate') ALTER TABLE Brands ADD CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE();
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Brands') AND name = 'UpdatedDate') ALTER TABLE Brands ADD UpdatedDate DATETIME2 NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Brands') AND name = 'IsActive') ALTER TABLE Brands ADD IsActive BIT NOT NULL DEFAULT 1;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Brands') AND name = 'IsDeleted') ALTER TABLE Brands ADD IsDeleted BIT NOT NULL DEFAULT 0;
+
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Coupons') AND name = 'MaxDiscountAmount') ALTER TABLE Coupons ADD MaxDiscountAmount DECIMAL(18,2) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Coupons') AND name = 'MinOrderAmount') ALTER TABLE Coupons ADD MinOrderAmount DECIMAL(18,2) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Coupons') AND name = 'UsageLimit') ALTER TABLE Coupons ADD UsageLimit INT NOT NULL DEFAULT 100;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Coupons') AND name = 'UsedCount') ALTER TABLE Coupons ADD UsedCount INT NOT NULL DEFAULT 0;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Coupons') AND name = 'ExpiryDate') ALTER TABLE Coupons ADD ExpiryDate DATETIME2 NOT NULL DEFAULT DATEADD(day, 30, GETDATE());
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Coupons') AND name = 'IsActive') ALTER TABLE Coupons ADD IsActive BIT NOT NULL DEFAULT 1;
+
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Offers') AND name = 'BannerUrl') ALTER TABLE Offers ADD BannerUrl NVARCHAR(255) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Offers') AND name = 'DiscountPercentage') ALTER TABLE Offers ADD DiscountPercentage DECIMAL(18,2) NOT NULL DEFAULT 10;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Offers') AND name = 'StartDate') ALTER TABLE Offers ADD StartDate DATETIME2 NOT NULL DEFAULT GETDATE();
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Offers') AND name = 'EndDate') ALTER TABLE Offers ADD EndDate DATETIME2 NOT NULL DEFAULT DATEADD(day, 30, GETDATE());
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Offers') AND name = 'IsActive') ALTER TABLE Offers ADD IsActive BIT NOT NULL DEFAULT 1;
+
                     IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('ProductVariants') AND name = 'Size') ALTER TABLE ProductVariants ADD Size NVARCHAR(50) NULL;
                     IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('ProductVariants') AND name = 'Color') ALTER TABLE ProductVariants ADD Color NVARCHAR(50) NULL;
                     IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('ProductVariants') AND name = 'Sku') ALTER TABLE ProductVariants ADD Sku NVARCHAR(100) NULL;
