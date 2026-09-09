@@ -232,41 +232,154 @@
         border: 1px solid rgba(59, 130, 246, 0.3);
     }
 
-    /* 25. Order Processing 4-Step Stepper */
+    /* 25. Order Processing Pipeline Banner & Stepper Styling */
+    .pipeline-info-banner {
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%) !important;
+        border: 1px solid rgba(59, 130, 246, 0.35) !important;
+        border-left: 4px solid #3b82f6 !important;
+        border-radius: 16px;
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35), 0 0 20px rgba(59, 130, 246, 0.1);
+        color: #ffffff !important;
+        margin-bottom: 1.75rem;
+    }
+
+    .pipeline-banner-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        background: rgba(59, 130, 246, 0.18);
+        border: 1px solid rgba(59, 130, 246, 0.4);
+        color: #60a5fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.25);
+    }
+
+    .pipeline-banner-content {
+        flex-grow: 1;
+    }
+
+    .pipeline-banner-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.35rem;
+        flex-wrap: wrap;
+    }
+
+    .pipeline-badge {
+        background: rgba(245, 158, 11, 0.18);
+        color: #fbbf24;
+        border: 1px solid rgba(245, 158, 11, 0.4);
+        font-size: 0.75rem;
+        font-weight: 800;
+        padding: 0.25rem 0.65rem;
+        border-radius: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .pipeline-title {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: #ffffff;
+    }
+
+    .pipeline-desc {
+        color: #cbd5e1 !important;
+        font-size: 0.92rem;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .stage-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.2rem 0.6rem;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        margin: 0 0.2rem;
+        letter-spacing: 0.02em;
+    }
+
+    .stage-tag.stage-accept {
+        background: rgba(245, 158, 11, 0.2);
+        color: #fbbf24;
+        border: 1px solid rgba(245, 158, 11, 0.45);
+    }
+
+    .stage-tag.stage-process {
+        background: rgba(168, 85, 247, 0.2);
+        color: #c084fc;
+        border: 1px solid rgba(168, 85, 247, 0.45);
+    }
+
+    .stage-tag.stage-pack {
+        background: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
+        border: 1px solid rgba(59, 130, 246, 0.45);
+    }
+
+    .stage-tag.stage-ship {
+        background: rgba(16, 185, 129, 0.2);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.45);
+    }
+
     .order-pipeline-bar {
-        background: rgba(15, 23, 42, 0.6);
-        border: 1px solid var(--glass-border);
+        background: rgba(15, 23, 42, 0.85) !important;
+        border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 12px;
-        padding: 0.65rem 1rem;
+        padding: 0.75rem 1.25rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.75rem;
+        box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.3);
+        flex-wrap: wrap;
     }
 
     .pipeline-step {
         display: flex;
         align-items: center;
-        gap: 6px;
-        font-size: 0.8rem;
+        gap: 8px;
+        font-size: 0.82rem;
         font-weight: 700;
-        letter-spacing: 0.03em;
+        letter-spacing: 0.04em;
         text-transform: uppercase;
-        color: var(--text-muted);
-        transition: all 0.3s ease;
-    }
-
-    .pipeline-step.done {
-        color: #10b981;
+        color: #94a3b8 !important;
+        padding: 0.4rem 0.85rem;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .pipeline-step.active {
-        color: white;
+        color: #ffffff !important;
+        background: rgba(59, 130, 246, 0.25) !important;
+        border: 1px solid rgba(59, 130, 246, 0.6) !important;
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.35);
+        transform: translateY(-1px);
+    }
+
+    .pipeline-step.done {
+        color: #34d399 !important;
+        background: rgba(16, 185, 129, 0.15) !important;
+        border: 1px solid rgba(16, 185, 129, 0.4) !important;
     }
 
     .pipeline-arrow {
-        color: rgba(255, 255, 255, 0.2);
-        font-size: 0.75rem;
+        color: #64748b;
+        font-size: 0.85rem;
     }
 
     .order-details-grid {
@@ -517,20 +630,31 @@
         <p class="text-muted mb-0">Track customer orders, prepare items, and update fulfilment progress.</p>
     </div>
 
+    <!-- 25. Order Processing Pipeline Info Banner -->
+    <div class="pipeline-info-banner">
+        <div class="pipeline-banner-icon">
+            <i class="fa-solid fa-boxes-packing"></i>
+        </div>
+        <div class="pipeline-banner-content">
+            <div class="pipeline-banner-header">
+                <span class="pipeline-badge"><i class="fa-solid fa-bolt text-warning me-1"></i> Feature 25</span>
+                <span class="pipeline-title">Order Processing Pipeline</span>
+            </div>
+            <p class="pipeline-desc">
+                Seller 4 sequential stages me order process karega: 
+                <span class="stage-tag stage-accept"><i class="fa-solid fa-check-to-slot me-1"></i> 1. Accept</span> &rarr; 
+                <span class="stage-tag stage-process"><i class="fa-solid fa-gears me-1"></i> 2. Processing</span> &rarr; 
+                <span class="stage-tag stage-pack"><i class="fa-solid fa-box-open me-1"></i> 3. Packed</span> &rarr; 
+                <span class="stage-tag stage-ship"><i class="fa-solid fa-truck-fast me-1"></i> 4. Shipped</span>. 
+                Customer tracking page status ko real-time me automatically dikhayega.
+            </p>
+        </div>
+    </div>
+
     <!-- Orders Grid/List -->
     <div id="ordersContainer">
         @if (Model == null || !Model.Any())
         {
-            <div class="alert alert-info d-flex align-items-center p-3 rounded-4 mb-4 border border-info" style="background: rgba(59, 130, 246, 0.12);">
-                <i class="fa-solid fa-boxes-packing fs-2 text-info me-3 flex-shrink-0"></i>
-                <div class="flex-grow-1">
-                    <strong class="text-info d-block mb-1">Feature 25: Order Processing Pipeline (Accept &rarr; Processing &rarr; Packed &rarr; Shipped)</strong>
-                    <div class="text-white-50 small">
-                        Seller 4 sequential stages me order process karega: <strong>Accept</strong> &rarr; <strong>Processing</strong> &rarr; <strong>Packed</strong> &rarr; <strong>Shipped</strong>. Customer tracking page status ko real-time me automatically dikhayega.
-                    </div>
-                </div>
-            </div>
-
             <div class="order-card" id="order-card-1001">
                 <!-- 25. Order Processing 4-Step Stepper -->
                 <div class="order-pipeline-bar mb-3" id="stepper-1001">
