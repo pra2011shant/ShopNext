@@ -1,19 +1,19 @@
 @using Microsoft.AspNetCore.Http
 @using System.Security.Claims
 @{
-    bool isShopLoggedIn = (Context.Request.Cookies.TryGetValue("ShopId", out string? shopIdCookie) && !string.IsNullOrEmpty(shopIdCookie)) ||
-                          (User.Identity?.IsAuthenticated == true && (User.IsInRole("Seller") || User.HasClaim(c => c.Type == "ShopId")));
+    string activeRole = User.Identity?.IsAuthenticated == true 
+        ? (User.FindFirst(ClaimTypes.Role)?.Value ?? User.FindFirst("UserRole")?.Value ?? "")
+        : "";
+
+    bool isAdminLoggedIn = activeRole == "Admin" || (string.IsNullOrEmpty(activeRole) && Context.Request.Cookies.TryGetValue("AdminAuth", out string? adminAuth) && adminAuth == "true");
+
+    bool isShopLoggedIn = activeRole == "Seller" || (string.IsNullOrEmpty(activeRole) && Context.Request.Cookies.TryGetValue("ShopId", out string? shopIdCookie) && !string.IsNullOrEmpty(shopIdCookie));
     string shopName = Context.Request.Cookies.TryGetValue("ShopName", out string? sName) && !string.IsNullOrEmpty(sName) ? sName : (User.Identity?.Name ?? "Shop Owner");
 
-    bool isRiderLoggedIn = (Context.Request.Cookies.TryGetValue("RiderId", out string? riderIdCookie) && !string.IsNullOrEmpty(riderIdCookie)) ||
-                           (User.Identity?.IsAuthenticated == true && User.IsInRole("Rider"));
+    bool isRiderLoggedIn = activeRole == "Rider" || (string.IsNullOrEmpty(activeRole) && Context.Request.Cookies.TryGetValue("RiderId", out string? riderIdCookie) && !string.IsNullOrEmpty(riderIdCookie));
     string riderName = Context.Request.Cookies.TryGetValue("RiderName", out string? rName) && !string.IsNullOrEmpty(rName) ? rName : (User.Identity?.Name ?? "Rider");
 
-    bool isAdminLoggedIn = (Context.Request.Cookies.TryGetValue("AdminAuth", out string? adminAuth) && adminAuth == "true") ||
-                           (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"));
-
-    bool isCustLoggedIn = (Context.Request.Cookies.TryGetValue("CustomerId", out string? custIdCookie) && !string.IsNullOrEmpty(custIdCookie)) ||
-                          (User.Identity?.IsAuthenticated == true && (User.IsInRole("Customer") || User.IsInRole("User")));
+    bool isCustLoggedIn = activeRole == "Customer" || activeRole == "User" || (string.IsNullOrEmpty(activeRole) && Context.Request.Cookies.TryGetValue("CustomerId", out string? custIdCookie) && !string.IsNullOrEmpty(custIdCookie));
     string customerName = Context.Request.Cookies.TryGetValue("CustomerName", out string? cName) && !string.IsNullOrEmpty(cName) ? cName : (User.Identity?.Name ?? "Customer");
 }
 <!DOCTYPE html>

@@ -167,6 +167,16 @@ namespace ShopNext.Controllers
                 new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)),
                 new AuthenticationProperties { IsPersistent = true, ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7) });
 
+            // Clear previous role cookies to avoid cross-role navbar leakage
+            Response.Cookies.Delete("AdminAuth");
+            Response.Cookies.Delete("ShopId");
+            Response.Cookies.Delete("ShopName");
+            Response.Cookies.Delete("CustomerId");
+            Response.Cookies.Delete("CustomerName");
+            Response.Cookies.Delete("CustomerPhone");
+            Response.Cookies.Delete("RiderId");
+            Response.Cookies.Delete("RiderName");
+
             Response.Cookies.Append("ShopNext_SessionId", sessionId, new CookieOptions { HttpOnly = true, Expires = DateTimeOffset.Now.AddDays(7) });
 
             if (role == "Customer")
