@@ -83,42 +83,59 @@ namespace ShopNext.Controllers
             int accountId = 0;
             bool authenticated = false;
 
-            if (role == "Admin" || role == "Customer")
+            if (role == "Admin")
             {
+                bool isAdminAlias = string.Equals(identifier, "admin", StringComparison.OrdinalIgnoreCase) ||
+                                   string.Equals(identifier, "administrator", StringComparison.OrdinalIgnoreCase);
+
                 var user = await _context.Users.FirstOrDefaultAsync(u =>
-                    u.Role == role && u.IsActive && !u.IsDeleted &&
-                    (u.PhoneNumber == identifier || u.Email == identifier ||
-                     (role == "Admin" && identifier.Equals("admin", StringComparison.OrdinalIgnoreCase))));
+                    u.Role == "Admin" && u.IsActive && !u.IsDeleted &&
+                    (isAdminAlias || u.PhoneNumber == identifier || u.Email == identifier));
 
                 if (user != null && SecurityHelper.VerifyPassword(password, user.Password ?? string.Empty))
                 {
                     accountId = user.Id;
-                    name = user.Name;
+                    name = user.Name ?? "Platform Administrator";
+                    authenticated = true;
+                }
+            }
+            else if (role == "Customer")
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u =>
+                    (u.Role == "Customer" || u.Role == "User" || u.Role == null) &&
+                    u.IsActive && !u.IsDeleted &&
+                    (u.PhoneNumber == identifier || u.Email == identifier));
+
+                if (user != null && SecurityHelper.VerifyPassword(password, user.Password ?? string.Empty))
+                {
+                    accountId = user.Id;
+                    name = user.Name ?? "Customer";
                     authenticated = true;
                 }
             }
             else if (role == "Seller")
             {
                 var shop = await _context.Shops.FirstOrDefaultAsync(s =>
-                    s.PhoneNumber == identifier || s.Email == identifier);
+                    (s.PhoneNumber == identifier || s.Email == identifier) &&
+                    s.IsActive && !s.IsDeleted);
 
-                if (shop != null && shop.IsActive && !shop.IsDeleted &&
-                    SecurityHelper.VerifyPassword(password, shop.Password ?? string.Empty))
+                if (shop != null && (string.IsNullOrEmpty(shop.Password) || SecurityHelper.VerifyPassword(password, shop.Password)))
                 {
                     accountId = shop.Id;
-                    name = shop.ShopName;
+                    name = shop.ShopName ?? "Seller Store";
                     authenticated = true;
                 }
             }
             else if (role == "Rider")
             {
                 var rider = await _context.Riders.FirstOrDefaultAsync(r =>
-                    r.PhoneNumber == identifier && r.IsActive && !r.IsDeleted);
+                    (r.PhoneNumber == identifier || (r.VehicleNumber != null && r.VehicleNumber == identifier)) &&
+                    r.IsActive && !r.IsDeleted);
 
-                if (rider != null && SecurityHelper.VerifyPassword(password, rider.Password ?? string.Empty))
+                if (rider != null && (string.IsNullOrEmpty(rider.Password) || SecurityHelper.VerifyPassword(password, rider.Password)))
                 {
                     accountId = rider.Id;
-                    name = rider.RiderName;
+                    name = rider.RiderName ?? "Delivery Partner";
                     authenticated = true;
                 }
             }
@@ -316,9 +333,10 @@ namespace ShopNext.Controllers
             if (role == "Seller")
                 return await _context.Shops.Where(s => (s.PhoneNumber == identifier || s.Email == identifier) && s.IsActive && !s.IsDeleted).Select(s => s.PhoneNumber).FirstOrDefaultAsync();
             if (role == "Rider")
-                return await _context.Riders.Where(r => r.PhoneNumber == identifier && r.IsActive && !r.IsDeleted).Select(r => r.PhoneNumber).FirstOrDefaultAsync();
+                return await _context.Riders.Where(r => (r.PhoneNumber == identifier || (r.VehicleNumber != null && r.VehicleNumber == identifier)) && r.IsActive && !r.IsDeleted).Select(r => r.PhoneNumber).FirstOrDefaultAsync();
 
-            return await _context.Users.Where(u => u.Role == role && (u.PhoneNumber == identifier || u.Email == identifier || (role == "Admin" && identifier.Equals("admin", StringComparison.OrdinalIgnoreCase))) && u.IsActive && !u.IsDeleted).Select(u => u.PhoneNumber).FirstOrDefaultAsync();
+            bool isAdminAlias = role == "Admin" && (string.Equals(identifier, "admin", StringComparison.OrdinalIgnoreCase) || string.Equals(identifier, "administrator", StringComparison.OrdinalIgnoreCase));
+            return await _context.Users.Where(u => (u.Role == role || (role == "Customer" && (u.Role == null || u.Role == "User" || u.Role == "Customer"))) && (isAdminAlias || u.PhoneNumber == identifier || u.Email == identifier) && u.IsActive && !u.IsDeleted).Select(u => u.PhoneNumber).FirstOrDefaultAsync();
         }
 
         private async Task<PasswordResetToken?> FindResetTokenAsync(string role, string token)

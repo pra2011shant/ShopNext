@@ -215,7 +215,7 @@
             <input type="hidden" name="role" id="selectedRoleInput" value="@selectedRole" />
 
             <!-- 100% Contained Responsive Role Grid -->
-            <div class="mb-4">
+            <div class="mb-3">
                 <label class="form-label small fw-bold text-uppercase mb-2 d-flex align-items-center justify-content-between" style="color: #cbd5e1; letter-spacing: 0.05em;">
                     <span><i class="fa-solid fa-id-badge text-info me-1"></i> Choose Account Role</span>
                     <span class="badge bg-secondary bg-opacity-40 text-white px-2.5 py-1 rounded-pill" id="activeRoleLabelBadge">@selectedRole</span>
@@ -236,6 +236,30 @@
                     <button type="button" class="role-tab-btn role-admin @(selectedRole == "Admin" ? "active" : "")" onclick="setLoginRole('Admin', this)">
                         <i class="fa-solid fa-crown"></i>
                         <span>Admin</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Demo Credentials Autofill Banner -->
+            <div class="mb-3 p-2.5 rounded-3" style="background: rgba(30, 41, 59, 0.6); border: 1px dashed rgba(255, 255, 255, 0.15);">
+                <div class="d-flex align-items-center justify-content-between mb-1.5">
+                    <span class="small fw-semibold text-white d-flex align-items-center gap-1.5" style="font-size: 0.78rem;">
+                        <i class="fa-solid fa-wand-magic-sparkles text-warning"></i> Quick Demo Fill:
+                    </span>
+                    <span class="text-secondary small" style="font-size: 0.72rem;">Click to auto-fill</span>
+                </div>
+                <div class="d-flex gap-1.5 flex-wrap">
+                    <button type="button" class="btn btn-outline-primary btn-sm py-1 px-2 text-nowrap" style="font-size: 0.75rem; border-radius: 8px;" onclick="fillDemoCredentials('Customer', '9876543210', 'Customer@123')">
+                        <i class="fa-solid fa-user me-1"></i> Customer
+                    </button>
+                    <button type="button" class="btn btn-outline-warning btn-sm py-1 px-2 text-nowrap" style="font-size: 0.75rem; border-radius: 8px;" onclick="fillDemoCredentials('Seller', '9822334455', 'Seller@123')">
+                        <i class="fa-solid fa-store me-1"></i> Seller
+                    </button>
+                    <button type="button" class="btn btn-outline-success btn-sm py-1 px-2 text-nowrap" style="font-size: 0.75rem; border-radius: 8px;" onclick="fillDemoCredentials('Rider', '9811223344', 'Rider@123')">
+                        <i class="fa-solid fa-motorcycle me-1"></i> Rider
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm py-1 px-2 text-nowrap" style="font-size: 0.75rem; border-radius: 8px;" onclick="fillDemoCredentials('Admin', 'admin', 'Admin@123')">
+                        <i class="fa-solid fa-crown me-1"></i> Admin
                     </button>
                 </div>
             </div>
@@ -305,6 +329,9 @@
         });
         if (btnEl) {
             btnEl.classList.add('active');
+        } else {
+            const matchBtn = document.querySelector('.role-tab-btn.role-' + role.toLowerCase());
+            if (matchBtn) matchBtn.classList.add('active');
         }
 
         const idInp = document.getElementById('loginIdentifier');
@@ -322,6 +349,12 @@
         if (forgotLink) {
             forgotLink.href = '/Account/ForgotPassword?role=' + encodeURIComponent(role);
         }
+    }
+
+    function fillDemoCredentials(role, identifier, password) {
+        setLoginRole(role);
+        document.getElementById('loginIdentifier').value = identifier;
+        document.getElementById('loginPassword').value = password;
     }
 
     function togglePasswordVisibility() {

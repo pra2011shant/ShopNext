@@ -1,15 +1,20 @@
 @using Microsoft.AspNetCore.Http
+@using System.Security.Claims
 @{
-    bool isShopLoggedIn = Context.Request.Cookies.TryGetValue("ShopId", out string? shopIdCookie) && !string.IsNullOrEmpty(shopIdCookie);
-    string shopName = isShopLoggedIn && Context.Request.Cookies.TryGetValue("ShopName", out string? sName) ? sName : "Shop Owner";
+    bool isShopLoggedIn = (Context.Request.Cookies.TryGetValue("ShopId", out string? shopIdCookie) && !string.IsNullOrEmpty(shopIdCookie)) ||
+                          (User.Identity?.IsAuthenticated == true && (User.IsInRole("Seller") || User.HasClaim(c => c.Type == "ShopId")));
+    string shopName = Context.Request.Cookies.TryGetValue("ShopName", out string? sName) && !string.IsNullOrEmpty(sName) ? sName : (User.Identity?.Name ?? "Shop Owner");
 
-    bool isRiderLoggedIn = Context.Request.Cookies.TryGetValue("RiderId", out string? riderIdCookie) && !string.IsNullOrEmpty(riderIdCookie);
-    string riderName = isRiderLoggedIn && Context.Request.Cookies.TryGetValue("RiderName", out string? rName) ? rName : "Rider";
+    bool isRiderLoggedIn = (Context.Request.Cookies.TryGetValue("RiderId", out string? riderIdCookie) && !string.IsNullOrEmpty(riderIdCookie)) ||
+                           (User.Identity?.IsAuthenticated == true && User.IsInRole("Rider"));
+    string riderName = Context.Request.Cookies.TryGetValue("RiderName", out string? rName) && !string.IsNullOrEmpty(rName) ? rName : (User.Identity?.Name ?? "Rider");
 
-    bool isAdminLoggedIn = Context.Request.Cookies.TryGetValue("AdminAuth", out string? adminAuth) && adminAuth == "true";
+    bool isAdminLoggedIn = (Context.Request.Cookies.TryGetValue("AdminAuth", out string? adminAuth) && adminAuth == "true") ||
+                           (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"));
 
-    bool isCustLoggedIn = Context.Request.Cookies.TryGetValue("CustomerId", out string? custIdCookie) && !string.IsNullOrEmpty(custIdCookie);
-    string customerName = isCustLoggedIn && Context.Request.Cookies.TryGetValue("CustomerName", out string? cName) ? cName : "Customer";
+    bool isCustLoggedIn = (Context.Request.Cookies.TryGetValue("CustomerId", out string? custIdCookie) && !string.IsNullOrEmpty(custIdCookie)) ||
+                          (User.Identity?.IsAuthenticated == true && (User.IsInRole("Customer") || User.IsInRole("User")));
+    string customerName = Context.Request.Cookies.TryGetValue("CustomerName", out string? cName) && !string.IsNullOrEmpty(cName) ? cName : (User.Identity?.Name ?? "Customer");
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -17,6 +22,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - ShopNext</title>
+    <!-- Google Fonts: Outfit + Noto Sans Devanagari + Hind for Hindi/English support -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -85,11 +95,6 @@
                             <li class="nav-item">
                                 <a class="nav-link text-success fw-semibold" asp-controller="Admin" asp-action="SystemMonitoring">
                                     <i class="fa-solid fa-shield-halved me-1 text-success"></i> System Monitoring
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-light" asp-controller="DatabaseSetup" asp-action="Index" data-i18n="Nav_SqlHub">
-                                    <i class="fa-solid fa-database me-1 text-info"></i> SQL Hub
                                 </a>
                             </li>
                         }
@@ -167,7 +172,7 @@
                                     <li><a class="dropdown-item" asp-controller="Customer" asp-action="Wallet" data-i18n="Nav_Wallet"><i class="fa-solid fa-wallet text-success"></i>Digital Wallet</a></li>
                                     <li><a class="dropdown-item" asp-controller="Home" asp-action="Cart" data-i18n="Nav_Cart"><i class="fa-solid fa-cart-shopping text-warning"></i>My Cart</a></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item text-danger" asp-controller="Customer" asp-action="Logout" data-i18n="Nav_Logout"><i class="fa-solid fa-arrow-right-from-bracket"></i>Logout Account</a></li>
+                                    <li><a class="dropdown-item text-danger" asp-controller="Account" asp-action="Logout" data-i18n="Nav_Logout"><i class="fa-solid fa-arrow-right-from-bracket"></i>Logout Account</a></li>
                                 </ul>
                             </li>
                         }
@@ -180,9 +185,9 @@
                                 <ul class="dropdown-menu dropdown-menu-end unified-dropdown" aria-labelledby="adminDropdown">
                                     <li><span class="dropdown-header">Administrator Active</span></li>
                                     <li><a class="dropdown-item" asp-controller="Admin" asp-action="Dashboard"><i class="fa-solid fa-sliders text-primary"></i>Management Console</a></li>
-                                    <li><a class="dropdown-item" asp-controller="DatabaseSetup" asp-action="Index"><i class="fa-solid fa-database text-info"></i>SQL Explorer</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Admin" asp-action="SystemMonitoring"><i class="fa-solid fa-shield-halved text-success"></i>System Monitoring</a></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item text-danger" asp-controller="Admin" asp-action="Logout"><i class="fa-solid fa-arrow-right-from-bracket"></i>Logout Admin</a></li>
+                                    <li><a class="dropdown-item text-danger" asp-controller="Account" asp-action="Logout"><i class="fa-solid fa-arrow-right-from-bracket"></i>Logout Admin</a></li>
                                 </ul>
                             </li>
                         }
@@ -194,10 +199,11 @@
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end unified-dropdown" aria-labelledby="vendorDropdown">
                                     <li><span class="dropdown-header">Shop Owner Portal</span></li>
+                                    <li><a class="dropdown-item" asp-controller="Vendor" asp-action="Dashboard"><i class="fa-solid fa-chart-line text-info"></i>Store Dashboard</a></li>
                                     <li><a class="dropdown-item" asp-controller="Vendor" asp-action="Products"><i class="fa-solid fa-boxes-stacked text-primary"></i>Manage Products</a></li>
                                     <li><a class="dropdown-item" asp-controller="Vendor" asp-action="Orders"><i class="fa-solid fa-receipt text-success"></i>Customer Orders</a></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item text-danger" asp-controller="Vendor" asp-action="Logout"><i class="fa-solid fa-arrow-right-from-bracket"></i>Logout Shop</a></li>
+                                    <li><a class="dropdown-item text-danger" asp-controller="Account" asp-action="Logout"><i class="fa-solid fa-arrow-right-from-bracket"></i>Logout Shop</a></li>
                                 </ul>
                             </li>
                         }
@@ -211,7 +217,7 @@
                                     <li><span class="dropdown-header">Delivery Partner</span></li>
                                     <li><a class="dropdown-item" asp-controller="Rider" asp-action="Dashboard"><i class="fa-solid fa-route text-success"></i>Active Trips</a></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item text-danger" asp-controller="Rider" asp-action="Logout"><i class="fa-solid fa-arrow-right-from-bracket"></i>Logout Rider</a></li>
+                                    <li><a class="dropdown-item text-danger" asp-controller="Account" asp-action="Logout"><i class="fa-solid fa-arrow-right-from-bracket"></i>Logout Rider</a></li>
                                 </ul>
                             </li>
                         }
@@ -273,11 +279,26 @@
                 <span>Seller</span>
             </a>
         }
+        else if (isRiderLoggedIn)
+        {
+            <a asp-controller="Rider" asp-action="Dashboard" class="nav-item-btn">
+                <i class="fa-solid fa-motorcycle"></i>
+                <span>Deliveries</span>
+            </a>
+            <a asp-controller="Rider" asp-action="Dashboard" class="nav-item-btn">
+                <i class="fa-solid fa-route"></i>
+                <span>Trips</span>
+            </a>
+        }
         else if (isAdminLoggedIn)
         {
             <a asp-controller="Admin" asp-action="Dashboard" class="nav-item-btn">
                 <i class="fa-solid fa-sliders"></i>
                 <span>Admin</span>
+            </a>
+            <a asp-controller="Admin" asp-action="SystemMonitoring" class="nav-item-btn">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>Monitor</span>
             </a>
         }
         else

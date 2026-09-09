@@ -3,7 +3,7 @@
    Theme: Professional Blue + White + Light Gray
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
   /* Brand Primary - Professional Royal Blue */
@@ -90,7 +90,7 @@ body {
   padding-bottom: 75px; /* Room for mobile bottom bar */
   background-color: var(--body-bg);
   color: var(--text-main);
-  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: 'Outfit', 'Noto Sans Devanagari', 'Hind', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.55;
@@ -987,4 +987,107 @@ p, span, li, td, th {
   transform: translateY(-3px);
   border-color: rgba(99, 102, 241, 0.5);
   box-shadow: 0 12px 30px rgba(99, 102, 241, 0.2);
+}
+
+/* ==========================================================================
+   UNIVERSAL HIGH-CONTRAST DARK SURFACE & BLACK BACKGROUND TYPOGRAPHY
+   Ensures 100% sharp white/bright fonts on all black and dark theme components
+   ========================================================================== */
+.bg-dark,
+.bg-black,
+.main-navbar,
+.main-footer,
+.login-glass-card,
+.admin-header-card,
+.kpi-card,
+.dark-glass-panel,
+.dark-surface,
+.dark-card,
+.card-dark,
+.admin-dark-card,
+.modal-content.dark-theme,
+[data-bs-theme="dark"] {
+  color: #f8fafc !important;
+}
+
+/* Headings on Dark Surfaces */
+.bg-dark h1, .bg-dark h2, .bg-dark h3, .bg-dark h4, .bg-dark h5, .bg-dark h6,
+.bg-black h1, .bg-black h2, .bg-black h3, .bg-black h4, .bg-black h5, .bg-black h6,
+.main-navbar h1, .main-navbar h2, .main-navbar h3, .main-navbar h4, .main-navbar h5, .main-navbar h6,
+.login-glass-card h1, .login-glass-card h2, .login-glass-card h3, .login-glass-card h4, .login-glass-card h5, .login-glass-card h6,
+.admin-header-card h1, .admin-header-card h2, .admin-header-card h3, .admin-header-card h4,
+.dark-card h1, .dark-card h2, .dark-card h3, .dark-card h4, .dark-card h5, .dark-card h6,
+.dark-surface h1, .dark-surface h2, .dark-surface h3, .dark-surface h4, .dark-surface h5, .dark-surface h6 {
+  color: #ffffff !important;
+  font-weight: 700;
+}
+
+/* Paragraphs, Spans & Labels on Dark Surfaces */
+.bg-dark p, .bg-black p, .login-glass-card p, .admin-header-card p, .dark-card p, .dark-surface p {
+  color: #cbd5e1 !important;
+}
+
+.bg-dark label, .bg-black label, .login-glass-card label, .dark-card label, .dark-surface label {
+  color: #e2e8f0 !important;
+}
+
+.bg-dark span:not(.badge):not(.text-primary):not(.text-success):not(.text-warning):not(.text-danger):not(.text-info),
+.login-glass-card span:not(.badge):not(.text-primary):not(.text-success):not(.text-warning):not(.text-danger):not(.text-info),
+.dark-card span:not(.badge):not(.text-primary):not(.text-success):not(.text-warning):not(.text-danger):not(.text-info) {
+  color: #f1f5f9;
+}
+
+/* Tables on Dark Backgrounds */
+.table-dark {
+  --bs-table-bg: #0f172a;
+  --bs-table-striped-bg: #1e293b;
+  --bs-table-hover-bg: #334155;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.table-dark th {
+  color: #ffffff !important;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  background-color: #0b1120 !important;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.table-dark td {
+  color: #e2e8f0 !important;
+  vertical-align: middle;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Inputs on Dark Surfaces */
+.bg-dark .form-control,
+.bg-black .form-control,
+.login-glass-card .form-control,
+.dark-surface .form-control {
+  background: rgba(15, 23, 42, 0.85) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.bg-dark .form-control::placeholder,
+.login-glass-card .form-control::placeholder {
+  color: #94a3b8 !important;
+}
+
+.bg-dark .form-control:focus,
+.login-glass-card .form-control:focus {
+  border-color: #60a5fa !important;
+  box-shadow: 0 0 0 0.25rem rgba(96, 165, 250, 0.25) !important;
+  color: #ffffff !important;
+}
+
+/* Glass & Dark Badges */
+.badge-dark-glass {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  font-weight: 600;
 }
