@@ -1516,10 +1516,38 @@
                 body: form
             });
             const data = await resp.json();
-            alert(data.message);
-            if (data.success) location.reload();
+            if (data.success) {
+                const modalEl = document.getElementById('accCancelModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Order Cancelled',
+                    text: data.message,
+                    background: '#0f172a',
+                    color: '#ffffff',
+                    confirmButtonColor: '#3b82f6'
+                }).then(() => location.reload());
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Cancellation Failed',
+                    text: data.message,
+                    background: '#0f172a',
+                    color: '#ffffff',
+                    confirmButtonColor: '#3b82f6'
+                });
+            }
         } catch (e) {
-            alert("Error: " + e.message);
+            Swal.fire({
+                icon: 'error',
+                title: 'Request Error',
+                text: 'Error: ' + e.message,
+                background: '#0f172a',
+                color: '#ffffff',
+                confirmButtonColor: '#3b82f6'
+            });
         }
     }
 

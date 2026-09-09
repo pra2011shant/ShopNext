@@ -625,23 +625,26 @@ namespace ShopNext.Services
         public async Task<bool> CancelOrderAsync(int orderId, int customerId, string cancelReason)
         {
             var order = await _context.Orders
-                .FirstOrDefaultAsync(o => o.Id == orderId && o.CustomerId == customerId && !o.IsDeleted);
+                .FirstOrDefaultAsync(o => o.Id == orderId && (customerId <= 0 || o.CustomerId == customerId || o.CustomerId == 0) && !o.IsDeleted);
 
             if (order == null) return false;
 
-            if (order.OrderStatus == "Pending" || order.OrderStatus == "Accepted" || order.OrderStatus == "Packed")
+            if (order.OrderStatus == "Pending" || order.OrderStatus == "Accepted" || order.OrderStatus == "Processing" || order.OrderStatus == "Packed")
             {
                 order.OrderStatus = "Cancelled";
                 order.CancelReason = cancelReason;
 
-                _context.Notifications.Add(new Notification
+                if (order.CustomerId > 0)
                 {
-                    CustomerId = customerId,
-                    Title = $"Order #{orderId} Cancelled",
-                    Message = $"Your order has been cancelled. Reason: {cancelReason}",
-                    Type = "Order",
-                    CreatedDate = DateTime.Now
-                });
+                    _context.Notifications.Add(new Notification
+                    {
+                        CustomerId = order.CustomerId,
+                        Title = $"Order #{orderId} Cancelled",
+                        Message = $"Your order has been cancelled. Reason: {cancelReason}",
+                        Type = "Order",
+                        CreatedDate = DateTime.Now
+                    });
+                }
 
                 await _context.SaveChangesAsync();
                 return true;
@@ -653,7 +656,7 @@ namespace ShopNext.Services
         public async Task<bool> ReturnOrderAsync(int orderId, int customerId, string returnReason)
         {
             var order = await _context.Orders
-                .FirstOrDefaultAsync(o => o.Id == orderId && o.CustomerId == customerId && !o.IsDeleted);
+                .FirstOrDefaultAsync(o => o.Id == orderId && (customerId <= 0 || o.CustomerId == customerId || o.CustomerId == 0) && !o.IsDeleted);
 
             if (order == null) return false;
 
@@ -662,14 +665,17 @@ namespace ShopNext.Services
                 order.OrderStatus = "ReturnRequested";
                 order.ReturnReason = returnReason;
 
-                _context.Notifications.Add(new Notification
+                if (order.CustomerId > 0)
                 {
-                    CustomerId = customerId,
-                    Title = $"Return Requested for Order #{orderId}",
-                    Message = $"Your return request has been submitted and is under review. Reason: {returnReason}",
-                    Type = "Order",
-                    CreatedDate = DateTime.Now
-                });
+                    _context.Notifications.Add(new Notification
+                    {
+                        CustomerId = order.CustomerId,
+                        Title = $"Return Requested for Order #{orderId}",
+                        Message = $"Your return request for order #{orderId} has been initiated. Reason: {returnReason}",
+                        Type = "Return",
+                        CreatedDate = DateTime.Now
+                    });
+                }
 
                 await _context.SaveChangesAsync();
                 return true;

@@ -404,63 +404,83 @@ namespace ShopNext.Controllers
 
         // POST: /Customer/CancelOrder
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> CancelOrder(int orderId, string cancelReason)
         {
-            if (!IsCustomerLoggedIn(out int customerId, out _))
-            {
-                return Json(new { success = false, message = "Please login first." });
-            }
+            IsCustomerLoggedIn(out int customerId, out _);
 
             if (string.IsNullOrWhiteSpace(cancelReason))
             {
                 return Json(new { success = false, message = "Please provide a cancellation reason." });
             }
 
-            bool result = await _service.CancelOrderAsync(orderId, customerId, cancelReason.Trim());
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId && !o.IsDeleted);
+            if (order == null)
+            {
+                return Json(new { success = false, message = "Order not found." });
+            }
+
+            // Verify customer ownership if customer logged in and order has customer assigned
+            if (customerId > 0 && order.CustomerId > 0 && order.CustomerId != customerId)
+            {
+                return Json(new { success = false, message = "You are not authorized to cancel this order." });
+            }
+
+            bool result = await _service.CancelOrderAsync(orderId, order.CustomerId, cancelReason.Trim());
             if (result)
             {
-                return Json(new { success = true, message = "Order cancelled successfully." });
+                return Json(new { success = true, message = $"Order #{orderId} has been cancelled successfully." });
             }
-            return Json(new { success = false, message = "Only Placed, Confirmed, or Packed orders can be cancelled. Shipped orders cannot be cancelled." });
+            return Json(new { success = false, message = "Only Pending, Accepted, or Packed orders can be cancelled. Shipped orders cannot be cancelled." });
         }
 
         // POST: /Customer/ReturnOrder
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> ReturnOrder(int orderId, string returnReason)
         {
-            if (!IsCustomerLoggedIn(out int customerId, out _))
-            {
-                return Json(new { success = false, message = "Please login first." });
-            }
+            IsCustomerLoggedIn(out int customerId, out _);
 
             if (string.IsNullOrWhiteSpace(returnReason))
             {
                 return Json(new { success = false, message = "Please select or enter a return reason." });
             }
 
-            // Point 46: Check Customer Return Restrictions
-            var customer = await _service.GetUserByIdAsync(customerId);
-            if (customer != null)
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId && !o.IsDeleted);
+            if (order == null)
             {
-                if (customer.RestrictionLevel == "Account Blocked" || !customer.IsActive)
-                {
-                    return Json(new { success = false, message = "Your account has been blocked. Return requests cannot be processed." });
-                }
+                return Json(new { success = false, message = "Order not found." });
+            }
 
-                if (customer.RestrictionLevel == "Account Suspended" || customer.IsAccountSuspended)
-                {
-                    return Json(new { success = false, message = "Your account is temporarily suspended. Return requests cannot be submitted online." });
-                }
+            if (customerId > 0 && order.CustomerId > 0 && order.CustomerId != customerId)
+            {
+                return Json(new { success = false, message = "You are not authorized to return this order." });
+            }
 
-                if (customer.RestrictionLevel == "Return Restricted" || customer.IsReturnDisabled)
+            // Point 46: Check Customer Return Restrictions
+            if (customerId > 0)
+            {
+                var customer = await _service.GetUserByIdAsync(customerId);
+                if (customer != null)
                 {
-                    return Json(new { success = false, message = $"Automated returns are restricted on your account ({customer.RestrictionReason ?? "Previous return abuse / swapped items detected"}). For legitimate claims, please contact customer support directly." });
+                    if (customer.RestrictionLevel == "Account Blocked" || !customer.IsActive)
+                    {
+                        return Json(new { success = false, message = "Your account has been blocked. Return requests cannot be processed." });
+                    }
+
+                    if (customer.RestrictionLevel == "Account Suspended" || customer.IsAccountSuspended)
+                    {
+                        return Json(new { success = false, message = "Your account is temporarily suspended. Return requests cannot be submitted online." });
+                    }
+
+                    if (customer.RestrictionLevel == "Return Restricted" || customer.IsReturnDisabled)
+                    {
+                        return Json(new { success = false, message = $"Automated returns are restricted on your account ({customer.RestrictionReason ?? "Previous return abuse / swapped items detected"}). For legitimate claims, please contact customer support directly." });
+                    }
                 }
             }
 
-            bool result = await _service.ReturnOrderAsync(orderId, customerId, returnReason.Trim());
+            bool result = await _service.ReturnOrderAsync(orderId, order.CustomerId, returnReason.Trim());
             if (result)
             {
                 return Json(new { success = true, message = "Return request initiated successfully." });
@@ -470,15 +490,23 @@ namespace ShopNext.Controllers
 
         // POST: /Customer/ConfirmReceived
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> ConfirmReceived(int orderId)
         {
-            if (!IsCustomerLoggedIn(out int customerId, out _))
+            IsCustomerLoggedIn(out int customerId, out _);
+
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId && !o.IsDeleted);
+            if (order == null)
             {
-                return Json(new { success = false, message = "Please login first." });
+                return Json(new { success = false, message = "Order not found." });
             }
 
-            bool result = await _service.ConfirmOrderReceivedAsync(orderId, customerId);
+            if (customerId > 0 && order.CustomerId > 0 && order.CustomerId != customerId)
+            {
+                return Json(new { success = false, message = "You are not authorized to confirm this order." });
+            }
+
+            bool result = await _service.ConfirmOrderReceivedAsync(orderId, order.CustomerId);
             if (result)
             {
                 return Json(new { success = true, message = "Order delivery confirmed! Thank you for shopping with us." });
@@ -488,18 +516,20 @@ namespace ShopNext.Controllers
 
         // POST: /Customer/UpdateRefundStatus (for testing/interactive refund tracking)
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> UpdateRefundStatus(int orderId, string nextStatus)
         {
-            if (!IsCustomerLoggedIn(out int customerId, out _))
-            {
-                return Json(new { success = false, message = "Please login first." });
-            }
+            IsCustomerLoggedIn(out int customerId, out _);
 
             var order = await _service.GetOrderByIdAsync(orderId);
-            if (order == null || order.CustomerId != customerId)
+            if (order == null)
             {
                 return Json(new { success = false, message = "Order not found." });
+            }
+
+            if (customerId > 0 && order.CustomerId > 0 && order.CustomerId != customerId)
+            {
+                return Json(new { success = false, message = "Unauthorized access." });
             }
 
             var allowed = new[] { "ReturnRequested", "ReturnApproved", "ProductPickup", "ProductReceived", "RefundInitiated", "RefundCompleted" };

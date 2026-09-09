@@ -1055,12 +1055,42 @@
                 body: form
             });
             const data = await resp.json();
-            alert(data.message);
+            
             if (data.success) {
-                window.location.reload();
+                // Hide modal
+                const modalEl = document.getElementById('trackingCancelModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Order Cancelled',
+                    text: data.message,
+                    background: '#0f172a',
+                    color: '#ffffff',
+                    confirmButtonColor: '#3b82f6'
+                }).then(() => {
+                    window.location.reload();
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Cancellation Failed',
+                    text: data.message,
+                    background: '#0f172a',
+                    color: '#ffffff',
+                    confirmButtonColor: '#3b82f6'
+                });
             }
         } catch (e) {
-            alert("Error: " + e.message);
+            Swal.fire({
+                icon: 'error',
+                title: 'Request Error',
+                text: 'Cancellation error: ' + e.message,
+                background: '#0f172a',
+                color: '#ffffff',
+                confirmButtonColor: '#3b82f6'
+            });
         }
     }
 
@@ -1084,12 +1114,41 @@
                 body: form
             });
             const data = await resp.json();
-            alert(data.message);
+            
             if (data.success) {
-                window.location.reload();
+                const modalEl = document.getElementById('trackingReturnModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Return Requested',
+                    text: data.message,
+                    background: '#0f172a',
+                    color: '#ffffff',
+                    confirmButtonColor: '#3b82f6'
+                }).then(() => {
+                    window.location.reload();
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Return Failed',
+                    text: data.message,
+                    background: '#0f172a',
+                    color: '#ffffff',
+                    confirmButtonColor: '#3b82f6'
+                });
             }
         } catch (e) {
-            alert("Error: " + e.message);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: e.message,
+                background: '#0f172a',
+                color: '#ffffff',
+                confirmButtonColor: '#3b82f6'
+            });
         }
     }
 
@@ -1108,10 +1167,24 @@
             if (data.success) {
                 window.location.reload();
             } else {
-                alert(data.message || "Failed to update refund status.");
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Status Update',
+                    text: data.message || "Failed to update refund status.",
+                    background: '#0f172a',
+                    color: '#ffffff',
+                    confirmButtonColor: '#3b82f6'
+                });
             }
         } catch (e) {
-            alert("Error: " + e.message);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: e.message,
+                background: '#0f172a',
+                color: '#ffffff',
+                confirmButtonColor: '#3b82f6'
+            });
         }
     }
 </script>
