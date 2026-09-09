@@ -225,6 +225,78 @@ p, span, li, td, th {
 }
 
 /* ==========================================================================
+   UNIVERSAL ALERT BOX CONTRAST & LEGIBILITY
+   Ensures alert boxes are always clearly readable across all pages
+   ========================================================================== */
+.alert-warning {
+  background-color: #fffbeb !important;
+  border: 1px solid #fde68a !important;
+  color: #78350f !important;
+}
+.alert-warning strong,
+.alert-warning h1, .alert-warning h2, .alert-warning h3, .alert-warning h4, .alert-warning h5, .alert-warning h6 {
+  color: #92400e !important;
+}
+.alert-warning p,
+.alert-warning span,
+.alert-warning div,
+.alert-warning .text-white-50,
+.alert-warning .text-muted {
+  color: #78350f !important;
+}
+
+.alert-success {
+  background-color: #ecfdf5 !important;
+  border: 1px solid #a7f3d0 !important;
+  color: #065f46 !important;
+}
+.alert-success strong,
+.alert-success h1, .alert-success h2, .alert-success h3, .alert-success h4, .alert-success h5, .alert-success h6 {
+  color: #047857 !important;
+}
+.alert-success p,
+.alert-success span,
+.alert-success div,
+.alert-success .text-white-50,
+.alert-success .text-muted {
+  color: #065f46 !important;
+}
+
+.alert-danger {
+  background-color: #fef2f2 !important;
+  border: 1px solid #fecaca !important;
+  color: #991b1b !important;
+}
+.alert-danger strong,
+.alert-danger h1, .alert-danger h2, .alert-danger h3, .alert-danger h4, .alert-danger h5, .alert-danger h6 {
+  color: #b91c1c !important;
+}
+.alert-danger p,
+.alert-danger span,
+.alert-danger div,
+.alert-danger .text-white-50,
+.alert-danger .text-muted {
+  color: #991b1b !important;
+}
+
+.alert-info {
+  background-color: #eff6ff !important;
+  border: 1px solid #bfdbfe !important;
+  color: #1e40af !important;
+}
+.alert-info strong,
+.alert-info h1, .alert-info h2, .alert-info h3, .alert-info h4, .alert-info h5, .alert-info h6 {
+  color: #1d4ed8 !important;
+}
+.alert-info p,
+.alert-info span,
+.alert-info div,
+.alert-info .text-white-50,
+.alert-info .text-muted {
+  color: #1e40af !important;
+}
+
+/* ==========================================================================
    NAVIGATION BAR (Top)
    ========================================================================== */
 .main-navbar {
