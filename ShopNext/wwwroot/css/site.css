@@ -1474,3 +1474,50 @@ body.theme-dark-portal main {
 .metric-subtitle {
   color: #e2e8f0 !important;
 }
+
+/* ==========================================================================
+   SWEETALERT2 DARK GLASSMORPHISM & TOAST STYLING
+   ========================================================================== */
+.swal2-dark-glass-popup {
+  background: rgba(15, 23, 42, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 20px !important;
+  color: #f8fafc !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important;
+  font-family: 'Outfit', sans-serif !important;
+}
+
+.swal2-dark-glass-popup .swal2-title {
+  color: #ffffff !important;
+  font-size: 1.35rem !important;
+  font-weight: 700 !important;
+}
+
+.swal2-dark-glass-popup .swal2-html-container {
+  color: #cbd5e1 !important;
+  font-size: 0.98rem !important;
+  line-height: 1.5 !important;
+}
+
+.swal2-dark-glass-popup .swal2-actions {
+  gap: 10px !important;
+  margin-top: 1.25rem !important;
+}
+
+.swal2-dark-glass-toast {
+  background: rgba(15, 23, 42, 0.95) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4) !important;
+  font-family: 'Outfit', sans-serif !important;
+}
+
+.swal2-dark-glass-toast .swal2-title {
+  color: #ffffff !important;
+  font-size: 0.92rem !important;
+  font-weight: 600 !important;
+}

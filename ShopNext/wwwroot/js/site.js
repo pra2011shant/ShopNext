@@ -1,9 +1,154 @@
 // ShopNext - Core JavaScript Suite, UI Helpers, & Recently Viewed Manager
 
 // ==========================================================================
-// 1. GLOBAL TOAST NOTIFICATION SYSTEM
+// 1. SWEETALERT2 UNIVERSAL SUITE & ALERT OVERRIDE
+// ==========================================================================
+const _swalDarkThemeConfig = {
+    background: '#0f172a',
+    color: '#f8fafc',
+    confirmButtonColor: '#2563eb',
+    cancelButtonColor: '#475569',
+    customClass: {
+        popup: 'swal2-dark-glass-popup',
+        title: 'text-white fw-bold',
+        htmlContainer: 'text-light',
+        confirmButton: 'btn btn-primary px-4 py-2 rounded-pill fw-bold shadow-sm',
+        cancelButton: 'btn btn-secondary px-4 py-2 rounded-pill fw-bold shadow-sm'
+    },
+    buttonsStyling: false
+};
+
+// Global Helper Functions
+function showSuccess(title, text = '') {
+    if (typeof Swal !== 'undefined') {
+        return Swal.fire({
+            ..._swalDarkThemeConfig,
+            icon: 'success',
+            title: title || 'Success!',
+            text: text,
+            confirmButtonText: 'Great!'
+        });
+    } else {
+        alert(`${title}\n${text}`);
+    }
+}
+
+function showError(title, text = '') {
+    if (typeof Swal !== 'undefined') {
+        return Swal.fire({
+            ..._swalDarkThemeConfig,
+            icon: 'error',
+            title: title || 'Oops... Something went wrong',
+            text: text,
+            confirmButtonText: 'Understood'
+        });
+    } else {
+        alert(`${title}\n${text}`);
+    }
+}
+
+function showWarning(title, text = '') {
+    if (typeof Swal !== 'undefined') {
+        return Swal.fire({
+            ..._swalDarkThemeConfig,
+            icon: 'warning',
+            title: title || 'Warning',
+            text: text,
+            confirmButtonText: 'OK'
+        });
+    } else {
+        alert(`${title}\n${text}`);
+    }
+}
+
+function showInfo(title, text = '') {
+    if (typeof Swal !== 'undefined') {
+        return Swal.fire({
+            ..._swalDarkThemeConfig,
+            icon: 'info',
+            title: title || 'Information',
+            text: text,
+            confirmButtonText: 'OK'
+        });
+    } else {
+        alert(`${title}\n${text}`);
+    }
+}
+
+async function showSweetConfirm(title, text = '', confirmText = 'Yes, Proceed', cancelText = 'Cancel', icon = 'warning') {
+    if (typeof Swal !== 'undefined') {
+        const result = await Swal.fire({
+            ..._swalDarkThemeConfig,
+            icon: icon,
+            title: title,
+            text: text,
+            showCancelButton: true,
+            confirmButtonText: confirmText,
+            cancelButtonText: cancelText,
+            reverseButtons: true
+        });
+        return result.isConfirmed;
+    } else {
+        return confirm(`${title}\n${text}`);
+    }
+}
+
+// Override native window.alert to automatically use SweetAlert2
+const _nativeBrowserAlert = window.alert;
+window.alert = function (message) {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            ..._swalDarkThemeConfig,
+            title: 'ShopNext Notification',
+            text: String(message),
+            icon: 'info',
+            confirmButtonText: 'OK'
+        });
+    } else {
+        _nativeBrowserAlert(message);
+    }
+};
+
+window.showSuccess = showSuccess;
+window.showError = showError;
+window.showWarning = showWarning;
+window.showInfo = showInfo;
+window.showSweetConfirm = showSweetConfirm;
+
+// ==========================================================================
+// 2. GLOBAL TOAST NOTIFICATION SYSTEM (SWEETALERT2 TOAST FALLBACK)
 // ==========================================================================
 function showToast(message, type = 'info', duration = 3200) {
+    if (typeof Swal !== 'undefined') {
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: duration,
+            timerProgressBar: true,
+            background: '#0f172a',
+            color: '#f8fafc',
+            customClass: {
+                popup: 'swal2-dark-glass-toast'
+            },
+            didOpen: (toast) => {
+                toast.onmouseenter = Swal.stopTimer;
+                toast.onmouseleave = Swal.resumeTimer;
+            }
+        });
+
+        let iconType = 'info';
+        if (type === 'success') iconType = 'success';
+        if (type === 'error' || type === 'danger') iconType = 'error';
+        if (type === 'warning') iconType = 'warning';
+
+        Toast.fire({
+            icon: iconType,
+            title: message
+        });
+        return;
+    }
+
     let container = document.getElementById("globalToastContainer");
     if (!container) {
         container = document.createElement("div");
