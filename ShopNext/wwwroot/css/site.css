@@ -1335,3 +1335,56 @@ p, span, li, td, th {
   color: #cbd5e1 !important;
   border: 1px solid rgba(148, 163, 184, 0.3) !important;
 }
+
+/* ==========================================================================
+   SELLER PORTAL HIGH-CONTRAST TYPOGRAPHY & CONTRAST
+   ========================================================================== */
+.seller-sidebar,
+.seller-main-content,
+.vendor-dashboard,
+.dashboard-hero,
+.metric-card,
+.glass-panel {
+  color: #f8fafc;
+}
+
+.seller-sidebar .sidebar-link {
+  color: #e2e8f0;
+}
+
+.seller-sidebar .sidebar-link i.nav-icon {
+  color: #60a5fa;
+}
+
+.seller-sidebar .sidebar-link:hover {
+  color: #ffffff;
+  background: rgba(59, 130, 246, 0.18);
+}
+
+.seller-sidebar .sidebar-link:hover i.nav-icon {
+  color: #93c5fd;
+}
+
+.seller-sidebar .submenu-link {
+  color: #cbd5e1;
+}
+
+.seller-sidebar .submenu-tree-symbol {
+  color: #60a5fa;
+}
+
+.dashboard-hero h1,
+.glass-panel h3,
+.glass-panel h4,
+.glass-panel h5 {
+  color: #ffffff !important;
+}
+
+.metric-title {
+  color: #cbd5e1 !important;
+  font-weight: 700 !important;
+}
+
+.metric-subtitle {
+  color: #e2e8f0 !important;
+}
