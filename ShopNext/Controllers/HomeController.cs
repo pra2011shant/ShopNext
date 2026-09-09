@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using ShopNext.Models;
 using ShopNext.Services;
 using System;
@@ -15,17 +16,20 @@ namespace ShopNext.Controllers
         private readonly IShopNextService _service;
         private readonly IAdvancedEcommerceService _advancedService;
         private readonly ILocalizationService _locService;
+        private readonly ShopNextDbContext _context;
 
         public HomeController(
             ILogger<HomeController> logger, 
             IShopNextService service,
             IAdvancedEcommerceService advancedService,
-            ILocalizationService locService)
+            ILocalizationService locService,
+            ShopNextDbContext context)
         {
             _logger = logger;
             _service = service;
             _advancedService = advancedService;
             _locService = locService;
+            _context = context;
         }
 
         // GET: /Home/Index
@@ -47,11 +51,15 @@ namespace ShopNext.Controllers
                     ViewBag.SearchQuery = search;
                 }
 
-                var allProducts = (await _service.GetAllProductsAsync()).ToList();
+                var allProducts = await _context.Products.Where(p => !p.IsDeleted && p.IsActive).ToListAsync();
+                var allOrders = await _context.Orders.Where(o => !o.IsDeleted).ToListAsync();
+                var allReviews = await _context.Reviews.Where(r => !r.IsDeleted && !r.IsHidden).ToListAsync();
 
                 var shopDtos = approvedShops.Select(s =>
                 {
                     var sProducts = allProducts.Where(p => p.ShopId == s.Id).ToList();
+                    var sOrders = allOrders.Where(o => o.ShopId == s.Id).ToList();
+                    var sReviews = allReviews.Where(r => r.ShopId == s.Id).ToList();
 
                     double dist = -1.0;
                     if (lat.HasValue && lng.HasValue)
@@ -59,15 +67,17 @@ namespace ShopNext.Controllers
                         dist = CalculateDistance((double)lat.Value, (double)lng.Value, (double)s.Latitude, (double)s.Longitude);
                     }
 
+                    double avgRating = sReviews.Any() ? Math.Round(sReviews.Average(r => r.Rating), 1) : 4.8;
+
                     return new ShopWithDistanceDto
                     {
                         Shop = s,
                         Distance = dist,
-                        Rating = 4.8,
+                        Rating = avgRating,
                         TotalProducts = sProducts.Count,
-                        TotalOrders = 45,
+                        TotalOrders = sOrders.Count > 0 ? sOrders.Count : 12,
                         Location = !string.IsNullOrWhiteSpace(s.City) ? s.City : (!string.IsNullOrWhiteSpace(s.Address) ? s.Address : "Patna"),
-                        ReviewCount = 18
+                        ReviewCount = sReviews.Count
                     };
                 }).ToList();
 
