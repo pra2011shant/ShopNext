@@ -1337,47 +1337,133 @@ p, span, li, td, th {
 }
 
 /* ==========================================================================
-   SELLER PORTAL HIGH-CONTRAST TYPOGRAPHY & CONTRAST
+   SELLER / ADMIN / RIDER PORTAL HIGH-CONTRAST TYPOGRAPHY & SEAMLESS DARK CANVAS
    ========================================================================== */
+body.theme-dark-portal {
+  background-color: #090d16 !important;
+  background: radial-gradient(ellipse at top, #1e293b 0%, #090d16 100%) !important;
+  color: #f8fafc !important;
+  min-height: 100vh;
+}
+
+body.theme-dark-portal main {
+  background: transparent !important;
+}
+
+/* Universal High Contrast for all Portal Content */
 .seller-sidebar,
 .seller-main-content,
 .vendor-dashboard,
 .dashboard-hero,
 .metric-card,
-.glass-panel {
-  color: #f8fafc;
+.glass-panel,
+.theme-dark-portal .card,
+.theme-dark-portal .modal-content {
+  color: #f8fafc !important;
 }
 
-.seller-sidebar .sidebar-link {
-  color: #e2e8f0;
+/* Sidebar Links & Nested Spans */
+.seller-sidebar a,
+.seller-sidebar .sidebar-link,
+.seller-sidebar .sidebar-link *,
+.seller-sidebar .sidebar-link-content,
+.seller-sidebar .sidebar-link-content * {
+  color: #f1f5f9 !important;
+  text-decoration: none !important;
 }
 
 .seller-sidebar .sidebar-link i.nav-icon {
-  color: #60a5fa;
+  color: #60a5fa !important;
 }
 
-.seller-sidebar .sidebar-link:hover {
-  color: #ffffff;
-  background: rgba(59, 130, 246, 0.18);
+.seller-sidebar .sidebar-link:hover,
+.seller-sidebar .sidebar-link:hover * {
+  color: #ffffff !important;
+  background: rgba(59, 130, 246, 0.2) !important;
 }
 
 .seller-sidebar .sidebar-link:hover i.nav-icon {
-  color: #93c5fd;
+  color: #93c5fd !important;
 }
 
-.seller-sidebar .submenu-link {
-  color: #cbd5e1;
+.seller-sidebar .sidebar-link.active,
+.seller-sidebar .sidebar-link.active * {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.5) 0%, rgba(59, 130, 246, 0.4) 100%) !important;
+}
+
+.seller-sidebar .sidebar-link.active {
+  border: 1px solid rgba(96, 165, 250, 0.6) !important;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.35) !important;
+}
+
+.seller-sidebar .sidebar-link.active i.nav-icon {
+  color: #93c5fd !important;
+}
+
+/* Submenu Links & Tree Symbols */
+.seller-sidebar .submenu-link,
+.seller-sidebar .submenu-link * {
+  color: #cbd5e1 !important;
+  text-decoration: none !important;
+}
+
+.seller-sidebar .submenu-link:hover,
+.seller-sidebar .submenu-link:hover * {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.seller-sidebar .submenu-link.active,
+.seller-sidebar .submenu-link.active * {
+  color: #38bdf8 !important;
+  background: rgba(56, 189, 248, 0.2) !important;
+  font-weight: 700 !important;
+}
+
+.seller-sidebar .submenu-link.active {
+  border-left: 3px solid #38bdf8 !important;
 }
 
 .seller-sidebar .submenu-tree-symbol {
-  color: #60a5fa;
+  color: #60a5fa !important;
 }
 
-.dashboard-hero h1,
-.glass-panel h3,
-.glass-panel h4,
-.glass-panel h5 {
+.seller-sidebar .chevron-icon {
+  color: #94a3b8 !important;
+}
+
+.seller-sidebar .sidebar-tree-toggle.open .chevron-icon {
+  color: #60a5fa !important;
+}
+
+/* Universal Headings & Subtitles on Dark Portal */
+.theme-dark-portal h1, .theme-dark-portal h2, .theme-dark-portal h3, .theme-dark-portal h4, .theme-dark-portal h5, .theme-dark-portal h6,
+.dashboard-hero h1, .glass-panel h3, .glass-panel h4, .glass-panel h5 {
   color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+.theme-dark-portal .text-muted,
+.seller-main-content .text-muted,
+.seller-sidebar .text-muted,
+.glass-panel .text-muted,
+.dashboard-hero .text-muted,
+.metric-card .text-muted {
+  color: #cbd5e1 !important;
+}
+
+.theme-dark-portal strong,
+.seller-main-content strong,
+.glass-panel strong {
+  color: #ffffff !important;
+}
+
+.theme-dark-portal label,
+.seller-main-content label,
+.glass-panel label {
+  color: #e2e8f0 !important;
+  font-weight: 600 !important;
 }
 
 .metric-title {

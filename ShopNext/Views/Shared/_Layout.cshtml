@@ -15,6 +15,11 @@
 
     bool isCustLoggedIn = activeRole == "Customer" || activeRole == "User" || (string.IsNullOrEmpty(activeRole) && Context.Request.Cookies.TryGetValue("CustomerId", out string? custIdCookie) && !string.IsNullOrEmpty(custIdCookie));
     string customerName = Context.Request.Cookies.TryGetValue("CustomerName", out string? cName) && !string.IsNullOrEmpty(cName) ? cName : (User.Identity?.Name ?? "Customer");
+
+    string currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    bool isDarkPortal = currentController.Equals("Vendor", StringComparison.OrdinalIgnoreCase) || 
+                       currentController.Equals("Admin", StringComparison.OrdinalIgnoreCase) || 
+                       currentController.Equals("Rider", StringComparison.OrdinalIgnoreCase);
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -32,7 +37,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/ShopNext.styles.css" asp-append-version="true" />
 </head>
-<body>
+<body class="@(isDarkPortal ? "theme-dark-portal" : "")">
     <!-- Top Navigation Bar -->
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark main-navbar mb-4 sticky-top">
