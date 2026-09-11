@@ -1566,3 +1566,26 @@ body {
   top: 0px !important;
   position: static !important;
 }
+
+/* ==========================================================================
+   Global Translucent Badge & Glassmorphic Icon Overrides
+   Fixes solid opaque blocks when bg-opacity-* is combined with text-* in Bootstrap 5.1
+   ========================================================================== */
+.bg-warning.bg-opacity-10, .bg-warning.bg-opacity-15, .bg-warning.bg-opacity-20, .bg-warning.bg-opacity-25, .bg-warning.bg-opacity-30 {
+  background-color: rgba(245, 158, 11, 0.16) !important;
+}
+.bg-primary.bg-opacity-10, .bg-primary.bg-opacity-15, .bg-primary.bg-opacity-20, .bg-primary.bg-opacity-25, .bg-primary.bg-opacity-30 {
+  background-color: rgba(99, 102, 241, 0.16) !important;
+}
+.bg-danger.bg-opacity-10, .bg-danger.bg-opacity-15, .bg-danger.bg-opacity-20, .bg-danger.bg-opacity-25, .bg-danger.bg-opacity-30 {
+  background-color: rgba(244, 63, 94, 0.16) !important;
+}
+.bg-success.bg-opacity-10, .bg-success.bg-opacity-15, .bg-success.bg-opacity-20, .bg-success.bg-opacity-25, .bg-success.bg-opacity-30 {
+  background-color: rgba(16, 185, 129, 0.16) !important;
+}
+.bg-info.bg-opacity-10, .bg-info.bg-opacity-15, .bg-info.bg-opacity-20, .bg-info.bg-opacity-25, .bg-info.bg-opacity-30 {
+  background-color: rgba(6, 182, 212, 0.16) !important;
+}
+.bg-secondary.bg-opacity-10, .bg-secondary.bg-opacity-15, .bg-secondary.bg-opacity-20, .bg-secondary.bg-opacity-25, .bg-secondary.bg-opacity-30 {
+  background-color: rgba(148, 163, 184, 0.15) !important;
+}
