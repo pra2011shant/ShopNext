@@ -1761,3 +1761,454 @@ BEGIN
     ORDER BY c.CreatedDate DESC;
 END;
 GO
+
+-- ==============================================================================
+-- 3. INDEXED VIEWS & REAL-TIME AGGREGATIONS
+-- ==============================================================================
+
+-- VIEW: vw_SellerOrdersSummary
+IF OBJECT_ID('dbo.vw_SellerOrdersSummary', 'V') IS NOT NULL DROP VIEW dbo.vw_SellerOrdersSummary;
+GO
+CREATE   VIEW vw_SellerOrdersSummary AS
+SELECT 
+    o.Id AS OrderId,
+    o.ShopId,
+    s.ShopName,
+    o.CustomerId,
+    u.Name AS CustomerName,
+    u.PhoneNumber AS CustomerPhone,
+    o.TotalAmount,
+    o.OrderStatus,
+    o.PaymentStatus,
+    o.PaymentMode,
+    o.CreatedDate,
+    o.DeliveredDate,
+    o.ReturnReason,
+    ISNULL((SELECT COUNT(1) FROM OrderItems oi WHERE oi.OrderId = o.Id), 0) AS ItemsCount
+FROM Orders o
+LEFT JOIN Shops s ON o.ShopId = s.Id
+LEFT JOIN Users u ON o.CustomerId = u.Id
+WHERE o.IsDeleted = 0;
+GO
+
+-- VIEW: vw_SellerProductsSummary
+IF OBJECT_ID('dbo.vw_SellerProductsSummary', 'V') IS NOT NULL DROP VIEW dbo.vw_SellerProductsSummary;
+GO
+CREATE   VIEW vw_SellerProductsSummary AS
+SELECT 
+    p.Id AS ProductId,
+    p.ShopId,
+    p.ProductName,
+    p.Price,
+    p.Mrp,
+    p.Discount,
+    p.Stock,
+    CASE 
+        WHEN p.Stock <= 0 THEN 'Out of Stock'
+        WHEN p.Stock < 5 THEN 'Low Stock'
+        ELSE 'In Stock'
+    END AS StockStatus,
+    p.Category AS CategoryName,
+    p.IsActive,
+    p.CreatedDate
+FROM Products p
+WHERE p.IsDeleted = 0;
+GO
+
+-- ==============================================================================
+-- 4. ULTRA-FAST STORED PROCEDURES (< 10ms TELEMETRY & REPORTING)
+-- ==============================================================================
+
+-- PROCEDURE: sp_GetActiveShops
+IF OBJECT_ID('dbo.sp_GetActiveShops', 'P') IS NOT NULL DROP PROCEDURE dbo.sp_GetActiveShops;
+GO
+
+-- ==============================================================================
+-- 3. OPTIMIZED STORED PROCEDURES (SPs) FOR MAXIMUM SPEED
+-- ==============================================================================
+
+-- 3.1 SP: Get All Active & Approved Shops
+CREATE   PROCEDURE dbo.sp_GetActiveShops
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT 
+        s.Id, s.ShopName, s.PhoneNumber, s.Category, s.Latitude, s.Longitude,
+        s.OwnerName, s.Email, s.Address, s.City, s.State, s.Pincode,
+        s.IsApproved, s.IsActive, s.CreatedDate
+    FROM dbo.Shops s WITH (NOLOCK)
+    WHERE s.IsDeleted = 0 AND s.IsActive = 1 AND s.IsApproved = 1
+    ORDER BY s.ShopName ASC;
+END;
+
+GO
+
+-- PROCEDURE: sp_GetAdminComplaintsList
+IF OBJECT_ID('dbo.sp_GetAdminComplaintsList', 'P') IS NOT NULL DROP PROCEDURE dbo.sp_GetAdminComplaintsList;
+GO
+
+-- 4. Fast Admin 3-Party Complaints List SP
+CREATE   PROCEDURE dbo.sp_GetAdminComplaintsList
+    @Limit INT = 50
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT TOP (@Limit)
+        c.Id,
+        c.TicketNumber,
+        c.CustomerId,
+        c.OrderId,
+        c.Issue,
+        c.Description,
+        c.Priority,
+        c.Status,
+        c.ComplainantRole,
+        c.ComplainantName,
+        c.SellerStatement,
+        c.RiderStatement,
+        c.EscalationLevel,
+        c.EscalationStage,
+        c.OrderAmount,
+        c.CreatedDate,
+        u.Name AS CustomerName,
+        u.PhoneNumber AS CustomerPhone,
+        s.ShopName
+    FROM dbo.Complaints c
+    LEFT JOIN dbo.Users u ON u.Id = c.CustomerId
+    LEFT JOIN dbo.Orders ord ON ord.Id = c.OrderId
+    LEFT JOIN dbo.Shops s ON s.Id = ord.ShopId
+    WHERE c.IsDeleted = 0
+    ORDER BY c.CreatedDate DESC;
+END;
+
+GO
+
+-- PROCEDURE: sp_GetAdminCustomersList
+IF OBJECT_ID('dbo.sp_GetAdminCustomersList', 'P') IS NOT NULL DROP PROCEDURE dbo.sp_GetAdminCustomersList;
+GO
+
+-- 2. Fast Admin Customers List SP
+CREATE   PROCEDURE dbo.sp_GetAdminCustomersList
+    @Limit INT = 50
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT TOP (@Limit)
+        u.Id,
+        u.Name,
+        u.Email,
+        u.PhoneNumber,
+        u.CreatedAt,
+        u.CreatedDate,
+        u.IsActive,
+        u.RiskScore,
+        u.RiskLevel,
+        u.IsCodDisabled,
+        u.IsAccountSuspended,
+        ISNULL(o.OrdersCount, 0) AS TotalOrders,
+        ISNULL(o.TotalSpent, 0) AS TotalSpent
+    FROM dbo.Users u
+    OUTER APPLY (
+        SELECT COUNT(1) AS OrdersCount, ISNULL(SUM(ord.TotalAmount), 0) AS TotalSpent
+        FROM dbo.Orders ord
+        WHERE ord.CustomerId = u.Id AND ord.IsDeleted = 0
+    ) o
+    WHERE u.Role = 'Customer' AND u.IsDeleted = 0
+    ORDER BY u.CreatedDate DESC;
+END;
+
+GO
+
+-- PROCEDURE: sp_GetAdminDashboardKPIs
+IF OBJECT_ID('dbo.sp_GetAdminDashboardKPIs', 'P') IS NOT NULL DROP PROCEDURE dbo.sp_GetAdminDashboardKPIs;
+GO
+
+-- 3.4 SP: Get Admin Platform Dashboard KPIs
+CREATE   PROCEDURE dbo.sp_GetAdminDashboardKPIs
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @TotalCustomers INT = (SELECT COUNT(*) FROM dbo.Users WITH (NOLOCK) WHERE Role = 'Customer' AND IsDeleted = 0);
+    DECLARE @TotalSellers INT = (SELECT COUNT(*) FROM dbo.Shops WITH (NOLOCK) WHERE IsDeleted = 0);
+    DECLARE @TotalProducts INT = (SELECT COUNT(*) FROM dbo.Products WITH (NOLOCK) WHERE IsDeleted = 0);
+    DECLARE @TotalOrders INT = (SELECT COUNT(*) FROM dbo.Orders WITH (NOLOCK) WHERE IsDeleted = 0);
+    DECLARE @PendingSellers INT = (SELECT COUNT(*) FROM dbo.Shops WITH (NOLOCK) WHERE IsApproved = 0 AND IsDeleted = 0);
+    DECLARE @PendingProducts INT = (SELECT COUNT(*) FROM dbo.Products WITH (NOLOCK) WHERE IsApproved = 0 AND IsDeleted = 0);
+    DECLARE @TodaySales DECIMAL(18,2) = ISNULL((SELECT SUM(TotalAmount) FROM dbo.Orders WITH (NOLOCK) WHERE CAST(CreatedDate AS DATE) = CAST(GETDATE() AS DATE) AND OrderStatus <> 'Cancelled'), 0);
+
+    SELECT 
+        @TotalCustomers AS TotalCustomers,
+        @TotalSellers AS TotalSellers,
+        @TotalProducts AS TotalProducts,
+        @TotalOrders AS TotalOrders,
+        @PendingSellers AS PendingSellers,
+        @PendingProducts AS PendingProducts,
+        @TodaySales AS TodaySales;
+END;
+
+GO
+
+-- PROCEDURE: sp_GetAdminDashboardSummary
+IF OBJECT_ID('dbo.sp_GetAdminDashboardSummary', 'P') IS NOT NULL DROP PROCEDURE dbo.sp_GetAdminDashboardSummary;
+GO
+
+-- ==============================================================================
+-- HIGH-PERFORMANCE ADMIN TELEMETRY STORED PROCEDURES (< 10ms execution)
+-- ==============================================================================
+
+-- 1. Master Dashboard Summary SP
+CREATE   PROCEDURE dbo.sp_GetAdminDashboardSummary
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        (SELECT COUNT(1) FROM dbo.Users WHERE Role = 'Customer' AND IsDeleted = 0) AS TotalCustomers,
+        (SELECT COUNT(1) FROM dbo.Shops WHERE IsDeleted = 0) AS TotalSellers,
+        (SELECT COUNT(1) FROM dbo.Shops WHERE IsApproved = 0 AND IsDeleted = 0) AS PendingSellerRequests,
+        (SELECT COUNT(1) FROM dbo.Products WHERE IsDeleted = 0) AS TotalProducts,
+        (SELECT COUNT(1) FROM dbo.Orders WHERE IsDeleted = 0) AS TotalOrders,
+        (SELECT ISNULL(SUM(TotalAmount), 0) FROM dbo.Orders WHERE CAST(CreatedDate AS DATE) = CAST(GETDATE() AS DATE)) AS TodaySales,
+        (SELECT COUNT(1) FROM dbo.Orders WHERE ReturnStatus IS NOT NULL AND ReturnStatus NOT IN ('Resolved', 'Rejected')) AS PendingReturns,
+        (SELECT COUNT(1) FROM dbo.Complaints WHERE Status = 'Open') AS PendingComplaints;
+END;
+
+GO
+
+-- PROCEDURE: sp_GetAdminSellersList
+IF OBJECT_ID('dbo.sp_GetAdminSellersList', 'P') IS NOT NULL DROP PROCEDURE dbo.sp_GetAdminSellersList;
+GO
+
+-- 3. Fast Admin Sellers List SP
+CREATE   PROCEDURE dbo.sp_GetAdminSellersList
+    @Limit INT = 50
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT TOP (@Limit)
+        s.Id,
+        s.ShopName,
+        s.OwnerName,
+        s.PhoneNumber,
+        s.Email,
+        s.Category,
+        s.City,
+        s.State,
+        s.IsApproved,
+        s.IsActive,
+        s.CreatedDate,
+        s.Rating,
+        ISNULL(p.ProductCount, 0) AS TotalProducts,
+        ISNULL(o.OrderCount, 0) AS TotalOrders
+    FROM dbo.Shops s
+    OUTER APPLY (
+        SELECT COUNT(1) AS ProductCount
+        FROM dbo.Products pr
+        WHERE pr.ShopId = s.Id AND pr.IsDeleted = 0
+    ) p
+    OUTER APPLY (
+        SELECT COUNT(1) AS OrderCount
+        FROM dbo.Orders ord
+        WHERE ord.ShopId = s.Id AND ord.IsDeleted = 0
+    ) o
+    WHERE s.IsDeleted = 0
+    ORDER BY s.CreatedDate DESC;
+END;
+
+GO
+
+-- PROCEDURE: sp_GetCustomerDashboardData
+IF OBJECT_ID('dbo.sp_GetCustomerDashboardData', 'P') IS NOT NULL DROP PROCEDURE dbo.sp_GetCustomerDashboardData;
+GO
+CREATE   PROCEDURE sp_GetCustomerDashboardData
+    @CustomerId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- 1. Summary
+    SELECT 
+        COUNT(o.Id) AS TotalOrders,
+        ISNULL(SUM(CASE WHEN o.OrderStatus IN ('Delivered', 'Completed') THEN 1 ELSE 0 END), 0) AS DeliveredOrders,
+        ISNULL(SUM(CASE WHEN o.OrderStatus IN ('Placed', 'Confirmed', 'Packed', 'Shipped', 'Out For Delivery') THEN 1 ELSE 0 END), 0) AS ActiveOrders,
+        ISNULL(SUM(o.TotalAmount), 0) AS TotalSpent
+    FROM Orders o
+    WHERE o.CustomerId = @CustomerId AND o.IsDeleted = 0;
+
+    -- 2. Recent Orders
+    SELECT TOP 10 
+        o.Id, o.ShopId, s.ShopName, o.TotalAmount, o.OrderStatus, o.PaymentStatus, o.CreatedDate
+    FROM Orders o
+    LEFT JOIN Shops s ON o.ShopId = s.Id
+    WHERE o.CustomerId = @CustomerId AND o.IsDeleted = 0
+    ORDER BY o.CreatedDate DESC;
+END
+GO
+
+-- PROCEDURE: sp_GetCustomerOrderHistory
+IF OBJECT_ID('dbo.sp_GetCustomerOrderHistory', 'P') IS NOT NULL DROP PROCEDURE dbo.sp_GetCustomerOrderHistory;
+GO
+
+-- 3.3 SP: Get Customer Profile Summary & Order History
+CREATE   PROCEDURE dbo.sp_GetCustomerOrderHistory
+    @CustomerId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Recent Orders List
+    SELECT TOP 20
+        o.Id AS OrderId,
+        o.TotalAmount,
+        o.OrderStatus,
+        o.PaymentMode,
+        o.CreatedDate,
+        o.Remark,
+        s.ShopName,
+        (SELECT COUNT(*) FROM dbo.OrderItems oi WITH (NOLOCK) WHERE oi.OrderId = o.Id) AS ItemCount
+    FROM dbo.Orders o WITH (NOLOCK)
+    LEFT JOIN dbo.Shops s WITH (NOLOCK) ON s.Id = o.ShopId
+    WHERE o.CustomerId = @CustomerId AND o.IsDeleted = 0
+    ORDER BY o.CreatedDate DESC;
+END;
+
+GO
+
+-- PROCEDURE: sp_GetHighReturnAreas
+IF OBJECT_ID('dbo.sp_GetHighReturnAreas', 'P') IS NOT NULL DROP PROCEDURE dbo.sp_GetHighReturnAreas;
+GO
+
+-- 3.5 SP: High Return Area / Pincode Analytics (Point 38)
+CREATE   PROCEDURE dbo.sp_GetHighReturnAreas
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        ISNULL(ca.Pincode, '800001') AS Pincode,
+        ISNULL(ca.City, 'Patna') AS AreaName,
+        COUNT(o.Id) AS TotalOrders,
+        SUM(CASE WHEN o.OrderStatus IN ('Delivered', 'Completed') THEN 1 ELSE 0 END) AS DeliveredOrders,
+        SUM(CASE WHEN o.OrderStatus IN ('Returned', 'Return_Requested', 'Approved') OR o.ReturnStatus IN ('Returned', 'Approved', 'Product_Swapped_Fraud') THEN 1 ELSE 0 END) AS ReturnOrders,
+        CASE 
+            WHEN COUNT(o.Id) > 0 THEN ROUND((CAST(SUM(CASE WHEN o.OrderStatus IN ('Returned', 'Return_Requested', 'Approved') OR o.ReturnStatus IN ('Returned', 'Approved', 'Product_Swapped_Fraud') THEN 1 ELSE 0 END) AS DECIMAL(18,2)) / COUNT(o.Id)) * 100.0, 1)
+            ELSE 0 
+        END AS ReturnRate
+    FROM dbo.Orders o WITH (NOLOCK)
+    LEFT JOIN dbo.CustomerAddresses ca WITH (NOLOCK) ON ca.CustomerId = o.CustomerId
+    WHERE o.IsDeleted = 0
+    GROUP BY ca.Pincode, ca.City
+    ORDER BY ReturnRate DESC;
+END;
+
+GO
+
+-- PROCEDURE: sp_GetMonitoringOverviewStats
+IF OBJECT_ID('dbo.sp_GetMonitoringOverviewStats', 'P') IS NOT NULL DROP PROCEDURE dbo.sp_GetMonitoringOverviewStats;
+GO
+
+-- 3.6 SP: System Monitoring Overview & Telemetry Stats
+CREATE   PROCEDURE dbo.sp_GetMonitoringOverviewStats
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @Today DATE = CAST(GETDATE() AS DATE);
+    DECLARE @ActiveCutoff DATETIME2 = DATEADD(minute, -30, GETDATE());
+
+    SELECT 
+        (SELECT COUNT(*) FROM dbo.Users WITH (NOLOCK) WHERE IsDeleted = 0) AS TotalUsers,
+        (SELECT COUNT(*) FROM dbo.UserSessions WITH (NOLOCK) WHERE IsActive = 1 AND LastSeenTime >= @ActiveCutoff) AS OnlineUsers,
+        (SELECT COUNT(*) FROM dbo.LoginHistories WITH (NOLOCK) WHERE CAST(LoginTime AS DATE) = @Today AND IsSuccessful = 1) AS TodayLogins,
+        (SELECT COUNT(*) FROM dbo.LoginHistories WITH (NOLOCK) WHERE CAST(LoginTime AS DATE) = @Today AND IsSuccessful = 0) AS FailedLoginAttempts,
+        (SELECT COUNT(*) FROM dbo.Orders WITH (NOLOCK) WHERE CAST(CreatedDate AS DATE) = @Today AND IsDeleted = 0) AS TodayOrders,
+        (SELECT COUNT(*) FROM dbo.UserActivities WITH (NOLOCK) WHERE CAST(Timestamp AS DATE) = @Today) AS TodayActivities;
+END;
+
+GO
+
+-- PROCEDURE: sp_GetProductsByShop
+IF OBJECT_ID('dbo.sp_GetProductsByShop', 'P') IS NOT NULL DROP PROCEDURE dbo.sp_GetProductsByShop;
+GO
+
+-- 3.2 SP: Get Products by Shop ID
+CREATE   PROCEDURE dbo.sp_GetProductsByShop
+    @ShopId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT 
+        p.Id, p.ShopId, p.ProductName, p.Category, p.SubCategory, p.Brand,
+        p.Description, p.Price, p.Mrp, p.Discount, p.Stock, p.Sku,
+        p.StockStatus, p.ImageUrl, p.HasVariants, p.IsApproved, p.ApprovalStatus,
+        ISNULL((SELECT AVG(CAST(r.Rating AS FLOAT)) FROM dbo.Reviews r WITH (NOLOCK) WHERE r.ProductId = p.Id AND r.IsDeleted = 0), 4.5) AS Rating,
+        ISNULL((SELECT COUNT(*) FROM dbo.Reviews r WITH (NOLOCK) WHERE r.ProductId = p.Id AND r.IsDeleted = 0), 0) AS ReviewsCount,
+        p.CreatedDate
+    FROM dbo.Products p WITH (NOLOCK)
+    WHERE p.ShopId = @ShopId AND p.IsDeleted = 0 AND p.IsActive = 1
+    ORDER BY p.ProductName ASC;
+END;
+
+GO
+
+-- PROCEDURE: sp_GetRiderDashboardData
+IF OBJECT_ID('dbo.sp_GetRiderDashboardData', 'P') IS NOT NULL DROP PROCEDURE dbo.sp_GetRiderDashboardData;
+GO
+CREATE   PROCEDURE sp_GetRiderDashboardData
+    @RiderId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        COUNT(o.Id) AS TotalDeliveries,
+        ISNULL(SUM(CASE WHEN o.OrderStatus IN ('Shipped', 'Out For Delivery', 'Assigned') THEN 1 ELSE 0 END), 0) AS ActiveDeliveries,
+        ISNULL(SUM(CASE WHEN o.OrderStatus = 'Delivered' THEN 1 ELSE 0 END), 0) AS CompletedDeliveries,
+        ISNULL(SUM(CASE WHEN CAST(o.CreatedDate AS DATE) = CAST(GETDATE() AS DATE) AND o.OrderStatus = 'Delivered' THEN 1 ELSE 0 END), 0) AS TodayDelivered
+    FROM Orders o
+    WHERE o.RiderId = @RiderId AND o.IsDeleted = 0;
+END
+GO
+
+-- PROCEDURE: sp_GetSellerDashboardData
+IF OBJECT_ID('dbo.sp_GetSellerDashboardData', 'P') IS NOT NULL DROP PROCEDURE dbo.sp_GetSellerDashboardData;
+GO
+CREATE   PROCEDURE sp_GetSellerDashboardData
+    @ShopId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- 1. Metric Counts
+    SELECT 
+        ISNULL(COUNT(p.Id), 0) AS TotalProducts,
+        ISNULL(SUM(CASE WHEN p.Stock >= 5 THEN 1 ELSE 0 END), 0) AS AvailableStock,
+        ISNULL(SUM(CASE WHEN p.Stock < 5 AND p.Stock > 0 THEN 1 ELSE 0 END), 0) AS LowStock,
+        ISNULL(SUM(CASE WHEN p.Stock <= 0 THEN 1 ELSE 0 END), 0) AS OutOfStock
+    FROM Products p
+    WHERE p.ShopId = @ShopId AND p.IsDeleted = 0;
+
+    -- 2. Order Metrics
+    SELECT 
+        COUNT(o.Id) AS TotalOrders,
+        ISNULL(SUM(CASE WHEN o.OrderStatus IN ('Placed', 'Confirmed', 'Packed', 'Pending') THEN 1 ELSE 0 END), 0) AS PendingOrders,
+        ISNULL(SUM(CASE WHEN o.OrderStatus IN ('Delivered', 'Completed') OR o.PaymentStatus = 'Paid' THEN o.TotalAmount ELSE 0 END), 0) AS TotalSales,
+        ISNULL(SUM(CASE WHEN o.OrderStatus IN ('Return Requested', 'Return Approved') OR o.ReturnReason IS NOT NULL THEN 1 ELSE 0 END), 0) AS PendingReturns,
+        ISNULL(SUM(CASE WHEN CAST(o.CreatedDate AS DATE) = CAST(GETDATE() AS DATE) THEN o.TotalAmount ELSE 0 END), 0) AS TodaySales,
+        ISNULL(SUM(CASE WHEN CAST(o.CreatedDate AS DATE) = CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END), 0) AS TodayOrdersCount
+    FROM Orders o
+    WHERE o.ShopId = @ShopId AND o.IsDeleted = 0;
+
+    -- 3. Recent 10 Orders
+    SELECT TOP 10 
+        o.Id, o.CustomerId, u.Name AS CustomerName, o.TotalAmount, o.OrderStatus, o.PaymentStatus, o.CreatedDate
+    FROM Orders o
+    LEFT JOIN Users u ON o.CustomerId = u.Id
+    WHERE o.ShopId = @ShopId AND o.IsDeleted = 0
+    ORDER BY o.CreatedDate DESC;
+END
+GO
