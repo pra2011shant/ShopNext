@@ -1,4 +1,4 @@
-﻿@* Views/Vendor/Dashboard.cshtml *@
+@* Views/Vendor/Dashboard.cshtml *@
 @model ShopNext.Models.SellerDashboardViewModel
 @{
     ViewData["Title"] = "Seller Sidebar Dashboard - ShopNext";
@@ -768,6 +768,7 @@
             <div class="tab-panel" id="tab-notifications" data-loaded="false" style="display: none;"></div>
 
             <!-- 17. TAB: SETTINGS -->
+
             <div class="tab-panel" id="tab-settings" data-loaded="false" style="display: none;"></div>
         </main>
     </div>
@@ -778,70 +779,130 @@
         const submenu = document.getElementById(submenuId);
         if (submenu) {
             submenu.classList.toggle('show');
-            toggleBtn.classList.toggle('open');
+            if (toggleBtn) {
+                toggleBtn.classList.toggle('open');
+            }
         }
     }
 
     function switchSellerTab(tabId) {
-        // 1. Hide all tab panels and show targeted one
+        if (!tabId) return;
+
+        // 1. Hide all tab panels
         const panels = document.querySelectorAll('.tab-panel');
-        panels.forEach(p => p.classList.remove('active'));
-        
-        const targetPanel = document.getElementById(tabId);
-        if (targetPanel) {
-            targetPanel.classList.add('active');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        panels.forEach(p => {
+            p.classList.remove('active');
+            p.style.display = 'none';
+        });
 
         // 2. Update active states on sidebar
         const allLinks = document.querySelectorAll('.sidebar-link, .submenu-link');
         allLinks.forEach(link => link.classList.remove('active'));
 
-        if (tabId === 'tab-dashboard') {
-            document.getElementById('nav-dashboard')?.classList.add('active');
-        } else if (tabId === 'tab-all-products') {
-            document.getElementById('subnav-all-products')?.classList.add('active');
-            document.getElementById('nav-products-parent')?.classList.add('active');
-        } else if (tabId === 'tab-add-product') {
-            document.getElementById('subnav-add-product')?.classList.add('active');
-            document.getElementById('nav-products-parent')?.classList.add('active');
-        } else if (tabId === 'tab-categories') {
-            document.getElementById('subnav-categories')?.classList.add('active');
-            document.getElementById('nav-products-parent')?.classList.add('active');
-        } else if (tabId === 'tab-stock') {
-            document.getElementById('subnav-stock')?.classList.add('active');
-            document.getElementById('nav-products-parent')?.classList.add('active');
-        } else if (tabId === 'tab-all-orders') {
-            document.getElementById('subnav-all-orders')?.classList.add('active');
-            document.getElementById('nav-orders-parent')?.classList.add('active');
-        } else if (tabId === 'tab-new-orders') {
-            document.getElementById('subnav-new-orders')?.classList.add('active');
-            document.getElementById('nav-orders-parent')?.classList.add('active');
-        } else if (tabId === 'tab-processing') {
-            document.getElementById('subnav-processing')?.classList.add('active');
-            document.getElementById('nav-orders-parent')?.classList.add('active');
-        } else if (tabId === 'tab-shipped') {
-            document.getElementById('subnav-shipped')?.classList.add('active');
-            document.getElementById('nav-orders-parent')?.classList.add('active');
-        } else if (tabId === 'tab-delivered') {
-            document.getElementById('subnav-delivered')?.classList.add('active');
-            document.getElementById('nav-orders-parent')?.classList.add('active');
-        } else if (tabId === 'tab-returns') {
-            document.getElementById('nav-returns')?.classList.add('active');
-        } else if (tabId === 'tab-reviews') {
-            document.getElementById('nav-reviews')?.classList.add('active');
-        } else if (tabId === 'tab-earnings') {
-            document.getElementById('nav-earnings')?.classList.add('active');
-        } else if (tabId === 'tab-coupons') {
-            document.getElementById('nav-coupons')?.classList.add('active');
-        } else if (tabId === 'tab-profile') {
-            document.getElementById('nav-profile')?.classList.add('active');
-        } else if (tabId === 'tab-notifications') {
-            document.getElementById('nav-notifications')?.classList.add('active');
-        } else if (tabId === 'tab-settings') {
-            document.getElementById('nav-settings')?.classList.add('active');
+        const navMap = {
+            'tab-dashboard': ['nav-dashboard'],
+            'tab-all-products': ['subnav-all-products', 'nav-products-parent'],
+            'tab-add-product': ['subnav-add-product', 'nav-products-parent'],
+            'tab-categories': ['subnav-categories', 'nav-products-parent'],
+            'tab-stock': ['subnav-stock', 'nav-products-parent'],
+            'tab-all-orders': ['subnav-all-orders', 'nav-orders-parent'],
+            'tab-new-orders': ['subnav-new-orders', 'nav-orders-parent'],
+            'tab-processing': ['subnav-processing', 'nav-orders-parent'],
+            'tab-shipped': ['subnav-shipped', 'nav-orders-parent'],
+            'tab-delivered': ['subnav-delivered', 'nav-orders-parent'],
+            'tab-returns': ['nav-returns'],
+            'tab-reviews': ['nav-reviews'],
+            'tab-earnings': ['nav-earnings'],
+            'tab-coupons': ['nav-coupons'],
+            'tab-profile': ['nav-profile'],
+            'tab-notifications': ['nav-notifications'],
+            'tab-settings': ['nav-settings']
+        };
+
+        const targetNavs = navMap[tabId];
+        if (targetNavs) {
+            targetNavs.forEach(id => document.getElementById(id)?.classList.add('active'));
+        }
+
+        // Auto open submenus if a child item is active
+        if (tabId.includes('product') || tabId.includes('categories') || tabId.includes('stock')) {
+            const sub = document.getElementById('submenu-products');
+            const parent = document.getElementById('nav-products-parent');
+            if (sub && !sub.classList.contains('show')) sub.classList.add('show');
+            if (parent && !parent.classList.contains('open')) parent.classList.add('open');
+        } else if (tabId.includes('order') || tabId.includes('processing') || tabId.includes('shipped') || tabId.includes('delivered')) {
+            const sub = document.getElementById('submenu-orders');
+            const parent = document.getElementById('nav-orders-parent');
+            if (sub && !sub.classList.contains('show')) sub.classList.add('show');
+            if (parent && !parent.classList.contains('open')) parent.classList.add('open');
+        }
+
+        // 3. Display target panel and lazy-load partial if not already loaded
+        let targetPanel = document.getElementById(tabId);
+        if (targetPanel) {
+            targetPanel.classList.add('active');
+            targetPanel.style.display = 'block';
+
+            if (tabId !== 'tab-dashboard' && targetPanel.getAttribute('data-loaded') !== 'true') {
+                targetPanel.innerHTML = `
+                    <div class="d-flex flex-column justify-content-center align-items-center py-5 text-center" style="min-height: 380px;">
+                        <div class="spinner-border text-primary mb-3" style="width: 2.8rem; height: 2.8rem;" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <h5 class="text-white fw-bold mb-1">Loading ${tabId.replace('tab-', '').toUpperCase()}...</h5>
+                        <p class="text-secondary small">Fetching high-speed store analytics (< 10ms)...</p>
+                    </div>`;
+
+                const tabKey = tabId.replace('tab-', '');
+                fetch('/Vendor/GetTabPartial?tab=' + encodeURIComponent(tabKey))
+                    .then(res => {
+                        if (!res.ok) throw new Error('Status ' + res.status);
+                        return res.text();
+                    })
+                    .then(html => {
+                        targetPanel.outerHTML = html;
+                        const updatedPanel = document.getElementById(tabId);
+                        if (updatedPanel) {
+                            updatedPanel.classList.add('active');
+                            updatedPanel.style.display = 'block';
+                            updatedPanel.setAttribute('data-loaded', 'true');
+                            
+                            // Re-bind / execute any script tags in loaded partial
+                            updatedPanel.querySelectorAll('script').forEach(oldScript => {
+                                const newScript = document.createElement('script');
+                                Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                                newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                                oldScript.parentNode.replaceChild(newScript, oldScript);
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Tab loading error:', err);
+                        targetPanel.innerHTML = `
+                            <div class="p-4 my-4 rounded-4 text-center border border-danger border-opacity-30 bg-danger bg-opacity-10 text-white">
+                                <i class="fa-solid fa-triangle-exclamation text-danger fs-2 mb-2"></i>
+                                <h5 class="fw-bold">Unable to load tab</h5>
+                                <p class="text-secondary small mb-3">Error: ${err.message}</p>
+                                <button class="btn btn-outline-primary btn-sm rounded-pill px-4" onclick="targetPanel.removeAttribute('data-loaded'); switchSellerTab('${tabId}');">
+                                    <i class="fa-solid fa-rotate-right me-1"></i> Retry
+                                </button>
+                            </div>`;
+                    });
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
+    window.switchSellerTab = switchSellerTab;
+
+    // Handle hash on direct load (e.g. #all-products, #orders)
+    document.addEventListener("DOMContentLoaded", function () {
+        let hash = window.location.hash.replace('#', '');
+        if (hash) {
+            if (!hash.startsWith('tab-')) hash = 'tab-' + hash;
+            switchSellerTab(hash);
+        }
+    });
 
     function calculateDiscountDash() {
         const mrp = parseFloat(document.getElementById('mrpDash')?.value || 0);
@@ -882,6 +943,7 @@
     // ==========================================
     // 22. PRODUCT VARIANTS MANAGEMENT SCRIPTS
     // ==========================================
+    
     function toggleVariantsSection(containerId, isChecked) {
         const container = document.getElementById(containerId);
         if (!container) return;
