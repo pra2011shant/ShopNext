@@ -1,9 +1,9 @@
 @model ShopNext.Models.AdminDashboardViewModel
 @{
-    var pendingShops = Model.PendingShops ?? new List<ShopNext.Models.Shop>();
-    var approvedShops = Model.ApprovedShops ?? new List<ShopNext.Models.Shop>();
+    var pendingShops = Model.PendingShops ?? ViewBag.PendingShops as List<ShopNext.Models.Shop> ?? new List<ShopNext.Models.Shop>();
+    var approvedShops = Model.ApprovedShops ?? ViewBag.ApprovedShops as List<ShopNext.Models.Shop> ?? new List<ShopNext.Models.Shop>();
 }
-<div class="tab-panel-container active" id="panel-overview">
+        <div class="tab-panel-container active" id="panel-overview" data-loaded="true">
             <!-- Admin Hero Header -->
             <div class="admin-header-card">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">

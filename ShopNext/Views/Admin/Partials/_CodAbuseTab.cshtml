@@ -1,0 +1,246 @@
+@model ShopNext.Models.AdminDashboardViewModel
+        <div class="tab-panel-container" id="panel-codabuse">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <h3 class="fw-bold text-white mb-0"><i class="fa-solid fa-hand-holding-dollar text-warning me-2"></i> COD Abuse &amp; Rejection Management</h3>
+                            <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30 rounded-pill px-3 py-1">POINT 49</span>
+                        </div>
+                        <p class="text-secondary small mb-0">Tracks high Cash-on-Delivery failure/rejection rates and enforces business policy (Prepaid-Only / COD Restrictions) without account blocking.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-outline-info btn-sm rounded-pill px-3 py-2" onclick="location.reload()">
+                            <i class="fa-solid fa-arrows-rotate me-1"></i> Refresh COD Telemetry
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4 Top KPI Cards for COD Abuse -->
+                <div class="row g-3 mb-4">
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-secondary small fw-semibold text-uppercase">Total COD Orders</div>
+                                    <div class="text-white fw-bold fs-3 mt-1">@Model.CodAbuseList.Sum(x => x.TotalCodOrders)</div>
+                                </div>
+                                <div class="p-3 rounded-3 bg-primary bg-opacity-15 text-primary fs-4">
+                                    <i class="fa-solid fa-truck-ramp-box"></i>
+                                </div>
+                            </div>
+                            <div class="text-secondary small mt-2"><i class="fa-solid fa-indian-rupee-sign me-1 text-info"></i> ₹@Model.CodAbuseList.Sum(x => x.TotalCodAmount).ToString("N0") Gross COD Value</div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="p-3 rounded-4" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-danger small fw-semibold text-uppercase">⚠ High COD Failure</div>
+                                    <div class="text-white fw-bold fs-3 mt-1">@Model.CodAbuseList.Count(x => x.CodRiskLevel == "High" || x.AlertBadge == "⚠ High COD Failure")</div>
+                                </div>
+                                <div class="p-3 rounded-3 bg-danger bg-opacity-20 text-danger fs-4">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                </div>
+                            </div>
+                            <div class="text-danger small mt-2"><i class="fa-solid fa-door-closed me-1"></i> Repeated Doorstep Refusals</div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="p-3 rounded-4" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-warning small fw-semibold text-uppercase">Prepaid-Only Enforced</div>
+                                    <div class="text-white fw-bold fs-3 mt-1">@Model.CodAbuseList.Count(x => x.IsCodDisabled || x.PolicyEnforcement.Contains("COD Restricted"))</div>
+                                </div>
+                                <div class="p-3 rounded-3 bg-warning bg-opacity-20 text-warning fs-4">
+                                    <i class="fa-solid fa-credit-card"></i>
+                                </div>
+                            </div>
+                            <div class="text-warning small mt-2"><i class="fa-solid fa-shield-check me-1"></i> COD Disabled / Online Orders OK</div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="p-3 rounded-4" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-success small fw-semibold text-uppercase">Healthy COD Customers</div>
+                                    <div class="text-white fw-bold fs-3 mt-1">@Model.CodAbuseList.Count(x => x.CodRiskLevel == "Low")</div>
+                                </div>
+                                <div class="p-3 rounded-3 bg-success bg-opacity-20 text-success fs-4">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                </div>
+                            </div>
+                            <div class="text-success small mt-2"><i class="fa-solid fa-percent me-1"></i> 85%+ Successful Delivery</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Business Policy Banner -->
+                <div class="p-3 mb-4 rounded-4" style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(245, 158, 11, 0.3);">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-3 rounded-3 bg-warning bg-opacity-20 text-warning fs-3 flex-shrink-0">
+                            <i class="fa-solid fa-scale-balanced"></i>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <h6 class="fw-bold text-white mb-0">💼 Business Policy: Prepaid-Only Mode for COD Abuse</h6>
+                                <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30 rounded-pill px-2.5 py-0.5" style="font-size: 0.72rem;">Operational Policy</span>
+                            </div>
+                            <p class="text-light text-opacity-80 small mb-0 mt-1">
+                                Agar kisi customer ka doorstep COD failure/rejection rate high ho (e.g. 15 COD orders me se 10 reject/cancel), toh system <strong>COD Risk: High</strong> alert raise karta hai.
+                                <span class="text-warning fw-semibold">Customer ka account full block nahi hota; customer prepaid payment (UPI / Card / NetBanking) se order continue kar sakta hai,</span> jabki COD temporarily unavailable ho jata hai.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters & Search Toolbar -->
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div class="btn-group bg-dark p-1 rounded-3 border border-secondary border-opacity-25" role="group">
+                        <button type="button" class="btn btn-sm btn-dark cod-filter-btn active" onclick="filterCodAbuseTable('all', this)">All Customers</button>
+                        <button type="button" class="btn btn-sm btn-dark cod-filter-btn" onclick="filterCodAbuseTable('high-risk', this)">
+                            <span class="text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i> ⚠ High COD Failure</span>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-dark cod-filter-btn" onclick="filterCodAbuseTable('restricted', this)">
+                            <span class="text-warning"><i class="fa-solid fa-credit-card me-1"></i> COD Restricted</span>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-dark cod-filter-btn" onclick="filterCodAbuseTable('medium-risk', this)">
+                            <span class="text-info"><i class="fa-solid fa-eye me-1"></i> Elevated (Medium)</span>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-dark cod-filter-btn" onclick="filterCodAbuseTable('healthy', this)">
+                            <span class="text-success"><i class="fa-solid fa-circle-check me-1"></i> Healthy COD</span>
+                        </button>
+                    </div>
+
+                    <div class="input-group" style="max-width: 340px;">
+                        <span class="input-group-text bg-dark border-secondary border-opacity-25 text-secondary"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" class="form-control bg-dark text-white border-secondary border-opacity-25" placeholder="Search Customer Name, Mobile..." onkeyup="searchCodAbuseTable(this.value)" id="codAbuseSearchInput" />
+                    </div>
+                </div>
+
+                <!-- COD Abuse Table -->
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0" id="codAbuseMainTable">
+                        <thead>
+                            <tr class="text-secondary small text-uppercase border-bottom border-secondary border-opacity-25">
+                                <th style="width: 25%;">Customer &amp; Contact</th>
+                                <th style="width: 25%;">COD Volume Breakdown (Orders / Deliv / Rejected)</th>
+                                <th style="width: 14%;">Rejection Rate</th>
+                                <th style="width: 14%;">COD Risk Level</th>
+                                <th style="width: 12%;">Policy Status</th>
+                                <th style="width: 10%; text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var cod in Model.CodAbuseList)
+                            {
+                                string filterClass = "all";
+                                if (cod.CodRiskLevel == "High" || cod.AlertBadge == "⚠ High COD Failure") { filterClass += " high-risk"; }
+                                if (cod.IsCodDisabled || cod.PolicyEnforcement.Contains("COD Restricted")) { filterClass += " restricted"; }
+                                if (cod.CodRiskLevel == "Medium") { filterClass += " medium-risk"; }
+                                if (cod.CodRiskLevel == "Low") { filterClass += " healthy"; }
+
+                                <tr class="cod-abuse-row @filterClass"
+                                    data-customer-id="@cod.CustomerId"
+                                    data-name="@cod.CustomerName"
+                                    data-phone="@cod.PhoneNumber"
+                                    data-email="@cod.Email"
+                                    data-risk="@cod.CodRiskLevel"
+                                    data-status="@cod.PolicyEnforcement"
+                                    id="cod-row-@cod.CustomerId">
+                                    <td>
+                                        <div class="d-flex align-items-start gap-2.5">
+                                            <div class="p-2.5 rounded-3 bg-secondary bg-opacity-20 text-white flex-shrink-0 mt-0.5">
+                                                <i class="fa-solid fa-user @(cod.CodRiskLevel == "High" ? "text-danger" : (cod.CodRiskLevel == "Medium" ? "text-warning" : "text-success"))"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-white fw-bold mb-0.5 cust-name">@cod.CustomerName</div>
+                                                <div class="text-secondary small font-monospace">@cod.PhoneNumber &bull; @cod.City</div>
+                                                <div class="text-secondary small text-truncate" style="max-width: 240px;">@cod.Address</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <div class="d-flex justify-content-between align-items-center small mb-1">
+                                                <span class="text-white fw-bold font-monospace">@cod.TotalCodOrders COD Orders</span>
+                                                <span class="text-secondary"><strong class="text-success">@cod.CodDelivered Deliv</strong> &bull; <strong class="text-danger">@cod.CodRejected Rejected</strong></span>
+                                            </div>
+                                            <!-- Progress Bar -->
+                                            <div class="progress" style="height: 7px; background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden;">
+                                                @{
+                                                    decimal dPct = cod.TotalCodOrders > 0 ? (decimal)cod.CodDelivered / cod.TotalCodOrders * 100m : 0m;
+                                                    decimal rPct = cod.TotalCodOrders > 0 ? (decimal)cod.CodRejected / cod.TotalCodOrders * 100m : 0m;
+                                                }
+                                                <div class="progress-bar bg-success" style="width: @dPct%" title="Delivered: @cod.CodDelivered"></div>
+                                                <div class="progress-bar bg-danger" style="width: @rPct%" title="Rejected: @cod.CodRejected (@cod.CodRejectionRate%)"></div>
+                                            </div>
+                                            <div class="d-flex justify-content-between text-secondary small mt-1 font-monospace" style="font-size: 0.73rem;">
+                                                <span class="text-success">Deliv: @cod.CodDeliveryRate%</span>
+                                                <span class="text-danger">Rejection: @cod.CodRejectionRate%</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold fs-6 font-monospace @(cod.CodRejectionRate >= 40 ? "text-danger" : (cod.CodRejectionRate >= 20 ? "text-warning" : "text-success"))">
+                                            @cod.CodRejectionRate%
+                                        </span>
+                                        <div class="text-secondary small font-monospace" style="font-size: 0.72rem;">₹@cod.TotalCodAmount.ToString("N0") COD gross</div>
+                                    </td>
+                                    <td>
+                                        @if (cod.CodRiskLevel == "High" || cod.AlertBadge == "⚠ High COD Failure")
+                                        {
+                                            <span class="badge bg-danger text-white border border-danger px-2.5 py-1.5 rounded-pill fw-bold">
+                                                <i class="fa-solid fa-triangle-exclamation me-1"></i> COD Risk: High
+                                            </span>
+                                            <div class="text-danger small mt-1" style="font-size: 0.72rem;">@cod.AlertBadge</div>
+                                        }
+                                        else if (cod.CodRiskLevel == "Medium")
+                                        {
+                                            <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-40 px-2.5 py-1.5 rounded-pill fw-bold">
+                                                <i class="fa-solid fa-eye me-1"></i> COD Risk: Medium
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30 px-2.5 py-1.5 rounded-pill fw-bold">
+                                                <i class="fa-solid fa-circle-check me-1"></i> COD Risk: Safe
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div id="cod-status-container-@cod.CustomerId">
+                                            @if (cod.IsCodDisabled || cod.PolicyEnforcement.Contains("COD Restricted"))
+                                            {
+                                                <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-40 px-2.5 py-1.5 rounded-pill fw-bold">
+                                                    <i class="fa-solid fa-credit-card me-1"></i> Prepaid Only
+                                                </span>
+                                            }
+                                            else if (cod.PolicyEnforcement == "Warning Issued")
+                                            {
+                                                <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 px-2.5 py-1.5 rounded-pill fw-bold">
+                                                    <i class="fa-solid fa-triangle-exclamation me-1"></i> Warning Issued
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30 px-2.5 py-1.5 rounded-pill fw-bold">
+                                                    <i class="fa-solid fa-circle-check me-1"></i> COD Allowed
+                                                </span>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <button type="button" class="btn btn-outline-warning btn-sm rounded-pill px-3 py-1.5 fw-semibold"
+                                                onclick="openCodAbuseModal(@cod.CustomerId)">
+                                            <i class="fa-solid fa-hand-holding-dollar me-1"></i> Manage COD
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>

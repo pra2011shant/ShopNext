@@ -1,0 +1,231 @@
+@model ShopNext.Models.AdminDashboardViewModel
+        <div class="tab-panel-container" id="panel-smartrisk">
+            <div class="glass-card mb-4">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 pb-3 border-bottom border-secondary border-opacity-25">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1.5 flex-wrap">
+                            <span class="badge px-3 py-1 rounded-pill fw-bold" style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35);">
+                                <i class="fa-solid fa-triangle-exclamation me-1"></i> RISK MONITORING &bull; REAL-TIME INTELLIGENCE
+                            </span>
+                            <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30 px-3 py-1 rounded-pill small">
+                                <i class="fa-solid fa-shield-halved me-1"></i> Active AI &amp; Telemetry Engines
+                            </span>
+                        </div>
+                        <h2 class="fw-bold text-white mb-1"><i class="fa-solid fa-brain text-warning me-2"></i> Smart Risk Dashboard</h2>
+                        <p class="text-secondary small mb-0">Centralized forensic risk matrix across return abuse, pin-code hotspots, swap disputes, and operational friction.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <button class="btn btn-outline-warning btn-sm rounded-pill px-3 shadow-sm fw-bold" onclick="location.reload()">
+                            <i class="fa-solid fa-rotate me-1"></i> Refresh Risk Matrix
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 7-PILLAR RISK MONITORING KPI GRID -->
+                <h5 class="fw-bold text-white mb-3 d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-danger"></i>
+                    <span>&#9888; RISK MONITORING METRICS (CLICK TO INVESTIGATE)</span>
+                </h5>
+
+                <div class="row g-3 mb-4">
+                    <!-- 1. High Return Customers (12) -->
+                    <div class="col-xl-3 col-md-6">
+                        <div class="p-3.5 rounded-4 h-100 cursor-pointer border border-secondary border-opacity-30" style="background: rgba(15, 23, 42, 0.7); cursor: pointer;" onclick="filterRiskDrillDown('highreturncustomers')">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="p-2.5 rounded-3 bg-danger bg-opacity-20 text-danger fs-5">
+                                    <i class="fa-solid fa-user-xmark"></i>
+                                </div>
+                                <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2 py-0.5 rounded-pill small">Investigate <i class="fa-solid fa-arrow-right ms-0.5"></i></span>
+                            </div>
+                            <div class="fs-2 fw-extrabold text-white font-monospace mb-1" id="riskKpiHighReturnCust">@Model.SmartRiskDashboard.HighReturnCustomersCount</div>
+                            <div class="fw-bold text-light small mb-0.5">High Return Customers</div>
+                            <small class="text-secondary" style="font-size: 11px;">Return rate &gt; 30% or repeat fraud alerts</small>
+                        </div>
+                    </div>
+
+                    <!-- 2. High Return Areas (5) -->
+                    <div class="col-xl-3 col-md-6">
+                        <div class="p-3.5 rounded-4 h-100 cursor-pointer border border-secondary border-opacity-30" style="background: rgba(15, 23, 42, 0.7); cursor: pointer;" onclick="filterRiskDrillDown('highreturnareas')">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="p-2.5 rounded-3 bg-warning bg-opacity-20 text-warning fs-5">
+                                    <i class="fa-solid fa-map-location-dot"></i>
+                                </div>
+                                <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-30 px-2 py-0.5 rounded-pill small">Investigate <i class="fa-solid fa-arrow-right ms-0.5"></i></span>
+                            </div>
+                            <div class="fs-2 fw-extrabold text-white font-monospace mb-1" id="riskKpiHighReturnAreas">@Model.SmartRiskDashboard.HighReturnAreasCount</div>
+                            <div class="fw-bold text-light small mb-0.5">High Return Areas</div>
+                            <small class="text-secondary" style="font-size: 11px;">High risk / high cancellation pincodes</small>
+                        </div>
+                    </div>
+
+                    <!-- 3. Wrong Product Disputes (8) -->
+                    <div class="col-xl-3 col-md-6">
+                        <div class="p-3.5 rounded-4 h-100 cursor-pointer border border-secondary border-opacity-30" style="background: rgba(15, 23, 42, 0.7); cursor: pointer;" onclick="filterRiskDrillDown('wrongproductdisputes')">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="p-2.5 rounded-3 bg-info bg-opacity-20 text-info fs-5">
+                                    <i class="fa-solid fa-shuffle"></i>
+                                </div>
+                                <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-30 px-2 py-0.5 rounded-pill small">Investigate <i class="fa-solid fa-arrow-right ms-0.5"></i></span>
+                            </div>
+                            <div class="fs-2 fw-extrabold text-white font-monospace mb-1" id="riskKpiWrongProduct">@Model.SmartRiskDashboard.WrongProductDisputesCount</div>
+                            <div class="fw-bold text-light small mb-0.5">Wrong Product Disputes</div>
+                            <small class="text-secondary" style="font-size: 11px;">Unboxing &amp; packaging discrepancy claims</small>
+                        </div>
+                    </div>
+
+                    <!-- 4. Rider Complaints (6) -->
+                    <div class="col-xl-3 col-md-6">
+                        <div class="p-3.5 rounded-4 h-100 cursor-pointer border border-secondary border-opacity-30" style="background: rgba(15, 23, 42, 0.7); cursor: pointer;" onclick="filterRiskDrillDown('ridercomplaints')">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="p-2.5 rounded-3 bg-primary bg-opacity-20 text-primary fs-5">
+                                    <i class="fa-solid fa-motorcycle"></i>
+                                </div>
+                                <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-30 px-2 py-0.5 rounded-pill small">Investigate <i class="fa-solid fa-arrow-right ms-0.5"></i></span>
+                            </div>
+                            <div class="fs-2 fw-extrabold text-white font-monospace mb-1" id="riskKpiRiderComplaints">@Model.SmartRiskDashboard.RiderComplaintsCount</div>
+                            <div class="fw-bold text-light small mb-0.5">Rider Complaints</div>
+                            <small class="text-secondary" style="font-size: 11px;">Failed pickup, non-visit, or OTP disputes</small>
+                        </div>
+                    </div>
+
+                    <!-- 5. Seller Complaints (4) -->
+                    <div class="col-xl-4 col-md-6">
+                        <div class="p-3.5 rounded-4 h-100 cursor-pointer border border-secondary border-opacity-30" style="background: rgba(15, 23, 42, 0.7); cursor: pointer;" onclick="filterRiskDrillDown('sellercomplaints')">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="p-2.5 rounded-3 bg-purple bg-opacity-20 text-purple fs-5" style="color: #c084fc;">
+                                    <i class="fa-solid fa-store"></i>
+                                </div>
+                                <span class="badge bg-purple bg-opacity-25 text-purple border border-purple border-opacity-40 px-2 py-0.5 rounded-pill small" style="color: #c084fc !important;">Investigate <i class="fa-solid fa-arrow-right ms-0.5"></i></span>
+                            </div>
+                            <div class="fs-2 fw-extrabold text-white font-monospace mb-1" id="riskKpiSellerComplaints">@Model.SmartRiskDashboard.SellerComplaintsCount</div>
+                            <div class="fw-bold text-light small mb-0.5">Seller Complaints</div>
+                            <small class="text-secondary" style="font-size: 11px;">SPF claims &amp; outbound verification issues</small>
+                        </div>
+                    </div>
+
+                    <!-- 6. COD Abuse (10) -->
+                    <div class="col-xl-4 col-md-6">
+                        <div class="p-3.5 rounded-4 h-100 cursor-pointer border border-secondary border-opacity-30" style="background: rgba(15, 23, 42, 0.7); cursor: pointer;" onclick="filterRiskDrillDown('codabuse')">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="p-2.5 rounded-3 bg-danger bg-opacity-20 text-danger fs-5">
+                                    <i class="fa-solid fa-money-bill-transfer"></i>
+                                </div>
+                                <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2 py-0.5 rounded-pill small">Investigate <i class="fa-solid fa-arrow-right ms-0.5"></i></span>
+                            </div>
+                            <div class="fs-2 fw-extrabold text-white font-monospace mb-1" id="riskKpiCodAbuse">@Model.SmartRiskDashboard.CodAbuseCount</div>
+                            <div class="fw-bold text-light small mb-0.5">COD Abuse</div>
+                            <small class="text-secondary" style="font-size: 11px;">Repeated doorstep refusal &amp; blocked COD</small>
+                        </div>
+                    </div>
+
+                    <!-- 7. Open Return Disputes (7) -->
+                    <div class="col-xl-4 col-md-12">
+                        <div class="p-3.5 rounded-4 h-100 cursor-pointer border border-secondary border-opacity-30" style="background: rgba(15, 23, 42, 0.7); cursor: pointer;" onclick="filterRiskDrillDown('openreturndisputes')">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="p-2.5 rounded-3 bg-success bg-opacity-20 text-success fs-5">
+                                    <i class="fa-solid fa-scale-balanced"></i>
+                                </div>
+                                <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-2 py-0.5 rounded-pill small">Investigate <i class="fa-solid fa-arrow-right ms-0.5"></i></span>
+                            </div>
+                            <div class="fs-2 fw-extrabold text-white font-monospace mb-1" id="riskKpiOpenReturns">@Model.SmartRiskDashboard.OpenReturnDisputesCount</div>
+                            <div class="fw-bold text-light small mb-0.5">Open Return Disputes</div>
+                            <small class="text-secondary" style="font-size: 11px;">Active returns under verification &amp; dispute</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🎯 FINAL CUSTOMER PROTECTION & REVERSE LOGISTICS RESILIENCE PIPELINE -->
+                <div class="p-4 rounded-4 border border-secondary border-opacity-25 mb-2" style="background: rgba(15, 23, 42, 0.85); box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2 pb-2 border-bottom border-secondary border-opacity-25">
+                        <div>
+                            <h5 class="fw-bold text-warning mb-0"><i class="fa-solid fa-bullseye text-warning me-2"></i> 🎯 Final Customer Protection Flow</h5>
+                            <small class="text-secondary">Automated resilience lifecycle for pickup failures and guaranteed customer escalation.</small>
+                        </div>
+                        <span class="badge bg-info bg-opacity-20 text-info border border-info border-opacity-30 px-3 py-1 rounded-pill small font-monospace">
+                            Auto-Retry State Machine
+                        </span>
+                    </div>
+
+                    <!-- Flow Diagram Pipeline -->
+                    <div class="row g-2 text-center align-items-center mb-3 py-2">
+                        <div class="col">
+                            <div class="p-2.5 rounded-3 h-100" style="background: rgba(30, 41, 59, 0.6); border: 1px solid #38bdf8;">
+                                <div class="small fw-bold text-info"><i class="fa-solid fa-box-archive me-1"></i> Return Requested</div>
+                                <small class="text-secondary" style="font-size: 10px;">Grievance filed</small>
+                            </div>
+                        </div>
+                        <div class="col-auto text-secondary"><i class="fa-solid fa-arrow-right"></i></div>
+                        <div class="col">
+                            <div class="p-2.5 rounded-3 h-100" style="background: rgba(30, 41, 59, 0.6); border: 1px solid #818cf8;">
+                                <div class="small fw-bold text-primary"><i class="fa-solid fa-motorcycle me-1"></i> Rider Assigned</div>
+                                <small class="text-secondary" style="font-size: 10px;">Dispatch partner</small>
+                            </div>
+                        </div>
+                        <div class="col-auto text-secondary"><i class="fa-solid fa-arrow-right"></i></div>
+                        <div class="col">
+                            <div class="p-2.5 rounded-3 h-100" style="background: rgba(30, 41, 59, 0.6); border: 1px solid #f59e0b;">
+                                <div class="small fw-bold text-warning"><i class="fa-solid fa-triangle-exclamation me-1"></i> Pickup Failed</div>
+                                <small class="text-secondary" style="font-size: 10px;">Partner failure</small>
+                            </div>
+                        </div>
+                        <div class="col-auto text-secondary"><i class="fa-solid fa-arrow-right"></i></div>
+                        <div class="col">
+                            <div class="p-2.5 rounded-3 h-100" style="background: rgba(30, 41, 59, 0.6); border: 1px solid #f87171;">
+                                <div class="small fw-bold text-danger"><i class="fa-solid fa-flag me-1"></i> Customer Reports</div>
+                                <small class="text-secondary" style="font-size: 10px;">Non-visit logged</small>
+                            </div>
+                        </div>
+                        <div class="col-auto text-secondary"><i class="fa-solid fa-arrow-right"></i></div>
+                        <div class="col">
+                            <div class="p-2.5 rounded-3 h-100" style="background: rgba(30, 41, 59, 0.6); border: 1px solid #22c55e;">
+                                <div class="small fw-bold text-success"><i class="fa-solid fa-rotate me-1"></i> Auto Re-Pickup</div>
+                                <small class="text-secondary" style="font-size: 10px;">Attempt #2 / #3</small>
+                            </div>
+                        </div>
+                        <div class="col-auto text-secondary"><i class="fa-solid fa-arrow-right"></i></div>
+                        <div class="col">
+                            <div class="p-2.5 rounded-3 h-100" style="background: rgba(30, 41, 59, 0.6); border: 1px solid #c084fc;">
+                                <div class="small fw-bold" style="color: #c084fc;"><i class="fa-solid fa-question me-1"></i> Still Failed?</div>
+                                <small class="text-secondary" style="font-size: 10px;">Strike 3 threshold</small>
+                            </div>
+                        </div>
+                        <div class="col-auto text-secondary"><i class="fa-solid fa-arrow-right"></i></div>
+                        <div class="col">
+                            <div class="p-2.5 rounded-3 h-100" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444;">
+                                <div class="small fw-bold text-danger"><i class="fa-solid fa-gavel me-1"></i> Admin Escalation</div>
+                                <small class="text-light" style="font-size: 10px;">Direct Settlement</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4-PILLAR ECOSYSTEM PROTECTION PRINCIPLE -->
+                    <div class="row g-3 pt-2">
+                        <div class="col-md-3">
+                            <div class="p-3 rounded-3 h-100" style="background: rgba(30, 41, 59, 0.5); border-left: 3px solid #38bdf8;">
+                                <h6 class="fw-bold text-info mb-1"><i class="fa-solid fa-user-shield me-1"></i> Customer Protection</h6>
+                                <p class="text-secondary small mb-0">Genuine grievances solved promptly, transparent unboxing video recognition, zero penalty for logistics delays.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 rounded-3 h-100" style="background: rgba(30, 41, 59, 0.5); border-left: 3px solid #f59e0b;">
+                                <h6 class="fw-bold text-warning mb-1"><i class="fa-solid fa-store me-1"></i> Seller Protection (SPF)</h6>
+                                <p class="text-secondary small mb-0">Immunity against deliberate product swapping, mandatory barcode/serial scan, payout compensation on verified transit damage.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 rounded-3 h-100" style="background: rgba(30, 41, 59, 0.5); border-left: 3px solid #818cf8;">
+                                <h6 class="fw-bold text-primary mb-1"><i class="fa-solid fa-motorcycle me-1"></i> Rider Protection</h6>
+                                <p class="text-secondary small mb-0">GPS geo-fence validation, OTP handover proof, protection against false doorstep non-attendance allegations.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 rounded-3 h-100" style="background: rgba(30, 41, 59, 0.5); border-left: 3px solid #22c55e;">
+                                <h6 class="fw-bold text-success mb-1"><i class="fa-solid fa-scale-balanced me-1"></i> Evidence Control</h6>
+                                <p class="text-secondary small mb-0">No one is presumed automatically right. All dispute judgments backed by tamper-evident timestamps &amp; immutable audit logs.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>

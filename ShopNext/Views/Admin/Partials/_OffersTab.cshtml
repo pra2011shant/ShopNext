@@ -1,0 +1,147 @@
+@model ShopNext.Models.AdminDashboardViewModel
+        <div class="tab-panel-container" id="panel-offers">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30 px-2.5 py-1 rounded-pill small fw-bold">
+                                <i class="fa-solid fa-fire me-1"></i> TODAY'S DEALS &bull; PROMOTIONS
+                            </span>
+                        </div>
+                        <h3 class="fw-bold text-white mb-1"><i class="fa-solid fa-bullhorn text-warning me-2"></i> Promotional Offers Management</h3>
+                        <p class="text-secondary small mb-0">Manage special pricing, time-limited flash deals, and featured homepage discount banners.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-warning bg-opacity-20 text-warning px-3 py-2 rounded-pill font-monospace" id="offersCountBadge">
+                            @Model.OffersList.Count Offers Live
+                        </span>
+                        <button type="button" class="btn btn-warning btn-sm px-3.5 py-2 fw-bold rounded-3 shadow-sm text-dark" onclick="openAddOfferModal()">
+                            <i class="fa-solid fa-plus me-1.5"></i> Add Offer
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Point 41: Offers Management Table (Product, MRP, Selling Price, Discount, Start Date, End Date, Status, Actions) -->
+                <div class="table-responsive">
+                    <table class="table approved-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>MRP</th>
+                                <th>Selling Price</th>
+                                <th>Discount</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th style="text-align: center;">Status</th>
+                                <th style="text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="offersTableBody">
+                            @if (!Model.OffersList.Any())
+                            {
+                                <tr>
+                                    <td colspan="8" class="text-center py-4 text-secondary">
+                                        <i class="fa-solid fa-tags fs-3 mb-2 d-block opacity-50"></i>
+                                        No promotional offers created yet. Click "Add Offer" to create your first flash deal.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var off in Model.OffersList)
+                                {
+                                    <tr id="offer-row-@off.Id">
+                                        <!-- Product -->
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2.5">
+                                                <div class="rounded-3 overflow-hidden border border-secondary border-opacity-25" style="width: 44px; height: 44px; flex-shrink: 0; background: #0b1324;">
+                                                    <img src="@off.ProductImage" class="w-100 h-100 object-fit-cover" id="offer-img-@off.Id" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100';" />
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold text-white" id="offer-title-@off.Id">@off.ProductName</div>
+                                                    <div class="d-flex gap-1.5 align-items-center mt-0.5">
+                                                        <span class="badge bg-secondary bg-opacity-30 text-light" style="font-size: 0.7rem;" id="offer-cat-@off.Id">@off.Category</span>
+                                                        <small class="text-secondary font-monospace" style="font-size: 0.72rem;">@off.ShopName</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <!-- MRP -->
+                                        <td>
+                                            <div class="font-monospace text-secondary text-decoration-line-through" id="offer-mrp-@off.Id">₹@off.Mrp.ToString("N0")</div>
+                                        </td>
+
+                                        <!-- Selling Price -->
+                                        <td>
+                                            <strong class="font-monospace text-success fs-6" id="offer-price-@off.Id">₹@off.SellingPrice.ToString("N0")</strong>
+                                        </td>
+
+                                        <!-- Discount -->
+                                        <td>
+                                            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill font-monospace fw-bold" id="offer-disc-@off.Id">
+                                                @off.DiscountFormatted
+                                            </span>
+                                        </td>
+
+                                        <!-- Start Date -->
+                                        <td>
+                                            <div class="text-secondary small font-monospace" id="offer-start-@off.Id">
+                                                <i class="fa-regular fa-calendar-check text-success me-1"></i> @off.StartDate
+                                            </div>
+                                        </td>
+
+                                        <!-- End Date -->
+                                        <td>
+                                            <div class="text-secondary small font-monospace" id="offer-end-@off.Id">
+                                                <i class="fa-regular fa-calendar-xmark text-danger me-1"></i> @off.EndDate
+                                            </div>
+                                        </td>
+
+                                        <!-- Status -->
+                                        <td style="text-align: center;" id="offer-status-cell-@off.Id">
+                                            @if (off.Status == "Active")
+                                            {
+                                                <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                    <i class="fa-solid fa-circle-check me-1"></i> Active
+                                                </span>
+                                            }
+                                            else if (off.Status == "Expired")
+                                            {
+                                                <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                    <i class="fa-solid fa-clock me-1"></i> Expired
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary bg-opacity-30 text-light px-2.5 py-1 rounded-pill">
+                                                    Inactive
+                                                </span>
+                                            }
+                                        </td>
+
+                                        <!-- Actions -->
+                                        <td style="text-align: center;">
+                                            <div class="d-inline-flex gap-1.5 flex-wrap justify-content-center">
+                                                <!-- [Edit] -->
+                                                <button type="button" class="btn btn-outline-warning btn-sm px-2 py-1 rounded-3" onclick="openEditOfferModal(@off.Id)" title="Edit Offer">
+                                                    <i class="fa-solid fa-pen-to-square"></i>
+                                                </button>
+                                                <!-- [Toggle Status] -->
+                                                <button type="button" class="btn btn-outline-info btn-sm px-2 py-1 rounded-3" onclick="toggleOfferStatus(@off.Id)" title="Toggle Active/Inactive">
+                                                    <i class="fa-solid fa-power-off"></i>
+                                                </button>
+                                                <!-- [Delete] -->
+                                                <button type="button" class="btn btn-outline-danger btn-sm px-2 py-1 rounded-3" onclick="openDeleteOfferModal(@off.Id, '@off.ProductName.Replace("'", "\\'")')" title="Delete Offer">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>

@@ -1,0 +1,432 @@
+@model ShopNext.Models.AdminDashboardViewModel
+        <div class="tab-panel-container" id="panel-flashsales">
+            <!-- Header Banner -->
+            <div class="glass-card mb-4" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(245, 158, 11, 0.12) 50%, rgba(15, 23, 42, 0.8) 100%); border-color: rgba(245, 158, 11, 0.3);">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold font-monospace fs-6">
+                                <i class="fa-solid fa-bolt me-1 fa-beat text-danger"></i> ⚡ FLASH SALE ENGINE
+                            </span>
+                            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill small">
+                                Point 52: High Urgency Limited Stock
+                            </span>
+                        </div>
+                        <h2 class="fw-bold text-white mb-1">Flash Deals & Real-Time Stock Allocation</h2>
+                        <p class="text-secondary small mb-0">High-velocity lightning sales with ticking countdown timers, allocated unit caps, and automatic <strong>SOLD OUT</strong> stock triggers.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <button type="button" class="btn btn-outline-warning rounded-pill px-3 py-2 btn-sm" onclick="syncFlashSaleSchedulesManually(false)">
+                            <i class="fa-solid fa-arrows-rotate me-1"></i> Sync Deal Clocks
+                        </button>
+                        <button type="button" class="btn btn-warning text-dark fw-bold rounded-pill px-4 py-2" onclick="openCreateFlashSaleModal()">
+                            <i class="fa-solid fa-plus me-1"></i> Create Flash Sale
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top 4 KPI Metrics -->
+            @{
+                var flashDeals = Model.FlashSalesList ?? new List<ShopNext.Models.AdminFlashSaleDto>();
+                var activeFlashDeals = flashDeals.Where(f => f.IsActive && !f.IsSoldOut && !f.IsExpired).ToList();
+                var soldOutDeals = flashDeals.Where(f => f.IsSoldOut).ToList();
+                int totalUnitsAllocated = flashDeals.Sum(f => f.TotalStockUnits);
+                int totalUnitsClaimed = flashDeals.Sum(f => f.ClaimedUnits);
+                decimal totalFlashGmv = flashDeals.Sum(f => f.FlashPrice * f.ClaimedUnits);
+                double overallClaimVelocity = totalUnitsAllocated > 0 ? ((double)totalUnitsClaimed / totalUnitsAllocated) * 100 : 0;
+            }
+            <div class="row g-3 mb-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="glass-card p-3.5 h-100 border-start border-warning border-4">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <small class="text-secondary fw-semibold text-uppercase">Live Flash Deals</small>
+                                <h3 class="fw-bold text-white mt-1 mb-0 font-monospace">@activeFlashDeals.Count <span class="fs-6 text-secondary fw-normal">/ @flashDeals.Count Total</span></h3>
+                                <small class="text-warning"><i class="fa-solid fa-bolt me-1"></i> Real-Time Active Deals</small>
+                            </div>
+                            <div class="p-2.5 rounded-3 bg-warning bg-opacity-15 text-warning fs-4">
+                                <i class="fa-solid fa-bolt"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="glass-card p-3.5 h-100 border-start border-danger border-4">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <small class="text-secondary fw-semibold text-uppercase">Stock Claim Velocity</small>
+                                <h3 class="fw-bold text-white mt-1 mb-0 font-monospace">@totalUnitsClaimed <span class="fs-6 text-secondary fw-normal">/ @totalUnitsAllocated Units</span></h3>
+                                <small class="text-danger fw-semibold"><i class="fa-solid fa-fire me-1"></i> @overallClaimVelocity.ToString("F1")% Units Claimed</small>
+                            </div>
+                            <div class="p-2.5 rounded-3 bg-danger bg-opacity-15 text-danger fs-4">
+                                <i class="fa-solid fa-cubes-stacked"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="glass-card p-3.5 h-100 border-start border-secondary border-4">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <small class="text-secondary fw-semibold text-uppercase">Sold Out Deals</small>
+                                <h3 class="fw-bold text-white mt-1 mb-0 font-monospace">@soldOutDeals.Count</h3>
+                                <small class="text-secondary"><i class="fa-solid fa-ban me-1 text-danger"></i> Stock Exhausted (Sold Out)</small>
+                            </div>
+                            <div class="p-2.5 rounded-3 bg-danger bg-opacity-15 text-danger fs-4">
+                                <i class="fa-solid fa-tags"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="glass-card p-3.5 h-100 border-start border-success border-4">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <small class="text-secondary fw-semibold text-uppercase">Flash GMV Generated</small>
+                                <h3 class="fw-bold text-success mt-1 mb-0 font-monospace">₹@((totalFlashGmv / 100000).ToString("F2")) L</h3>
+                                <small class="text-success"><i class="fa-solid fa-arrow-trend-up me-1"></i> Lightning Sale Turnover</small>
+                            </div>
+                            <div class="p-2.5 rounded-3 bg-success bg-opacity-15 text-success fs-4">
+                                <i class="fa-solid fa-wallet"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flash Deal Showcase Grid (Highlighting User Prompt Example) -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-white mb-0 d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-fire text-danger"></i> Live Flash Deal Showcase
+                        <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 rounded-pill fs-7">Real-Time Ticking Clocks</span>
+                    </h5>
+                    <small class="text-secondary">Simulate live customer purchases or restock units dynamically</small>
+                </div>
+                <div class="row g-3" id="flashShowcaseCardsGrid">
+                    @foreach (var deal in flashDeals)
+                    {
+                        var isSoldOut = deal.IsSoldOut || deal.RemainingUnits <= 0;
+                        var isUrgent = deal.RemainingUnits > 0 && deal.RemainingUnits <= 5;
+                        var cardBorder = isSoldOut ? "border-danger border-opacity-30" : "border-warning border-opacity-40";
+                        var bgGlow = isSoldOut ? "background: rgba(15, 23, 42, 0.95);" : "background: linear-gradient(145deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.7) 100%);";
+
+                        <div class="col-xl-3 col-lg-6 col-md-6" id="flash-card-@deal.Id">
+                            <div class="glass-card p-3.5 h-100 position-relative border @cardBorder" style="@bgGlow">
+                                <!-- Top Bar -->
+                                <div class="d-flex justify-content-between align-items-center mb-2.5">
+                                    <span class="badge bg-warning text-dark fw-bold font-monospace px-2.5 py-1 rounded-pill">
+                                        <i class="fa-solid fa-bolt me-1 text-danger"></i> ⚡ FLASH SALE
+                                    </span>
+                                    <span class="badge bg-danger text-white fw-bold px-2 py-0.5 rounded-pill font-monospace small">
+                                        @deal.DiscountPercentage% OFF
+                                    </span>
+                                </div>
+
+                                <!-- Product Image & Titles -->
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div class="rounded-3 overflow-hidden border border-secondary border-opacity-30 position-relative" style="width: 64px; height: 64px; flex-shrink: 0; background: #0f172a;">
+                                        <img src="@deal.ProductImageUrl" class="w-100 h-100 object-fit-cover" alt="@deal.ProductName" onerror="this.src='https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300';" />
+                                        @if (isSoldOut)
+                                        {
+                                            <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-black bg-opacity-80">
+                                                <span class="badge bg-danger text-white fw-bold" style="font-size: 0.65rem;">SOLD OUT</span>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="flex-grow-1 overflow-hidden">
+                                        <h6 class="fw-bold text-white mb-0 text-truncate" title="@deal.Title">@deal.Title</h6>
+                                        <small class="text-secondary d-block text-truncate">@deal.ProductName</small>
+                                        <span class="badge bg-secondary bg-opacity-30 text-light py-0.5 px-2 rounded-pill mt-1" style="font-size: 0.68rem;">
+                                            @deal.Category
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Pricing Box: ₹40,000 → ₹32,999 -->
+                                <div class="p-2.5 rounded-3 mb-3 text-center border border-secondary border-opacity-20" style="background: rgba(0, 0, 0, 0.35);">
+                                    <div class="d-flex align-items-center justify-content-center gap-2">
+                                        <span class="text-secondary text-decoration-line-through font-monospace">₹@deal.OriginalPrice.ToString("N0")</span>
+                                        <span class="text-warning fs-5 fw-bold font-monospace">→ ₹@deal.FlashPrice.ToString("N0")</span>
+                                    </div>
+                                </div>
+
+                                <!-- Stock Units Info: Only 50 Units / Claimed Progress -->
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-1 small">
+                                        <span class="text-secondary fw-semibold">
+                                            <i class="fa-solid fa-boxes-stacked me-1 text-info"></i> Total: <strong>@deal.TotalStockUnits Units</strong>
+                                        </span>
+                                        @if (isSoldOut)
+                                        {
+                                            <span class="badge bg-danger text-white fw-bold px-2 py-0.5 rounded-pill font-monospace" id="flash-card-stock-badge-@deal.Id">
+                                                Stock khatam: SOLD OUT
+                                            </span>
+                                        }
+                                        else if (deal.RemainingUnits <= 5)
+                                        {
+                                            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 fw-bold px-2 py-0.5 rounded-pill font-monospace" id="flash-card-stock-badge-@deal.Id">
+                                                Only @deal.RemainingUnits Units Left!
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-30 fw-bold px-2 py-0.5 rounded-pill font-monospace" id="flash-card-stock-badge-@deal.Id">
+                                                @deal.RemainingUnits Units Left
+                                            </span>
+                                        }
+                                    </div>
+                                    <div class="progress" style="height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 6px;">
+                                        <div class="progress-bar @(isSoldOut ? "bg-danger" : (deal.ClaimPercentage > 85 ? "bg-danger" : "bg-warning"))" 
+                                             role="progressbar" 
+                                             id="flash-card-progress-@deal.Id"
+                                             style="width: @deal.ClaimPercentage%;" 
+                                             aria-valuenow="@deal.ClaimPercentage" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100"></div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mt-1 text-secondary" style="font-size: 0.72rem;">
+                                        <span id="flash-card-claimed-txt-@deal.Id">Claimed: @deal.ClaimedUnits / @deal.TotalStockUnits</span>
+                                        <span id="flash-card-claimpct-@deal.Id">@deal.ClaimPercentage.ToString("F0")% Claimed</span>
+                                    </div>
+                                </div>
+
+                                <!-- Countdown Timer: Ends in: 00:25:10 -->
+                                <div class="p-2.5 rounded-3 mb-3 text-center border @(isSoldOut ? "border-danger border-opacity-30 bg-danger bg-opacity-10" : "border-warning border-opacity-30 bg-warning bg-opacity-10")">
+                                    @if (isSoldOut)
+                                    {
+                                        <div class="text-danger fw-bold font-monospace fs-6">
+                                            <i class="fa-solid fa-ban me-1"></i> SOLD OUT
+                                        </div>
+                                        <small class="text-secondary" style="font-size: 0.72rem;">Deal stock fully exhausted</small>
+                                    }
+                                    else
+                                    {
+                                        <div class="text-secondary small fw-semibold mb-1">
+                                            <i class="fa-regular fa-clock me-1 text-warning"></i> Ends in:
+                                        </div>
+                                        <div class="text-warning fw-bold font-monospace fs-5 flash-timer-display" 
+                                             id="flash-timer-@deal.Id" 
+                                             data-deal-id="@deal.Id" 
+                                             data-remaining-seconds="@deal.RemainingSeconds">
+                                            @deal.FormattedRemainingTime
+                                        </div>
+                                    }
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="d-grid gap-2">
+                                    @if (isSoldOut)
+                                    {
+                                        <button type="button" class="btn btn-danger disabled w-100 fw-bold py-1.5 rounded-pill" id="btn-flash-claim-@deal.Id" disabled>
+                                            <i class="fa-solid fa-ban me-1"></i> SOLD OUT
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-warning text-dark fw-bold w-100 py-1.5 rounded-pill" id="btn-flash-claim-@deal.Id" onclick="simulateClaimFlashDeal(@deal.Id)">
+                                            <i class="fa-solid fa-bolt me-1 text-danger"></i> Claim 1 Unit (Simulate Buy)
+                                        </button>
+                                    }
+                                    <div class="d-flex gap-1.5">
+                                        <button type="button" class="btn btn-outline-info btn-sm flex-grow-1 rounded-3 py-1" onclick="openRestockFlashModal(@deal.Id, '@deal.Title', @deal.TotalStockUnits, @deal.ClaimedUnits)">
+                                            <i class="fa-solid fa-plus me-1"></i> Restock
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-3 py-1 px-2.5" onclick="openEditFlashSaleModal(@deal.Id)" title="Edit Deal">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm rounded-3 py-1 px-2.5" onclick="deleteFlashSale(@deal.Id)" title="Delete Deal">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Flash Sales Master Table -->
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <h5 class="fw-bold text-white mb-0">
+                            <i class="fa-solid fa-list-check text-warning me-1"></i> Flash Sale Inventory Table
+                        </h5>
+                        <span class="badge bg-secondary bg-opacity-30 text-light font-monospace" id="flashSaleTableCountBadge">
+                            @flashDeals.Count Deals
+                        </span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <div class="input-group input-group-sm" style="max-width: 250px;">
+                            <span class="input-group-text bg-dark border-secondary border-opacity-30 text-secondary">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </span>
+                            <input type="text" class="form-control bg-dark border-secondary border-opacity-30 text-light" 
+                                   id="flashSaleSearchInput" placeholder="Search mobile, brand..." onkeyup="searchFlashSaleTable(this.value)" />
+                        </div>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-warning text-dark active flash-filter-btn" onclick="filterFlashSaleTable('all', this)">All</button>
+                            <button type="button" class="btn btn-dark flash-filter-btn" onclick="filterFlashSaleTable('live', this)">⚡ Live</button>
+                            <button type="button" class="btn btn-dark flash-filter-btn" onclick="filterFlashSaleTable('soldout', this)">🔴 Sold Out</button>
+                            <button type="button" class="btn btn-dark flash-filter-btn" onclick="filterFlashSaleTable('paused', this)">⏸️ Paused</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table approved-table align-middle" id="flashSalesMainTable">
+                        <thead>
+                            <tr>
+                                <th>Flash Deal & Product</th>
+                                <th>Category</th>
+                                <th>Pricing (Orig → Flash)</th>
+                                <th>Stock Allocation & Claim Velocity</th>
+                                <th>Timer (Ends In)</th>
+                                <th>Status</th>
+                                <th style="text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!flashDeals.Any())
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center py-5 text-secondary">
+                                        <i class="fa-solid fa-bolt fs-1 text-warning text-opacity-50 mb-3 d-block"></i>
+                                        <h6>No Flash Sales active</h6>
+                                        <p class="small mb-3">Create your first limited-unit lightning deal now.</p>
+                                        <button type="button" class="btn btn-warning btn-sm text-dark fw-bold rounded-pill px-3" onclick="openCreateFlashSaleModal()">
+                                            <i class="fa-solid fa-plus me-1"></i> Create Flash Sale
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                            @foreach (var d in flashDeals)
+                            {
+                                var isSold = d.IsSoldOut || d.RemainingUnits <= 0;
+                                var rowStatus = isSold ? "soldout" : (d.IsActive ? "live" : "paused");
+
+                                <tr class="flash-table-row" id="flash-row-@d.Id" data-status="@rowStatus" data-deal-id="@d.Id">
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2.5">
+                                            <div class="rounded-3 overflow-hidden border border-secondary border-opacity-30 position-relative" style="width: 44px; height: 44px; flex-shrink: 0; background: #0b1324;">
+                                                <img src="@d.ProductImageUrl" class="w-100 h-100 object-fit-cover" alt="@d.ProductName" onerror="this.src='https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300';" />
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-white d-flex align-items-center gap-1.5">
+                                                    <span>@d.Title</span>
+                                                    @if (isSold)
+                                                    {
+                                                        <span class="badge bg-danger text-white rounded-pill" style="font-size: 0.65rem;">SOLD OUT</span>
+                                                    }
+                                                </div>
+                                                <small class="text-secondary d-block font-monospace">@d.ProductName</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary bg-opacity-30 text-light px-2.5 py-1 rounded-pill">
+                                            @d.Category
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-1.5">
+                                            <span class="text-secondary text-decoration-line-through small font-monospace">₹@d.OriginalPrice.ToString("N0")</span>
+                                            <span class="text-warning fw-bold font-monospace">₹@d.FlashPrice.ToString("N0")</span>
+                                        </div>
+                                        <small class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 px-1.5 py-0.5 rounded-pill font-monospace" style="font-size: 0.68rem;">
+                                            @d.DiscountPercentage% OFF
+                                        </small>
+                                    </td>
+                                    <td style="min-width: 200px;">
+                                        <div class="d-flex justify-content-between align-items-center small mb-1">
+                                            <span class="text-secondary fw-semibold" id="table-claimed-txt-@d.Id">@d.ClaimedUnits / @d.TotalStockUnits Units</span>
+                                            @if (isSold)
+                                            {
+                                                <span class="badge bg-danger text-white font-monospace" style="font-size: 0.68rem;">SOLD OUT</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-warning font-monospace" id="table-remaining-txt-@d.Id">@d.RemainingUnits Left</span>
+                                            }
+                                        </div>
+                                        <div class="progress" style="height: 6px; background: rgba(255, 255, 255, 0.1);">
+                                            <div class="progress-bar @(isSold ? "bg-danger" : (d.ClaimPercentage > 85 ? "bg-danger" : "bg-warning"))" 
+                                                 id="table-progress-@d.Id"
+                                                 style="width: @d.ClaimPercentage%;"></div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="font-monospace fw-bold @(isSold ? "text-danger" : "text-warning") flash-table-timer" 
+                                             id="table-timer-@d.Id" 
+                                             data-deal-id="@d.Id"
+                                             data-remaining-seconds="@d.RemainingSeconds">
+                                            @if (isSold)
+                                            {
+                                                <span><i class="fa-solid fa-ban me-1"></i> SOLD OUT</span>
+                                            }
+                                            else
+                                            {
+                                                <span><i class="fa-regular fa-clock me-1"></i> @d.FormattedRemainingTime</span>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td id="table-status-cell-@d.Id">
+                                        @if (isSold)
+                                        {
+                                            <span class="badge bg-danger text-white px-2.5 py-1 rounded-pill fw-bold">
+                                                <i class="fa-solid fa-ban me-1"></i> SOLD OUT
+                                            </span>
+                                        }
+                                        else if (d.IsActive)
+                                        {
+                                            <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-30 px-2.5 py-1 rounded-pill fw-bold">
+                                                <i class="fa-solid fa-bolt me-1 text-danger"></i> Live Deal
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary bg-opacity-30 text-secondary border border-secondary border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-pause me-1"></i> Paused
+                                            </span>
+                                        }
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <div class="d-flex align-items-center justify-content-end gap-1.5">
+                                            <button type="button" class="btn btn-warning btn-sm text-dark fw-bold px-2 py-1 rounded-3" 
+                                                    id="table-btn-claim-@d.Id"
+                                                    onclick="simulateClaimFlashDeal(@d.Id)" 
+                                                    title="Claim 1 Unit" @(isSold ? "disabled" : "")>
+                                                <i class="fa-solid fa-bolt text-danger"></i> Claim
+                                            </button>
+                                            <button type="button" class="btn btn-outline-info btn-sm px-2 py-1 rounded-3" 
+                                                    onclick="openRestockFlashModal(@d.Id, '@d.Title', @d.TotalStockUnits, @d.ClaimedUnits)" 
+                                                    title="Restock Inventory">
+                                                <i class="fa-solid fa-plus"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm px-2 py-1 rounded-3" 
+                                                    id="table-btn-toggle-@d.Id"
+                                                    onclick="toggleFlashSaleStatus(@d.Id)" 
+                                                    title="Toggle Pause / Live">
+                                                <i class="fa-solid @(d.IsActive ? "fa-pause text-warning" : "fa-play text-success")"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary btn-sm px-2 py-1 rounded-3" 
+                                                    onclick="openEditFlashSaleModal(@d.Id)" 
+                                                    title="Edit Deal">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger btn-sm px-2 py-1 rounded-3" 
+                                                    onclick="deleteFlashSale(@d.Id)" 
+                                                    title="Delete Deal">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>

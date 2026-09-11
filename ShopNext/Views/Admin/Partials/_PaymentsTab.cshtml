@@ -1,0 +1,143 @@
+@model ShopNext.Models.AdminDashboardViewModel
+        <div class="tab-panel-container" id="panel-payments">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                    <div>
+                        <h3 class="fw-bold text-white mb-1"><i class="fa-solid fa-credit-card text-success me-2"></i> Payment Management &amp; Settlements</h3>
+                        <p class="text-secondary small mb-0">Audit merchant payment transactions, 5% platform commission settlements, and gateway receipts.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="badge bg-success bg-opacity-20 text-success px-3 py-2 rounded-pill font-monospace">
+                            <i class="fa-solid fa-shield-halved me-1"></i> 5% Standard Platform Fee
+                        </span>
+                        <span class="badge bg-info bg-opacity-20 text-info px-3 py-2 rounded-pill font-monospace" id="paymentTotalBadge">
+                            @Model.PaymentsList.Count Transactions
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Point 39: Status Filter Pills (Pending, Success, Failed, Refunded, All) & Search -->
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button type="button" class="btn btn-sm btn-outline-light rounded-pill px-3 fw-bold payment-filter-btn active" onclick="filterPaymentTable('all', this)">
+                            All (<span id="count-pay-all">@Model.PaymentsList.Count</span>)
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold payment-filter-btn" onclick="filterPaymentTable('Success', this)">
+                            <i class="fa-solid fa-circle-check me-1"></i> Success (<span id="count-pay-success">@Model.PaymentsList.Count(p => p.Status == "Success")</span>)
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-warning rounded-pill px-3 fw-bold payment-filter-btn" onclick="filterPaymentTable('Pending', this)">
+                            <i class="fa-solid fa-clock me-1"></i> Pending (<span id="count-pay-pending">@Model.PaymentsList.Count(p => p.Status == "Pending")</span>)
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold payment-filter-btn" onclick="filterPaymentTable('Failed', this)">
+                            <i class="fa-solid fa-circle-xmark me-1"></i> Failed (<span id="count-pay-failed">@Model.PaymentsList.Count(p => p.Status == "Failed")</span>)
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-3 fw-bold payment-filter-btn" onclick="filterPaymentTable('Refunded', this)">
+                            <i class="fa-solid fa-rotate-left me-1"></i> Refunded (<span id="count-pay-refunded">@Model.PaymentsList.Count(p => p.Status == "Refunded")</span>)
+                        </button>
+                    </div>
+                    <div class="input-group input-group-sm" style="max-width: 280px;">
+                        <span class="input-group-text bg-dark text-secondary border-secondary"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" id="paymentSearchInput" class="form-control bg-dark text-white border-secondary" placeholder="Search Txn ID, Order ID..." oninput="searchPaymentTable()" />
+                    </div>
+                </div>
+
+                <!-- Point 39: Payments Table (Payment ID, Order ID, Customer, Amount, Payment Method, Transaction ID, Status, Date) -->
+                <div class="table-responsive">
+                    <table class="table approved-table">
+                        <thead>
+                            <tr>
+                                <th>Payment ID</th>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Amount &amp; Fee</th>
+                                <th>Payment Method</th>
+                                <th>Transaction ID</th>
+                                <th style="text-align: center;">Status</th>
+                                <th>Date</th>
+                                <th style="text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentsTableBody">
+                            @foreach (var pay in Model.PaymentsList)
+                            {
+                                <tr class="payment-table-row" id="payment-row-@pay.RawOrderId" data-status="@pay.Status" data-search="@pay.PaymentId @pay.OrderId @pay.TransactionId @pay.CustomerName @pay.CustomerMobile">
+                                    <!-- Payment ID -->
+                                    <td class="font-monospace text-info fw-bold">@pay.PaymentId</td>
+
+                                    <!-- Order ID -->
+                                    <td class="font-monospace text-light fw-bold">@pay.OrderId</td>
+
+                                    <!-- Customer -->
+                                    <td>
+                                        <strong class="text-white">@pay.CustomerName</strong>
+                                        <div class="text-secondary small font-monospace">@pay.CustomerMobile</div>
+                                    </td>
+
+                                    <!-- Amount, 5% Commission, Net Payout -->
+                                    <td>
+                                        <div class="font-monospace text-white fw-bold">₹@pay.Amount.ToString("N2")</div>
+                                        <small class="text-warning">5% Fee: ₹@pay.Commission.ToString("F2")</small>
+                                    </td>
+
+                                    <!-- Payment Method -->
+                                    <td>
+                                        <span class="badge bg-secondary bg-opacity-30 text-light px-2.5 py-1 rounded-pill">
+                                            @pay.PaymentMethod
+                                        </span>
+                                    </td>
+
+                                    <!-- Transaction ID -->
+                                    <td class="font-monospace text-secondary small">@pay.TransactionId</td>
+
+                                    <!-- Status -->
+                                    <td style="text-align: center;" id="payment-status-cell-@pay.RawOrderId">
+                                        @if (pay.Status == "Success")
+                                        {
+                                            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-circle-check me-1"></i> Success
+                                            </span>
+                                        }
+                                        else if (pay.Status == "Pending")
+                                        {
+                                            <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-clock me-1"></i> Pending
+                                            </span>
+                                        }
+                                        else if (pay.Status == "Failed")
+                                        {
+                                            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-circle-xmark me-1"></i> Failed
+                                            </span>
+                                        }
+                                        else if (pay.Status == "Refunded")
+                                        {
+                                            <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-rotate-left me-1"></i> Refunded
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <!-- Date -->
+                                    <td class="text-secondary small font-monospace">@pay.Date</td>
+
+                                    <!-- Actions -->
+                                    <td style="text-align: center;">
+                                        <div class="d-inline-flex gap-1.5 flex-wrap justify-content-center">
+                                            <button type="button" class="btn btn-outline-info btn-sm px-2 py-1 rounded-3" onclick="viewPaymentDetailsModal(@pay.RawOrderId)" title="View Transaction Audit">
+                                                <i class="fa-solid fa-eye me-1"></i> View
+                                            </button>
+                                            @if (pay.Status == "Success")
+                                            {
+                                                <button type="button" class="btn btn-outline-warning btn-sm px-2 py-1 rounded-3" onclick="openRefundModal(@pay.RawOrderId, @pay.Amount)" title="Initiate Refund">
+                                                    <i class="fa-solid fa-rotate-left me-1"></i> Refund
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>

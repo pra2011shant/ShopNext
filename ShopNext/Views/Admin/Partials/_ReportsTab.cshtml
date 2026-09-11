@@ -1,0 +1,613 @@
+@model ShopNext.Models.AdminDashboardViewModel
+        <div class="tab-panel-container" id="panel-reports">
+            <div class="glass-card mb-4">
+                <!-- Header & Action Toolbar -->
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                    <div>
+                        <h3 class="fw-bold text-white mb-1"><i class="fa-solid fa-chart-line text-info me-2"></i> Financial &amp; Operational Reports Suite</h3>
+                        <p class="text-secondary small mb-0">Platform-wide analytics across Sales, Orders, Customers, Sellers, Products, Payments, Returns, Refunds, and Commissions with dynamic date filtering.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <button class="btn btn-outline-info btn-sm rounded-pill px-3 shadow-sm" onclick="exportCurrentReportCsv()">
+                            <i class="fa-solid fa-file-arrow-down me-1"></i> Export CSV
+                        </button>
+                        <button class="btn btn-outline-light btn-sm rounded-pill px-3 shadow-sm" onclick="window.print()">
+                            <i class="fa-solid fa-print me-1"></i> Print / PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Universal Date Filter Toolbar (Today, 7 Days, 30 Days, Custom) -->
+                <div class="p-3 rounded-4 mb-4 border border-secondary border-opacity-25" style="background: rgba(15, 23, 42, 0.75);">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-lg-5 col-md-12">
+                            <label class="form-label text-secondary small fw-bold mb-2"><i class="fa-solid fa-calendar-days text-info me-1"></i> Date Filter Window:</label>
+                            <div class="d-flex gap-2 flex-wrap" id="reportDateFilterButtons">
+                                <button type="button" class="btn btn-sm btn-outline-light rounded-pill px-3 report-date-btn" data-filter="Today" onclick="setReportDateFilter('Today')">
+                                    <i class="fa-solid fa-calendar-day me-1"></i> Today
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-light rounded-pill px-3 report-date-btn" data-filter="7Days" onclick="setReportDateFilter('7Days')">
+                                    <i class="fa-solid fa-calendar-week me-1"></i> 7 Days
+                                </button>
+                                <button type="button" class="btn btn-sm btn-info text-dark fw-bold rounded-pill px-3 report-date-btn active" data-filter="30Days" onclick="setReportDateFilter('30Days')">
+                                    <i class="fa-solid fa-calendar me-1"></i> 30 Days
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-light rounded-pill px-3 report-date-btn" data-filter="Custom" onclick="setReportDateFilter('Custom')">
+                                    <i class="fa-solid fa-sliders me-1"></i> Custom Range
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Custom Date Pickers (Shown for Custom Filter) -->
+                        <div class="col-lg-7 col-md-12" id="customDateRangeBox" style="display: none;">
+                            <div class="row g-2 align-items-end">
+                                <div class="col-sm-5">
+                                    <label class="form-label text-secondary small mb-1">Start Date</label>
+                                    <input type="date" class="form-control form-control-sm bg-dark text-white border-secondary" id="reportCustomStartDate" value="@Model.Reports.StartDate" />
+                                </div>
+                                <div class="col-sm-5">
+                                    <label class="form-label text-secondary small mb-1">End Date</label>
+                                    <input type="date" class="form-control form-control-sm bg-dark text-white border-secondary" id="reportCustomEndDate" value="@Model.Reports.EndDate" />
+                                </div>
+                                <div class="col-sm-2">
+                                    <button class="btn btn-info btn-sm text-dark fw-bold w-100" onclick="applyCustomReportDateRange()">
+                                        <i class="fa-solid fa-filter me-1"></i> Apply
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtered KPI Aggregate Summary Cards -->
+                <div class="row g-3 mb-4">
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="p-3 rounded-4 border border-info border-opacity-30 h-100" style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(15, 23, 42, 0.7));">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-secondary fw-semibold text-uppercase">Gross Sales (GMV)</small>
+                                    <h3 class="fw-bold text-white mb-0 mt-1" id="kpiReportGrossSales">₹@Model.Reports.TotalGrossSales.ToString("N2")</h3>
+                                </div>
+                                <div class="p-3 rounded-circle bg-info bg-opacity-20 text-info fs-4">
+                                    <i class="fa-solid fa-indian-rupee-sign"></i>
+                                </div>
+                            </div>
+                            <small class="text-info d-block mt-2"><i class="fa-solid fa-arrow-trend-up me-1"></i> Filtered Time Window</small>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="p-3 rounded-4 border border-primary border-opacity-30 h-100" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(15, 23, 42, 0.7));">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-secondary fw-semibold text-uppercase">Orders Volume</small>
+                                    <h3 class="fw-bold text-white mb-0 mt-1" id="kpiReportTotalOrders">@Model.Reports.TotalOrdersCount</h3>
+                                </div>
+                                <div class="p-3 rounded-circle bg-primary bg-opacity-20 text-primary fs-4">
+                                    <i class="fa-solid fa-cart-shopping"></i>
+                                </div>
+                            </div>
+                            <small class="text-primary d-block mt-2"><i class="fa-solid fa-chart-simple me-1"></i> Total Orders Processed</small>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="p-3 rounded-4 border border-success border-opacity-30 h-100" style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(15, 23, 42, 0.7));">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-secondary fw-semibold text-uppercase">Platform Commission (10%)</small>
+                                    <h3 class="fw-bold text-success mb-0 mt-1" id="kpiReportCommission">₹@Model.Reports.TotalCommissionEarned.ToString("N2")</h3>
+                                </div>
+                                <div class="p-3 rounded-circle bg-success bg-opacity-20 text-success fs-4">
+                                    <i class="fa-solid fa-percent"></i>
+                                </div>
+                            </div>
+                            <small class="text-success d-block mt-2"><i class="fa-solid fa-building-columns me-1"></i> Net Marketplace Cut</small>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="p-3 rounded-4 border border-warning border-opacity-30 h-100" style="background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(15, 23, 42, 0.7));">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-secondary fw-semibold text-uppercase">Avg. Order Value (AOV)</small>
+                                    <h3 class="fw-bold text-warning mb-0 mt-1" id="kpiReportAov">₹@Model.Reports.AverageOrderValue.ToString("N2")</h3>
+                                </div>
+                                <div class="p-3 rounded-circle bg-warning bg-opacity-20 text-warning fs-4">
+                                    <i class="fa-solid fa-scale-balanced"></i>
+                                </div>
+                            </div>
+                            <small class="text-warning d-block mt-2"><i class="fa-solid fa-wallet me-1"></i> Basket Size Metric</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 9 Report Module Tabs Selection Bar -->
+                <div class="d-flex gap-2 overflow-auto pb-2 mb-4 border-bottom border-secondary border-opacity-25" id="reportModuleTabNav">
+                    <button class="btn btn-sm btn-info text-dark fw-bold rounded-pill px-3 py-1.5 report-nav-tab active" data-report="Sales" onclick="switchReportModule('Sales')">
+                        <i class="fa-solid fa-chart-line me-1"></i> 1. Sales Report
+                    </button>
+                    <button class="btn btn-sm btn-outline-light rounded-pill px-3 py-1.5 report-nav-tab" data-report="Order" onclick="switchReportModule('Order')">
+                        <i class="fa-solid fa-box me-1"></i> 2. Order Report
+                    </button>
+                    <button class="btn btn-sm btn-outline-light rounded-pill px-3 py-1.5 report-nav-tab" data-report="Customer" onclick="switchReportModule('Customer')">
+                        <i class="fa-solid fa-users me-1"></i> 3. Customer Report
+                    </button>
+                    <button class="btn btn-sm btn-outline-light rounded-pill px-3 py-1.5 report-nav-tab" data-report="Seller" onclick="switchReportModule('Seller')">
+                        <i class="fa-solid fa-store me-1"></i> 4. Seller Report
+                    </button>
+                    <button class="btn btn-sm btn-outline-light rounded-pill px-3 py-1.5 report-nav-tab" data-report="Product" onclick="switchReportModule('Product')">
+                        <i class="fa-solid fa-layer-group me-1"></i> 5. Product Report
+                    </button>
+                    <button class="btn btn-sm btn-outline-light rounded-pill px-3 py-1.5 report-nav-tab" data-report="Payment" onclick="switchReportModule('Payment')">
+                        <i class="fa-solid fa-credit-card me-1"></i> 6. Payment Report
+                    </button>
+                    <button class="btn btn-sm btn-outline-light rounded-pill px-3 py-1.5 report-nav-tab" data-report="Return" onclick="switchReportModule('Return')">
+                        <i class="fa-solid fa-rotate-left me-1"></i> 7. Return Report
+                    </button>
+                    <button class="btn btn-sm btn-outline-light rounded-pill px-3 py-1.5 report-nav-tab" data-report="Refund" onclick="switchReportModule('Refund')">
+                        <i class="fa-solid fa-money-bill-transfer me-1"></i> 8. Refund Report
+                    </button>
+                    <button class="btn btn-sm btn-outline-light rounded-pill px-3 py-1.5 report-nav-tab" data-report="Commission" onclick="switchReportModule('Commission')">
+                        <i class="fa-solid fa-percent me-1"></i> 9. Commission Report
+                    </button>
+                </div>
+
+                <!-- Report Content Section -->
+                <div id="reportActiveContentContainer">
+                    <!-- ==========================================
+                         1. SALES REPORT VIEW
+                         ========================================== -->
+                    <div class="report-content-panel" id="report-view-Sales">
+                        <div class="row g-4 mb-4">
+                            <div class="col-lg-6">
+                                <div class="p-3 rounded-4 border border-secondary border-opacity-25 h-100" style="background: rgba(15, 23, 42, 0.6);">
+                                    <h5 class="text-white fw-bold mb-3"><i class="fa-solid fa-pie-chart text-info me-2"></i> Category Sales Contribution</h5>
+                                    <div class="table-responsive">
+                                        <table class="table table-dark table-hover mb-0 align-middle">
+                                            <thead>
+                                                <tr class="text-secondary small">
+                                                    <th>Category</th>
+                                                    <th>Orders</th>
+                                                    <th>Units</th>
+                                                    <th>Gross Sales</th>
+                                                    <th>Share</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="salesCategoryTableBody">
+                                                @foreach (var cat in Model.Reports.SalesReport.CategoryBreakdown)
+                                                {
+                                                    <tr>
+                                                        <td class="fw-semibold text-white"><i class="fa-solid fa-tag text-info me-2"></i> @cat.CategoryName</td>
+                                                        <td>@cat.TotalOrders</td>
+                                                        <td>@cat.UnitsSold</td>
+                                                        <td class="fw-bold text-success">₹@cat.TotalAmount.ToString("N2")</td>
+                                                        <td>
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <div class="progress flex-grow-1" style="height: 6px; background: rgba(255,255,255,0.1);">
+                                                                    <div class="progress-bar bg-info" style="width: @(cat.Percentage)%"></div>
+                                                                </div>
+                                                                <small class="text-secondary">@cat.Percentage%</small>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="p-3 rounded-4 border border-secondary border-opacity-25 h-100" style="background: rgba(15, 23, 42, 0.6);">
+                                    <h5 class="text-white fw-bold mb-3"><i class="fa-solid fa-calendar-day text-primary me-2"></i> Daily Sales Trend</h5>
+                                    <div class="table-responsive">
+                                        <table class="table table-dark table-hover mb-0 align-middle">
+                                            <thead>
+                                                <tr class="text-secondary small">
+                                                    <th>Date</th>
+                                                    <th>Orders</th>
+                                                    <th>Gross Revenue</th>
+                                                    <th>Net Revenue</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="salesDailyTrendTableBody">
+                                                @foreach (var day in Model.Reports.SalesReport.DailyTrend)
+                                                {
+                                                    <tr>
+                                                        <td class="fw-semibold text-white"><i class="fa-regular fa-clock text-secondary me-2"></i> @day.DateLabel</td>
+                                                        <td><span class="badge bg-primary bg-opacity-20 text-primary">@day.OrderCount orders</span></td>
+                                                        <td class="fw-bold text-white">₹@day.GrossSales.ToString("N2")</td>
+                                                        <td class="fw-bold text-success">₹@day.NetSales.ToString("N2")</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ==========================================
+                         2. ORDER REPORT VIEW
+                         ========================================== -->
+                    <div class="report-content-panel" id="report-view-Order" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <h5 class="text-white fw-bold mb-0"><i class="fa-solid fa-box text-primary me-2"></i> Orders Transaction Ledger</h5>
+                            <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" style="max-width: 250px;" placeholder="Search orders report..." onkeyup="filterReportTableRows(this, 'orderReportTableBody')" />
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover mb-0 align-middle">
+                                <thead>
+                                    <tr class="text-secondary small text-uppercase">
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Merchant / Shop</th>
+                                        <th>Items</th>
+                                        <th>Amount</th>
+                                        <th>Payment</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="orderReportTableBody">
+                                    @foreach (var o in Model.Reports.OrderReports)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold text-info">@o.OrderNumber</td>
+                                            <td>
+                                                <div class="fw-semibold text-white">@o.CustomerName</div>
+                                                <small class="text-secondary">@o.CustomerMobile</small>
+                                            </td>
+                                            <td class="text-light">@o.ShopName</td>
+                                            <td>@o.ItemCount</td>
+                                            <td class="fw-bold text-white">₹@o.TotalAmount.ToString("N2")</td>
+                                            <td>
+                                                <span class="badge bg-secondary bg-opacity-30 text-light me-1">@o.PaymentMode</span>
+                                                <span class="badge bg-success bg-opacity-20 text-success">@o.PaymentStatus</span>
+                                            </td>
+                                            <td>
+                                                @if (o.OrderStatus == "Delivered")
+                                                {
+                                                    <span class="badge bg-success bg-opacity-20 text-success"><i class="fa-solid fa-circle-check me-1"></i> Delivered</span>
+                                                }
+                                                else if (o.OrderStatus == "Cancelled")
+                                                {
+                                                    <span class="badge bg-danger bg-opacity-20 text-danger"><i class="fa-solid fa-circle-xmark me-1"></i> Cancelled</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-info bg-opacity-20 text-info"><i class="fa-solid fa-truck-fast me-1"></i> @o.OrderStatus</span>
+                                                }
+                                            </td>
+                                            <td class="text-secondary small">@o.OrderDate</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- ==========================================
+                         3. CUSTOMER REPORT VIEW
+                         ========================================== -->
+                    <div class="report-content-panel" id="report-view-Customer" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <h5 class="text-white fw-bold mb-0"><i class="fa-solid fa-users text-info me-2"></i> Customer Lifetime Value &amp; Cohort Report</h5>
+                            <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" style="max-width: 250px;" placeholder="Search customer report..." onkeyup="filterReportTableRows(this, 'customerReportTableBody')" />
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover mb-0 align-middle">
+                                <thead>
+                                    <tr class="text-secondary small text-uppercase">
+                                        <th>Customer ID</th>
+                                        <th>Customer Name</th>
+                                        <th>Email</th>
+                                        <th>Mobile</th>
+                                        <th>Joined Date</th>
+                                        <th>Orders Count</th>
+                                        <th>Total Spent (LTV)</th>
+                                        <th>Last Order</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="customerReportTableBody">
+                                    @foreach (var c in Model.Reports.CustomerReports)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold text-secondary">#CUST-@c.CustomerId</td>
+                                            <td class="fw-bold text-white">@c.CustomerName</td>
+                                            <td class="text-secondary">@c.Email</td>
+                                            <td class="text-light">@c.Mobile</td>
+                                            <td class="text-secondary small">@c.JoinedDate</td>
+                                            <td><span class="badge bg-info bg-opacity-20 text-info">@c.TotalOrders orders</span></td>
+                                            <td class="fw-bold text-success">₹@c.TotalSpent.ToString("N2")</td>
+                                            <td class="text-secondary small">@c.LastOrderDate</td>
+                                            <td><span class="badge bg-success bg-opacity-25 text-success">@c.Status</span></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- ==========================================
+                         4. SELLER REPORT VIEW
+                         ========================================== -->
+                    <div class="report-content-panel" id="report-view-Seller" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <h5 class="text-white fw-bold mb-0"><i class="fa-solid fa-store text-warning me-2"></i> Merchant Performance &amp; Settlement Report</h5>
+                            <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" style="max-width: 250px;" placeholder="Search seller report..." onkeyup="filterReportTableRows(this, 'sellerReportTableBody')" />
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover mb-0 align-middle">
+                                <thead>
+                                    <tr class="text-secondary small text-uppercase">
+                                        <th>Shop ID</th>
+                                        <th>Shop Name</th>
+                                        <th>Owner</th>
+                                        <th>Category</th>
+                                        <th>Products</th>
+                                        <th>Orders</th>
+                                        <th>Gross Sales</th>
+                                        <th>Commission (10%)</th>
+                                        <th>Net Payout</th>
+                                        <th>Rating</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sellerReportTableBody">
+                                    @foreach (var s in Model.Reports.SellerReports)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold text-secondary">#SHP-@s.ShopId</td>
+                                            <td class="fw-bold text-white">@s.ShopName</td>
+                                            <td class="text-light">@s.OwnerName</td>
+                                            <td><span class="badge bg-secondary bg-opacity-40 text-light">@s.Category</span></td>
+                                            <td>@s.TotalProducts</td>
+                                            <td>@s.TotalOrders</td>
+                                            <td class="fw-bold text-white">₹@s.GrossSales.ToString("N2")</td>
+                                            <td class="text-success fw-bold">₹@s.CommissionPaid.ToString("N2")</td>
+                                            <td class="text-info fw-bold">₹@s.NetPayout.ToString("N2")</td>
+                                            <td><span class="text-warning"><i class="fa-solid fa-star me-1"></i> @s.Rating</span></td>
+                                            <td><span class="badge bg-success bg-opacity-25 text-success">@s.ApprovalStatus</span></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- ==========================================
+                         5. PRODUCT REPORT VIEW
+                         ========================================== -->
+                    <div class="report-content-panel" id="report-view-Product" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <h5 class="text-white fw-bold mb-0"><i class="fa-solid fa-layer-group text-info me-2"></i> Product Sales &amp; Inventory Report</h5>
+                            <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" style="max-width: 250px;" placeholder="Search product report..." onkeyup="filterReportTableRows(this, 'productReportTableBody')" />
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover mb-0 align-middle">
+                                <thead>
+                                    <tr class="text-secondary small text-uppercase">
+                                        <th>SKU / ID</th>
+                                        <th>Product Name</th>
+                                        <th>Merchant</th>
+                                        <th>Category</th>
+                                        <th>Selling Price</th>
+                                        <th>Units Sold</th>
+                                        <th>Revenue</th>
+                                        <th>Stock</th>
+                                        <th>Inventory Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productReportTableBody">
+                                    @foreach (var p in Model.Reports.ProductReports)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold text-secondary">@p.Sku</td>
+                                            <td class="fw-bold text-white">@p.ProductName</td>
+                                            <td class="text-light">@p.ShopName</td>
+                                            <td><span class="badge bg-secondary bg-opacity-40 text-light">@p.Category</span></td>
+                                            <td class="fw-bold text-white">₹@p.SellingPrice.ToString("N2")</td>
+                                            <td><span class="badge bg-primary bg-opacity-20 text-primary">@p.UnitsSold units</span></td>
+                                            <td class="fw-bold text-success">₹@p.TotalRevenue.ToString("N2")</td>
+                                            <td>@p.CurrentStock</td>
+                                            <td>
+                                                @if (p.CurrentStock > 10)
+                                                {
+                                                    <span class="badge bg-success bg-opacity-25 text-success">In Stock</span>
+                                                }
+                                                else if (p.CurrentStock > 0)
+                                                {
+                                                    <span class="badge bg-warning bg-opacity-25 text-warning">Low Stock</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger bg-opacity-25 text-danger">Out of Stock</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- ==========================================
+                         6. PAYMENT REPORT VIEW
+                         ========================================== -->
+                    <div class="report-content-panel" id="report-view-Payment" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <h5 class="text-white fw-bold mb-0"><i class="fa-solid fa-credit-card text-success me-2"></i> Payment Gateway &amp; Settlements Report</h5>
+                            <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" style="max-width: 250px;" placeholder="Search payment report..." onkeyup="filterReportTableRows(this, 'paymentReportTableBody')" />
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover mb-0 align-middle">
+                                <thead>
+                                    <tr class="text-secondary small text-uppercase">
+                                        <th>Payment ID</th>
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Merchant</th>
+                                        <th>Amount</th>
+                                        <th>Payment Method</th>
+                                        <th>Transaction ID</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="paymentReportTableBody">
+                                    @foreach (var py in Model.Reports.PaymentReports)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold text-info">@py.PaymentId</td>
+                                            <td class="text-light">@py.OrderNumber</td>
+                                            <td class="fw-semibold text-white">@py.CustomerName</td>
+                                            <td class="text-secondary">@py.ShopName</td>
+                                            <td class="fw-bold text-success">₹@py.Amount.ToString("N2")</td>
+                                            <td><span class="badge bg-secondary bg-opacity-30 text-light"><i class="fa-solid fa-wallet me-1"></i> @py.PaymentMethod</span></td>
+                                            <td class="text-secondary font-monospace small">@py.TransactionId</td>
+                                            <td><span class="badge bg-success bg-opacity-25 text-success">@py.Status</span></td>
+                                            <td class="text-secondary small">@py.TransactionDate</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- ==========================================
+                         7. RETURN REPORT VIEW
+                         ========================================== -->
+                    <div class="report-content-panel" id="report-view-Return" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <h5 class="text-white fw-bold mb-0"><i class="fa-solid fa-rotate-left text-danger me-2"></i> Return Requests &amp; Replacements Ledger</h5>
+                            <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" style="max-width: 250px;" placeholder="Search return report..." onkeyup="filterReportTableRows(this, 'returnReportTableBody')" />
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover mb-0 align-middle">
+                                <thead>
+                                    <tr class="text-secondary small text-uppercase">
+                                        <th>Return ID</th>
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Merchant</th>
+                                        <th>Product Name</th>
+                                        <th>Return Reason</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="returnReportTableBody">
+                                    @foreach (var ret in Model.Reports.ReturnReports)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold text-danger">@ret.ReturnId</td>
+                                            <td class="text-light">@ret.OrderNumber</td>
+                                            <td class="fw-semibold text-white">@ret.CustomerName</td>
+                                            <td class="text-secondary">@ret.ShopName</td>
+                                            <td class="text-light">@ret.ProductName</td>
+                                            <td class="text-warning small">@ret.Reason</td>
+                                            <td class="fw-bold text-white">₹@ret.Amount.ToString("N2")</td>
+                                            <td><span class="badge bg-info bg-opacity-25 text-info">@ret.Status</span></td>
+                                            <td class="text-secondary small">@ret.RequestDate</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- ==========================================
+                         8. REFUND REPORT VIEW
+                         ========================================== -->
+                    <div class="report-content-panel" id="report-view-Refund" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <h5 class="text-white fw-bold mb-0"><i class="fa-solid fa-money-bill-transfer text-danger me-2"></i> Processed Refunds &amp; Reversals Ledger</h5>
+                            <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" style="max-width: 250px;" placeholder="Search refund report..." onkeyup="filterReportTableRows(this, 'refundReportTableBody')" />
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover mb-0 align-middle">
+                                <thead>
+                                    <tr class="text-secondary small text-uppercase">
+                                        <th>Refund ID</th>
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Refund Amount</th>
+                                        <th>Payment Mode</th>
+                                        <th>Gateway Ref</th>
+                                        <th>Reason</th>
+                                        <th>Status</th>
+                                        <th>Processed Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="refundReportTableBody">
+                                    @foreach (var rf in Model.Reports.RefundReports)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold text-danger">@rf.RefundId</td>
+                                            <td class="text-light">@rf.OrderNumber</td>
+                                            <td class="fw-semibold text-white">@rf.CustomerName</td>
+                                            <td class="fw-bold text-danger">₹@rf.Amount.ToString("N2")</td>
+                                            <td><span class="badge bg-secondary bg-opacity-30 text-light">@rf.PaymentMethod</span></td>
+                                            <td class="text-secondary font-monospace small">@rf.GatewayRef</td>
+                                            <td class="text-light small">@rf.Reason</td>
+                                            <td><span class="badge bg-success bg-opacity-25 text-success">@rf.Status</span></td>
+                                            <td class="text-secondary small">@rf.ProcessedDate</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- ==========================================
+                         9. COMMISSION REPORT VIEW
+                         ========================================== -->
+                    <div class="report-content-panel" id="report-view-Commission" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <h5 class="text-white fw-bold mb-0"><i class="fa-solid fa-percent text-success me-2"></i> Marketplace Commission &amp; Net Seller Payouts</h5>
+                            <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" style="max-width: 250px;" placeholder="Search commission report..." onkeyup="filterReportTableRows(this, 'commissionReportTableBody')" />
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover mb-0 align-middle">
+                                <thead>
+                                    <tr class="text-secondary small text-uppercase">
+                                        <th>Commission ID</th>
+                                        <th>Order ID</th>
+                                        <th>Order Date</th>
+                                        <th>Merchant / Shop</th>
+                                        <th>Gross Amount</th>
+                                        <th>Rate</th>
+                                        <th>Commission Earned</th>
+                                        <th>Net Seller Payout</th>
+                                        <th>Payout Status</th>
+                                        <th>Settlement Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="commissionReportTableBody">
+                                    @foreach (var cm in Model.Reports.CommissionReports)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold text-info">@cm.CommissionId</td>
+                                            <td class="text-light">@cm.OrderNumber</td>
+                                            <td class="text-secondary small">@cm.OrderDate</td>
+                                            <td class="fw-semibold text-white">@cm.ShopName</td>
+                                            <td class="fw-bold text-white">₹@cm.GrossAmount.ToString("N2")</td>
+                                            <td><span class="badge bg-secondary bg-opacity-40 text-light">@cm.CommissionRate%</span></td>
+                                            <td class="fw-bold text-success">₹@cm.CommissionAmount.ToString("N2")</td>
+                                            <td class="fw-bold text-info">₹@cm.NetSellerPayout.ToString("N2")</td>
+                                            <td><span class="badge bg-success bg-opacity-25 text-success">@cm.PayoutStatus</span></td>
+                                            <td class="text-secondary small">@cm.SettlementDate</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>

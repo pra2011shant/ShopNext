@@ -1,0 +1,158 @@
+@model ShopNext.Models.AdminDashboardViewModel
+        <div class="tab-panel-container" id="panel-reviews">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-danger bg-opacity-15 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill small fw-bold">
+                                <i class="fa-solid fa-shield-halved me-1"></i> POLICY &bull; REVIEW MODERATION
+                            </span>
+                        </div>
+                        <h3 class="fw-bold text-white mb-1"><i class="fa-solid fa-star text-warning me-2"></i> Customer Review Moderation</h3>
+                        <p class="text-secondary small mb-0">Audit product ratings and remove inappropriate, abusive, or fake reviews from customer visibility.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-warning bg-opacity-20 text-warning px-3 py-2 rounded-pill font-monospace" id="reviewsCountBadge">
+                            @Model.ReviewsList.Count Total Reviews
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Review Status Filter Pills -->
+                <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
+                    <span class="text-secondary small fw-bold text-uppercase me-1"><i class="fa-solid fa-filter me-1"></i> Filter:</span>
+                    <button type="button" class="btn btn-sm btn-outline-light rounded-pill px-3 active review-filter-btn" onclick="filterReviewTable('all', this)">All Reviews</button>
+                    <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 review-filter-btn" onclick="filterReviewTable('visible', this)"><i class="fa-solid fa-eye me-1"></i> Visible</button>
+                    <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 review-filter-btn" onclick="filterReviewTable('hidden', this)"><i class="fa-solid fa-eye-slash me-1"></i> Hidden / Flagged</button>
+                </div>
+
+                <!-- Point 42: Review Management Table (Product, Customer, Rating, Review, Date, Actions: [Hide], [Delete]) -->
+                <div class="table-responsive">
+                    <table class="table approved-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Customer</th>
+                                <th style="text-align: center;">Rating</th>
+                                <th style="min-width: 250px;">Review Comment</th>
+                                <th>Date</th>
+                                <th style="text-align: center;">Status</th>
+                                <th style="text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reviewsTableBody">
+                            @if (!Model.ReviewsList.Any())
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-secondary">
+                                        <i class="fa-solid fa-comment-slash fs-3 mb-2 d-block opacity-50"></i>
+                                        No customer reviews recorded yet.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var r in Model.ReviewsList)
+                                {
+                                    <tr id="review-row-@r.Id" class="review-table-row" data-status="@(r.IsHidden ? "hidden" : "visible")">
+                                        <!-- Product -->
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="rounded-3 overflow-hidden border border-secondary border-opacity-25" style="width: 40px; height: 40px; flex-shrink: 0; background: #0b1324;">
+                                                    <img src="@r.ProductImage" class="w-100 h-100 object-fit-cover" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100';" />
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold text-white small" id="rev-pname-@r.Id">@r.ProductName</div>
+                                                    <small class="text-secondary font-monospace" style="font-size: 0.72rem;">@r.ShopName</small>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <!-- Customer -->
+                                        <td>
+                                            <div class="text-white fw-bold small" id="rev-cname-@r.Id">@r.CustomerName</div>
+                                            <small class="text-secondary font-monospace">@r.CustomerPhone</small>
+                                        </td>
+
+                                        <!-- Rating (1 to 5 Stars) -->
+                                        <td style="text-align: center;">
+                                            <div class="text-warning font-monospace fw-bold" style="font-size: 0.95rem;">
+                                                @for (int i = 1; i <= 5; i++)
+                                                {
+                                                    if (i <= r.Rating)
+                                                    {
+                                                        <i class="fa-solid fa-star text-warning"></i>
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="fa-regular fa-star text-secondary opacity-50"></i>
+                                                    }
+                                                }
+                                            </div>
+                                            <small class="text-secondary font-monospace">@r.Rating.0 / 5.0</small>
+                                        </td>
+
+                                        <!-- Review Comment -->
+                                        <td>
+                                            <div class="text-light small fst-italic" id="rev-comment-@r.Id">
+                                                "@r.Comment"
+                                            </div>
+                                            @if (r.IsHidden && !string.IsNullOrWhiteSpace(r.ModerationReason))
+                                            {
+                                                <div class="mt-1" id="rev-reason-badge-@r.Id">
+                                                    <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30" style="font-size: 0.7rem;">
+                                                        <i class="fa-solid fa-triangle-exclamation me-1"></i> Reason: @r.ModerationReason
+                                                    </span>
+                                                </div>
+                                            }
+                                        </td>
+
+                                        <!-- Date -->
+                                        <td class="text-secondary small font-monospace">
+                                            @r.Date
+                                        </td>
+
+                                        <!-- Status -->
+                                        <td style="text-align: center;" id="review-status-cell-@r.Id">
+                                            @if (r.IsHidden)
+                                            {
+                                                <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                    <i class="fa-solid fa-eye-slash me-1"></i> Hidden
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                    <i class="fa-solid fa-eye me-1"></i> Visible
+                                                </span>
+                                            }
+                                        </td>
+
+                                        <!-- Actions: [Hide] / [Unhide], [Delete] -->
+                                        <td style="text-align: center;" id="review-action-cell-@r.Id">
+                                            <div class="d-inline-flex gap-1.5 flex-wrap justify-content-center">
+                                                @if (r.IsHidden)
+                                                {
+                                                    <button type="button" class="btn btn-outline-success btn-sm px-2.5 py-1 rounded-3" onclick="unhideReview(@r.Id)" title="Make Review Visible to Customers">
+                                                        <i class="fa-solid fa-eye me-1"></i> Unhide
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <button type="button" class="btn btn-outline-warning btn-sm px-2.5 py-1 rounded-3" onclick="openHideReviewModal(@r.Id, '@r.CustomerName.Replace("'", "\\'")')" title="Hide Inappropriate Review">
+                                                        <i class="fa-solid fa-eye-slash me-1"></i> Hide
+                                                    </button>
+                                                }
+                                                <button type="button" class="btn btn-outline-danger btn-sm px-2 py-1 rounded-3" onclick="openDeleteReviewModal(@r.Id, '@r.CustomerName.Replace("'", "\\'")')" title="Permanently Delete Review">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>

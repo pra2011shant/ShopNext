@@ -1,0 +1,325 @@
+@model ShopNext.Models.AdminDashboardViewModel
+        <div class="tab-panel-container" id="panel-salefraud">
+            <!-- Header Banner -->
+            <div class="glass-card mb-4" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(245, 158, 11, 0.12) 50%, rgba(15, 23, 42, 0.95) 100%); border: 1px solid rgba(239, 68, 68, 0.35);">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-danger text-white px-3 py-1 rounded-pill fw-bold font-monospace fs-6">
+                                <i class="fa-solid fa-triangle-exclamation me-1"></i> 🚨 SALE FRAUD MONITOR
+                            </span>
+                            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill small fw-bold">
+                                Point 57: Special Sale Monitoring &amp; Abuse Prevention
+                            </span>
+                        </div>
+                        <h2 class="fw-bold text-white mb-1">Sale Fraud &amp; Abuse Monitoring Engine</h2>
+                        <p class="text-secondary small mb-0">Sale ke time special live monitoring: Repeated coupon exploits, brute-force attempts, bot account clusters, velocity spikes, abnormal cancellations &amp; returns.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <button type="button" class="btn btn-outline-light btn-sm px-3.5 py-2 fw-semibold rounded-3" onclick="exportSaleFraudCsv()">
+                            <i class="fa-solid fa-file-csv me-1.5 text-warning"></i> Export Audit CSV
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm px-4 py-2 fw-bold rounded-3 shadow-sm" onclick="refreshSaleFraudAlerts()">
+                            <i class="fa-solid fa-arrows-rotate me-1.5"></i> Refresh Telemetry
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top 4 KPI Metrics -->
+            <div class="row g-3 mb-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="glass-card p-3.5 h-100 border-start border-danger border-4" style="background: rgba(15, 23, 42, 0.8);">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <small class="text-secondary fw-semibold text-uppercase">Suspicious Activities</small>
+                                <h3 class="fw-bold text-white mt-1 mb-0 font-monospace" id="kpiFraudTotal">@Model.SaleFraudSummary.TotalSuspiciousActivitiesCount</h3>
+                                <small class="text-danger fw-semibold"><i class="fa-solid fa-triangle-exclamation me-1"></i> @Model.SaleFraudSummary.CriticalCount Critical Risk</small>
+                            </div>
+                            <div class="p-2.5 rounded-3 bg-danger bg-opacity-20 text-danger fs-4">
+                                <i class="fa-solid fa-shield-virus"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="glass-card p-3.5 h-100 border-start border-warning border-4" style="background: rgba(15, 23, 42, 0.8);">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <small class="text-secondary fw-semibold text-uppercase">Pending Review</small>
+                                <h3 class="fw-bold text-warning mt-1 mb-0 font-monospace" id="kpiFraudUnderReview">@Model.SaleFraudSummary.UnderReviewCount</h3>
+                                <small class="text-warning"><i class="fa-solid fa-clock me-1"></i> Requires Admin Decision</small>
+                            </div>
+                            <div class="p-2.5 rounded-3 bg-warning bg-opacity-20 text-warning fs-4">
+                                <i class="fa-solid fa-user-clock"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="glass-card p-3.5 h-100 border-start border-info border-4" style="background: rgba(15, 23, 42, 0.8);">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <small class="text-secondary fw-semibold text-uppercase">Loss Prevented</small>
+                                <h3 class="fw-bold text-info mt-1 mb-0 font-monospace" id="kpiFraudPreventedLoss">@Model.SaleFraudSummary.PreventedLossFormatted</h3>
+                                <small class="text-info"><i class="fa-solid fa-hand-holding-dollar me-1"></i> Promo &amp; Stock Preserved</small>
+                            </div>
+                            <div class="p-2.5 rounded-3 bg-info bg-opacity-20 text-info fs-4">
+                                <i class="fa-solid fa-wallet"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="glass-card p-3.5 h-100 border-start border-success border-4" style="background: rgba(15, 23, 42, 0.8);">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <small class="text-secondary fw-semibold text-uppercase">Enforcement Actions</small>
+                                <h3 class="fw-bold text-success mt-1 mb-0 font-monospace" id="kpiFraudEnforced">@(Model.SaleFraudSummary.BlockedCount + Model.SaleFraudSummary.ClearedCount)</h3>
+                                <small class="text-success"><i class="fa-solid fa-circle-check me-1"></i> @Model.SaleFraudSummary.BlockedCount Blocked &bull; @Model.SaleFraudSummary.ClearedCount Cleared</small>
+                            </div>
+                            <div class="p-2.5 rounded-3 bg-success bg-opacity-20 text-success fs-4">
+                                <i class="fa-solid fa-gavel"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6 SPECIAL SALE MONITORING CATEGORIES MATRIX (PROMPT EXACT MATCH) -->
+            <div class="row g-3 mb-4">
+                <div class="col-12">
+                    <div class="glass-card p-4" style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255, 255, 255, 0.08);">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold text-white mb-0"><i class="fa-solid fa-microchip text-danger me-2"></i> 6 Core Sale Abuse Detection Signatures</h5>
+                            <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 font-monospace small">Active Heuristics Engine</span>
+                        </div>
+                        <div class="row g-2.5">
+                            <div class="col-lg-2 col-md-4 col-sm-6">
+                                <div class="p-2.5 rounded-3 bg-dark border border-secondary border-opacity-25 text-center h-100">
+                                    <div class="text-danger fs-5 mb-1"><i class="fa-solid fa-ticket"></i></div>
+                                    <div class="text-white small fw-bold">Same coupon repeatedly misuse</div>
+                                    <small class="text-secondary" style="font-size: 0.72rem;">Multi-account coupon recycling</small>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-sm-6">
+                                <div class="p-2.5 rounded-3 bg-dark border border-secondary border-opacity-25 text-center h-100">
+                                    <div class="text-warning fs-5 mb-1"><i class="fa-solid fa-bolt"></i></div>
+                                    <div class="text-white small fw-bold">Excessive coupon attempts</div>
+                                    <small class="text-secondary" style="font-size: 0.72rem;">Brute-force promo rate-limiting</small>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-sm-6">
+                                <div class="p-2.5 rounded-3 bg-dark border border-secondary border-opacity-25 text-center h-100">
+                                    <div class="text-primary fs-5 mb-1"><i class="fa-solid fa-users-viewfinder"></i></div>
+                                    <div class="text-white small fw-bold">Multiple suspicious accounts</div>
+                                    <small class="text-secondary" style="font-size: 0.72rem;">Device/IP synthetic bot rings</small>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-sm-6">
+                                <div class="p-2.5 rounded-3 bg-dark border border-secondary border-opacity-25 text-center h-100">
+                                    <div class="text-info fs-5 mb-1"><i class="fa-solid fa-chart-line"></i></div>
+                                    <div class="text-white small fw-bold">Unusual order patterns</div>
+                                    <small class="text-secondary" style="font-size: 0.72rem;">Bulk commercial hoarders</small>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-sm-6">
+                                <div class="p-2.5 rounded-3 bg-dark border border-secondary border-opacity-25 text-center h-100">
+                                    <div class="text-danger fs-5 mb-1"><i class="fa-solid fa-ban"></i></div>
+                                    <div class="text-white small fw-bold">Abnormal cancellations</div>
+                                    <small class="text-secondary" style="font-size: 0.72rem;">Flash inventory lock &amp; dump</small>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-sm-6">
+                                <div class="p-2.5 rounded-3 bg-dark border border-secondary border-opacity-25 text-center h-100">
+                                    <div class="text-secondary fs-5 mb-1"><i class="fa-solid fa-rotate-left"></i></div>
+                                    <div class="text-white small fw-bold">Abnormal returns</div>
+                                    <small class="text-secondary" style="font-size: 0.72rem;">Sale wardrobing &amp; tag swap</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- POINT 57: SUSPICIOUS ACTIVITY SECTION (EXACT PROMPT MATCHING: Customer A, Customer B, Customer C [Review]) -->
+            <div class="glass-card mb-4 p-4 position-relative overflow-hidden" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(30, 27, 75, 0.8) 50%, rgba(15, 23, 42, 0.95) 100%); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 20px;">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2.5">
+                        <div class="p-2.5 rounded-3 bg-danger bg-opacity-20 text-danger fs-4">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <h4 class="fw-bold text-white mb-0">⚠ Suspicious Activity</h4>
+                                <span class="badge bg-danger text-white px-2.5 py-1 rounded-pill small fw-bold">Point 57 Match</span>
+                            </div>
+                            <small class="text-secondary">High-urgency accounts flagged during active sale window</small>
+                        </div>
+                    </div>
+                    <span class="badge bg-dark text-danger border border-danger border-opacity-40 font-monospace px-3 py-1.5 rounded-pill">
+                        <i class="fa-solid fa-satellite-dish fa-fade me-1.5"></i> Live Threat Telemetry
+                    </span>
+                </div>
+
+                <!-- 3 Top Prompt Customers Spotlight (Customer A, Customer B, Customer C) -->
+                <div class="row g-3" id="fraudSpotlightCards">
+                    @if (Model.SaleFraudAlertsList != null && Model.SaleFraudAlertsList.Any())
+                    {
+                        @foreach (var alert in Model.SaleFraudAlertsList.Take(3))
+                        {
+                            <div class="col-lg-4 col-md-6" id="fraud-card-@alert.Id">
+                                <div class="p-3.5 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255, 255, 255, 0.1);">
+                                    <div>
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="p-2 rounded-2 bg-dark text-white fw-bold font-monospace border border-secondary border-opacity-30">
+                                                    @alert.CustomerDisplayName
+                                                </div>
+                                                <div>
+                                                    <div class="text-white fw-bold">@alert.RealCustomerName</div>
+                                                    <small class="text-secondary">@alert.CustomerPhone</small>
+                                                </div>
+                                            </div>
+                                            <span class="badge @alert.RiskBadgeClass px-2 py-1 rounded-pill font-monospace small">
+                                                Score: @alert.RiskScore/100
+                                            </span>
+                                        </div>
+
+                                        <div class="p-2.5 rounded-2 bg-dark border border-secondary border-opacity-25 mb-2.5">
+                                            <div class="text-danger small fw-bold text-uppercase mb-1"><i class="fa-solid fa-flag me-1"></i> @alert.AbuseCategory</div>
+                                            <div class="text-light small">@alert.TriggerSummary</div>
+                                        </div>
+
+                                        <div class="d-flex justify-content-between align-items-center small text-secondary mb-3">
+                                            <span><i class="fa-solid fa-clock me-1"></i> @alert.DetectedAtFormatted</span>
+                                            <span class="badge @alert.StatusBadgeClass font-monospace" id="badge-spotlight-status-@alert.Id">@alert.Status</span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <button type="button" class="btn btn-warning btn-sm w-100 fw-bold text-dark rounded-pill py-2" onclick="openReviewSaleFraudModal(@alert.Id)">
+                                            <i class="fa-solid fa-magnifying-glass me-1.5"></i> [Review]
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
+            <!-- Complete Suspicious Activity Master Table -->
+            <div class="glass-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                        <button type="button" class="btn btn-sm btn-dark fraud-filter-btn active" onclick="filterSaleFraudTable('all', this)">All Suspicious (6)</button>
+                        <button type="button" class="btn btn-sm btn-dark fraud-filter-btn" onclick="filterSaleFraudTable('critical', this)">
+                            <i class="fa-solid fa-shield-virus text-danger me-1"></i> Critical
+                        </button>
+                        <button type="button" class="btn btn-sm btn-dark fraud-filter-btn" onclick="filterSaleFraudTable('review', this)">
+                            <i class="fa-solid fa-clock text-warning me-1"></i> Under Review
+                        </button>
+                        <button type="button" class="btn btn-sm btn-dark fraud-filter-btn" onclick="filterSaleFraudTable('enforced', this)">
+                            <i class="fa-solid fa-gavel text-success me-1"></i> Action Enforced
+                        </button>
+                    </div>
+
+                    <div class="input-group input-group-sm" style="max-width: 320px;">
+                        <span class="input-group-text bg-dark text-secondary border-secondary border-opacity-25"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" class="form-control bg-dark text-white border-secondary border-opacity-25" placeholder="Search Customer, IP, Trigger..." onkeyup="searchSaleFraudTable(this.value)" id="fraudSearchInput" />
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0" id="saleFraudTable">
+                        <thead>
+                            <tr class="text-secondary small text-uppercase border-bottom border-secondary border-opacity-25">
+                                <th>Flagged Customer</th>
+                                <th>Abuse Category &amp; Trigger Reason</th>
+                                <th>Risk Score</th>
+                                <th>Sale Activity Metrics</th>
+                                <th>Loss Prevented</th>
+                                <th style="text-align: center;">Status</th>
+                                <th style="text-align: center;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="saleFraudTableBody">
+                            @if (Model.SaleFraudAlertsList != null && Model.SaleFraudAlertsList.Any())
+                            {
+                                @foreach (var alert in Model.SaleFraudAlertsList)
+                                {
+                                    <tr class="fraud-row border-bottom border-secondary border-opacity-10" id="fraud-row-@alert.Id"
+                                        data-risk="@alert.RiskLevel.ToLowerInvariant()"
+                                        data-status="@alert.Status.ToLowerInvariant()">
+                                        <!-- Customer -->
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2.5">
+                                                <div class="p-2 rounded-3 bg-dark border border-secondary border-opacity-30 text-white font-monospace fw-bold">
+                                                    @alert.CustomerDisplayName
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold text-white">@alert.RealCustomerName</div>
+                                                    <div class="text-secondary small">@alert.CustomerEmail &bull; @alert.CustomerPhone</div>
+                                                    <span class="badge bg-dark border border-secondary text-secondary small font-monospace mt-0.5">
+                                                        IP: @alert.IpAddress
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <!-- Abuse Category & Trigger -->
+                                        <td>
+                                            <div class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 mb-1">
+                                                @alert.AbuseCategory
+                                            </div>
+                                            <div class="text-light small">@alert.TriggerSummary</div>
+                                            <div class="text-secondary small" style="font-size: 0.72rem;">Detected: @alert.DetectedAtFormatted</div>
+                                        </td>
+
+                                        <!-- Risk Score -->
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="badge @alert.RiskBadgeClass px-2.5 py-1 rounded-pill font-monospace fw-bold">
+                                                    @alert.RiskScore/100
+                                                </span>
+                                                <span class="small text-secondary">@alert.RiskLevel</span>
+                                            </div>
+                                        </td>
+
+                                        <!-- Sale Activity Metrics -->
+                                        <td>
+                                            <div class="small text-light">Orders: <strong class="text-info font-monospace">@alert.TotalOrdersDuringSale</strong> | Cancels: <strong class="text-danger font-monospace">@alert.CancellationsDuringSale</strong></div>
+                                            <div class="small text-secondary mt-0.5">Coupons Used: <strong class="text-warning font-monospace">@alert.CouponsUsedCount</strong> (@alert.CouponAttemptsCount tries)</div>
+                                        </td>
+
+                                        <!-- Loss Prevented -->
+                                        <td>
+                                            <div class="font-monospace fw-bold text-success">@alert.PreventedFraudAmountFormatted</div>
+                                            <div class="text-secondary small" style="font-size: 0.7rem;">Direct Promo / GMV Saved</div>
+                                        </td>
+
+                                        <!-- Status -->
+                                        <td style="text-align: center;">
+                                            <span class="badge @alert.StatusBadgeClass font-monospace px-2.5 py-1 rounded-pill" id="table-status-badge-@alert.Id">
+                                                @alert.Status
+                                            </span>
+                                        </td>
+
+                                        <!-- Action -->
+                                        <td style="text-align: center;">
+                                            <button type="button" class="btn btn-warning btn-sm px-3 py-1.5 fw-bold text-dark rounded-pill" onclick="openReviewSaleFraudModal(@alert.Id)">
+                                                <i class="fa-solid fa-magnifying-glass me-1"></i> [Review]
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>

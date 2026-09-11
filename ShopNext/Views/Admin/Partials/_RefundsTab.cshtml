@@ -1,0 +1,36 @@
+@model ShopNext.Models.AdminDashboardViewModel
+        <div class="tab-panel-container" id="panel-refunds">
+            <div class="glass-card">
+                <h3 class="section-title">
+                    <span><i class="fa-solid fa-money-bill-transfer text-amber me-2"></i> Processed Refunds Ledger</span>
+                    <span class="badge bg-success">Instant Gateway</span>
+                </h3>
+                <div class="table-responsive">
+                    <table class="table approved-table">
+                        <thead>
+                            <tr>
+                                <th>Refund ID</th>
+                                <th>Customer</th>
+                                <th>Amount</th>
+                                <th>Gateway</th>
+                                <th>Status</th>
+                                <th>Processed Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var refd in Model.RefundsList)
+                            {
+                                <tr>
+                                    <td class="font-monospace text-info fw-bold">@refd.RefundId</td>
+                                    <td>@refd.CustomerName</td>
+                                    <td class="font-monospace text-danger fw-bold">₹@refd.Amount.ToString("N0")</td>
+                                    <td><span class="badge bg-secondary bg-opacity-30 text-light px-2 py-1">@refd.Gateway</span></td>
+                                    <td><span class="badge bg-success bg-opacity-25 text-success px-2 py-1 rounded-pill">@refd.Status</span></td>
+                                    <td class="text-secondary small">@refd.ProcessedDate</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>

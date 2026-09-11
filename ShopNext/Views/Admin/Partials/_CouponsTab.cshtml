@@ -1,0 +1,362 @@
+@model ShopNext.Models.AdminDashboardViewModel
+        <div class="tab-panel-container" id="panel-coupons">
+            <!-- Header Banner -->
+            <div class="glass-card mb-4" style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(99, 102, 241, 0.12) 50%, rgba(15, 23, 42, 0.8) 100%); border-color: rgba(6, 182, 212, 0.3);">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-info text-dark px-3 py-1 rounded-pill fw-bold font-monospace fs-6">
+                                <i class="fa-solid fa-ticket me-1 text-primary"></i> 🎟️ SALE COUPONS ENGINE
+                            </span>
+                            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill small">
+                                Point 53: Campaign-Specific & Strict Usage Limits
+                            </span>
+                        </div>
+                        <h2 class="fw-bold text-white mb-1">Campaign Coupons & Real-Time Usage Limits</h2>
+                        <p class="text-secondary small mb-0">Manage festival-exclusive coupons (e.g., <strong>BIGSALE500</strong>), enforce minimum order thresholds, and track live usage limits (Total, Used, Remaining).</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <button type="button" class="btn btn-info text-dark fw-bold rounded-pill px-4 py-2" onclick="openAddCouponModal()">
+                            <i class="fa-solid fa-plus me-1"></i> Add Coupon
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top 4 KPI Metrics -->
+            @{
+                var allCouponsList = Model.CouponsList ?? new List<ShopNext.Models.AdminCouponDto>();
+                var saleLinkedCoupons = allCouponsList.Where(c => c.IsValidOnlyDuringSale || !string.IsNullOrEmpty(c.CampaignName)).ToList();
+                int totalCouponsUsageLimit = allCouponsList.Sum(c => c.TotalUsageLimit);
+                int totalCouponsUsed = allCouponsList.Sum(c => c.UsedCount);
+                int totalCouponsRemaining = Math.Max(0, totalCouponsUsageLimit - totalCouponsUsed);
+                double overallCouponsRedeemPct = totalCouponsUsageLimit > 0 ? ((double)totalCouponsUsed / totalCouponsUsageLimit) * 100 : 0;
+            }
+            <div class="row g-3 mb-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="glass-card p-3.5 h-100 border-start border-info border-4">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <small class="text-secondary fw-semibold text-uppercase">Total Active Coupons</small>
+                                <h3 class="fw-bold text-white mt-1 mb-0 font-monospace">@allCouponsList.Count(c => c.IsActive) <span class="fs-6 text-secondary fw-normal">/ @allCouponsList.Count Total</span></h3>
+                                <small class="text-info"><i class="fa-solid fa-ticket me-1"></i> Promo & Sale Codes</small>
+                            </div>
+                            <div class="p-2.5 rounded-3 bg-info bg-opacity-15 text-info fs-4">
+                                <i class="fa-solid fa-tags"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="glass-card p-3.5 h-100 border-start border-danger border-4">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <small class="text-secondary fw-semibold text-uppercase">Sale-Exclusive Coupons</small>
+                                <h3 class="fw-bold text-white mt-1 mb-0 font-monospace">@saleLinkedCoupons.Count</h3>
+                                <small class="text-danger fw-semibold"><i class="fa-solid fa-fire me-1"></i> Valid Only During Sale</small>
+                            </div>
+                            <div class="p-2.5 rounded-3 bg-danger bg-opacity-15 text-danger fs-4">
+                                <i class="fa-solid fa-fire"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="glass-card p-3.5 h-100 border-start border-warning border-4">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <small class="text-secondary fw-semibold text-uppercase">Total Usage Telemetry</small>
+                                <h3 class="fw-bold text-warning mt-1 mb-0 font-monospace">@totalCouponsUsed.ToString("N0") <span class="fs-6 text-secondary fw-normal">/ @totalCouponsUsageLimit.ToString("N0")</span></h3>
+                                <small class="text-warning"><i class="fa-solid fa-chart-pie me-1"></i> @overallCouponsRedeemPct.ToString("F1")% Redeemed (@totalCouponsRemaining.ToString("N0") Remaining)</small>
+                            </div>
+                            <div class="p-2.5 rounded-3 bg-warning bg-opacity-15 text-warning fs-4">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="glass-card p-3.5 h-100 border-start border-success border-4">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <small class="text-secondary fw-semibold text-uppercase">Discount Savings Granted</small>
+                                <h3 class="fw-bold text-success mt-1 mb-0 font-monospace">₹@(((totalCouponsUsed * 500m) / 100000m).ToString("F1")) L</h3>
+                                <small class="text-success"><i class="fa-solid fa-arrow-trend-up me-1"></i> Customer Savings Velocity</small>
+                            </div>
+                            <div class="p-2.5 rounded-3 bg-success bg-opacity-15 text-success fs-4">
+                                <i class="fa-solid fa-wallet"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Campaign-Specific Sale Coupons Showcase Grid -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-white mb-0 d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-fire text-danger"></i> Campaign-Specific Sale Coupons
+                        <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 rounded-pill fs-7">Strict Usage Limits</span>
+                    </h5>
+                    <small class="text-secondary">Simulate live redemptions or extend usage limits dynamically</small>
+                </div>
+                <div class="row g-3">
+                    @foreach (var sc in saleLinkedCoupons)
+                    {
+                        var isExhausted = sc.IsUsageExhausted;
+                        var cardBorder = isExhausted ? "border-danger border-opacity-30" : "border-info border-opacity-40";
+                        var bgGlow = isExhausted ? "background: rgba(15, 23, 42, 0.95);" : "background: linear-gradient(145deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.7) 100%);";
+
+                        <div class="col-xl-4 col-md-6" id="sale-coupon-card-@sc.Id">
+                            <div class="glass-card p-3.5 h-100 position-relative border @cardBorder" style="@bgGlow">
+                                <!-- Top Bar -->
+                                <div class="d-flex justify-content-between align-items-center mb-2.5">
+                                    <span class="badge bg-danger text-white fw-bold px-2.5 py-1 rounded-pill font-monospace small">
+                                        <i class="fa-solid fa-fire me-1"></i> @(sc.CampaignName ?? "Campaign Sale")
+                                    </span>
+                                    <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-30 px-2 py-0.5 rounded-pill small">
+                                        <i class="fa-solid fa-calendar-check me-1"></i> Valid only during Sale
+                                    </span>
+                                </div>
+
+                                <!-- Coupon Code & Discount Header -->
+                                <div class="p-3 rounded-3 mb-3 text-center border border-info border-opacity-30 position-relative" style="background: rgba(6, 182, 212, 0.08);">
+                                    <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
+                                        <h4 class="fw-bold text-info font-monospace mb-0" id="showcase-code-@sc.Id">@sc.Code</h4>
+                                        <button type="button" class="btn btn-outline-info btn-sm rounded-circle p-1" onclick="copyCouponCode('@sc.Code')" title="Copy Code" style="width: 28px; height: 28px;">
+                                            <i class="fa-regular fa-copy" style="font-size: 0.75rem;"></i>
+                                        </button>
+                                    </div>
+                                    <div class="text-success fw-bold font-monospace fs-5">@sc.Discount</div>
+                                    <small class="text-secondary d-block">Minimum Order: <strong class="text-white">₹@sc.MinOrder.ToString("N0")</strong></small>
+                                </div>
+
+                                <!-- Description -->
+                                <p class="text-secondary small mb-3" style="min-height: 38px;">@sc.Description</p>
+
+                                <!-- Admin Usage Limit Matrix: Total, Used, Remaining -->
+                                <div class="p-2.5 rounded-3 mb-3 border border-secondary border-opacity-25" style="background: rgba(0, 0, 0, 0.35);">
+                                    <div class="d-flex justify-content-between align-items-center mb-1 text-secondary small">
+                                        <span><i class="fa-solid fa-chart-simple text-info me-1"></i> Admin Usage Limit</span>
+                                        <span class="badge @(isExhausted ? "bg-danger" : "bg-info bg-opacity-20 text-info") font-monospace fw-bold" id="card-usage-badge-@sc.Id">
+                                            @(isExhausted ? "EXHAUSTED" : $"{sc.UsagePercentage:F1}% Used")
+                                        </span>
+                                    </div>
+                                    <div class="row g-2 text-center my-1.5">
+                                        <div class="col-4">
+                                            <div class="p-1.5 rounded-2 bg-dark border border-secondary border-opacity-20">
+                                                <small class="text-secondary d-block" style="font-size: 0.68rem;">Total Usage</small>
+                                                <span class="text-white fw-bold font-monospace small" id="card-total-@sc.Id">@sc.TotalUsageLimit.ToString("N0")</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="p-1.5 rounded-2 bg-dark border border-secondary border-opacity-20">
+                                                <small class="text-secondary d-block" style="font-size: 0.68rem;">Used</small>
+                                                <span class="text-warning fw-bold font-monospace small" id="card-used-@sc.Id">@sc.UsedCount.ToString("N0")</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="p-1.5 rounded-2 bg-dark border border-secondary border-opacity-20">
+                                                <small class="text-secondary d-block" style="font-size: 0.68rem;">Remaining</small>
+                                                <span class="fw-bold font-monospace small @(isExhausted ? "text-danger" : "text-success")" id="card-rem-@sc.Id">@sc.RemainingCount.ToString("N0")</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 6px; background: rgba(255,255,255,0.1);">
+                                        <div class="progress-bar @(isExhausted ? "bg-danger" : "bg-info")" 
+                                             id="card-progress-@sc.Id" 
+                                             style="width: @sc.UsagePercentage%;"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="d-grid gap-2">
+                                    <button type="button" class="btn btn-info text-dark fw-bold w-100 py-1.5 rounded-pill" 
+                                            id="btn-redeem-@sc.Id" 
+                                            onclick="simulateRedeemCoupon(@sc.Id)" @(isExhausted ? "disabled" : "")>
+                                        <i class="fa-solid fa-bolt me-1 text-danger"></i> Simulate 1 Redeem
+                                    </button>
+                                    <div class="d-flex gap-1.5">
+                                        <button type="button" class="btn btn-outline-info btn-sm flex-grow-1 rounded-3 py-1" onclick="openRestockCouponModal(@sc.Id, '@sc.Code', @sc.TotalUsageLimit, @sc.UsedCount)">
+                                            <i class="fa-solid fa-plus me-1"></i> Restock Limit
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-3 py-1 px-2.5" onclick="openEditCouponModal(@sc.Id)" title="Edit Coupon">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm rounded-3 py-1 px-2.5" onclick="openDeleteCouponModal(@sc.Id, '@sc.Code')" title="Delete Coupon">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Master Coupons Inventory Table -->
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <h5 class="fw-bold text-white mb-0">
+                            <i class="fa-solid fa-list-check text-info me-1"></i> Promotional & Sale Coupons Table
+                        </h5>
+                        <span class="badge bg-secondary bg-opacity-30 text-light font-monospace" id="couponTableCountBadge">
+                            @allCouponsList.Count Coupons Active
+                        </span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <div class="input-group input-group-sm" style="max-width: 250px;">
+                            <span class="input-group-text bg-dark border-secondary border-opacity-30 text-secondary">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </span>
+                            <input type="text" class="form-control bg-dark border-secondary border-opacity-30 text-light" 
+                                   id="couponSearchInput" placeholder="Search code, campaign..." onkeyup="searchCouponTable(this.value)" />
+                        </div>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-info text-dark active coupon-filter-btn" onclick="filterCouponTable('all', this)">All</button>
+                            <button type="button" class="btn btn-dark coupon-filter-btn" onclick="filterCouponTable('sale', this)">🔥 Sale Only</button>
+                            <button type="button" class="btn btn-dark coupon-filter-btn" onclick="filterCouponTable('active', this)">⚡ Active</button>
+                            <button type="button" class="btn btn-dark coupon-filter-btn" onclick="filterCouponTable('exhausted', this)">🔴 Exhausted</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table approved-table align-middle" id="couponsMainTable">
+                        <thead>
+                            <tr>
+                                <th>Coupon Code & Campaign</th>
+                                <th>Discount</th>
+                                <th>Minimum Order</th>
+                                <th>Maximum Discount</th>
+                                <th>Validity Period</th>
+                                <th>Usage Limit Telemetry</th>
+                                <th style="text-align: center;">Status</th>
+                                <th style="text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="couponsTableBody">
+                            @foreach (var c in allCouponsList)
+                            {
+                                var isExh = c.IsUsageExhausted;
+                                var isSale = c.IsValidOnlyDuringSale || !string.IsNullOrEmpty(c.CampaignName);
+                                var rowFilter = isExh ? "exhausted" : (isSale ? "sale" : (c.IsActive ? "active" : "inactive"));
+
+                                <tr class="coupon-table-row" id="coupon-row-@c.Id" data-status="@rowFilter" data-code="@c.Code" data-campaign="@(c.CampaignName ?? "")">
+                                    <!-- Coupon Code & Scope -->
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge bg-primary bg-opacity-20 text-info px-3 py-1.5 rounded-pill font-monospace fw-bold fs-6 border border-primary border-opacity-30" id="coupon-code-@c.Id">
+                                                @c.Code
+                                            </span>
+                                            @if (c.IsValidOnlyDuringSale)
+                                            {
+                                                <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2 py-0.5 rounded-pill font-monospace small">
+                                                    <i class="fa-solid fa-fire me-1"></i> Sale Only
+                                                </span>
+                                            }
+                                        </div>
+                                        <div class="text-secondary small mt-1" id="coupon-desc-@c.Id">@c.Description</div>
+                                        @if (!string.IsNullOrEmpty(c.CampaignName))
+                                        {
+                                            <small class="text-warning fw-semibold"><i class="fa-solid fa-bullhorn me-1"></i> @c.CampaignName</small>
+                                        }
+                                    </td>
+
+                                    <!-- Discount -->
+                                    <td>
+                                        <strong class="text-success font-monospace fs-6" id="coupon-disc-@c.Id">@c.Discount</strong>
+                                        <div class="text-secondary small">Type: @c.DiscountType</div>
+                                    </td>
+
+                                    <!-- Minimum Order -->
+                                    <td>
+                                        <div class="font-monospace text-white fw-bold" id="coupon-min-@c.Id">₹@c.MinOrder.ToString("N0")</div>
+                                        <small class="text-secondary">Min Cart</small>
+                                    </td>
+
+                                    <!-- Maximum Discount -->
+                                    <td>
+                                        <div class="font-monospace text-info" id="coupon-max-@c.Id">@(c.MaxDiscount.HasValue ? $"₹{c.MaxDiscount.Value:N0}" : "Uncapped")</div>
+                                    </td>
+
+                                    <!-- Validity Period -->
+                                    <td class="text-secondary small font-monospace" id="coupon-validity-@c.Id">
+                                        <div><i class="fa-regular fa-calendar-check text-success me-1"></i> @c.StartDate</div>
+                                        <div><i class="fa-regular fa-calendar-xmark text-danger me-1"></i> @c.EndDate</div>
+                                    </td>
+
+                                    <!-- Usage Limit Matrix (Total, Used, Remaining) -->
+                                    <td style="min-width: 190px;">
+                                        <div class="d-flex justify-content-between align-items-center small mb-1 font-monospace">
+                                            <span class="text-secondary" id="table-used-txt-@c.Id">Used: @c.UsedCount.ToString("N0") / @c.TotalUsageLimit.ToString("N0")</span>
+                                            <span class="@(isExh ? "text-danger fw-bold" : "text-success")" id="table-rem-txt-@c.Id">@c.RemainingCount.ToString("N0") Left</span>
+                                        </div>
+                                        <div class="progress" style="height: 5px; background: rgba(255,255,255,0.1);">
+                                            <div class="progress-bar @(isExh ? "bg-danger" : "bg-info")" 
+                                                 id="table-progress-@c.Id" 
+                                                 style="width: @c.UsagePercentage%;"></div>
+                                        </div>
+                                    </td>
+
+                                    <!-- Status -->
+                                    <td style="text-align: center;" id="coupon-status-cell-@c.Id">
+                                        @if (isExh)
+                                        {
+                                            <span class="badge bg-danger text-white px-2.5 py-1 rounded-pill fw-bold">
+                                                <i class="fa-solid fa-ban me-1"></i> Limit Exhausted
+                                            </span>
+                                        }
+                                        else if (c.Status == "Active")
+                                        {
+                                            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-circle-check me-1"></i> Active
+                                            </span>
+                                        }
+                                        else if (c.Status == "Expired")
+                                        {
+                                            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-clock me-1"></i> Expired
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary bg-opacity-30 text-light px-2.5 py-1 rounded-pill">
+                                                Inactive
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <!-- Actions -->
+                                    <td style="text-align: right;">
+                                        <div class="d-inline-flex gap-1.5 flex-wrap justify-content-end">
+                                            <button type="button" class="btn btn-info btn-sm text-dark fw-bold px-2 py-1 rounded-3" 
+                                                    id="table-btn-redeem-@c.Id"
+                                                    onclick="simulateRedeemCoupon(@c.Id)" 
+                                                    title="Simulate 1 Redemption" @(isExh ? "disabled" : "")>
+                                                <i class="fa-solid fa-bolt text-danger"></i> Redeem
+                                            </button>
+                                            <button type="button" class="btn btn-outline-info btn-sm px-2 py-1 rounded-3" 
+                                                    onclick="openRestockCouponModal(@c.Id, '@c.Code', @c.TotalUsageLimit, @c.UsedCount)" 
+                                                    title="Extend Usage Limit">
+                                                <i class="fa-solid fa-plus"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-warning btn-sm px-2 py-1 rounded-3" onclick="openEditCouponModal(@c.Id)" title="Edit Coupon">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm px-2 py-1 rounded-3" onclick="toggleCouponStatus(@c.Id)" title="Toggle Active Status">
+                                                <i class="fa-solid fa-power-off"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger btn-sm px-2 py-1 rounded-3" onclick="openDeleteCouponModal(@c.Id, '@c.Code')" title="Delete Coupon">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>

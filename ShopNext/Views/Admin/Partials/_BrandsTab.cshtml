@@ -1,0 +1,100 @@
+@model ShopNext.Models.AdminDashboardViewModel
+        <div class="tab-panel-container" id="panel-brands">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                    <div>
+                        <h3 class="fw-bold text-white mb-1"><i class="fa-solid fa-copyright text-pink me-2" style="color: #f472b6;"></i> Brand Management</h3>
+                        <p class="text-secondary small mb-0">Manage partner brands (Samsung, Apple, Nike, Adidas, HP, Dell, Lenovo), category associations, and quality ratings.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <!-- [Add] Brand Action -->
+                        <button type="button" class="btn btn-sm px-3.5 py-2 fw-bold rounded-3 shadow-sm text-white" style="background: linear-gradient(135deg, #ec4899, #db2777); border: none;" onclick="openAddBrandModal()">
+                            <i class="fa-solid fa-plus me-1.5"></i> Add Brand
+                        </button>
+                        <span class="badge px-3 py-2 rounded-pill font-monospace" style="background: rgba(244, 114, 182, 0.2); color: #f472b6;" id="brandTotalBadge">@Model.BrandsList.Count Brands</span>
+                    </div>
+                </div>
+
+                <!-- 7 Target Brands Table (Samsung, Apple, Nike, Adidas, HP, Dell, Lenovo) -->
+                <div class="table-responsive">
+                    <table class="table approved-table">
+                        <thead>
+                            <tr>
+                                <th>Brand Details</th>
+                                <th>Category</th>
+                                <th>Description / Scope</th>
+                                <th>Products</th>
+                                <th>Rating</th>
+                                <th style="text-align: center;">Status</th>
+                                <th style="text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="brandsTableBody">
+                            @foreach (var b in Model.BrandsList)
+                            {
+                                <tr id="brand-row-@b.Id">
+                                    <td>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="rounded-3 overflow-hidden d-flex align-items-center justify-content-center p-1" style="width: 44px; height: 44px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);" id="brand-logo-wrap-@b.Id">
+                                                <img src="@(string.IsNullOrWhiteSpace(b.LogoUrl) ? "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100" : b.LogoUrl)" id="brand-img-@b.Id" class="img-fluid rounded-2" style="max-height: 100%; object-fit: cover;" onerror="this.src='https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100';" alt="@b.Name" />
+                                            </div>
+                                            <div>
+                                                <strong class="text-white fs-6" id="brand-name-@b.Id">@b.Name</strong>
+                                                <div class="text-secondary small font-monospace">ID: #BRD-@b.Id.ToString("D3")</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary bg-opacity-30 text-light px-2.5 py-1 rounded-pill" id="brand-cat-@b.Id">
+                                            @b.Category
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="text-secondary small text-truncate" style="max-width: 260px;" id="brand-desc-@b.Id" title="@b.Description">
+                                            @(string.IsNullOrWhiteSpace(b.Description) ? $"{b.Name} authorized brand collection" : b.Description)
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="text-info fw-bold font-monospace">@b.ProductCount.ToString("N0")</span>
+                                        <small class="text-secondary">items</small>
+                                    </td>
+                                    <td>
+                                        <span class="text-warning fw-bold font-monospace" id="brand-rating-@b.Id">⭐ @b.Rating.ToString("F1")</span>
+                                    </td>
+                                    <td style="text-align: center;" id="brand-status-cell-@b.Id">
+                                        @if (b.Status == "Active")
+                                        {
+                                            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-circle-check me-1"></i> Active
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                Inactive
+                                            </span>
+                                        }
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <div class="d-inline-flex gap-1.5">
+                                            <!-- [View] -->
+                                            <button type="button" class="btn btn-outline-info btn-sm px-2.5 py-1 rounded-3" onclick="viewBrandModal(@b.Id)" title="View Brand Profile">
+                                                <i class="fa-solid fa-eye me-1"></i> View
+                                            </button>
+                                            <!-- [Edit] -->
+                                            <button type="button" class="btn btn-outline-warning btn-sm px-2.5 py-1 rounded-3 fw-bold" onclick="openEditBrandModal(@b.Id)" title="Edit Brand">
+                                                <i class="fa-solid fa-pen-to-square me-1"></i> Edit
+                                            </button>
+                                            <!-- [Delete] -->
+                                            <button type="button" class="btn btn-outline-danger btn-sm px-2.5 py-1 rounded-3" onclick="openDeleteBrandModal(@b.Id, '@Html.Raw(b.Name.Replace("'", "\\'"))')" title="Delete Brand">
+                                                <i class="fa-solid fa-trash me-1"></i> Delete
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>

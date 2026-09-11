@@ -1,0 +1,98 @@
+@model ShopNext.Models.AdminDashboardViewModel
+        <div class="tab-panel-container" id="panel-returns">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill small fw-bold">
+                                <i class="fa-solid fa-shield-halved me-1"></i> ANTI-FRAUD &bull; SWAP PROTECTION
+                            </span>
+                        </div>
+                        <h3 class="fw-bold text-white mb-1"><i class="fa-solid fa-rotate-left text-danger me-2"></i> Returns &amp; Product Verification Desk</h3>
+                        <p class="text-secondary small mb-0">Audit serial numbers, verify original SKUs, and inspect returned items before refund release.</p>
+                    </div>
+                    <span class="badge bg-danger bg-opacity-20 text-danger px-3 py-2 rounded-pill font-monospace" id="returnsBadge">
+                        @Model.ReturnsList.Count Returns Active
+                    </span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table approved-table">
+                        <thead>
+                            <tr>
+                                <th>Return &amp; Order ID</th>
+                                <th>Customer &amp; Store</th>
+                                <th>Product &amp; SKU</th>
+                                <th>Reason</th>
+                                <th>Refund Amount</th>
+                                <th style="text-align: center;">Verification Status</th>
+                                <th style="text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="returnsTableBody">
+                            @foreach (var ret in Model.ReturnsList)
+                            {
+                                <tr id="return-row-@ret.RawOrderId">
+                                    <td class="font-monospace text-danger fw-bold">
+                                        <div>@ret.ReturnId</div>
+                                        <small class="text-secondary">@ret.OrderId</small>
+                                    </td>
+                                    <td>
+                                        <div class="text-white fw-bold">@ret.CustomerName</div>
+                                        <small class="text-secondary"><i class="fa-solid fa-store text-warning me-1"></i> @ret.ShopName</small>
+                                    </td>
+                                    <td>
+                                        <div class="text-light fw-semibold">@ret.ProductName</div>
+                                        <div class="font-monospace text-secondary small">SKU: @ret.Sku</div>
+                                    </td>
+                                    <td class="text-warning small fst-italic">"@ret.Reason"</td>
+                                    <td class="font-monospace text-success fw-bold">₹@ret.Amount.ToString("N2")</td>
+                                    <td style="text-align: center;" id="return-status-cell-@ret.RawOrderId">
+                                        @if (ret.Status == "Approved" || ret.Status == "Return_Approved")
+                                        {
+                                            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-circle-check me-1"></i> Approved
+                                            </span>
+                                        }
+                                        else if (ret.Status == "Under_Verification")
+                                        {
+                                            <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-magnifying-glass me-1"></i> Under Verification
+                                            </span>
+                                        }
+                                        else if (ret.Status == "Product_Swapped_Fraud" || ret.Status == "Swapped_Product_Hold")
+                                        {
+                                            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-triangle-exclamation me-1"></i> Swapped / Hold
+                                            </span>
+                                        }
+                                        else if (ret.Status == "Rejected" || ret.Status == "Return_Rejected")
+                                        {
+                                            <span class="badge bg-secondary bg-opacity-30 text-light border border-secondary px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-xmark me-1"></i> Rejected
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-clock me-1"></i> Return Requested
+                                            </span>
+                                        }
+                                    </td>
+                                    <td style="text-align: center;" id="return-action-cell-@ret.RawOrderId">
+                                        <div class="d-inline-flex gap-1.5 flex-wrap justify-content-center">
+                                            <button type="button" class="btn btn-outline-warning btn-sm px-2.5 py-1.5 rounded-3 fw-bold" onclick="openReturnVerificationModal(@ret.RawOrderId)" title="Inspect & Verify Item">
+                                                <i class="fa-solid fa-shield-halved me-1"></i> Verify
+                                            </button>
+                                            <button type="button" class="btn btn-outline-info btn-sm px-2.5 py-1.5 rounded-3 fw-bold" onclick="openReturnEvidenceModal(@ret.RawOrderId)" title="Side-by-Side Visual Photo Comparison">
+                                                <i class="fa-solid fa-camera-rotate me-1"></i> Compare Evidence
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>

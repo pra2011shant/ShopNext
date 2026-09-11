@@ -1,0 +1,771 @@
+@model ShopNext.Models.AdminDashboardViewModel
+        <div class="tab-panel-container" id="panel-campaigns">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <h3 class="fw-bold text-white mb-0"><i class="fa-solid fa-fire text-danger me-2"></i> Sale &amp; Festival Campaign Management</h3>
+                            <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 px-3 py-1 rounded-pill fw-bold">Point 50</span>
+                        </div>
+                        <p class="text-secondary small mb-0 mt-1">Configure and manage large-scale shopping events (like Big Billion Days &amp; Mega Festival Sales) with multi-category tiered discounts, coupons, and seller governance.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-danger bg-opacity-20 text-danger px-3 py-2 rounded-pill font-monospace" id="campaignsLiveBadge">
+                            @Model.SaleCampaignsList.Count(x => x.IsActive) Active Campaigns
+                        </span>
+                        <button type="button" class="btn btn-outline-info btn-sm px-3 py-2 fw-bold rounded-3 shadow-sm text-info" onclick="openSaleAnalyticsModal(1)" title="Post-Sale Intelligence & Performance Report">
+                            <i class="fa-solid fa-chart-line me-1.5"></i> 📊 Sale Analytics
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm px-3.5 py-2 fw-bold rounded-3 shadow-sm text-white" onclick="openCreateCampaignModal()">
+                            <i class="fa-solid fa-plus me-1.5"></i> Create Sale Campaign
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4 Top KPI Cards -->
+                <div class="row g-3 mb-4">
+                    <!-- KPI 1: Live & Active Campaigns -->
+                    <div class="col-xl-3 col-md-6">
+                        <div class="p-3.5 rounded-3 h-100" style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-danger small fw-bold text-uppercase tracking-wider">Active Campaigns</div>
+                                    <div class="text-white fw-bold fs-3 mt-1" id="kpiActiveCampaignsCount">@Model.SaleCampaignsList.Count(x => x.IsActive)</div>
+                                </div>
+                                <div class="p-3 rounded-3 bg-danger bg-opacity-20 text-danger fs-3">
+                                    <i class="fa-solid fa-fire-flame-curved"></i>
+                                </div>
+                            </div>
+                            <div class="text-secondary small mt-2"><i class="fa-solid fa-calendar-check me-1 text-danger"></i> @Model.SaleCampaignsList.Count(x => x.Status == "Upcoming") Upcoming Scheduled Sales</div>
+                        </div>
+                    </div>
+
+                    <!-- KPI 2: Max Category Discount -->
+                    <div class="col-xl-3 col-md-6">
+                        <div class="p-3.5 rounded-3 h-100" style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-warning small fw-bold text-uppercase tracking-wider">Peak Category Discount</div>
+                                    <div class="text-white fw-bold fs-3 mt-1">Up to 60% OFF</div>
+                                </div>
+                                <div class="p-3 rounded-3 bg-warning bg-opacity-20 text-warning fs-3">
+                                    <i class="fa-solid fa-percent"></i>
+                                </div>
+                            </div>
+                            <div class="text-secondary small mt-2"><i class="fa-solid fa-tags me-1 text-warning"></i> Fashion &bull; Mobiles &bull; Electronics</div>
+                        </div>
+                    </div>
+
+                    <!-- KPI 3: Participating Sellers -->
+                    <div class="col-xl-3 col-md-6">
+                        <div class="p-3.5 rounded-3 h-100" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-success small fw-bold text-uppercase tracking-wider">Participating Sellers</div>
+                                    <div class="text-white fw-bold fs-3 mt-1">250+ Verified</div>
+                                </div>
+                                <div class="p-3 rounded-3 bg-success bg-opacity-20 text-success fs-3">
+                                    <i class="fa-solid fa-store"></i>
+                                </div>
+                            </div>
+                            <div class="text-secondary small mt-2"><i class="fa-solid fa-shield-halved me-1 text-success"></i> 100% Platform Verified Sellers</div>
+                        </div>
+                    </div>
+
+                    <!-- KPI 4: Gross Campaign GMV -->
+                    <div class="col-xl-3 col-md-6">
+                        <div class="p-3.5 rounded-3 h-100" style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.25);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-primary small fw-bold text-uppercase tracking-wider">Campaign GMV Generated</div>
+                                    <div class="text-white fw-bold fs-3 mt-1">₹@Model.SaleCampaignsList.Sum(x => x.TotalGrossRevenue).ToString("N0")</div>
+                                </div>
+                                <div class="p-3 rounded-3 bg-primary bg-opacity-20 text-primary fs-3">
+                                    <i class="fa-solid fa-chart-line"></i>
+                                </div>
+                            </div>
+                            <div class="text-secondary small mt-2"><i class="fa-solid fa-bag-shopping me-1 text-primary"></i> @Model.SaleCampaignsList.Sum(x => x.TotalOrdersGenerated).ToString("N0") Orders Processed</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- POINT 51: Scheduled Sale Automation Hero & Live Flip Countdown (Starts In / Ends In) -->
+                <div class="p-4 mb-4 rounded-3 position-relative overflow-hidden" style="background: linear-gradient(135deg, rgba(30, 27, 75, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1px solid rgba(239, 68, 68, 0.35);">
+                    <div class="row align-items-center g-4">
+                        <div class="col-lg-6">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="badge bg-danger text-white fw-bold px-3 py-1 rounded-pill">
+                                    <i class="fa-solid fa-bolt me-1"></i> Point 51: Auto-Scheduled Sale
+                                </span>
+                                <span class="badge bg-dark border border-secondary text-warning font-monospace px-2.5 py-1 rounded-pill">
+                                    <i class="fa-solid fa-robot me-1"></i> Zero Manual Intervention
+                                </span>
+                            </div>
+                            <h4 class="fw-bold text-white mb-1">🔥 Mega Shopping Sale</h4>
+                            <p class="text-secondary small mb-3">
+                                Sale future date par automatically start hogi: <strong>Start time par Campaign &rarr; ACTIVE</strong>, <strong>End time par Campaign &rarr; EXPIRED</strong>. Admin ko manually start/stop karne ki zarurat nahi.
+                            </p>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="badge bg-dark text-info border border-secondary px-2.5 py-1 rounded-pill small">
+                                    <i class="fa-solid fa-mobile-screen me-1"></i> Mobiles 20% OFF
+                                </span>
+                                <span class="badge bg-dark text-danger border border-secondary px-2.5 py-1 rounded-pill small">
+                                    <i class="fa-solid fa-shirt me-1"></i> Fashion 40% OFF
+                                </span>
+                                <span class="badge bg-dark text-warning border border-secondary px-2.5 py-1 rounded-pill small">
+                                    <i class="fa-solid fa-laptop me-1"></i> Electronics 30% OFF
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6 text-center">
+                            <div class="p-3 rounded-3 bg-dark bg-opacity-80 border border-secondary border-opacity-30 d-inline-block w-100" style="max-width: 480px;">
+                                <div class="text-warning small fw-bold text-uppercase tracking-wider mb-2" id="heroCountdownLabel">
+                                    <i class="fa-regular fa-clock me-1"></i> Sale Starts In:
+                                </div>
+                                
+                                <!-- Flip-style countdown tiles matching prompt: 02 Days, 08 Hours, 25 Minutes, XX Seconds -->
+                                <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
+                                    <div class="text-center">
+                                        <div class="p-2.5 rounded-3 bg-black border border-danger border-opacity-50 text-danger fw-bold fs-3 font-monospace" style="min-width: 65px;" id="heroTimerDays">02</div>
+                                        <div class="text-secondary small mt-1 text-uppercase" style="font-size: 0.7rem;">Days</div>
+                                    </div>
+                                    <div class="fs-4 text-secondary fw-bold">:</div>
+                                    <div class="text-center">
+                                        <div class="p-2.5 rounded-3 bg-black border border-warning border-opacity-50 text-warning fw-bold fs-3 font-monospace" style="min-width: 65px;" id="heroTimerHours">08</div>
+                                        <div class="text-secondary small mt-1 text-uppercase" style="font-size: 0.7rem;">Hours</div>
+                                    </div>
+                                    <div class="fs-4 text-secondary fw-bold">:</div>
+                                    <div class="text-center">
+                                        <div class="p-2.5 rounded-3 bg-black border border-info border-opacity-50 text-info fw-bold fs-3 font-monospace" style="min-width: 65px;" id="heroTimerMinutes">25</div>
+                                        <div class="text-secondary small mt-1 text-uppercase" style="font-size: 0.7rem;">Minutes</div>
+                                    </div>
+                                    <div class="fs-4 text-secondary fw-bold">:</div>
+                                    <div class="text-center">
+                                        <div class="p-2.5 rounded-3 bg-black border border-success border-opacity-50 text-success fw-bold fs-3 font-monospace" style="min-width: 65px;" id="heroTimerSeconds">40</div>
+                                        <div class="text-secondary small mt-1 text-uppercase" style="font-size: 0.7rem;">Seconds</div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-25 px-2">
+                                    <div class="text-success small fw-semibold" id="heroAutoStatusText">
+                                        <i class="fa-solid fa-circle-check me-1"></i> Auto-Start at 08 Sep 2026, 11:33 AM
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-warning py-0.5 px-2 small rounded-pill" onclick="syncCampaignSchedulesManually()" title="Trigger manual background schedule evaluation">
+                                        <i class="fa-solid fa-rotate me-1"></i> Sync Clock
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Featured Sale Cards Showcase (Visual Preview matching prompt) -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-white mb-0"><i class="fa-solid fa-bolt text-warning me-2"></i> Featured Live &amp; Scheduled Mega Sales</h5>
+                        <small class="text-secondary">Interactive Festival Banners &bull; Category-Tiered Pricing Matrix</small>
+                    </div>
+
+                    <div class="row g-3">
+                        @foreach (var camp in Model.SaleCampaignsList.Take(3))
+                        {
+                            var themeBorder = camp.BannerTheme == "flame-red" ? "border-danger" : (camp.BannerTheme == "festive-gold" ? "border-warning" : "border-info");
+                            var themeBg = camp.BannerTheme == "flame-red" ? "rgba(239, 68, 68, 0.12)" : (camp.BannerTheme == "festive-gold" ? "rgba(245, 158, 11, 0.12)" : "rgba(147, 51, 234, 0.15)");
+                            
+                            <div class="col-lg-4 col-md-6">
+                                <div class="p-3.5 rounded-3 h-100 border @themeBorder border-opacity-40 position-relative d-flex flex-column justify-content-between" style="background: @themeBg; backdrop-filter: blur(10px);">
+                                    <div>
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <span class="badge @(camp.IsActive ? "bg-danger" : "bg-secondary") text-white fw-bold px-2.5 py-1 rounded-pill">
+                                                @(camp.IsActive ? "🔥 " + camp.Status : "⏸ " + camp.Status)
+                                            </span>
+                                            @if (!string.IsNullOrEmpty(camp.CouponCode))
+                                            {
+                                                <span class="badge bg-dark border border-secondary text-warning font-monospace px-2.5 py-1 rounded-pill">
+                                                    <i class="fa-solid fa-ticket me-1"></i> @camp.CouponCode
+                                                </span>
+                                            }
+                                        </div>
+
+                                        <h5 class="fw-bold text-white mb-1">@camp.CampaignName</h5>
+                                        <div class="text-secondary small mb-2.5">@camp.Tagline</div>
+
+                                        <!-- Timeline Pill -->
+                                        <div class="d-flex align-items-center gap-2 p-2 rounded-2 bg-dark bg-opacity-60 border border-secondary border-opacity-25 mb-3">
+                                            <i class="fa-regular fa-calendar text-warning fs-5"></i>
+                                            <div class="small">
+                                                <span class="text-white fw-semibold">@camp.StartDate</span>
+                                                <span class="text-secondary mx-1">&darr;</span>
+                                                <span class="text-white fw-semibold">@camp.EndDate</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Category Discounts Matrix (Exact matching prompt format) -->
+                                        <div class="p-2.5 rounded-2 bg-dark bg-opacity-75 border border-secondary border-opacity-25 mb-3">
+                                            <div class="text-secondary small fw-semibold mb-1.5 text-uppercase" style="font-size: 0.72rem;">Category Discounts:</div>
+                                            <div class="d-flex flex-wrap gap-1.5">
+                                                @foreach (var cat in camp.CategoryDiscounts)
+                                                {
+                                                    <span class="badge bg-@cat.BadgeColor bg-opacity-20 text-@cat.BadgeColor border border-@cat.BadgeColor border-opacity-30 px-2 py-1 rounded-pill small">
+                                                        <i class="fa-solid @cat.IconClass me-1"></i> @cat.CategoryName &rarr; <strong>@cat.DiscountPercentage.ToString("N0")% OFF</strong>
+                                                    </span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Bottom Footer / Actions -->
+                                    <div class="pt-2 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center mt-2">
+                                        <div class="small text-secondary">
+                                            Min: <strong class="text-light">₹@camp.MinOrderAmount.ToString("N0")</strong>
+                                            @if (camp.MaxDiscountAmount.HasValue)
+                                            {
+                                                <span class="ms-1">| Cap: <strong class="text-info">₹@camp.MaxDiscountAmount.Value.ToString("N0")</strong></span>
+                                            }
+                                        </div>
+                                        <div class="d-flex gap-1.5">
+                                            <button type="button" class="btn btn-sm btn-outline-success px-2.5 py-1 rounded-2" onclick="openSaleAnalyticsModal(@camp.Id)" title="📊 Post-Sale Analytics">
+                                                <i class="fa-solid fa-chart-pie"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-warning px-2.5 py-1 rounded-2" onclick="openEditCampaignModal(@camp.Id)" title="Edit Campaign Settings">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-info px-2.5 py-1 rounded-2" onclick="openViewCampaignModal(@camp.Id)" title="View Details">
+                                                <i class="fa-solid fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- POINT 56: POST-SALE PERFORMANCE REPORT (MEGA SALE REPORT EXECUTIVE CARD) -->
+                <div class="glass-card mb-4 p-4 position-relative overflow-hidden" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 27, 75, 0.8) 50%, rgba(17, 24, 39, 0.95) 100%); border: 1px solid rgba(99, 102, 241, 0.35); border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.35);">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-2.5">
+                            <div class="p-2.5 rounded-3 bg-indigo bg-opacity-25 text-indigo fs-4" style="background: rgba(99, 102, 241, 0.2); color: #a5b4fc;">
+                                <i class="fa-solid fa-chart-pie"></i>
+                            </div>
+                            <div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <h4 class="fw-bold text-white mb-0" id="inlineReportCampName">📊 Mega Sale Report</h4>
+                                    <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-2.5 py-1 rounded-pill small fw-bold" id="inlineReportCampStatus">CONCLUDED &bull; 100% RECONCILED</span>
+                                    <span class="badge bg-indigo bg-opacity-25 text-indigo border border-indigo border-opacity-30 px-2 py-0.5 rounded-pill small fw-bold" style="color:#c7d2fe; border-color: rgba(199,210,254,0.3);">Point 56</span>
+                                </div>
+                                <div class="text-secondary small mt-0.5" id="inlineReportDateRange">Sale ke baad Admin dekhe: Executive Post-Campaign Intelligence &amp; Unit Economics</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <select class="form-select form-select-sm bg-dark text-white border-secondary border-opacity-40 rounded-3" style="min-width: 210px;" id="inlineReportCampSelector" onchange="switchSaleAnalyticsCampaign(this.value)">
+                                @if (Model.AvailableCampaignReports != null && Model.AvailableCampaignReports.Any())
+                                {
+                                    @foreach (var c in Model.AvailableCampaignReports)
+                                    {
+                                        <option value="@c.CampaignId" selected="@(c.CampaignId == 1)">@c.CampaignName (@c.DateRange)</option>
+                                    }
+                                }
+                                else
+                                {
+                                    <option value="1" selected>🔥 Mega Shopping Sale (10 Sep - 15 Sep)</option>
+                                    <option value="2">🌙 Midnight Super Flash Sale (05 Sep - 06 Sep)</option>
+                                    <option value="3">⚡ Diwali Grand Festival Sale (Scheduled)</option>
+                                }
+                            </select>
+
+                            <button type="button" class="btn btn-sm btn-outline-light px-3 py-1.5 rounded-3 fw-semibold" onclick="exportSaleAnalyticsCsv(document.getElementById('inlineReportCampSelector').value)">
+                                <i class="fa-solid fa-download me-1 text-info"></i> CSV
+                            </button>
+                            <button type="button" class="btn btn-sm btn-indigo text-white px-3 py-1.5 rounded-3 fw-bold" style="background: #6366f1;" onclick="openSaleAnalyticsModal(document.getElementById('inlineReportCampSelector').value)">
+                                <i class="fa-solid fa-magnifying-glass-chart me-1"></i> Full Drilldown
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 3 Main Data Pillars (Exact matching prompt structure) -->
+                    <div class="row g-3">
+                        <!-- Pillar 1: High Level Totals -->
+                        <div class="col-lg-4 col-md-6">
+                            <div class="p-3.5 rounded-3 h-100" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08);">
+                                <div class="text-secondary small fw-bold text-uppercase tracking-wider mb-2.5 d-flex align-items-center justify-content-between">
+                                    <span><i class="fa-solid fa-wallet text-success me-1.5"></i> Order Volume &amp; Revenue</span>
+                                    <span class="badge bg-success bg-opacity-20 text-success font-monospace">100% Realized</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="label text-secondary">Total Orders</span>
+                                    <span class="value text-white font-monospace fs-5 fw-bold" id="inlineReportTotalOrders">25,500</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="label text-secondary">Products Sold</span>
+                                    <span class="value text-info font-monospace fs-5 fw-bold" id="inlineReportProductsSold">38,200</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="label text-secondary">Revenue</span>
+                                    <span class="value text-success font-monospace fs-4 fw-extrabold" id="inlineReportRevenue" style="color: #34d399;">₹2.5 Crore</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pillar 2: Top Champions (Top Category, Top Product, Top Seller) -->
+                        <div class="col-lg-4 col-md-6">
+                            <div class="p-3.5 rounded-3 h-100" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08);">
+                                <div class="text-secondary small fw-bold text-uppercase tracking-wider mb-2.5 d-flex align-items-center justify-content-between">
+                                    <span><i class="fa-solid fa-trophy text-warning me-1.5"></i> Top Champions</span>
+                                    <span class="badge bg-warning bg-opacity-20 text-warning font-monospace">Leaderboard</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="label text-secondary"><i class="fa-solid fa-layer-group text-warning me-1"></i> Top Category</span>
+                                    <span class="value text-warning fw-bold" id="inlineReportTopCategory">Electronics</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="label text-secondary"><i class="fa-solid fa-mobile-screen-button text-primary me-1"></i> Top Product</span>
+                                    <span class="value text-primary fw-bold" id="inlineReportTopProduct" style="color: #60a5fa !important;">Samsung Mobile</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="label text-secondary"><i class="fa-solid fa-store text-emerald me-1"></i> Top Seller</span>
+                                    <span class="value text-emerald fw-bold" id="inlineReportTopSeller" style="color: #34d399 !important;">ABC Electronics</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pillar 3: Post-Sale Risk (Returns & Cancellations) -->
+                        <div class="col-lg-4 col-md-12">
+                            <div class="p-3.5 rounded-3 h-100" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08);">
+                                <div class="text-secondary small fw-bold text-uppercase tracking-wider mb-2.5 d-flex align-items-center justify-content-between">
+                                    <span><i class="fa-solid fa-triangle-exclamation text-danger me-1.5"></i> Post-Sale Telemetry</span>
+                                    <span class="badge bg-danger bg-opacity-20 text-danger font-monospace">Risk Metrics</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="label text-secondary"><i class="fa-solid fa-rotate-left text-danger me-1"></i> Returns</span>
+                                    <span class="value text-danger font-monospace fs-5 fw-bold" id="inlineReportReturns">1,250</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="label text-secondary"><i class="fa-solid fa-ban text-secondary me-1"></i> Cancellations</span>
+                                    <span class="value text-secondary font-monospace fs-5 fw-bold" id="inlineReportCancellations">850</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="label text-secondary"><i class="fa-solid fa-circle-check text-success me-1"></i> Fulfilled Success Rate</span>
+                                    <span class="value text-success font-monospace fw-bold" id="inlineReportFulfillmentRate">91.8% (23,400 orders)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campaigns Table Header & Filter Toolbar -->
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                        <button type="button" class="btn btn-sm btn-dark camp-filter-btn active" onclick="filterCampaignsTable('all', this)">All Campaigns</button>
+                        <button type="button" class="btn btn-sm btn-dark camp-filter-btn" onclick="filterCampaignsTable('live', this)">
+                            <i class="fa-solid fa-fire text-danger me-1"></i> Live Now
+                        </button>
+                        <button type="button" class="btn btn-sm btn-dark camp-filter-btn" onclick="filterCampaignsTable('upcoming', this)">
+                            <i class="fa-solid fa-clock text-warning me-1"></i> Upcoming
+                        </button>
+                        <button type="button" class="btn btn-sm btn-dark camp-filter-btn" onclick="filterCampaignsTable('paused', this)">
+                            <i class="fa-solid fa-pause text-secondary me-1"></i> Paused / Draft
+                        </button>
+                    </div>
+
+                    <div class="input-group input-group-sm" style="max-width: 320px;">
+                        <span class="input-group-text bg-dark text-secondary border-secondary border-opacity-25"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" class="form-control bg-dark text-white border-secondary border-opacity-25" placeholder="Search Campaign, Coupon, Category..." onkeyup="searchCampaignsTable(this.value)" id="campaignSearchInput" />
+                    </div>
+                </div>
+
+                <!-- Main Campaigns Table -->
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0" id="campaignsMainTable">
+                        <thead>
+                            <tr class="text-secondary small text-uppercase border-bottom border-secondary border-opacity-25">
+                                <th>Campaign Details</th>
+                                <th>Validity Period</th>
+                                <th>Category Discounts Matrix</th>
+                                <th>Coupon &amp; Limits</th>
+                                <th>Sellers &amp; Products</th>
+                                <th>GMV / Orders</th>
+                                <th style="text-align: center;">Status</th>
+                                <th style="text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="campaignsTableBody">
+                            @foreach (var camp in Model.SaleCampaignsList)
+                            {
+                                <tr class="camp-row border-bottom border-secondary border-opacity-10" id="camp-row-@camp.Id"
+                                    data-status="@(camp.IsActive ? "live" : "paused")"
+                                    data-stage="@camp.Status.ToLowerInvariant()">
+                                    <!-- Campaign Details -->
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2.5">
+                                            <div class="p-2.5 rounded-3 bg-danger bg-opacity-20 text-danger fs-4 flex-shrink-0">
+                                                <i class="fa-solid fa-fire"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-white fs-6" id="camp-name-@camp.Id">@camp.CampaignName</div>
+                                                <div class="text-secondary small" id="camp-tagline-@camp.Id">@camp.Tagline</div>
+                                                <span class="badge bg-dark border border-secondary text-secondary small mt-1 font-monospace">Theme: @camp.BannerTheme</span>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <!-- Validity Period -->
+                                    <td>
+                                        <div class="font-monospace small">
+                                            <div class="text-success"><i class="fa-regular fa-calendar-check me-1"></i> @camp.StartDate (@camp.StartTime)</div>
+                                            <div class="text-danger mt-0.5"><i class="fa-regular fa-calendar-xmark me-1"></i> @camp.EndDate (@camp.EndTime)</div>
+                                            <div class="badge @(camp.Status == "Live Now" ? "bg-danger" : (camp.Status == "Upcoming" ? "bg-warning text-dark" : "bg-secondary")) bg-opacity-25 font-monospace small px-2 py-1 mt-1.5 d-block text-start border border-secondary border-opacity-25 camp-row-timer" id="camp-timer-@camp.Id" data-seconds="@camp.TotalSecondsRemaining" data-label="@camp.CountdownLabel">
+                                                <i class="fa-regular fa-clock me-1"></i> @camp.CountdownLabel @camp.CountdownFormatted
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <!-- Category Discounts Breakdown -->
+                                    <td>
+                                        <div class="d-flex flex-column gap-1">
+                                            @foreach (var cat in camp.CategoryDiscounts)
+                                            {
+                                                <div class="d-flex align-items-center gap-1.5">
+                                                    <span class="badge bg-@cat.BadgeColor bg-opacity-20 text-@cat.BadgeColor border border-@cat.BadgeColor border-opacity-30 px-2 py-0.5 rounded-pill font-monospace small">
+                                                        <i class="fa-solid @cat.IconClass me-1"></i> @cat.CategoryName: <strong>@cat.DiscountPercentage.ToString("N0")% OFF</strong>
+                                                    </span>
+                                                </div>
+                                            }
+                                        </div>
+                                    </td>
+
+                                    <!-- Coupon & Limits -->
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(camp.CouponCode))
+                                        {
+                                            <div class="badge bg-primary bg-opacity-20 text-info border border-primary border-opacity-30 font-monospace px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-ticket me-1"></i> @camp.CouponCode
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-secondary small">No Coupon (Auto-Applied)</span>
+                                        }
+                                        <div class="text-secondary small mt-1">Min Order: <strong class="text-light">₹@camp.MinOrderAmount.ToString("N0")</strong></div>
+                                        <div class="text-secondary small">Max Cap: <strong class="text-light">@(camp.MaxDiscountAmount.HasValue ? $"₹{camp.MaxDiscountAmount.Value:N0}" : "Uncapped")</strong></div>
+                                    </td>
+
+                                    <!-- Scope & Sellers -->
+                                    <td>
+                                        <div class="text-light small"><i class="fa-solid fa-store text-success me-1"></i> @camp.SellersScope</div>
+                                        <div class="text-secondary small mt-0.5"><i class="fa-solid fa-boxes-stacked text-info me-1"></i> @camp.ProductsScope</div>
+                                    </td>
+
+                                    <!-- GMV / Orders -->
+                                    <td>
+                                        <div class="font-monospace text-success fw-bold">₹@camp.TotalGrossRevenue.ToString("N0")</div>
+                                        <div class="text-secondary small">@camp.TotalOrdersGenerated.ToString("N0") orders</div>
+                                    </td>
+
+                                    <!-- Status (Point 51: Scheduled / Active / Expired) -->
+                                    <td style="text-align: center;" id="camp-status-cell-@camp.Id">
+                                        @if (camp.Status == "Live Now")
+                                        {
+                                            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill fw-bold">
+                                                <i class="fa-solid fa-circle-dot fa-fade me-1 text-danger"></i> ACTIVE (Live)
+                                            </span>
+                                            <div class="text-secondary small mt-0.5" style="font-size: 0.7rem;">Auto-Expires at End</div>
+                                        }
+                                        else if (camp.Status == "Upcoming")
+                                        {
+                                            <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-30 px-2.5 py-1 rounded-pill fw-bold">
+                                                <i class="fa-solid fa-clock me-1"></i> SCHEDULED
+                                            </span>
+                                            <div class="text-secondary small mt-0.5" style="font-size: 0.7rem;">Auto-Starts at Start</div>
+                                        }
+                                        else if (camp.Status == "Expired")
+                                        {
+                                            <span class="badge bg-secondary bg-opacity-30 text-secondary border border-secondary border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-hourglass-end me-1"></i> EXPIRED
+                                            </span>
+                                            <div class="text-secondary small mt-0.5" style="font-size: 0.7rem;">Auto-Concluded</div>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary bg-opacity-30 text-secondary border border-secondary border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-pause me-1"></i> Paused
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <!-- Actions -->
+                                    <td style="text-align: center;">
+                                        <div class="d-inline-flex gap-1.5 flex-wrap justify-content-center">
+                                            <!-- [Sale Analytics Report] -->
+                                            <button type="button" class="btn btn-outline-success btn-sm px-2 py-1 rounded-3" onclick="openSaleAnalyticsModal(@camp.Id)" title="📊 Post-Sale Analytics Report">
+                                                <i class="fa-solid fa-chart-pie"></i>
+                                            </button>
+                                            <!-- [Edit] -->
+                                            <button type="button" class="btn btn-outline-warning btn-sm px-2 py-1 rounded-3" onclick="openEditCampaignModal(@camp.Id)" title="Edit Campaign">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </button>
+                                            <!-- [Toggle Status] -->
+                                            <button type="button" class="btn btn-outline-@(camp.IsActive ? "danger" : "success") btn-sm px-2 py-1 rounded-3" onclick="toggleSaleCampaignStatus(@camp.Id)" title="@(camp.IsActive ? "Pause Campaign" : "Activate Campaign")" id="btn-toggle-camp-@camp.Id">
+                                                <i class="fa-solid fa-@(camp.IsActive ? "pause" : "play")"></i>
+                                            </button>
+                                            <!-- [View Details] -->
+                                            <button type="button" class="btn btn-outline-info btn-sm px-2 py-1 rounded-3" onclick="openViewCampaignModal(@camp.Id)" title="View Details">
+                                                <i class="fa-solid fa-eye"></i>
+                                            </button>
+                                            <!-- [Delete] -->
+                                            <button type="button" class="btn btn-outline-secondary btn-sm px-2 py-1 rounded-3 text-danger" onclick="deleteSaleCampaign(@camp.Id)" title="Delete Campaign">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ========================================== -->
+                <!-- POINT 55: SELLER SALE PARTICIPATION & ADMIN APPROVAL -->
+                <!-- Example: Samsung Mobile ☑, Laptop ☐, Headphone ☑ -->
+                <!-- ========================================== -->
+                <div class="mt-5 pt-4 border-top border-secondary border-opacity-25" id="section-seller-participation">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold font-monospace fs-6">
+                                    <i class="fa-solid fa-store me-1 text-dark"></i> 🏪 SELLER SALE PARTICIPATION
+                                </span>
+                                <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill small">
+                                    Point 55: Seller Opt-In &amp; Admin Final Approval
+                                </span>
+                            </div>
+                            <h4 class="fw-bold text-white mb-0">Seller Products Campaign Opt-In &amp; Approval Governance</h4>
+                            <p class="text-secondary small mb-0 mt-1">
+                                Sellers decide which products participate in Mega Sales (☑ Participate vs ☐ Opt Out). Admin reviews discounts and grants final approval.
+                            </p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-info btn-sm rounded-pill px-3 py-2 fw-semibold" onclick="refreshSellerParticipations()">
+                                <i class="fa-solid fa-arrows-rotate me-1"></i> Refresh List
+                            </button>
+                            <button type="button" class="btn btn-warning btn-sm rounded-pill px-3.5 py-2 fw-bold text-dark shadow-sm" onclick="openOptInDemoModal()">
+                                <i class="fa-solid fa-plus me-1"></i> + New Seller Product Opt-In
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 4 Mini Metric Badges for Participation -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3 col-6">
+                            <div class="p-3 rounded-3 bg-dark border border-secondary border-opacity-25">
+                                <div class="text-secondary small fw-semibold">Total Submitted Items</div>
+                                <div class="text-white fw-bold fs-4 mt-0.5" id="countPartTotal">@Model.SellerSaleParticipationsList.Count</div>
+                                <div class="text-secondary small" style="font-size: 0.72rem;">Across all sellers</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="p-3 rounded-3 bg-dark border border-success border-opacity-30">
+                                <div class="text-success small fw-semibold">☑ Approved (Live in Sale)</div>
+                                <div class="text-success fw-bold fs-4 mt-0.5" id="countPartApproved">@Model.SellerSaleParticipationsList.Count(x => x.ApprovalStatus == "Approved")</div>
+                                <div class="text-secondary small" style="font-size: 0.72rem;"><i class="fa-solid fa-circle-check text-success me-1"></i> Admin Approved</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="p-3 rounded-3 bg-dark border border-warning border-opacity-30">
+                                <div class="text-warning small fw-semibold">⏳ Pending Admin Approval</div>
+                                <div class="text-warning fw-bold fs-4 mt-0.5" id="countPartPending">@Model.SellerSaleParticipationsList.Count(x => x.ApprovalStatus == "Pending")</div>
+                                <div class="text-secondary small" style="font-size: 0.72rem;"><i class="fa-solid fa-clock text-warning me-1"></i> Requires Review</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="p-3 rounded-3 bg-dark border border-secondary border-opacity-25">
+                                <div class="text-secondary small fw-semibold">☐ Opted Out / Excluded</div>
+                                <div class="text-secondary fw-bold fs-4 mt-0.5" id="countPartOptedOut">@Model.SellerSaleParticipationsList.Count(x => x.ApprovalStatus == "OptedOut" || !x.IsParticipating)</div>
+                                <div class="text-secondary small" style="font-size: 0.72rem;"><i class="fa-solid fa-ban text-secondary me-1"></i> Regular Price Only</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filter Bar & Search -->
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-warning text-dark fw-bold seller-part-filter-btn" onclick="filterSellerParticipation('all', this)">
+                                All Products (@Model.SellerSaleParticipationsList.Count)
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary text-light seller-part-filter-btn" onclick="filterSellerParticipation('pending', this)">
+                                ⏳ Pending Approval (@Model.SellerSaleParticipationsList.Count(x => x.ApprovalStatus == "Pending"))
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary text-light seller-part-filter-btn" onclick="filterSellerParticipation('approved', this)">
+                                ✅ Approved (@Model.SellerSaleParticipationsList.Count(x => x.ApprovalStatus == "Approved"))
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary text-light seller-part-filter-btn" onclick="filterSellerParticipation('optedout', this)">
+                                ☐ Opted Out (@Model.SellerSaleParticipationsList.Count(x => x.ApprovalStatus == "OptedOut" || !x.IsParticipating))
+                            </button>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary rounded-pill px-3" 
+                                   style="width: 220px;" placeholder="Search seller or product..." onkeyup="searchSellerParticipation(this.value)" />
+                        </div>
+                    </div>
+
+                    <!-- Seller Participation Table matching Prompt Example -->
+                    <div class="table-responsive" style="border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                        <table class="table table-dark table-hover align-middle mb-0 text-nowrap" id="tableSellerParticipation">
+                            <thead class="bg-dark" style="border-bottom: 1px solid rgba(255,255,255,0.12);">
+                                <tr class="text-secondary small text-uppercase">
+                                    <th>Product Details</th>
+                                    <th>Seller / Store</th>
+                                    <th>Target Campaign</th>
+                                    <th>Regular vs Sale Price</th>
+                                    <th>Sale Stock</th>
+                                    <th>Seller Decision</th>
+                                    <th>Admin Approval Status</th>
+                                    <th>Admin Remarks</th>
+                                    <th style="text-align: center;">Admin Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sellerParticipationTableBody">
+                                @foreach (var item in Model.SellerSaleParticipationsList)
+                                {
+                                    <tr class="seller-part-row" id="part-row-@item.Id" 
+                                        data-status="@item.ApprovalStatus.ToLower()" 
+                                        data-participating="@(item.IsParticipating ? "true" : "false")"
+                                        data-name="@item.ProductName" 
+                                        data-shop="@item.ShopName">
+                                        <!-- Product Details -->
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2.5">
+                                                <img src="@item.ProductImage" alt="@item.ProductName" 
+                                                     class="rounded-3 border border-secondary border-opacity-30" 
+                                                     style="width: 44px; height: 44px; object-fit: cover;" 
+                                                     onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100'" />
+                                                <div>
+                                                    <div class="text-white fw-bold">@item.ProductName</div>
+                                                    <span class="badge bg-secondary bg-opacity-30 text-secondary small" style="font-size: 0.7rem;">@item.Category</span>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <!-- Seller / Store -->
+                                        <td>
+                                            <div class="text-light fw-semibold small">@item.ShopName</div>
+                                            <div class="text-secondary small" style="font-size: 0.7rem;">Verified Merchant</div>
+                                        </td>
+
+                                        <!-- Target Campaign -->
+                                        <td>
+                                            <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill small">
+                                                @item.CampaignName
+                                            </span>
+                                        </td>
+
+                                        <!-- Regular vs Sale Price -->
+                                        <td>
+                                            <div class="d-flex align-items-center gap-1.5 font-monospace">
+                                                <span class="text-decoration-line-through text-secondary small">₹@item.RegularPrice.ToString("N0")</span>
+                                                <i class="fa-solid fa-arrow-right text-secondary small" style="font-size: 0.65rem;"></i>
+                                                <span class="text-warning fw-bold fs-6">₹@item.SalePrice.ToString("N0")</span>
+                                            </div>
+                                            @if (item.DiscountPct > 0)
+                                            {
+                                                <div class="text-success small fw-bold" style="font-size: 0.72rem;">@item.DiscountPct% OFF</div>
+                                            }
+                                        </td>
+
+                                        <!-- Sale Stock -->
+                                        <td class="font-monospace">
+                                            @if (item.IsParticipating && item.AllocatedSaleStock > 0)
+                                            {
+                                                <span class="badge bg-info bg-opacity-20 text-info px-2.5 py-1 rounded-pill">
+                                                    @item.AllocatedSaleStock Units
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-secondary small">&mdash;</span>
+                                            }
+                                        </td>
+
+                                        <!-- Seller Decision (Prompt Checkbox) -->
+                                        <td>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="part-check-@item.Id" 
+                                                       @(item.IsParticipating ? "checked" : "") 
+                                                       onchange="toggleSellerParticipationCheck(@item.Id, this.checked)" />
+                                                <label class="form-check-label @(item.IsParticipating ? "text-success fw-bold" : "text-secondary") small" for="part-check-@item.Id" id="part-check-label-@item.Id">
+                                                    @(item.IsParticipating ? "☑ Participate in Mega Sale" : "☐ Not Participating")
+                                                </label>
+                                            </div>
+                                        </td>
+
+                                        <!-- Admin Approval Status -->
+                                        <td id="part-status-cell-@item.Id">
+                                            @if (item.ApprovalStatus == "Approved")
+                                            {
+                                                <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                    <i class="fa-solid fa-circle-check me-1"></i> Approved (Live in Sale)
+                                                </span>
+                                            }
+                                            else if (item.ApprovalStatus == "Pending")
+                                            {
+                                                <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                    <i class="fa-solid fa-clock me-1"></i> Pending Admin Approval
+                                                </span>
+                                            }
+                                            else if (item.ApprovalStatus == "Rejected")
+                                            {
+                                                <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                    <i class="fa-solid fa-circle-xmark me-1"></i> Rejected
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                    <i class="fa-solid fa-ban me-1"></i> Opted Out
+                                                </span>
+                                            }
+                                        </td>
+
+                                        <!-- Admin Remarks -->
+                                        <td>
+                                            <small class="text-secondary font-monospace" id="part-remarks-@item.Id" style="font-size: 0.75rem;">
+                                                @item.AdminRemarks
+                                            </small>
+                                        </td>
+
+                                        <!-- Admin Actions -->
+                                        <td style="text-align: center;">
+                                            <div class="d-inline-flex gap-1.5 justify-content-center" id="part-actions-@item.Id">
+                                                @if (item.ApprovalStatus == "Pending" || item.ApprovalStatus == "Rejected" || item.ApprovalStatus == "OptedOut")
+                                                {
+                                                    <!-- [Approve] -->
+                                                    <button type="button" class="btn btn-outline-success btn-sm px-2.5 py-1 rounded-3 fw-bold" 
+                                                            onclick="approveSellerParticipation(@item.Id, '@item.ProductName')" title="Grant Admin Approval">
+                                                        <i class="fa-solid fa-check me-1"></i> Approve
+                                                    </button>
+                                                }
+                                                @if (item.ApprovalStatus == "Pending" || item.ApprovalStatus == "Approved")
+                                                {
+                                                    <!-- [Reject] -->
+                                                    <button type="button" class="btn btn-outline-danger btn-sm px-2.5 py-1 rounded-3" 
+                                                            onclick="rejectSellerParticipation(@item.Id, '@item.ProductName')" title="Reject Participation">
+                                                        <i class="fa-solid fa-xmark me-1"></i> Reject
+                                                    </button>
+                                                }
+                                                <!-- [Edit Deal] -->
+                                                <button type="button" class="btn btn-outline-secondary btn-sm px-2 py-1 rounded-3" 
+                                                        onclick="openEditSellerDealModal(@item.Id, '@item.ProductName', @item.RegularPrice, @item.SalePrice, @item.AllocatedSaleStock)" title="Edit Pricing & Stock">
+                                                    <i class="fa-solid fa-sliders"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
