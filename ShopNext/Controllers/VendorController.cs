@@ -445,6 +445,13 @@ namespace ShopNext.Controllers
             decimal settledAmount = Math.Round(netEarnings * 0.85m, 2);
             decimal pendingPayout = netEarnings - settledAmount;
 
+            var sellerNotifications = await _context.Notifications.AsNoTracking()
+                .Where(n => (n.ShopId == shopId || (n.RecipientRole == "Seller" && n.ShopId == null)) && !n.IsDeleted)
+                .OrderByDescending(n => n.CreatedDate)
+                .Take(50)
+                .ToListAsync();
+            int unreadNotifCount = sellerNotifications.Count(n => !n.IsRead);
+
             return new SellerDashboardViewModel
             {
                 Shop = shop,
@@ -473,7 +480,9 @@ namespace ShopNext.Controllers
                 Products = products,
                 RecentOrders = orders.Take(15).ToList(),
                 Reviews = reviews,
-                Coupons = coupons
+                Coupons = coupons,
+                Notifications = sellerNotifications,
+                UnreadNotificationsCount = unreadNotifCount
             };
         }
 

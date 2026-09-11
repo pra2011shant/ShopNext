@@ -566,15 +566,47 @@ namespace ShopNext.Services
             }
             await _context.SaveChangesAsync();
 
-            // Create notification for customer with Delivery OTP
+            // 1. Create notification for Customer with Delivery OTP
             _context.Notifications.Add(new Notification
             {
                 CustomerId = order.CustomerId,
+                RecipientRole = "Customer",
                 Title = $"Order #{newOrderId} Placed Successfully! (OTP: {generatedOtp})",
                 Message = $"Your order has been placed with total ₹{order.TotalAmount:N0}. Your Delivery OTP is {generatedOtp}. Share this OTP with the delivery rider only upon receiving your parcel.",
                 Type = "Order",
-                CreatedDate = DateTime.Now
+                LinkUrl = "/Customer/Account?tab=orders",
+                CreatedDate = DateTime.Now,
+                IsActive = true
             });
+
+            // 2. Create notification for Seller (targeted to this specific ShopId)
+            if (order.ShopId > 0)
+            {
+                _context.Notifications.Add(new Notification
+                {
+                    ShopId = order.ShopId,
+                    RecipientRole = "Seller",
+                    Title = $"New Order #{newOrderId} Received! (₹{order.TotalAmount:N0})",
+                    Message = $"Customer placed order #{newOrderId} with total ₹{order.TotalAmount:N0}. Please accept and pack the order.",
+                    Type = "Order",
+                    LinkUrl = "/Vendor/Dashboard#tab-new-orders",
+                    CreatedDate = DateTime.Now,
+                    IsActive = true
+                });
+            }
+
+            // 3. Create notification for Admin
+            _context.Notifications.Add(new Notification
+            {
+                RecipientRole = "Admin",
+                Title = $"Platform Order #{newOrderId} Placed",
+                Message = $"Order #{newOrderId} worth ₹{order.TotalAmount:N0} was placed for Shop #{order.ShopId}.",
+                Type = "Order",
+                LinkUrl = "/Admin/Dashboard#orders",
+                CreatedDate = DateTime.Now,
+                IsActive = true
+            });
+
             await _context.SaveChangesAsync();
 
             return newOrderId;
@@ -980,6 +1012,86 @@ namespace ShopNext.Services
             {
                 order.PaymentStatus = "Refunded";
             }
+
+            // 1. Targeted Notification for Customer
+            if (order.CustomerId > 0)
+            {
+                string custMsg = status switch
+                {
+                    "Accepted" => $"Your order #{orderId} has been accepted by the store and will be prepared shortly.",
+                    "Processing" => $"Your order #{orderId} is now being prepared & packed.",
+                    "Packed" => $"Your order #{orderId} has been packed and waiting for delivery partner pickup.",
+                    "Shipped" => $"Your order #{orderId} is on the way with delivery partner.",
+                    "OutForDelivery" => $"Your order #{orderId} is out for delivery! Please keep OTP ready.",
+                    "Delivered" => $"Your order #{orderId} has been delivered successfully! Thank you for shopping with ShopNext.",
+                    "Completed" => $"Your order #{orderId} is completed.",
+                    "Cancelled" => $"Your order #{orderId} has been cancelled.",
+                    "RefundCompleted" => $"Refund for order #{orderId} has been successfully processed to your account.",
+                    _ => $"Your order #{orderId} status changed to {status}."
+                };
+
+                _context.Notifications.Add(new Notification
+                {
+                    CustomerId = order.CustomerId,
+                    RecipientRole = "Customer",
+                    Title = $"Order #{orderId} - {status}",
+                    Message = custMsg,
+                    Type = status == "Delivered" ? "Delivery" : "Order",
+                    LinkUrl = "/Customer/Account?tab=orders",
+                    CreatedDate = DateTime.Now,
+                    IsActive = true
+                });
+            }
+
+            // 2. Targeted Notification for Seller
+            if (order.ShopId > 0)
+            {
+                _context.Notifications.Add(new Notification
+                {
+                    ShopId = order.ShopId,
+                    RecipientRole = "Seller",
+                    Title = $"Order #{orderId} Status: {status}",
+                    Message = $"Order #{orderId} current status updated to '{status}'.",
+                    Type = "Order",
+                    LinkUrl = "/Vendor/Dashboard#tab-all-orders",
+                    CreatedDate = DateTime.Now,
+                    IsActive = true
+                });
+            }
+
+            // 3. Targeted Notification for Rider (when packed/shipped)
+            if (status == "Packed" || status == "Shipped")
+            {
+                if (order.RiderId.HasValue && order.RiderId.Value > 0)
+                {
+                    _context.Notifications.Add(new Notification
+                    {
+                        RiderId = order.RiderId.Value,
+                        RecipientRole = "Rider",
+                        Title = $"Pickup Ready: Order #{orderId}",
+                        Message = $"Order #{orderId} is packed and ready for pickup.",
+                        Type = "Delivery",
+                        LinkUrl = "/Rider/Dashboard",
+                        CreatedDate = DateTime.Now,
+                        IsActive = true
+                    });
+                }
+                else
+                {
+                    // Broadcast to available fleet riders
+                    _context.Notifications.Add(new Notification
+                    {
+                        RecipientRole = "Rider",
+                        Title = $"New Delivery Available: Order #{orderId}",
+                        Message = $"Order #{orderId} is packed and ready for pickup.",
+                        Type = "Delivery",
+                        LinkUrl = "/Rider/Dashboard",
+                        CreatedDate = DateTime.Now,
+                        IsActive = true
+                    });
+                }
+            }
+
             await _context.SaveChangesAsync();
             return true;
         }

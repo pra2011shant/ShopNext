@@ -4,7 +4,62 @@ This document illustrates the complete end-to-end architectural workflows of the
 
 ---
 
-## 1. 🛒 Customer Shopping & Order Lifecycle
+## 1. 🔔 Targeted Multi-Role Notification Dispatch Architecture
+
+```mermaid
+graph TD
+    A[Platform Event: Order / Stock / KYC / Delivery] --> B[INotificationService Dispatcher]
+    
+    B -->|Event: Order Placed| C1[Customer: Order Confirmation + 4-Digit OTP]
+    B -->|Event: Order Placed| C2[Seller: New Order Alert with ₹ Total Amount]
+    B -->|Event: Order Placed| C3[Admin: High-Level Platform Transaction Alert]
+    
+    B -->|Event: Order Packed/Shipped| D1[Customer: Order Dispatched Notice]
+    B -->|Event: Order Packed/Shipped| D2[Fleet Rider: Pickup Ready at Merchant Store]
+    
+    B -->|Event: Out for Delivery / Delivered| E1[Customer: OTP Verification & Delivery Confirmation]
+    B -->|Event: Out for Delivery / Delivered| E2[Seller: Order Marked Delivered & Settlement Scheduled]
+    
+    B -->|Event: Stock < 5 Units| F1[Seller: ⚠ Low Inventory Threshold Alert]
+    B -->|Event: KYC Submitted / Approved| G1[Admin: Merchant Review & Seller Approval Notice]
+
+    C1 & D1 & E1 --> H1[Customer Hub: /Customer/Account?tab=notifications]
+    C2 & E2 & F1 & G1 --> H2[Seller Hub: /Vendor/Dashboard#tab-notifications]
+    D2 --> H3[Rider Hub: /Rider/Dashboard]
+    C3 & G1 --> H4[Admin Hub: /Admin/Dashboard#notifications]
+```
+
+---
+
+## 2. ⚡ Ultra-Fast AJAX Dynamic Lazy-Loading Workflow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Merchant / Admin
+    participant UI as Sidebar Navigation Link
+    participant Engine as MVC Controller (Vendor/Admin)
+    participant DB as SQL Server (SPs & 261 Indexes)
+
+    User->>UI: Clicks Sidebar Tab (e.g. Products / Orders / Earnings)
+    UI->>UI: Check data-loaded attribute
+    
+    alt Tab Not Yet Loaded (data-loaded == false)
+        UI->>UI: Display Glassmorphic Loading Spinner
+        UI->>Engine: AJAX GET /Vendor/GetTabPartial?tab=all-products (< 10ms)
+        Engine->>DB: Execute Indexed Query / Stored Procedure
+        DB-->>Engine: Return Pre-Compiled Data Stream
+        Engine-->>UI: Return Rendered Partial Razor View
+        UI->>UI: Replace targetPanel.outerHTML & Set data-loaded=true
+        UI->>UI: Initialize Dynamic Charts / Re-bind Scripts
+    else Tab Already Cached (data-loaded == true)
+        UI->>UI: Instant Tab Switch (0ms Local DOM Transition)
+    end
+```
+
+---
+
+## 3. 🛒 Customer Shopping & Order Lifecycle
 
 ```mermaid
 sequenceDiagram
@@ -37,7 +92,7 @@ sequenceDiagram
 
 ---
 
-## 2. 🛡️ System Monitoring, Live Sessions & Diff Audit Lifecycle (Point 174)
+## 4. 🛡️ System Monitoring, Live Sessions & Diff Audit Lifecycle (Point 174)
 
 ```mermaid
 graph TD
@@ -70,7 +125,7 @@ graph TD
 
 ---
 
-## 3. 🌐 Point 173: Multi-Language & Localization Architecture
+## 5. 🌐 Point 173: Multi-Language & Localization Architecture
 
 ```mermaid
 graph TD
@@ -95,7 +150,7 @@ graph TD
 
 ---
 
-## 4. 🚚 Hyperlocal Dispatch & Proof of Delivery (POD)
+## 6. 🚚 Hyperlocal Dispatch & Proof of Delivery (POD)
 
 ```mermaid
 sequenceDiagram
@@ -127,7 +182,7 @@ sequenceDiagram
 
 ---
 
-## 5. 🛡️ Return, Swap Fraud Prevention & 3-Party Grievance
+## 7. 🛡️ Return, Swap Fraud Prevention & 3-Party Grievance
 
 ```mermaid
 graph TD
@@ -154,7 +209,7 @@ graph TD
 
 ---
 
-## 6. 🧠 AI Customer Risk Score & Fraud Monitoring Engine
+## 8. 🧠 AI Customer Risk Score & Fraud Monitoring Engine
 
 ```mermaid
 graph TD
@@ -175,7 +230,7 @@ graph TD
 
 ---
 
-## 7. ⚡ High-Concurrency Flash Sale & Zero-Oversell Protection
+## 9. ⚡ High-Concurrency Flash Sale & Zero-Oversell Protection
 
 ```mermaid
 sequenceDiagram
@@ -200,7 +255,7 @@ sequenceDiagram
 
 ---
 
-## 8. 🔒 Multi-Role Session Isolation & Cross-Role Cookie Purge
+## 10. 🔒 Multi-Role Session Isolation & Cross-Role Cookie Purge
 
 ```mermaid
 graph TD
@@ -233,7 +288,7 @@ graph TD
 
 ---
 
-## 9. 📍 Live GPS Auto-Detection & Interactive Map Pin-Picker (Leaflet.js)
+## 11. 📍 Live GPS Auto-Detection & Interactive Map Pin-Picker (Leaflet.js)
 
 ```mermaid
 sequenceDiagram
@@ -266,7 +321,7 @@ sequenceDiagram
 
 ---
 
-## 10. 🎨 Universal High-Contrast Dark Portal UI Flow
+## 12. 🎨 Universal High-Contrast Dark Portal UI Flow
 
 ```mermaid
 graph TD

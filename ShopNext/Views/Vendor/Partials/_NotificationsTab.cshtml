@@ -1,29 +1,105 @@
-﻿@model ShopNext.Models.SellerDashboardViewModel
+@model ShopNext.Models.SellerDashboardViewModel
+@{
+    var notifications = Model.Notifications ?? new List<ShopNext.Models.Notification>();
+}
             <div class="tab-panel" id="tab-notifications">
                 <div class="glass-panel">
                     <div class="panel-header-flex">
                         <div>
-                            <h3><i class="fa-solid fa-bell text-warning"></i> Store Notifications</h3>
-                            <span class="text-muted small">Live system alerts and customer dispatch notices</span>
+                            <h3><i class="fa-solid fa-bell text-warning me-2"></i> Store Notifications</h3>
+                            <span class="text-muted small">Targeted merchant alerts, new orders, settlements, and customer return updates</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-warning bg-opacity-20 text-warning px-3 py-1.5 rounded-pill font-monospace">
+                                @notifications.Count Notifications (@Model.UnreadNotificationsCount Unread)
+                            </span>
                         </div>
                     </div>
-                    <div class="d-flex flex-column gap-3">
-                        <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <strong class="text-warning"><i class="fa-solid fa-box-archive me-1"></i> New Order Received</strong>
-                                <span class="text-muted small">10 mins ago</span>
+
+                    @if (!notifications.Any())
+                    {
+                        <div class="text-center py-5">
+                            <div class="p-3 rounded-circle bg-secondary bg-opacity-10 d-inline-flex mb-3 text-secondary">
+                                <i class="fa-regular fa-bell-slash fs-2"></i>
                             </div>
-                            <p class="text-light small mb-0">Customer Pooja Sharma has placed order #ORD1045 for ₹38,999.00.</p>
+                            <h5 class="text-white fw-bold">No notifications yet</h5>
+                            <p class="text-muted small">New order alerts, customer returns, and payout confirmations will appear here.</p>
                         </div>
-                        <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <strong class="text-info"><i class="fa-solid fa-circle-check me-1"></i> Weekly Settlement Released</strong>
-                                <span class="text-muted small">Yesterday</span>
-                            </div>
-                            <p class="text-light small mb-0">₹45,200 has been transferred directly to your registered bank account.</p>
+                    }
+                    else
+                    {
+                        <div class="d-flex flex-column gap-3">
+                            @foreach (var n in notifications)
+                            {
+                                var iconClass = n.Type switch
+                                {
+                                    "Order" => "fa-solid fa-box text-warning",
+                                    "Stock" => "fa-solid fa-triangle-exclamation text-danger",
+                                    "Payment" => "fa-solid fa-wallet text-success",
+                                    "Return" => "fa-solid fa-rotate-left text-info",
+                                    "KYC" => "fa-solid fa-id-card text-purple",
+                                    _ => "fa-solid fa-bell text-primary"
+                                };
+
+                                var bgStyle = !n.IsRead 
+                                    ? "background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(96, 165, 250, 0.4); box-shadow: 0 4px 15px rgba(37, 99, 235, 0.15);" 
+                                    : "background: rgba(15, 23, 42, 0.55); border: 1px solid var(--glass-border);";
+
+                                <div class="p-3 rounded-4 transition-all" style="@bgStyle" id="seller-notif-@n.Id">
+                                    <div class="d-flex justify-content-between align-items-center mb-1.5 flex-wrap gap-2">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="@iconClass"></i>
+                                            <strong class="text-white">@n.Title</strong>
+                                            @if (!n.IsRead)
+                                            {
+                                                <span class="badge bg-primary bg-opacity-25 text-info border border-info px-2 py-0.5 rounded-pill small">New</span>
+                                            }
+                                        </div>
+                                        <span class="text-muted small font-monospace"><i class="fa-regular fa-clock me-1"></i>@n.CreatedDate.ToString("dd MMM, hh:mm tt")</span>
+                                    </div>
+                                    <p class="text-light small mb-2" style="line-height: 1.5;">@n.Message</p>
+                                    <div class="d-flex align-items-center gap-3">
+                                        @if (!string.IsNullOrEmpty(n.LinkUrl))
+                                        {
+                                            <a href="@n.LinkUrl" class="btn btn-outline-primary btn-sm rounded-pill px-3 py-0.5 text-decoration-none">
+                                                <i class="fa-solid fa-arrow-right me-1"></i> Open Tab
+                                            </a>
+                                        }
+                                        @if (!n.IsRead)
+                                        {
+                                            <button type="button" class="btn btn-link text-muted btn-sm p-0 text-decoration-none small" onclick="markSellerNotifRead(@n.Id)">
+                                                <i class="fa-solid fa-check me-1"></i> Mark as read
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            }
                         </div>
-                    </div>
+                    }
                 </div>
             </div>
 
-            <!-- 17. TAB: SETTINGS -->
+<script>
+    async function markSellerNotifRead(notifId) {
+        try {
+            const formData = new FormData();
+            formData.append('notificationId', notifId);
+            const resp = await fetch('/Customer/MarkNotificationRead', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await resp.json();
+            if (data.success) {
+                const el = document.getElementById('seller-notif-' + notifId);
+                if (el) {
+                    el.style.border = '1px solid var(--glass-border)';
+                    el.style.background = 'rgba(15, 23, 42, 0.55)';
+                    el.querySelector('.badge')?.remove();
+                    el.querySelector('button')?.remove();
+                }
+            }
+        } catch(e) {
+            console.error(e);
+        }
+    }
+</script>

@@ -35,5 +35,9 @@ namespace ShopNext.Models
         public decimal NetEarnings { get; set; }
         public decimal SettledAmount { get; set; }
         public decimal PendingPayoutAmount { get; set; }
+
+        // Targeted Seller Notifications
+        public List<Notification> Notifications { get; set; } = new List<Notification>();
+        public int UnreadNotificationsCount { get; set; }
     }
 }
