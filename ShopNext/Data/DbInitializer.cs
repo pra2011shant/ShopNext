@@ -189,6 +189,13 @@ namespace ShopNext.Data
                     IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AuditLogs') AND name = 'EntityName') ALTER TABLE AuditLogs ADD EntityName NVARCHAR(100) NULL;
                     IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AuditLogs') AND name = 'UserRole') ALTER TABLE AuditLogs ADD UserRole NVARCHAR(50) NULL;
                     IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AuditLogs') AND name = 'UserName') ALTER TABLE AuditLogs ADD UserName NVARCHAR(100) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AuditLogs') AND name = 'Remark') ALTER TABLE AuditLogs ADD Remark NVARCHAR(MAX) NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AuditLogs') AND name = 'CreatedDate') ALTER TABLE AuditLogs ADD CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE();
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AuditLogs') AND name = 'CreatedById') ALTER TABLE AuditLogs ADD CreatedById INT NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AuditLogs') AND name = 'UpdatedDate') ALTER TABLE AuditLogs ADD UpdatedDate DATETIME2 NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AuditLogs') AND name = 'UpdatedById') ALTER TABLE AuditLogs ADD UpdatedById INT NULL;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AuditLogs') AND name = 'IsDeleted') ALTER TABLE AuditLogs ADD IsDeleted BIT NOT NULL DEFAULT 0;
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AuditLogs') AND name = 'IsActive') ALTER TABLE AuditLogs ADD IsActive BIT NOT NULL DEFAULT 1;
                 ";
                 await context.Database.ExecuteSqlRawAsync(batchScript);
             }

@@ -606,7 +606,16 @@ BEGIN
         UserName NVARCHAR(200) NULL,
         UserRole NVARCHAR(50) NULL,
         IpAddress NVARCHAR(100) NULL,
-        Timestamp DATETIME2 NOT NULL DEFAULT GETDATE()
+        Timestamp DATETIME2 NOT NULL DEFAULT GETDATE(),
+
+        -- BaseModel Audit Fields
+        Remark NVARCHAR(MAX) NULL,
+        CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedById INT NULL,
+        UpdatedDate DATETIME2 NULL,
+        UpdatedById INT NULL,
+        IsDeleted BIT NOT NULL DEFAULT 0,
+        IsActive BIT NOT NULL DEFAULT 1
     );
 END;
 GO
