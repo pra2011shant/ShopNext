@@ -9,7 +9,43 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<script>
+    // Immediate Global Tab Switcher (Ensures instant click response anywhere on the page)
+    function switchAdminTab(tabKey, clickedEl) {
+        if (!tabKey) return;
+        
+        // 1. Update Sidebar Active State
+        document.querySelectorAll('.nav-sidebar-item').forEach(el => el.classList.remove('active'));
+        if (clickedEl && clickedEl.classList.contains('nav-sidebar-item')) {
+            clickedEl.classList.add('active');
+        } else {
+            const navEl = document.getElementById('nav-' + tabKey);
+            if (navEl) navEl.classList.add('active');
+        }
+
+        // 2. Switch Active Panel with direct DOM visibility enforcement
+        document.querySelectorAll('.tab-panel-container').forEach(panel => {
+            panel.classList.remove('active');
+            panel.style.display = 'none';
+        });
+
+        const targetPanel = document.getElementById('panel-' + tabKey);
+        if (targetPanel) {
+            targetPanel.classList.add('active');
+            targetPanel.style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+    window.switchAdminTab = switchAdminTab;
+
+    // Handle hash on direct page load (e.g. #orders, #sellers)
+    document.addEventListener("DOMContentLoaded", function () {
+        const hash = window.location.hash.replace('#', '').replace('-tab', '');
+        if (hash) {
+            switchAdminTab(hash);
+        }
+    });
+</script>
 
 <style>
     :root {
