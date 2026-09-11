@@ -1590,3 +1590,46 @@ GO
 
 PRINT 'ShopNext SQL Server Master Schema, Stored Procedures & Seed Data Successfully Deployed!';
 GO
+
+-- ==============================================================================
+-- HIGH-PERFORMANCE NON-CLUSTERED INDEXES
+-- ==============================================================================
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Orders_Customer_CreatedDate' AND object_id = OBJECT_ID('Orders'))
+    CREATE NONCLUSTERED INDEX IX_Orders_Customer_CreatedDate ON dbo.Orders (CustomerId, CreatedDate DESC) INCLUDE (TotalAmount, OrderStatus, ShopId);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Orders_Shop_CreatedDate' AND object_id = OBJECT_ID('Orders'))
+    CREATE NONCLUSTERED INDEX IX_Orders_Shop_CreatedDate ON dbo.Orders (ShopId, CreatedDate DESC);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Orders_Status' AND object_id = OBJECT_ID('Orders'))
+    CREATE NONCLUSTERED INDEX IX_Orders_Status ON dbo.Orders (OrderStatus, ReturnStatus);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Products_Shop_Active' AND object_id = OBJECT_ID('Products'))
+    CREATE NONCLUSTERED INDEX IX_Products_Shop_Active ON dbo.Products (ShopId, IsActive, IsApproved) INCLUDE (ProductName, Price, Stock);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Products_Category' AND object_id = OBJECT_ID('Products'))
+    CREATE NONCLUSTERED INDEX IX_Products_Category ON dbo.Products (Category, IsActive);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Complaints_Status_CreatedDate' AND object_id = OBJECT_ID('Complaints'))
+    CREATE NONCLUSTERED INDEX IX_Complaints_Status_CreatedDate ON dbo.Complaints (Status, CreatedDate DESC) INCLUDE (CustomerId, OrderId, Priority);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_AuditLogs_CreatedDate' AND object_id = OBJECT_ID('AuditLogs'))
+    CREATE NONCLUSTERED INDEX IX_AuditLogs_CreatedDate ON dbo.AuditLogs (CreatedDate DESC) INCLUDE (Action, EntityName, UserId);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_OrderItems_OrderId' AND object_id = OBJECT_ID('OrderItems'))
+    CREATE NONCLUSTERED INDEX IX_OrderItems_OrderId ON dbo.OrderItems (OrderId) INCLUDE (ProductId, Quantity, UnitPrice, TotalPrice);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_CustomerAddresses_CustomerId' AND object_id = OBJECT_ID('CustomerAddresses'))
+    CREATE NONCLUSTERED INDEX IX_CustomerAddresses_CustomerId ON dbo.CustomerAddresses (CustomerId, IsDefault);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Reviews_Product_CreatedDate' AND object_id = OBJECT_ID('Reviews'))
+    CREATE NONCLUSTERED INDEX IX_Reviews_Product_CreatedDate ON dbo.Reviews (ProductId, CreatedDate DESC);
+GO

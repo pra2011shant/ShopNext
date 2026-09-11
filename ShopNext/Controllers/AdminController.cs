@@ -229,19 +229,19 @@ namespace ShopNext.Controllers
                 return RedirectToAction("Login");
             }
 
-            // 1. Fetch DB Entities directly from SQL Server Database tables
-            var allShops = await _context.Shops.OrderByDescending(s => s.CreatedDate).ToListAsync();
-            var allProducts = await _context.Products.Include(p => p.Shop).ToListAsync();
-            var allOrders = await _context.Orders.Include(o => o.Customer).Include(o => o.Shop).OrderByDescending(o => o.CreatedDate).ToListAsync();
-            var allUsers = await _context.Users.Where(u => u.Role == "Customer").OrderByDescending(u => u.CreatedDate).ToListAsync();
-            var allAddresses = await _context.CustomerAddresses.ToListAsync();
-            var allCategories = await _context.Categories.OrderBy(c => c.DisplayOrder).ToListAsync();
-            var allBrands = await _context.Brands.ToListAsync();
-            var allReviews = await _context.Reviews.Include(r => r.Customer).Include(r => r.Product).OrderByDescending(r => r.CreatedDate).ToListAsync();
-            var allCoupons = await _context.Coupons.ToListAsync();
-            var allOffers = await _context.Offers.Include(o => o.Product).ThenInclude(p => p!.Shop).OrderByDescending(o => o.CreatedDate).ToListAsync();
-            var allComplaints = await _context.Complaints.Include(c => c.Customer).Include(c => c.Order).OrderByDescending(c => c.CreatedDate).ToListAsync();
-            var allNotifications = await _context.Notifications.Where(n => n.RecipientRole == "Admin" || n.RecipientRole == null).OrderByDescending(n => n.CreatedDate).Take(20).ToListAsync();
+            // 1. Fetch DB Entities directly from SQL Server Database tables with AsNoTracking() for high performance
+            var allShops = await _context.Shops.AsNoTracking().OrderByDescending(s => s.CreatedDate).ToListAsync();
+            var allProducts = await _context.Products.AsNoTracking().Include(p => p.Shop).ToListAsync();
+            var allOrders = await _context.Orders.AsNoTracking().Include(o => o.Customer).Include(o => o.Shop).OrderByDescending(o => o.CreatedDate).ToListAsync();
+            var allUsers = await _context.Users.AsNoTracking().Where(u => u.Role == "Customer").OrderByDescending(u => u.CreatedDate).ToListAsync();
+            var allAddresses = await _context.CustomerAddresses.AsNoTracking().ToListAsync();
+            var allCategories = await _context.Categories.AsNoTracking().OrderBy(c => c.DisplayOrder).ToListAsync();
+            var allBrands = await _context.Brands.AsNoTracking().ToListAsync();
+            var allReviews = await _context.Reviews.AsNoTracking().Include(r => r.Customer).Include(r => r.Product).OrderByDescending(r => r.CreatedDate).ToListAsync();
+            var allCoupons = await _context.Coupons.AsNoTracking().ToListAsync();
+            var allOffers = await _context.Offers.AsNoTracking().Include(o => o.Product).ThenInclude(p => p!.Shop).OrderByDescending(o => o.CreatedDate).ToListAsync();
+            var allComplaints = await _context.Complaints.AsNoTracking().Include(c => c.Customer).Include(c => c.Order).OrderByDescending(c => c.CreatedDate).ToListAsync();
+            var allNotifications = await _context.Notifications.AsNoTracking().Where(n => n.RecipientRole == "Admin" || n.RecipientRole == null).OrderByDescending(n => n.CreatedDate).Take(20).ToListAsync();
 
             var pendingShops = allShops.Where(s => !s.IsApproved && (s.Remark == null || !s.Remark.StartsWith("Rejected"))).ToList();
             var approvedShops = allShops.Where(s => s.IsApproved && s.IsActive).ToList();

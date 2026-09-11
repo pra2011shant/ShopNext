@@ -1,13 +1,40 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using ShopNext.Data;
 using ShopNext.Models;
 using ShopNext.Services;
+using System.IO.Compression;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// Response Compression for Ultra-Fast HTML, JSON, CSS, and JS transfer
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
+    {
+        "text/html",
+        "text/css",
+        "application/javascript",
+        "application/json",
+        "text/json",
+        "image/svg+xml"
+    });
+});
+builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Fastest;
+});
+builder.Services.Configure<GzipCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Fastest;
+});
 
 // In-Memory Caching for performance optimization (Point 30)
 builder.Services.AddMemoryCache();
@@ -103,6 +130,7 @@ else
     app.UseDeveloperExceptionPage();
 }
 
+app.UseResponseCompression();
 app.UseStatusCodePagesWithReExecute("/Error/{0}");
 app.UseStaticFiles();
 
