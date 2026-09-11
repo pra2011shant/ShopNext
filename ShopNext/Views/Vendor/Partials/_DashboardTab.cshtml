@@ -1,0 +1,139 @@
+﻿@model ShopNext.Models.SellerDashboardViewModel
+@{
+    var shopName = ViewBag.ShopName as string ?? Model.Shop?.ShopName ?? "My Store";
+    var ownerName = Model.Shop?.OwnerName ?? "Rahul";
+}
+            <div class="tab-panel active" id="tab-dashboard">
+                <!-- Header Banner -->
+                <div class="dashboard-hero">
+                    <div class="hero-text-block">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <span class="badge bg-success bg-opacity-25 text-success border border-success px-3 py-1 rounded-pill">
+                                <i class="fa-solid fa-circle-check me-1"></i> Verified Merchant
+                            </span>
+                            <span class="text-muted small">
+                                <i class="fa-solid fa-user me-1 text-primary"></i> Owner: <strong class="text-light">@ownerName</strong>
+                            </span>
+                        </div>
+                        <h1>SELLER DASHBOARD</h1>
+                        <p class="text-muted mb-0">Overview of your store performance, orders, and sales metrics.</p>
+                    </div>
+                    <div>
+                        <button type="button" class="btn-quick-primary" onclick="switchSellerTab('tab-add-product')">
+                            <i class="fa-solid fa-plus-circle"></i> Add Product
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 18. Seller Dashboard - The 6 Metric Cards -->
+                <div class="metrics-grid">
+                    <div class="metric-card metric-products" onclick="switchSellerTab('tab-all-products')" style="cursor: pointer;">
+                        <div class="metric-icon-wrap"><i class="fa-solid fa-boxes-stacked"></i></div>
+                        <div class="metric-title">Total Products</div>
+                        <div class="metric-val">@Model.TotalProducts</div>
+                        <div class="metric-subtitle"><i class="fa-solid fa-circle-check text-success me-1"></i> Active in catalog</div>
+                    </div>
+
+                    <div class="metric-card metric-orders" onclick="switchSellerTab('tab-all-orders')" style="cursor: pointer;">
+                        <div class="metric-icon-wrap"><i class="fa-solid fa-cart-shopping"></i></div>
+                        <div class="metric-title">Total Orders</div>
+                        <div class="metric-val">@Model.TotalOrders</div>
+                        <div class="metric-subtitle"><i class="fa-solid fa-arrow-trend-up text-primary me-1"></i> Lifetime transactions</div>
+                    </div>
+
+                    <div class="metric-card metric-pending" onclick="switchSellerTab('tab-new-orders')" style="cursor: pointer;">
+                        <div class="metric-icon-wrap"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                        <div class="metric-title">Pending Orders</div>
+                        <div class="metric-val text-warning">@Model.PendingOrders</div>
+                        <div class="metric-subtitle"><i class="fa-solid fa-bolt text-warning me-1"></i> Requires packing/dispatch</div>
+                    </div>
+
+                    <div class="metric-card metric-sales" onclick="switchSellerTab('tab-earnings')" style="cursor: pointer;">
+                        <div class="metric-icon-wrap"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                        <div class="metric-title">Total Sales</div>
+                        <div class="metric-val text-success">₹@Model.TotalSales.ToString("N0")</div>
+                        <div class="metric-subtitle"><i class="fa-solid fa-wallet text-success me-1"></i> Gross merchant revenue</div>
+                    </div>
+
+                    <div class="metric-card metric-returns" onclick="switchSellerTab('tab-returns')" style="cursor: pointer;">
+                        <div class="metric-icon-wrap"><i class="fa-solid fa-rotate-left"></i></div>
+                        <div class="metric-title">Pending Returns</div>
+                        <div class="metric-val" style="color: #fb923c;">@Model.PendingReturns</div>
+                        <div class="metric-subtitle"><i class="fa-solid fa-triangle-exclamation text-warning me-1"></i> Awaiting pickup/refund</div>
+                    </div>
+
+                    <div class="metric-card metric-lowstock" onclick="switchSellerTab('tab-stock')" style="cursor: pointer;">
+                        <div class="metric-icon-wrap"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div class="metric-title">Low Stock</div>
+                        <div class="metric-val text-danger">@Model.LowStock</div>
+                        <div class="metric-subtitle"><i class="fa-solid fa-cubes-stacked text-danger me-1"></i> Items need restocking</div>
+                    </div>
+                </div>
+
+                <!-- Recent Orders Section -->
+                <div class="glass-panel">
+                    <div class="panel-header-flex">
+                        <div>
+                            <h3><i class="fa-solid fa-receipt text-primary"></i> Recent Orders</h3>
+                            <span class="text-muted small">Latest incoming customer orders for your store</span>
+                        </div>
+                        <button type="button" class="btn btn-outline-light btn-sm px-3 py-1 rounded-pill" onclick="switchSellerTab('tab-all-orders')">
+                            View All <i class="fa-solid fa-chevron-right ms-1"></i>
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Customer</th>
+                                    <th>Items Summary</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.RecentOrders != null && Model.RecentOrders.Any())
+                                {
+                                    foreach (var order in Model.RecentOrders.Take(5))
+                                    {
+                                        var statusClass = order.OrderStatus switch
+                                        {
+                                            "Delivered" or "Completed" => "status-delivered",
+                                            "Placed" or "Confirmed" or "Packed" or "Pending" => "status-pending",
+                                            "Shipped" or "Dispatched" or "OutForDelivery" => "status-shipped",
+                                            "Return Requested" or "Return Approved" => "status-return",
+                                            _ => "status-pending"
+                                        };
+                                        var itemsText = order.OrderItems.Any() 
+                                            ? string.Join(", ", order.OrderItems.Select(i => $"{i.Product?.ProductName ?? "Item"} (x{i.Quantity})")) 
+                                            : "Standard Items";
+
+                                        <tr>
+                                            <td><strong class="text-white">#ORD@(order.Id + 1000)</strong></td>
+                                            <td>
+                                                <div>@(order.Customer?.Name ?? "Customer")</div>
+                                                <div class="text-muted small">@(order.Customer?.PhoneNumber ?? "98XXXXXXXX")</div>
+                                            </td>
+                                            <td><span class="text-truncate d-inline-block" style="max-width: 220px;">@itemsText</span></td>
+                                            <td><strong class="text-white">₹@order.TotalAmount.ToString("N2")</strong></td>
+                                            <td><span class="badge-status @statusClass">@order.OrderStatus</span></td>
+                                            <td class="text-muted small">@order.CreatedDate.ToString("dd MMM yyyy")</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-4">No orders found for this shop.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. TAB: ALL PRODUCTS (Products ├── All Products) -->

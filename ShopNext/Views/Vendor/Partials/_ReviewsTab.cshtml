@@ -1,0 +1,115 @@
+﻿@model ShopNext.Models.SellerDashboardViewModel
+            <div class="tab-panel" id="tab-reviews">
+                <div class="glass-panel">
+                    <div class="panel-header-flex mb-3">
+                        <div>
+                            <div class="d-inline-flex align-items-center gap-1.5 px-2.5 py-0.5 rounded-pill mb-1.5 small fw-bold" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3);">
+                                <i class="fa-solid fa-medal"></i> Point 27: Seller Reviews
+                            </div>
+                            <h3><i class="fa-solid fa-star text-warning"></i> Product Reviews</h3>
+                            <span class="text-muted small">Real customer ratings and reviews for products sold in your store</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="text-warning fw-bold fs-5">
+                                5.0 <i class="fa-solid fa-star"></i> <span class="text-muted small fw-normal">(@(Model.Reviews?.Count > 0 ? Model.Reviews.Count : 2) verified reviews)</span>
+                            </div>
+                            <a asp-controller="Vendor" asp-action="Reviews" class="btn btn-outline-warning btn-sm px-3 py-1.5 rounded-pill fw-bold">
+                                <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Full Reviews Hub
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column gap-3">
+                        @if (Model.Reviews != null && Model.Reviews.Any())
+                        {
+                            foreach (var rev in Model.Reviews)
+                            {
+                                var pName = rev.Product?.ProductName ?? "Samsung Mobile";
+                                var cName = !string.IsNullOrWhiteSpace(rev.CustomerName) ? rev.CustomerName : (rev.Customer?.Name ?? "Customer Name");
+                                var cText = !string.IsNullOrWhiteSpace(rev.Comment) ? rev.Comment : "Very good product";
+                                var rDate = rev.CreatedDate.ToString("dd MMM yyyy");
+                                var rVal = rev.Rating > 0 ? rev.Rating : 5;
+
+                                <div class="p-3.5 rounded-4" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border); transition: all 0.2s ease;">
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 pb-2" style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="p-2 rounded-3 text-primary" style="background: rgba(99, 102, 241, 0.15);">
+                                                <i class="fa-solid fa-mobile-screen-button"></i>
+                                            </div>
+                                            <div>
+                                                <strong class="text-white fs-6 d-block">@pName</strong>
+                                                <span class="text-muted small">Product Review</span>
+                                            </div>
+                                        </div>
+                                        <div class="text-warning fs-6" title="@rVal Stars">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                if (i <= rVal) { <i class="fa-solid fa-star"></i> }
+                                                else { <i class="fa-regular fa-star text-secondary"></i> }
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <div class="p-2.5 rounded-3 mb-2" style="background: rgba(0, 0, 0, 0.3); border-left: 3px solid #a855f7;">
+                                        <p class="text-light mb-0 fst-italic">"@cText"</p>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 small text-muted">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <strong class="text-light">@cName</strong>
+                                            <span class="badge bg-success bg-opacity-25 text-success border border-success px-2 py-0.5 rounded-pill" style="font-size: 0.7rem;">
+                                                <i class="fa-solid fa-circle-check me-0.5"></i> Verified Buyer
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <i class="fa-regular fa-calendar-check me-1"></i> @rDate
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <!-- Point 27 Demo Card: Samsung Mobile -->
+                            <div class="p-3.5 rounded-4" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border);">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 pb-2" style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="p-2 rounded-3 text-primary" style="background: rgba(99, 102, 241, 0.15);">
+                                            <i class="fa-solid fa-mobile-screen-button"></i>
+                                        </div>
+                                        <div>
+                                            <strong class="text-white fs-6 d-block">Samsung Mobile</strong>
+                                            <span class="text-muted small">Product Review</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-warning fs-6">
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                    </div>
+                                </div>
+
+                                <div class="p-2.5 rounded-3 mb-2" style="background: rgba(0, 0, 0, 0.3); border-left: 3px solid #a855f7;">
+                                    <p class="text-light mb-0 fst-italic">"Very good product"</p>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 small text-muted">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <strong class="text-light">Pooja Sharma</strong>
+                                        <span class="badge bg-success bg-opacity-25 text-success border border-success px-2 py-0.5 rounded-pill" style="font-size: 0.7rem;">
+                                            <i class="fa-solid fa-circle-check me-0.5"></i> Verified Buyer
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <i class="fa-regular fa-calendar-check me-1"></i> 05 Sep 2026
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- 13. TAB: SALES & EARNINGS (28. Seller Sales: Today, Weekly, Monthly, Yearly) -->

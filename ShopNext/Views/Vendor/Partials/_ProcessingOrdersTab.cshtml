@@ -1,0 +1,72 @@
+﻿@model ShopNext.Models.SellerDashboardViewModel
+            <div class="tab-panel" id="tab-processing">
+                <div class="glass-panel">
+                    <div class="panel-header-flex mb-3">
+                        <div>
+                            <h3><i class="fa-solid fa-boxes-packing text-info"></i> Processing &amp; Packed Orders</h3>
+                            <span class="text-muted small">Orders undergoing inspection, packaging, and dispatch preparation</span>
+                        </div>
+                        <a asp-controller="Vendor" asp-action="Orders" class="btn btn-outline-light btn-sm px-3 py-2 rounded-pill">
+                            <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Open Order Hub
+                        </a>
+                    </div>
+                    
+                    @{
+                        var processingOrders = Model.RecentOrders?.Where(o => o.OrderStatus == "Accepted" || o.OrderStatus == "Processing" || o.OrderStatus == "Packed").ToList();
+                    }
+
+                    @if (processingOrders != null && processingOrders.Any())
+                    {
+                        foreach (var pord in processingOrders)
+                        {
+                            var item = pord.OrderItems?.FirstOrDefault();
+                            <div class="p-3 rounded-4 mb-3" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border);">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                                    <div>
+                                        <strong class="text-white fs-6">Order #@pord.Id &bull; @(pord.Customer?.Name ?? "Customer")</strong>
+                                        <span class="text-muted small ms-2">@(item?.Product?.ProductName ?? "Ordered Products") (Qty: @(item?.Quantity ?? 1))</span>
+                                    </div>
+                                    <span class="badge @(pord.OrderStatus == "Processing" ? "bg-purple bg-opacity-25 text-purple" : "bg-info bg-opacity-25 text-info") border px-3 py-1 rounded-pill" id="orderStatusBadge_@pord.Id" style="@(pord.OrderStatus == "Processing" ? "background: rgba(168,85,247,0.2); color: #c084fc; border-color: rgba(168,85,247,0.4);" : "")">
+                                        <i class="fa-solid @(pord.OrderStatus == "Processing" ? "fa-gears fa-spin" : "fa-box-open") me-1"></i> Status: @pord.OrderStatus
+                                    </span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pt-2 border-top border-secondary border-opacity-25">
+                                    <span class="text-success fw-bold">₹@pord.TotalAmount.ToString("N2")</span>
+                                    <div>
+                                        @if (pord.OrderStatus == "Accepted")
+                                        {
+                                            <button type="button" class="btn px-3 py-1.5 rounded-pill fw-bold text-white btn-sm" onclick="progressOrderStage(@pord.Id, 'Processing', this)" style="background: linear-gradient(135deg, #a855f7 0%, #c084fc 100%); border: none;">
+                                                <i class="fa-solid fa-gears me-1"></i> Start Processing
+                                            </button>
+                                        }
+                                        else if (pord.OrderStatus == "Processing")
+                                        {
+                                            <button type="button" class="btn px-3 py-1.5 rounded-pill fw-bold text-white btn-sm" onclick="progressOrderStage(@pord.Id, 'Packed', this)" style="background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%); border: none;">
+                                                <i class="fa-solid fa-box me-1"></i> Mark as Packed
+                                            </button>
+                                        }
+                                        else if (pord.OrderStatus == "Packed")
+                                        {
+                                            <button type="button" class="btn px-3 py-1.5 rounded-pill fw-bold text-white btn-sm" onclick="progressOrderStage(@pord.Id, 'Shipped', this)" style="background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%); border: none;">
+                                                <i class="fa-solid fa-truck-fast me-1"></i> Ship Order
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="p-3 rounded-4 mb-2" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <strong class="text-white">#ORD1001 &bull; Samsung Mobile (Qty: 2)</strong>
+                                <span class="badge bg-purple bg-opacity-25 text-purple border px-2 py-1 rounded-pill" style="background: rgba(168,85,247,0.2); color: #c084fc; border-color: rgba(168,85,247,0.4);">Processing</span>
+                            </div>
+                            <div class="text-muted small">Pooja Sharma &bull; Undergoing quality inspection and packaging.</div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- 9. TAB: SHIPPED (Orders ├── Shipped) -->

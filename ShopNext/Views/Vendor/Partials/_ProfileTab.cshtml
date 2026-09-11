@@ -1,0 +1,54 @@
+﻿@model ShopNext.Models.SellerDashboardViewModel
+@{
+    var shopName = ViewBag.ShopName as string ?? Model.Shop?.ShopName ?? "My Store";
+    var ownerName = Model.Shop?.OwnerName ?? "Rahul";
+    var email = Model.Shop?.Email ?? "merchant@shopnext.local";
+    var phone = Model.Shop?.PhoneNumber ?? "9876543210";
+    var address = Model.Shop?.Address ?? "Main Market";
+    var location = $"{Model.Shop?.City}, {Model.Shop?.State} - {Model.Shop?.Pincode}".Trim(' ', ',', '-');
+    if (string.IsNullOrWhiteSpace(location)) { location = "New Delhi, Delhi - 110001"; }
+}
+            <div class="tab-panel" id="tab-profile">
+                <div class="glass-panel">
+                    <div class="panel-header-flex">
+                        <div>
+                            <h3><i class="fa-solid fa-id-card text-primary"></i> Shop Profile & Business Info</h3>
+                            <span class="text-muted small">Registered merchant and storefront details</span>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                <div class="text-muted small fw-bold uppercase mb-1">Dukaan ka Naam</div>
+                                <div class="text-white fs-5 fw-bold">@shopName</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                <div class="text-muted small fw-bold uppercase mb-1">Owner Full Name</div>
+                                <div class="text-white fs-5 fw-bold">@ownerName</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                <div class="text-muted small fw-bold uppercase mb-1">Registered Mobile</div>
+                                <div class="text-white fs-5 fw-bold">@phone</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                <div class="text-muted small fw-bold uppercase mb-1">Email Address</div>
+                                <div class="text-white fs-5 fw-bold">@email</div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                <div class="text-muted small fw-bold uppercase mb-1">Store Address & Location</div>
+                                <div class="text-white fs-6">@address, @location</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 16. TAB: NOTIFICATIONS -->

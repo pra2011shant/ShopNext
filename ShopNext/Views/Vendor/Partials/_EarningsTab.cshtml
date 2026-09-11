@@ -1,0 +1,115 @@
+﻿@model ShopNext.Models.SellerDashboardViewModel
+            <div class="tab-panel" id="tab-earnings">
+                <div class="glass-panel">
+                    <div class="panel-header-flex mb-3">
+                        <div>
+                            <div class="d-inline-flex align-items-center gap-1.5 px-2.5 py-0.5 rounded-pill mb-1.5 small fw-bold" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">
+                                <i class="fa-solid fa-chart-line"></i> Point 28: Seller Sales
+                            </div>
+                            <h3><i class="fa-solid fa-wallet text-success"></i> Sales & Revenue Overview</h3>
+                            <span class="text-muted small">Real-time revenue metrics categorized by Today, Week, Month, and Year</span>
+                        </div>
+                        <a asp-controller="Vendor" asp-action="Sales" class="btn btn-outline-success btn-sm px-3 py-1.5 rounded-pill fw-bold">
+                            <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Full Sales Hub
+                        </a>
+                    </div>
+
+                    <!-- 28. The 4 Core Sales Metric Cards -->
+                    <div class="row g-3 mb-4">
+                        <!-- 1. Today's Sales -->
+                        <div class="col-md-3 col-sm-6">
+                            <div class="p-3.5 rounded-4 h-100" style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.35);">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-info small uppercase fw-bold"><i class="fa-solid fa-calendar-day me-1"></i> Today's Sales</span>
+                                    <span class="badge bg-info bg-opacity-25 text-info px-2 py-0.5 rounded-pill" style="font-size: 0.7rem;">Today</span>
+                                </div>
+                                <div class="fs-2 fw-bold text-info">₹@Model.TodaySales.ToString("N0")</div>
+                                <div class="text-muted small mt-1">
+                                    <strong class="text-white">@Model.TodayOrdersCount</strong> Orders placed today
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Weekly Sales -->
+                        <div class="col-md-3 col-sm-6">
+                            <div class="p-3.5 rounded-4 h-100" style="background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.35);">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-purple small uppercase fw-bold" style="color: #c084fc;"><i class="fa-solid fa-calendar-week me-1"></i> Weekly Sales</span>
+                                    <span class="badge bg-purple bg-opacity-25 text-purple px-2 py-0.5 rounded-pill" style="background: rgba(168,85,247,0.2); color: #c084fc; font-size: 0.7rem;">7 Days</span>
+                                </div>
+                                <div class="fs-2 fw-bold" style="color: #c084fc;">₹@Model.WeeklySales.ToString("N0")</div>
+                                <div class="text-muted small mt-1">
+                                    <strong class="text-white">@Model.WeeklyOrdersCount</strong> Orders this week
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Monthly Sales -->
+                        <div class="col-md-3 col-sm-6">
+                            <div class="p-3.5 rounded-4 h-100" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35);">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-success small uppercase fw-bold"><i class="fa-solid fa-calendar-days me-1"></i> Monthly Sales</span>
+                                    <span class="badge bg-success bg-opacity-25 text-success px-2 py-0.5 rounded-pill" style="font-size: 0.7rem;">30 Days</span>
+                                </div>
+                                <div class="fs-2 fw-bold text-success">₹@Model.MonthlySales.ToString("N0")</div>
+                                <div class="text-muted small mt-1">
+                                    <strong class="text-white">@Model.MonthlyOrdersCount</strong> Orders this month
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Yearly Sales -->
+                        <div class="col-md-3 col-sm-6">
+                            <div class="p-3.5 rounded-4 h-100" style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35);">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-warning small uppercase fw-bold"><i class="fa-solid fa-chart-line me-1"></i> Yearly Sales</span>
+                                    <span class="badge bg-warning bg-opacity-25 text-warning px-2 py-0.5 rounded-pill" style="font-size: 0.7rem;">Year @DateTime.Now.Year</span>
+                                </div>
+                                <div class="fs-2 fw-bold text-warning">₹@Model.YearlySales.ToString("N0")</div>
+                                <div class="text-muted small mt-1">
+                                    <strong class="text-white">@Model.YearlyOrdersCount</strong> Orders this year
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Chart.js Graph in Dashboard Tab -->
+                    <div class="p-3.5 rounded-4 mb-4" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border);">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                            <div>
+                                <h4 class="text-white mb-0" id="dashChartTitle"><i class="fa-solid fa-chart-area text-info me-2"></i> Today's Sales Trend</h4>
+                                <span class="text-muted small" id="dashChartSub">Live hourly revenue volume</span>
+                            </div>
+                            <div class="btn-group p-1 rounded-3" style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--glass-border);">
+                                <button type="button" class="btn btn-sm btn-dark active" id="btnDashToday" onclick="switchDashSalesPeriod('today')">Today</button>
+                                <button type="button" class="btn btn-sm btn-dark" id="btnDashWeekly" onclick="switchDashSalesPeriod('weekly')">Weekly</button>
+                                <button type="button" class="btn btn-sm btn-dark" id="btnDashMonthly" onclick="switchDashSalesPeriod('monthly')">Monthly</button>
+                                <button type="button" class="btn btn-sm btn-dark" id="btnDashYearly" onclick="switchDashSalesPeriod('yearly')">Yearly</button>
+                            </div>
+                        </div>
+                        <div style="position: relative; height: 260px; width: 100%;">
+                            <canvas id="dashSalesTrendChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Payout & Settlement Info -->
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border);">
+                                <div class="text-muted small uppercase fw-bold">Settled to Bank Account</div>
+                                <div class="fs-3 fw-bold text-primary">₹@((Model.TotalSales * 0.95m).ToString("N0"))</div>
+                                <div class="text-muted small mt-1">Direct NEFT automated merchant payouts</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-4" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border);">
+                                <div class="text-muted small uppercase fw-bold">Next Scheduled Payout</div>
+                                <div class="fs-3 fw-bold text-warning">₹@((Model.TotalSales * 0.05m).ToString("N0"))</div>
+                                <div class="text-muted small mt-1">Auto-release in 24 hours to registered bank</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 14. TAB: COUPONS -->

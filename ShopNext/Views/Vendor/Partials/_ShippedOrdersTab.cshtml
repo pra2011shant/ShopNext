@@ -1,0 +1,46 @@
+﻿@model ShopNext.Models.SellerDashboardViewModel
+            <div class="tab-panel" id="tab-shipped">
+                <div class="glass-panel">
+                    <div class="panel-header-flex mb-3">
+                        <div>
+                            <h3><i class="fa-solid fa-truck-fast text-primary"></i> Dispatched &amp; Shipped</h3>
+                            <span class="text-muted small">Live orders on the road with delivery riders</span>
+                        </div>
+                        <a asp-controller="Vendor" asp-action="Orders" class="btn btn-outline-light btn-sm px-3 py-2 rounded-pill">
+                            <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Open Order Hub
+                        </a>
+                    </div>
+
+                    @{
+                        var shippedOrders = Model.RecentOrders?.Where(o => o.OrderStatus == "Shipped" || o.OrderStatus == "Dispatched" || o.OrderStatus == "OutForDelivery").ToList();
+                    }
+
+                    @if (shippedOrders != null && shippedOrders.Any())
+                    {
+                        foreach (var sord in shippedOrders)
+                        {
+                            <div class="p-3 rounded-4 mb-2" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <strong class="text-white">Order #@sord.Id &bull; @(sord.Customer?.Name ?? "Customer")</strong>
+                                    <span class="badge bg-primary bg-opacity-25 text-info border border-primary px-2 py-1 rounded-pill">@sord.OrderStatus</span>
+                                </div>
+                                <div class="text-muted small">
+                                    @(sord.Rider != null ? $"Rider: {sord.Rider.RiderName} ({sord.Rider.PhoneNumber}) • In Transit" : "In transit to delivery location.")
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="p-3 rounded-4 mb-2" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <strong class="text-white">#ORD1044 &bull; Sony WH-1000XM5</strong>
+                                <span class="badge-status status-shipped">Out for Delivery</span>
+                            </div>
+                            <div class="text-muted small">Rider: Rajesh Kumar (+91 98999 11111) &bull; Estimated delivery in 25 mins</div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- 10. TAB: DELIVERED (Orders └── Delivered) -->

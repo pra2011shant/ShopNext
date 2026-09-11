@@ -1,0 +1,47 @@
+﻿@model ShopNext.Models.SellerDashboardViewModel
+            <div class="tab-panel" id="tab-delivered">
+                <div class="glass-panel">
+                    <div class="panel-header-flex">
+                        <div>
+                            <h3><i class="fa-solid fa-circle-check text-success"></i> Delivered Orders</h3>
+                            <span class="text-muted small">Successfully completed local fulfillments</span>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table custom-table">
+                            <thead><tr><th>Order #</th><th>Customer</th><th>Total Paid</th><th>Fulfilled Date</th></tr></thead>
+                            <tbody>
+                                @{
+                                    var deliveredOrders = Model.RecentOrders?.Where(o => o.OrderStatus == "Delivered" || o.OrderStatus == "Completed").ToList();
+                                }
+                                @if (deliveredOrders != null && deliveredOrders.Any())
+                                {
+                                    foreach (var dord in deliveredOrders)
+                                    {
+                                        <tr>
+                                            <td><strong class="text-white">#ORD@(dord.Id + 1000)</strong></td>
+                                            <td>@(dord.Customer?.Name ?? "Customer")</td>
+                                            <td><strong class="text-white">₹@dord.TotalAmount.ToString("N2")</strong></td>
+                                            <td class="text-muted small">@dord.CreatedDate.ToString("dd MMM yyyy")</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="4" class="text-center py-5">
+                                            <div class="py-3">
+                                                <i class="fa-solid fa-box-open fs-1 text-muted mb-3"></i>
+                                                <h5 class="text-white fw-bold">No Delivered Orders Yet</h5>
+                                                <p class="text-muted small mb-0">Completed and delivered customer orders will appear here.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 11. TAB: RETURNS -->

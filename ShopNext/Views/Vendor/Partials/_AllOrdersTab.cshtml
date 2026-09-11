@@ -1,0 +1,53 @@
+@model ShopNext.Models.SellerDashboardViewModel
+@{
+    var shopName = ViewBag.ShopName as string ?? Model.Shop?.ShopName ?? "My Store";
+}
+            <div class="tab-panel" id="tab-all-orders">
+                <div class="glass-panel">
+                    <div class="panel-header-flex">
+                        <div>
+                            <h3><i class="fa-solid fa-list-check text-primary"></i> All Orders</h3>
+                            <span class="text-muted small">Complete order history for @shopName</span>
+                        </div>
+                        <a asp-controller="Vendor" asp-action="Orders" class="btn btn-outline-light btn-sm px-3 py-2 rounded-pill">
+                            Open Full Order Dispatch Hub
+                        </a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table custom-table">
+                            <thead>
+                                <tr><th>Order #</th><th>Customer</th><th>Amount</th><th>Status</th><th>Date</th></tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.RecentOrders != null && Model.RecentOrders.Any())
+                                {
+                                    foreach (var o in Model.RecentOrders)
+                                    {
+                                        <tr>
+                                            <td><strong class="text-white">#ORD@(o.Id + 1000)</strong></td>
+                                            <td>@(o.Customer?.Name ?? "Customer")</td>
+                                            <td><strong class="text-white">₹@o.TotalAmount.ToString("N2")</strong></td>
+                                            <td><span class="badge-status status-pending">@o.OrderStatus</span></td>
+                                            <td class="text-muted small">@o.CreatedDate.ToString("dd MMM yyyy")</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5">
+                                            <div class="py-3">
+                                                <i class="fa-solid fa-clipboard-list fs-1 text-primary mb-3"></i>
+                                                <h5 class="text-white fw-bold">No Orders Placed Yet</h5>
+                                                <p class="text-muted small mb-0">Customer orders for your shop will appear here in real-time.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. TAB: NEW ORDERS (24. Seller Orders: Orders ├── New Orders) -->

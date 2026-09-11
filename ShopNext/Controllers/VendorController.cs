@@ -319,6 +319,38 @@ namespace ShopNext.Controllers
             return RedirectToAction("Login");
         }
 
+        // GET: /Vendor/GetTabPartial?tab=all-products
+        [HttpGet]
+        public async Task<IActionResult> GetTabPartial(string tab)
+        {
+            if (!IsLoggedIn(out int shopId, out _)) return Unauthorized();
+
+            var vm = await BuildSellerDashboardViewModelAsync(shopId);
+            if (vm == null) return NotFound();
+
+            return (tab?.ToLowerInvariant().Replace("tab-", "")) switch
+            {
+                "dashboard" => PartialView("~/Views/Vendor/Partials/_DashboardTab.cshtml", vm),
+                "all-products" => PartialView("~/Views/Vendor/Partials/_AllProductsTab.cshtml", vm),
+                "add-product" => PartialView("~/Views/Vendor/Partials/_AddProductTab.cshtml", vm),
+                "categories" => PartialView("~/Views/Vendor/Partials/_CategoriesTab.cshtml", vm),
+                "stock" => PartialView("~/Views/Vendor/Partials/_StockTab.cshtml", vm),
+                "all-orders" => PartialView("~/Views/Vendor/Partials/_AllOrdersTab.cshtml", vm),
+                "new-orders" => PartialView("~/Views/Vendor/Partials/_NewOrdersTab.cshtml", vm),
+                "processing" => PartialView("~/Views/Vendor/Partials/_ProcessingOrdersTab.cshtml", vm),
+                "shipped" => PartialView("~/Views/Vendor/Partials/_ShippedOrdersTab.cshtml", vm),
+                "delivered" => PartialView("~/Views/Vendor/Partials/_DeliveredOrdersTab.cshtml", vm),
+                "returns" => PartialView("~/Views/Vendor/Partials/_ReturnsTab.cshtml", vm),
+                "reviews" => PartialView("~/Views/Vendor/Partials/_ReviewsTab.cshtml", vm),
+                "earnings" => PartialView("~/Views/Vendor/Partials/_EarningsTab.cshtml", vm),
+                "coupons" => PartialView("~/Views/Vendor/Partials/_CouponsTab.cshtml", vm),
+                "profile" => PartialView("~/Views/Vendor/Partials/_ProfileTab.cshtml", vm),
+                "notifications" => PartialView("~/Views/Vendor/Partials/_NotificationsTab.cshtml", vm),
+                "settings" => PartialView("~/Views/Vendor/Partials/_SettingsTab.cshtml", vm),
+                _ => BadRequest("Invalid tab specified")
+            };
+        }
+
         // GET: /Vendor/Dashboard (18. Seller Dashboard)
         [HttpGet]
         public async Task<IActionResult> Dashboard()
@@ -328,7 +360,7 @@ namespace ShopNext.Controllers
                 return RedirectToAction("Login");
             }
 
-            var shop = await _service.GetShopByIdAsync(shopId);
+            var shop = await _context.Shops.AsNoTracking().FirstOrDefaultAsync(s => s.Id == shopId);
             if (shop == null)
             {
                 return RedirectToAction("Login");
@@ -343,10 +375,38 @@ namespace ShopNext.Controllers
             ViewBag.Shop = shop;
             ViewBag.IsApproved = shop.IsApproved;
 
-            var products = (await _service.GetProductsByShopIdAsync(shopId)).ToList();
-            var orders = (await _service.GetOrdersByShopIdAsync(shopId)).ToList();
-            var reviews = (await _service.GetReviewsByShopIdAsync(shopId)).ToList();
-            var coupons = (await _service.GetActiveCouponsAsync()).ToList();
+            var vm = await BuildSellerDashboardViewModelAsync(shopId);
+            return View(vm);
+        }
+
+        private async Task<SellerDashboardViewModel?> BuildSellerDashboardViewModelAsync(int shopId)
+        {
+            var shop = await _context.Shops.AsNoTracking().FirstOrDefaultAsync(s => s.Id == shopId);
+            if (shop == null) return null;
+
+            var products = await _context.Products.AsNoTracking()
+                .Include(p => p.Category)
+                .Where(p => p.ShopId == shopId && !p.IsDeleted)
+                .OrderByDescending(p => p.CreatedDate)
+                .ToListAsync();
+
+            var orders = await _context.Orders.AsNoTracking()
+                .Include(o => o.Customer)
+                .Include(o => o.OrderItems)
+                .Where(o => o.ShopId == shopId && !o.IsDeleted)
+                .OrderByDescending(o => o.CreatedDate)
+                .ToListAsync();
+
+            var reviews = await _context.Reviews.AsNoTracking()
+                .Include(r => r.Customer)
+                .Include(r => r.Product)
+                .Where(r => r.Product != null && r.Product.ShopId == shopId && !r.IsDeleted)
+                .OrderByDescending(r => r.CreatedDate)
+                .ToListAsync();
+
+            var coupons = await _context.Coupons.AsNoTracking()
+                .Where(c => c.IsActive && !c.IsDeleted)
+                .ToListAsync();
 
             // Real dynamic counts directly from database
             int totalProducts = products.Count;
@@ -354,12 +414,12 @@ namespace ShopNext.Controllers
             int pendingOrders = orders.Count(o => o.OrderStatus == "Placed" || o.OrderStatus == "Confirmed" || o.OrderStatus == "Packed" || o.OrderStatus == "Pending");
             decimal totalSales = orders.Where(o => o.OrderStatus == "Delivered" || o.OrderStatus == "Completed" || o.PaymentStatus == "Paid").Sum(o => o.TotalAmount);
             int pendingReturns = orders.Count(o => o.OrderStatus == "Return Requested" || o.OrderStatus == "Return Approved" || !string.IsNullOrEmpty(o.ReturnReason));
-            // 23. Inventory Rules: Stock < 5 is Low Stock, 0 is Out of Stock, >= 5 is Available
+            // Inventory Rules: Stock < 5 is Low Stock, 0 is Out of Stock, >= 5 is Available
             int availableStock = products.Count(p => p.Stock >= 5);
             int lowStock = products.Count(p => p.Stock < 5 && p.Stock > 0);
             int outOfStock = products.Count(p => p.Stock <= 0);
 
-            // 28. Seller Sales Metrics (Today, Weekly, Monthly, Yearly)
+            // Seller Sales Metrics (Today, Weekly, Monthly, Yearly)
             var activeSalesOrders = orders.Where(o => o.OrderStatus != "Cancelled" && o.OrderStatus != "Rejected").ToList();
 
             var todayOrders = activeSalesOrders.Where(o => o.CreatedDate.Date == DateTime.Today).ToList();
@@ -377,7 +437,7 @@ namespace ShopNext.Controllers
             decimal yearlySales = yearlyOrders.Sum(o => o.TotalAmount);
             int yearlyOrdersCount = yearlyOrders.Count;
 
-            // 29. Seller Earnings (Net Earnings = Total Sales - Commission - Refund)
+            // Seller Earnings (Net Earnings = Total Sales - Commission - Refund)
             decimal earningsGrossSales = totalSales;
             decimal platformCommissionRate = 5.0m;
             decimal platformCommission = Math.Round(earningsGrossSales * (platformCommissionRate / 100.0m), 2);
@@ -386,7 +446,7 @@ namespace ShopNext.Controllers
             decimal settledAmount = Math.Round(netEarnings * 0.85m, 2);
             decimal pendingPayout = netEarnings - settledAmount;
 
-            var vm = new SellerDashboardViewModel
+            return new SellerDashboardViewModel
             {
                 Shop = shop,
                 TotalProducts = totalProducts,
@@ -416,8 +476,6 @@ namespace ShopNext.Controllers
                 Reviews = reviews,
                 Coupons = coupons
             };
-
-            return View(vm);
         }
 
         // GET: /Vendor/Products

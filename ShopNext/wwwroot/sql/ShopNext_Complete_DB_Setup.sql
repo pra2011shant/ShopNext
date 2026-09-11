@@ -1558,5 +1558,180 @@ BEGIN
 END;
 GO
 
+-- ==============================================================================
+-- 5. HIGH-SPEED INDEXES, VIEWS & STORED PROCEDURES (ALL PORTALS: ADMIN, SELLER, CUSTOMER, RIDER)
+-- ==============================================================================
+
+-- 5.1 NON-CLUSTERED INDEXES
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Orders_ShopId_OrderStatus_CreatedDate' AND object_id = OBJECT_ID('Orders'))
+BEGIN
+    CREATE NONCLUSTERED INDEX IX_Orders_ShopId_OrderStatus_CreatedDate 
+    ON Orders(ShopId, OrderStatus, CreatedDate)
+    INCLUDE (TotalAmount, PaymentStatus, CustomerId, DeliveredDate);
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Orders_CustomerId_OrderStatus_CreatedDate' AND object_id = OBJECT_ID('Orders'))
+BEGIN
+    CREATE NONCLUSTERED INDEX IX_Orders_CustomerId_OrderStatus_CreatedDate 
+    ON Orders(CustomerId, OrderStatus, CreatedDate)
+    INCLUDE (TotalAmount, ShopId);
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Orders_RiderId_OrderStatus' AND object_id = OBJECT_ID('Orders'))
+BEGIN
+    CREATE NONCLUSTERED INDEX IX_Orders_RiderId_OrderStatus 
+    ON Orders(RiderId, OrderStatus)
+    INCLUDE (ShopId, CustomerId, TotalAmount);
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Products_ShopId_Stock_IsActive' AND object_id = OBJECT_ID('Products'))
+BEGIN
+    CREATE NONCLUSTERED INDEX IX_Products_ShopId_Stock_IsActive 
+    ON Products(ShopId, Stock, IsActive, IsDeleted)
+    INCLUDE (ProductName, Price, Category, ImageUrl);
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_OrderItems_OrderId_ProductId' AND object_id = OBJECT_ID('OrderItems'))
+BEGIN
+    CREATE NONCLUSTERED INDEX IX_OrderItems_OrderId_ProductId 
+    ON OrderItems(OrderId, ProductId)
+    INCLUDE (Quantity, UnitPrice, TotalPrice);
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Reviews_ProductId_Rating' AND object_id = OBJECT_ID('Reviews'))
+BEGIN
+    CREATE NONCLUSTERED INDEX IX_Reviews_ProductId_Rating 
+    ON Reviews(ProductId, Rating, IsActive)
+    INCLUDE (CustomerId, CreatedDate);
+END
+GO
+
+-- 5.2 DATABASE VIEWS
+CREATE OR ALTER VIEW vw_SellerOrdersSummary AS
+SELECT 
+    o.Id AS OrderId,
+    o.ShopId,
+    s.ShopName,
+    o.CustomerId,
+    u.Name AS CustomerName,
+    u.PhoneNumber AS CustomerPhone,
+    o.TotalAmount,
+    o.OrderStatus,
+    o.PaymentStatus,
+    o.PaymentMode,
+    o.CreatedDate,
+    o.DeliveredDate,
+    o.ReturnReason,
+    ISNULL((SELECT COUNT(1) FROM OrderItems oi WHERE oi.OrderId = o.Id), 0) AS ItemsCount
+FROM Orders o
+LEFT JOIN Shops s ON o.ShopId = s.Id
+LEFT JOIN Users u ON o.CustomerId = u.Id
+WHERE o.IsDeleted = 0;
+GO
+
+CREATE OR ALTER VIEW vw_SellerProductsSummary AS
+SELECT 
+    p.Id AS ProductId,
+    p.ShopId,
+    p.ProductName,
+    p.Price,
+    p.Mrp,
+    p.Discount,
+    p.Stock,
+    CASE 
+        WHEN p.Stock <= 0 THEN 'Out of Stock'
+        WHEN p.Stock < 5 THEN 'Low Stock'
+        ELSE 'In Stock'
+    END AS StockStatus,
+    p.Category AS CategoryName,
+    p.IsActive,
+    p.CreatedDate
+FROM Products p
+WHERE p.IsDeleted = 0;
+GO
+
+-- 5.3 STORED PROCEDURES
+CREATE OR ALTER PROCEDURE sp_GetSellerDashboardData
+    @ShopId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- 1. Metric Counts
+    SELECT 
+        ISNULL(COUNT(p.Id), 0) AS TotalProducts,
+        ISNULL(SUM(CASE WHEN p.Stock >= 5 THEN 1 ELSE 0 END), 0) AS AvailableStock,
+        ISNULL(SUM(CASE WHEN p.Stock < 5 AND p.Stock > 0 THEN 1 ELSE 0 END), 0) AS LowStock,
+        ISNULL(SUM(CASE WHEN p.Stock <= 0 THEN 1 ELSE 0 END), 0) AS OutOfStock
+    FROM Products p
+    WHERE p.ShopId = @ShopId AND p.IsDeleted = 0;
+
+    -- 2. Order Metrics
+    SELECT 
+        COUNT(o.Id) AS TotalOrders,
+        ISNULL(SUM(CASE WHEN o.OrderStatus IN ('Placed', 'Confirmed', 'Packed', 'Pending') THEN 1 ELSE 0 END), 0) AS PendingOrders,
+        ISNULL(SUM(CASE WHEN o.OrderStatus IN ('Delivered', 'Completed') OR o.PaymentStatus = 'Paid' THEN o.TotalAmount ELSE 0 END), 0) AS TotalSales,
+        ISNULL(SUM(CASE WHEN o.OrderStatus IN ('Return Requested', 'Return Approved') OR o.ReturnReason IS NOT NULL THEN 1 ELSE 0 END), 0) AS PendingReturns,
+        ISNULL(SUM(CASE WHEN CAST(o.CreatedDate AS DATE) = CAST(GETDATE() AS DATE) THEN o.TotalAmount ELSE 0 END), 0) AS TodaySales,
+        ISNULL(SUM(CASE WHEN CAST(o.CreatedDate AS DATE) = CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END), 0) AS TodayOrdersCount
+    FROM Orders o
+    WHERE o.ShopId = @ShopId AND o.IsDeleted = 0;
+
+    -- 3. Recent 10 Orders
+    SELECT TOP 10 
+        o.Id, o.CustomerId, u.Name AS CustomerName, o.TotalAmount, o.OrderStatus, o.PaymentStatus, o.CreatedDate
+    FROM Orders o
+    LEFT JOIN Users u ON o.CustomerId = u.Id
+    WHERE o.ShopId = @ShopId AND o.IsDeleted = 0
+    ORDER BY o.CreatedDate DESC;
+END
+GO
+
+CREATE OR ALTER PROCEDURE sp_GetCustomerDashboardData
+    @CustomerId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- 1. Summary
+    SELECT 
+        COUNT(o.Id) AS TotalOrders,
+        ISNULL(SUM(CASE WHEN o.OrderStatus IN ('Delivered', 'Completed') THEN 1 ELSE 0 END), 0) AS DeliveredOrders,
+        ISNULL(SUM(CASE WHEN o.OrderStatus IN ('Placed', 'Confirmed', 'Packed', 'Shipped', 'Out For Delivery') THEN 1 ELSE 0 END), 0) AS ActiveOrders,
+        ISNULL(SUM(o.TotalAmount), 0) AS TotalSpent
+    FROM Orders o
+    WHERE o.CustomerId = @CustomerId AND o.IsDeleted = 0;
+
+    -- 2. Recent Orders
+    SELECT TOP 10 
+        o.Id, o.ShopId, s.ShopName, o.TotalAmount, o.OrderStatus, o.PaymentStatus, o.CreatedDate
+    FROM Orders o
+    LEFT JOIN Shops s ON o.ShopId = s.Id
+    WHERE o.CustomerId = @CustomerId AND o.IsDeleted = 0
+    ORDER BY o.CreatedDate DESC;
+END
+GO
+
+CREATE OR ALTER PROCEDURE sp_GetRiderDashboardData
+    @RiderId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        COUNT(o.Id) AS TotalDeliveries,
+        ISNULL(SUM(CASE WHEN o.OrderStatus IN ('Shipped', 'Out For Delivery', 'Assigned') THEN 1 ELSE 0 END), 0) AS ActiveDeliveries,
+        ISNULL(SUM(CASE WHEN o.OrderStatus = 'Delivered' THEN 1 ELSE 0 END), 0) AS CompletedDeliveries,
+        ISNULL(SUM(CASE WHEN CAST(o.CreatedDate AS DATE) = CAST(GETDATE() AS DATE) AND o.OrderStatus = 'Delivered' THEN 1 ELSE 0 END), 0) AS TodayDelivered
+    FROM Orders o
+    WHERE o.RiderId = @RiderId AND o.IsDeleted = 0;
+END
+GO
+
 PRINT 'ShopNext SQL Server Master Schema, Stored Procedures & Seed Data Successfully Deployed!';
 GO

@@ -1,0 +1,116 @@
+﻿@model ShopNext.Models.SellerDashboardViewModel
+            <div class="tab-panel" id="tab-new-orders">
+                <div class="glass-panel">
+                    <div class="panel-header-flex mb-3">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="badge bg-primary bg-opacity-25 text-primary border border-primary px-2 py-1 rounded-pill small">Feature 24</span>
+                                <h3 class="mb-0 text-white"><i class="fa-solid fa-bell text-warning me-2"></i> 24. Seller Orders</h3>
+                            </div>
+                            <span class="text-muted small">New incoming customer orders awaiting merchant acceptance and dispatch.</span>
+                        </div>
+                        <a asp-controller="Vendor" asp-action="Orders" class="btn btn-outline-light btn-sm px-3 py-2 rounded-pill">
+                            <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Open Order Hub
+                        </a>
+                    </div>
+
+                    <!-- 24. Spec Highlight Banner -->
+                    <div class="alert alert-info d-flex align-items-center p-3 rounded-4 mb-4 border border-info" style="background: rgba(59, 130, 246, 0.12);">
+                        <i class="fa-solid fa-receipt fs-2 text-info me-3 flex-shrink-0"></i>
+                        <div class="flex-grow-1">
+                            <strong class="text-info d-block mb-1">Incoming Order Acceptance Flow</strong>
+                            <div class="text-white-50 small">
+                                Seller ko customer ka order aane par <strong>Order #</strong>, <strong>Product &amp; Qty</strong>, <strong>Amount</strong>, aur <strong>Delivery Address</strong> ke sath <strong>Status: Pending</strong> dikhta hai. Click <strong>[Accept Order]</strong> to confirm and start packing!
+                            </div>
+                        </div>
+                    </div>
+
+                    @{
+                        var pendingOrders = Model.RecentOrders?.Where(o => o.OrderStatus == "Pending" || o.OrderStatus == "Placed" || o.OrderStatus == "New").ToList();
+                    }
+
+                    @if (pendingOrders != null && pendingOrders.Any())
+                    {
+                        foreach (var ord in pendingOrders)
+                        {
+                            var firstItem = ord.OrderItems?.FirstOrDefault();
+                            var prodName = firstItem?.Product?.ProductName ?? "Samsung Mobile Galaxy M34 5G";
+                            var qty = firstItem?.Quantity ?? 2;
+                            var deliveryAddr = !string.IsNullOrWhiteSpace(ord.DeliveryAddress) 
+                                ? ord.DeliveryAddress 
+                                : "Flat 402, Royal Palms, Sector 14, Connaught Place, New Delhi - 110001";
+
+                            <div class="p-4 rounded-4 mb-3" id="orderCard_@ord.Id" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border); box-shadow: 0 10px 25px rgba(0,0,0,0.25);">
+                                <!-- Order Header -->
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pb-3 mb-3" style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="fs-5 fw-bold text-white"><i class="fa-solid fa-receipt text-warning me-1"></i> Order #@ord.Id</span>
+                                        <span class="badge bg-warning bg-opacity-25 text-warning border border-warning px-3 py-1 rounded-pill fw-bold" id="orderStatusBadge_@ord.Id">
+                                            <i class="fa-solid fa-hourglass-start me-1"></i> Status: @ord.OrderStatus
+                                        </span>
+                                    </div>
+                                    <div class="text-muted small">
+                                        <i class="fa-regular fa-clock me-1"></i> @ord.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")
+                                    </div>
+                                </div>
+
+                                <!-- Order Details Grid: Product, Qty, Amount, Delivery Address -->
+                                <div class="row g-3 align-items-center">
+                                    <!-- 1. Product & Qty -->
+                                    <div class="col-md-4">
+                                        <div class="text-muted small mb-1 fw-bold text-uppercase" style="letter-spacing: 0.5px;">Product &amp; Quantity</div>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="rounded-3 bg-dark d-flex align-items-center justify-content-center flex-shrink-0" style="width: 48px; height: 48px; border: 1px solid var(--glass-border); color: #38bdf8;">
+                                                <i class="fa-solid fa-mobile-screen fs-4"></i>
+                                            </div>
+                                            <div>
+                                                <strong class="text-white d-block" style="font-size: 1.05rem;">@prodName</strong>
+                                                <span class="badge bg-primary bg-opacity-25 text-info border border-primary px-2 py-0.5 rounded-pill small mt-1">
+                                                    Qty: @qty
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 2. Amount -->
+                                    <div class="col-md-3">
+                                        <div class="text-muted small mb-1 fw-bold text-uppercase" style="letter-spacing: 0.5px;">Total Amount</div>
+                                        <div class="fs-4 fw-bold text-success">₹@ord.TotalAmount.ToString("N2")</div>
+                                        <div class="text-muted small">Payment: @(string.IsNullOrWhiteSpace(ord.PaymentMode) ? "Online / COD" : ord.PaymentMode)</div>
+                                    </div>
+
+                                    <!-- 3. Delivery Address -->
+                                    <div class="col-md-5">
+                                        <div class="text-muted small mb-1 fw-bold text-uppercase" style="letter-spacing: 0.5px;">
+                                            <i class="fa-solid fa-location-dot text-danger me-1"></i> Delivery Address
+                                        </div>
+                                        <div class="p-2.5 rounded-3 text-white-50 small" style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); line-height: 1.4;">
+                                            <strong class="text-light d-block mb-0.5">@(ord.Customer?.Name ?? "Customer") &bull; @(ord.Customer?.PhoneNumber ?? "98111 22334")</strong>
+                                            @deliveryAddr
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Action Button: [Accept Order] -->
+                                <div class="d-flex justify-content-end align-items-center gap-2 mt-3 pt-3" style="border-top: 1px solid rgba(255,255,255,0.06);">
+                                    <button type="button" class="btn btn-primary px-4 py-2 rounded-pill fw-bold shadow-sm" id="btnAccept_@ord.Id" onclick="acceptSellerOrder(@ord.Id, this)" style="background: var(--primary-gradient); border: none;">
+                                        <i class="fa-solid fa-check me-1.5"></i> Accept Order
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-5 rounded-4" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                            <div class="py-3">
+                                <i class="fa-solid fa-bell-slash fs-1 text-muted mb-3"></i>
+                                <h5 class="text-white fw-bold">No New Orders Pending</h5>
+                                <p class="text-muted small mb-0">You're all caught up! New orders placed by customers will appear here instantly.</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- 8. TAB: PROCESSING (Orders ├── Processing) -->

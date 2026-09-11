@@ -1,0 +1,54 @@
+﻿@model ShopNext.Models.SellerDashboardViewModel
+            <div class="tab-panel" id="tab-returns">
+                <div class="glass-panel">
+                    <div class="panel-header-flex">
+                        <div>
+                            <h3><i class="fa-solid fa-rotate-left text-warning"></i> Customer Returns</h3>
+                            <span class="text-muted small">Review return requests, pickup status, and refunds</span>
+                        </div>
+                        <span class="badge bg-warning text-dark px-3 py-1 rounded-pill">@Model.PendingReturns Pending Return</span>
+                    </div>
+
+                    @{
+                        var returnOrders = Model.RecentOrders?.Where(o => o.OrderStatus == "Return Requested" || o.OrderStatus == "Return Approved" || !string.IsNullOrEmpty(o.ReturnReason)).ToList();
+                    }
+
+                    @if (returnOrders != null && returnOrders.Any())
+                    {
+                        foreach (var rord in returnOrders)
+                        {
+                            var rItem = rord.OrderItems?.FirstOrDefault();
+                            <div class="p-4 rounded-4 mb-3" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <span class="badge bg-warning text-dark me-2">@rord.OrderStatus</span>
+                                        <strong class="text-white">#ORD@(rord.Id + 1000) &bull; @(rord.Customer?.Name ?? "Customer")</strong>
+                                    </div>
+                                    <span class="text-white fw-bold">₹@rord.TotalAmount.ToString("N2")</span>
+                                </div>
+                                <div class="text-muted small mb-2">Item: @(rItem?.Product?.ProductName ?? "Order Item") (x@(rItem?.Quantity ?? 1))</div>
+                                <div class="p-2 rounded-3 mb-3 bg-dark border border-secondary text-warning small">
+                                    <i class="fa-solid fa-circle-info me-1"></i> Return Reason: <strong>@(string.IsNullOrEmpty(rord.ReturnReason) ? "Customer requested return" : rord.ReturnReason)</strong>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a asp-controller="Vendor" asp-action="Orders" class="btn btn-outline-success btn-sm px-3 rounded-pill fw-bold">
+                                        <i class="fa-solid fa-check me-1"></i> Approve Return & Schedule Pickup
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-5 rounded-4" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                            <div class="py-3">
+                                <i class="fa-solid fa-rotate-left fs-1 text-muted mb-3"></i>
+                                <h5 class="text-white fw-bold">No Return Requests</h5>
+                                <p class="text-muted small mb-0">No active customer return requests found for your store.</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- 12. TAB: REVIEWS (27. Seller Reviews: Product Reviews, Rating, Comment, Customer Name, Date) -->

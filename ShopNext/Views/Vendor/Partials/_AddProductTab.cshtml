@@ -1,0 +1,240 @@
+﻿@model ShopNext.Models.SellerDashboardViewModel
+            <div class="tab-panel" id="tab-add-product">
+                <div class="glass-panel" style="max-width: 780px; margin: 0 auto;">
+                    <div class="panel-header-flex">
+                        <div>
+                            <h3><i class="fa-solid fa-cart-plus text-primary"></i> 20. Add Product</h3>
+                            <span class="text-muted small">Seller Product Management &bull; List a new product with full specifications</span>
+                        </div>
+                    </div>
+
+                    <form asp-controller="Vendor" asp-action="AddProduct" method="post" enctype="multipart/form-data" id="addProductDashboardForm">
+                        @Html.AntiForgeryToken()
+
+                        <!-- 1. Product Name -->
+                        <div class="mb-3">
+                            <label for="productNameDash" class="form-label text-muted small fw-bold">Product Name *</label>
+                            <input type="text" id="productNameDash" name="productName" class="form-control" placeholder="e.g. Samsung Galaxy S24 Ultra 5G (256GB)" required style="background: rgba(15, 23, 42, 0.6); color: white; border: 1px solid var(--glass-border); padding: 0.75rem;" />
+                        </div>
+
+                        <!-- 2. Category, 3. Sub Category, 4. Brand -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label for="categoryDash" class="form-label text-muted small fw-bold">Category *</label>
+                                <select id="categoryDash" name="category" class="form-select" required style="background: rgba(15, 23, 42, 0.6); color: white; border: 1px solid var(--glass-border); padding: 0.75rem;">
+                                    <option value="Electronics" selected>Electronics</option>
+                                    <option value="Grocery">Grocery / Kirana</option>
+                                    <option value="Fashion">Fashion & Apparel</option>
+                                    <option value="Dairy & Bakery">Dairy & Bakery</option>
+                                    <option value="Pharmacy">Pharmacy & Healthcare</option>
+                                    <option value="Home & Kitchen">Home & Kitchen</option>
+                                    <option value="Others">Others</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="subCategoryDash" class="form-label text-muted small fw-bold">Sub Category</label>
+                                <input type="text" id="subCategoryDash" name="subCategory" class="form-control" placeholder="e.g. Flagship Smartphones" style="background: rgba(15, 23, 42, 0.6); color: white; border: 1px solid var(--glass-border); padding: 0.75rem;" />
+                            </div>
+                            <div class="col-md-4">
+                                <label for="brandDash" class="form-label text-muted small fw-bold">Brand</label>
+                                <input type="text" id="brandDash" name="brand" class="form-control" placeholder="e.g. Samsung" style="background: rgba(15, 23, 42, 0.6); color: white; border: 1px solid var(--glass-border); padding: 0.75rem;" />
+                            </div>
+                        </div>
+
+                        <!-- 5. Description -->
+                        <div class="mb-3">
+                            <label for="descriptionDash" class="form-label text-muted small fw-bold">Description</label>
+                            <textarea id="descriptionDash" name="description" rows="3" class="form-control" placeholder="Describe key product features, box contents, specs, and brand warranty..." style="background: rgba(15, 23, 42, 0.6); color: white; border: 1px solid var(--glass-border); padding: 0.75rem;"></textarea>
+                        </div>
+
+                        <!-- 6. MRP, 7. Selling Price, 8. Discount -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label for="mrpDash" class="form-label text-muted small fw-bold">MRP (₹) *</label>
+                                <input type="number" step="0.01" min="0" id="mrpDash" name="mrp" class="form-control" placeholder="e.g. 129999.00" oninput="calculateDiscountDash()" required style="background: rgba(15, 23, 42, 0.6); color: white; border: 1px solid var(--glass-border); padding: 0.75rem;" />
+                            </div>
+                            <div class="col-md-4">
+                                <label for="sellingPriceDash" class="form-label text-muted small fw-bold">Selling Price (₹) *</label>
+                                <input type="number" step="0.01" min="0.01" id="sellingPriceDash" name="sellingPrice" class="form-control" placeholder="e.g. 119999.00" oninput="calculateDiscountDash()" required style="background: rgba(15, 23, 42, 0.6); color: white; border: 1px solid var(--glass-border); padding: 0.75rem;" />
+                            </div>
+                            <div class="col-md-4">
+                                <label for="discountDash" class="form-label text-muted small fw-bold">Discount (%)</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.1" min="0" max="100" id="discountDash" name="discount" class="form-control" placeholder="e.g. 7.7" style="background: rgba(15, 23, 42, 0.6); color: #34d399; font-weight: bold; border: 1px solid var(--glass-border); padding: 0.75rem;" />
+                                    <span class="input-group-text text-success bg-dark border-secondary">% OFF</span>
+                                </div>
+                                <span class="text-muted" style="font-size: 0.75rem;">Auto-calculated from MRP & Selling Price</span>
+                            </div>
+                        </div>
+
+                        <!-- 9. Stock, 10. SKU -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="stockDash" class="form-label text-muted small fw-bold">Stock (Available Quantity) *</label>
+                                <input type="number" min="0" id="stockDash" name="stock" class="form-control" placeholder="e.g. 50" value="25" required style="background: rgba(15, 23, 42, 0.6); color: white; border: 1px solid var(--glass-border); padding: 0.75rem;" />
+                            </div>
+                            <div class="col-md-6">
+                                <label for="skuDash" class="form-label text-muted small fw-bold">SKU (Stock Keeping Unit)</label>
+                                <input type="text" id="skuDash" name="sku" class="form-control" placeholder="e.g. SKU-SAM-S24U-256" style="background: rgba(15, 23, 42, 0.6); color: white; border: 1px solid var(--glass-border); padding: 0.75rem;" />
+                            </div>
+                        </div>
+
+                        <!-- 11. Product Images (21. Multiple Images: Main Image, Front, Back, Side, Packaging) -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label text-muted small fw-bold mb-0">
+                                    <i class="fa-solid fa-images text-primary me-1"></i> 21. Product Images (Multiple Angles) *
+                                </label>
+                                <span class="badge bg-primary bg-opacity-25 text-info small">5 Image Angles</span>
+                            </div>
+
+                            <div class="row g-3">
+                                <!-- 1. Main Image -->
+                                <div class="col-12 col-md-4">
+                                    <div class="p-3 rounded-3 h-100" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(99, 102, 241, 0.4);">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="small fw-bold text-light"><i class="fa-solid fa-star text-warning me-1"></i> Main Image *</span>
+                                            <span class="badge bg-primary small">Cover Photo</span>
+                                        </div>
+                                        <input type="file" name="mainImageFile" accept="image/*" class="form-control form-control-sm mb-2" onchange="previewImg(this, 'previewMainDash')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                        <input type="url" name="mainImageUrl" class="form-control form-control-sm" placeholder="Or Main photo URL..." oninput="previewUrl(this.value, 'previewMainDash')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                        <div class="mt-2 text-center" id="previewMainDash" style="display: none;">
+                                            <img src="" class="rounded border" style="max-height: 70px; object-fit: cover;" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 2. Front View -->
+                                <div class="col-6 col-md-4">
+                                    <div class="p-3 rounded-3 h-100" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="small fw-bold text-light"><i class="fa-solid fa-camera text-info me-1"></i> Front</span>
+                                            <span class="badge bg-secondary small">Front View</span>
+                                        </div>
+                                        <input type="file" name="frontImageFile" accept="image/*" class="form-control form-control-sm mb-2" onchange="previewImg(this, 'previewFrontDash')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                        <input type="url" name="frontImageUrl" class="form-control form-control-sm" placeholder="Or Front URL..." oninput="previewUrl(this.value, 'previewFrontDash')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                        <div class="mt-2 text-center" id="previewFrontDash" style="display: none;">
+                                            <img src="" class="rounded border" style="max-height: 70px; object-fit: cover;" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 3. Back View -->
+                                <div class="col-6 col-md-4">
+                                    <div class="p-3 rounded-3 h-100" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="small fw-bold text-light"><i class="fa-solid fa-rotate text-info me-1"></i> Back</span>
+                                            <span class="badge bg-secondary small">Back View</span>
+                                        </div>
+                                        <input type="file" name="backImageFile" accept="image/*" class="form-control form-control-sm mb-2" onchange="previewImg(this, 'previewBackDash')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                        <input type="url" name="backImageUrl" class="form-control form-control-sm" placeholder="Or Back URL..." oninput="previewUrl(this.value, 'previewBackDash')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                        <div class="mt-2 text-center" id="previewBackDash" style="display: none;">
+                                            <img src="" class="rounded border" style="max-height: 70px; object-fit: cover;" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 4. Side View -->
+                                <div class="col-6 col-md-6">
+                                    <div class="p-3 rounded-3 h-100" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="small fw-bold text-light"><i class="fa-solid fa-cube text-info me-1"></i> Side</span>
+                                            <span class="badge bg-secondary small">Side View</span>
+                                        </div>
+                                        <input type="file" name="sideImageFile" accept="image/*" class="form-control form-control-sm mb-2" onchange="previewImg(this, 'previewSideDash')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                        <input type="url" name="sideImageUrl" class="form-control form-control-sm" placeholder="Or Side URL..." oninput="previewUrl(this.value, 'previewSideDash')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                        <div class="mt-2 text-center" id="previewSideDash" style="display: none;">
+                                            <img src="" class="rounded border" style="max-height: 70px; object-fit: cover;" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 5. Packaging View -->
+                                <div class="col-6 col-md-6">
+                                    <div class="p-3 rounded-3 h-100" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border);">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="small fw-bold text-light"><i class="fa-solid fa-box-open text-info me-1"></i> Packaging</span>
+                                            <span class="badge bg-secondary small">Box / Packaging</span>
+                                        </div>
+                                        <input type="file" name="packagingImageFile" accept="image/*" class="form-control form-control-sm mb-2" onchange="previewImg(this, 'previewPackagingDash')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                        <input type="url" name="packagingImageUrl" class="form-control form-control-sm" placeholder="Or Packaging URL..." oninput="previewUrl(this.value, 'previewPackagingDash')" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                        <div class="mt-2 text-center" id="previewPackagingDash" style="display: none;">
+                                            <img src="" class="rounded border" style="max-height: 70px; object-fit: cover;" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 22. Product Variants (Professional Feature: Size, Color, Price, Stock, SKU) -->
+                        <div class="mb-4 p-3 rounded-3" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(129, 140, 248, 0.35);">
+                            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                                <div>
+                                    <span class="fw-bold text-white fs-6"><i class="fa-solid fa-layer-group text-primary me-2"></i>22. Product Variants (Professional Feature)</span>
+                                    <div class="text-muted small">Example: T-Shirt with Size (S, M, L, XL) &amp; Color (Black, White, Blue). Har variant ka Price, Stock &amp; SKU alag ho sakta hai.</div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="hasVariantsToggleDash" onchange="toggleVariantsSection('variantsContainerDash', this.checked)" style="cursor: pointer; width: 44px; height: 22px;">
+                                    <label class="form-check-label text-light small fw-semibold ms-1" for="hasVariantsToggleDash">Enable Variants</label>
+                                </div>
+                            </div>
+
+                            <!-- Hidden Input for Form Submission -->
+                            <input type="hidden" name="productVariantsJson" id="productVariantsJsonDash" value="" />
+
+                            <!-- Collapsible Variants Matrix Container -->
+                            <div id="variantsContainerDash" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed rgba(255,255,255,0.15);">
+                                <!-- Quick Matrix Generator Row -->
+                                <div class="row g-2 mb-3 align-items-end">
+                                    <div class="col-md-5">
+                                        <label class="form-label text-muted small fw-bold mb-1">Sizes (e.g. S, M, L, XL)</label>
+                                        <input type="text" id="quickSizesDash" class="form-control form-control-sm" placeholder="S, M, L, XL" value="S, M, L, XL" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label text-muted small fw-bold mb-1">Colors (e.g. Black, White, Blue)</label>
+                                        <input type="text" id="quickColorsDash" class="form-control form-control-sm" placeholder="Black, White, Blue" value="Black, White, Blue" style="background: rgba(30, 41, 59, 0.8); color: white; border: 1px solid var(--glass-border);" />
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-primary btn-sm w-100 fw-semibold" onclick="generateMatrix('Dash')">
+                                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Variants Table -->
+                                <div class="table-responsive rounded-3 border border-secondary border-opacity-25 mb-2">
+                                    <table class="table table-dark table-sm mb-0 align-middle small text-center" id="variantsTableDash">
+                                        <thead style="background: rgba(30, 41, 59, 0.9);">
+                                            <tr>
+                                                <th style="width: 15%;">Size</th>
+                                                <th style="width: 20%;">Color</th>
+                                                <th style="width: 20%;">Price (₹) *</th>
+                                                <th style="width: 15%;">Stock *</th>
+                                                <th style="width: 20%;">SKU *</th>
+                                                <th style="width: 10%;">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="variantsTbodyDash">
+                                            <!-- Dynamic rows injected here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <button type="button" class="btn btn-outline-light btn-sm" onclick="addCustomVariantRow('Dash')">
+                                        <i class="fa-solid fa-plus me-1"></i> Add Custom Row
+                                    </button>
+                                    <span class="text-info small" id="variantCountNoticeDash">0 variants configured</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 12. [Add Product] Submit Button -->
+                        <button type="submit" class="btn-quick-primary w-100 py-3 justify-content-center fs-6 fw-bold" id="btnAddProductDashboardSubmit" onclick="syncVariantsJsonBeforeSubmit('Dash')">
+                            <i class="fa-solid fa-plus-circle me-2"></i> Add Product
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 4. TAB: CATEGORIES (Products ├── Categories) -->

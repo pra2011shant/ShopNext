@@ -1,0 +1,80 @@
+@model ShopNext.Models.SellerDashboardViewModel
+@{
+    var shopName = ViewBag.ShopName as string ?? Model.Shop?.ShopName ?? "My Store";
+}
+            <div class="tab-panel" id="tab-all-products">
+                <div class="glass-panel">
+                    <div class="panel-header-flex">
+                        <div>
+                            <h3><i class="fa-solid fa-boxes-stacked text-primary"></i> All Products</h3>
+                            <span class="text-muted small">Catalog items published under @shopName</span>
+                        </div>
+                        <button type="button" class="btn-quick-primary" onclick="switchSellerTab('tab-add-product')">
+                            <i class="fa-solid fa-plus"></i> Add Product
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Stock Status</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.Products != null && Model.Products.Any())
+                                {
+                                    foreach (var p in Model.Products)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center gap-3">
+                                                    <img src="@p.ImageUrl" alt="@p.ProductName" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; background: #0f172a;" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&auto=format&fit=crop&q=60';" />
+                                                    <div>
+                                                        <strong class="text-white">@p.ProductName</strong>
+                                                        <div class="text-muted small">ID: #PRD-@p.Id</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>@(string.IsNullOrEmpty(p.Category) ? "General" : p.Category)</td>
+                                            <td><strong class="text-white">₹@p.Price.ToString("N2")</strong></td>
+                                            <td>
+                                                @if (p.StockStatus == "InStock")
+                                                {
+                                                    <span class="badge bg-success bg-opacity-25 text-success border border-success px-2 py-1 rounded-pill">In Stock</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger bg-opacity-25 text-danger border border-danger px-2 py-1 rounded-pill">Out of Stock</span>
+                                                }
+                                            </td>
+                                            <td class="text-muted small">@p.CreatedDate.ToString("dd MMM yyyy")</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5">
+                                            <div class="py-3">
+                                                <i class="fa-solid fa-boxes-stacked fs-1 text-primary mb-3"></i>
+                                                <h5 class="text-white fw-bold">No Products in Catalog Yet</h5>
+                                                <p class="text-muted small mb-3">You haven't listed any products yet. Click below to add your first product.</p>
+                                                <button type="button" class="btn btn-primary btn-sm px-4 py-2 rounded-pill fw-bold" onclick="switchSellerTab('tab-add-product')">
+                                                    <i class="fa-solid fa-plus-circle me-1"></i> Add Product
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. TAB: ADD PRODUCT (20. Add Product: Products ├── Add Product) -->
