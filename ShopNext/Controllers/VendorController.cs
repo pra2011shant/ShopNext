@@ -385,7 +385,6 @@ namespace ShopNext.Controllers
             if (shop == null) return null;
 
             var products = await _context.Products.AsNoTracking()
-                .Include(p => p.Category)
                 .Where(p => p.ShopId == shopId && !p.IsDeleted)
                 .OrderByDescending(p => p.CreatedDate)
                 .ToListAsync();
