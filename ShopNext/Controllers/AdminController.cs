@@ -220,6 +220,27 @@ namespace ShopNext.Controllers
             return Redirect("/Admin/Dashboard#categories-tab");
         }
 
+        // GET: /Admin/GetTabPartial?tab=customers
+        [HttpGet]
+        public async Task<IActionResult> GetTabPartial(string tab)
+        {
+            if (!IsAdminLoggedIn()) return Unauthorized();
+            
+            // Re-use fast view model mapping
+            var vm = await BuildDashboardViewModelAsync();
+            
+            return (tab?.ToLowerInvariant()) switch
+            {
+                "overview" => PartialView("~/Views/Admin/Partials/_OverviewTab.cshtml", vm),
+                "customers" => PartialView("~/Views/Admin/Partials/_CustomersTab.cshtml", vm),
+                "sellers" => PartialView("~/Views/Admin/Partials/_SellersTab.cshtml", vm),
+                "products" => PartialView("~/Views/Admin/Partials/_ProductsTab.cshtml", vm),
+                "orders" => PartialView("~/Views/Admin/Partials/_OrdersTab.cshtml", vm),
+                "complaints" => PartialView("~/Views/Admin/Partials/_ComplaintsTab.cshtml", vm),
+                _ => BadRequest("Invalid tab specified")
+            };
+        }
+
         // GET: /Admin/Dashboard
         [HttpGet]
         public async Task<IActionResult> Dashboard()
@@ -229,7 +250,12 @@ namespace ShopNext.Controllers
                 return RedirectToAction("Login");
             }
 
-            // 1. Fetch DB Entities directly from SQL Server Database tables with AsNoTracking() for high performance
+            var vm = await BuildDashboardViewModelAsync();
+            return View(vm);
+        }
+
+        private async Task<AdminDashboardViewModel> BuildDashboardViewModelAsync()
+        {
             var allShops = await _context.Shops.AsNoTracking().OrderByDescending(s => s.CreatedDate).ToListAsync();
             var allProducts = await _context.Products.AsNoTracking().Include(p => p.Shop).ToListAsync();
             var allOrders = await _context.Orders.AsNoTracking().Include(o => o.Customer).Include(o => o.Shop).OrderByDescending(o => o.CreatedDate).ToListAsync();
@@ -731,6 +757,8 @@ namespace ShopNext.Controllers
                 TotalOrders = dbOrderCount,
                 TodaySales = liveTodaySales,
                 PendingSellerRequests = dbPendingSellers,
+                PendingShops = pendingShops,
+                ApprovedShops = approvedShops,
                 PendingComplaints = openComplaintsCount,
                 PendingProductApprovals = productsList.Count(p => p.ApprovalStatus == "Pending" || !p.IsApproved),
                 PendingReturns = allOrders.Count(o => o.ReturnStatus == "Return_Requested" || o.ReturnStatus == "Return_Dispute"),
@@ -763,10 +791,7 @@ namespace ShopNext.Controllers
                 AuditLogsList = await _advancedService.GetAuditLogsAsync(100)
             };
 
-            ViewBag.PendingShops = pendingShops;
-            ViewBag.ApprovedShops = approvedShops;
-
-            return View(vm);
+            return vm;
         }
 
         // ==========================================

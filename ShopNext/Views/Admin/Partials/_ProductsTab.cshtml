@@ -1,0 +1,138 @@
+@model ShopNext.Models.AdminDashboardViewModel
+        <div class="tab-panel-container" id="panel-products">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                    <div>
+                        <h3 class="fw-bold text-white mb-1"><i class="fa-solid fa-boxes-stacked text-cyan me-2" style="color: #22d3ee;"></i> Product Management &amp; Approval Queue</h3>
+                        <p class="text-secondary small mb-0">Multi-Vendor Lifecycle: Seller Adds &rarr; Admin Review &rarr; Approved &rarr; Visible to Customers.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="badge bg-warning bg-opacity-20 text-warning px-3 py-2 rounded-pill font-monospace" id="productPendingHeaderBadge">
+                            <i class="fa-solid fa-clock me-1"></i> @Model.PendingProductApprovals Pending Review
+                        </span>
+                        <span class="badge bg-info bg-opacity-20 text-info px-3 py-2 rounded-pill font-monospace" id="productTotalHeaderBadge">
+                            @Model.ProductsList.Count Total Products
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Approval Filter Pills -->
+                <div class="d-flex gap-2 mb-3 flex-wrap">
+                    <button type="button" class="btn btn-sm btn-outline-light rounded-pill px-3 fw-bold product-filter-btn active" onclick="filterProductTable('all', this)">
+                        All (<span id="count-all-prod">@Model.ProductsList.Count</span>)
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-warning rounded-pill px-3 fw-bold product-filter-btn" onclick="filterProductTable('Pending', this)">
+                        <i class="fa-solid fa-clock me-1"></i> Pending Review (<span id="count-pending-prod">@Model.ProductsList.Count(p => p.ApprovalStatus == "Pending" || !p.IsApproved)</span>)
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold product-filter-btn" onclick="filterProductTable('Approved', this)">
+                        <i class="fa-solid fa-circle-check me-1"></i> Approved (<span id="count-approved-prod">@Model.ProductsList.Count(p => p.IsApproved && p.ApprovalStatus == "Approved")</span>)
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold product-filter-btn" onclick="filterProductTable('Rejected', this)">
+                        <i class="fa-solid fa-circle-xmark me-1"></i> Rejected (<span id="count-rejected-prod">@Model.ProductsList.Count(p => p.ApprovalStatus == "Rejected")</span>)
+                    </button>
+                </div>
+
+                <!-- Product Catalog Table -->
+                <div class="table-responsive">
+                    <table class="table approved-table">
+                        <thead>
+                            <tr>
+                                <th>Product Details &amp; SKU</th>
+                                <th>Seller / Shop</th>
+                                <th>Category &amp; Brand</th>
+                                <th>Price &amp; Stock</th>
+                                <th style="text-align: center;">Approval Status</th>
+                                <th>Date Added</th>
+                                <th style="text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody">
+                            @foreach (var prod in Model.ProductsList)
+                            {
+                                string approvalStatus = string.IsNullOrWhiteSpace(prod.ApprovalStatus) ? (prod.IsApproved ? "Approved" : "Pending") : prod.ApprovalStatus;
+                                <tr class="product-table-row" id="product-row-@prod.Id" data-status="@approvalStatus">
+                                    <td>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <img src="@prod.ImageUrl" class="rounded-3" style="width: 48px; height: 48px; object-fit: cover; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100';" alt="@prod.ProductName" />
+                                            <div>
+                                                <div class="fw-bold text-white" id="prod-name-@prod.Id">@prod.ProductName</div>
+                                                <div class="d-flex align-items-center gap-2 text-secondary small font-monospace">
+                                                    <span>SKU: @prod.Sku</span>
+                                                    @if (prod.HasVariants)
+                                                    {
+                                                        <span class="badge bg-indigo bg-opacity-20 text-indigo px-1.5 py-0.5 rounded" style="font-size: 0.7rem; color: #a5b4fc; background: rgba(99,102,241,0.2);">Variants</span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <strong class="text-white">@prod.ShopName</strong>
+                                        <div class="text-secondary small">ID: #SHP-@prod.ShopId.ToString("D3")</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary bg-opacity-30 text-light px-2 py-1">@prod.Category</span>
+                                        <div class="text-light small mt-0.5"><i class="fa-solid fa-copyright text-pink me-1" style="font-size: 0.75rem;"></i> @prod.Brand</div>
+                                    </td>
+                                    <td>
+                                        <div class="font-monospace text-info fw-bold">₹@prod.Price.ToString("N0")</div>
+                                        @if (prod.Mrp.HasValue && prod.Mrp > prod.Price)
+                                        {
+                                            <div class="text-secondary small font-monospace text-decoration-line-through">₹@prod.Mrp.Value.ToString("N0")</div>
+                                        }
+                                        <small class="badge bg-success bg-opacity-20 text-success py-0.5 px-1.5 rounded">@prod.Stock in stock</small>
+                                    </td>
+                                    <td style="text-align: center;" id="product-status-cell-@prod.Id">
+                                        @if (approvalStatus == "Approved")
+                                        {
+                                            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-2.5 py-1.5 rounded-pill">
+                                                <i class="fa-solid fa-circle-check me-1"></i> Approved &amp; Live
+                                            </span>
+                                        }
+                                        else if (approvalStatus == "Pending")
+                                        {
+                                            <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-30 px-2.5 py-1.5 rounded-pill">
+                                                <i class="fa-solid fa-clock me-1"></i> Pending Review
+                                            </span>
+                                        }
+                                        else if (approvalStatus == "Rejected")
+                                        {
+                                            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2.5 py-1.5 rounded-pill" title="@prod.RejectionReason">
+                                                <i class="fa-solid fa-circle-xmark me-1"></i> Rejected
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="text-secondary small">
+                                        @prod.CreatedDate
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <div class="d-inline-flex gap-1.5 flex-wrap justify-content-center" id="product-action-cell-@prod.Id">
+                                            <!-- [View] -->
+                                            <button type="button" class="btn btn-outline-info btn-sm px-2 py-1 rounded-3" onclick="viewProductApprovalModal(@prod.Id)" title="View Product Specifications">
+                                                <i class="fa-solid fa-eye me-1"></i> View
+                                            </button>
+
+                                            @if (approvalStatus == "Pending" || approvalStatus == "Rejected")
+                                            {
+                                                <!-- [Approve] -->
+                                                <button type="button" class="btn btn-outline-success btn-sm px-2 py-1 rounded-3 fw-bold" onclick="approveProduct(@prod.Id)" title="Approve Product for Customer Catalog">
+                                                    <i class="fa-solid fa-check me-1"></i> Approve
+                                                </button>
+                                            }
+
+                                            @if (approvalStatus == "Pending" || approvalStatus == "Approved")
+                                            {
+                                                <!-- [Reject] -->
+                                                <button type="button" class="btn btn-outline-danger btn-sm px-2 py-1 rounded-3" onclick="openRejectProductModal(@prod.Id, '@Html.Raw(prod.ProductName.Replace("'", "\\'"))')" title="Reject Product">
+                                                    <i class="fa-solid fa-xmark me-1"></i> Reject
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>

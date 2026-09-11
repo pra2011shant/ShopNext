@@ -1,0 +1,225 @@
+@model ShopNext.Models.AdminDashboardViewModel
+        <div class="tab-panel-container" id="panel-complaints">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                    <div>
+                        <h3 class="fw-bold text-white mb-1"><i class="fa-solid fa-headset text-danger me-2"></i> Complaint / Support Management</h3>
+                        <p class="text-secondary small mb-0">Audit and resolve customer order complaints, defective items, delivery escalations, and refund requests.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="badge px-3 py-2 rounded-pill font-monospace" style="background: rgba(239, 68, 68, 0.2); color: #f87171;" id="complaintTotalBadge">
+                            @Model.ComplaintsList.Count Total Tickets
+                        </span>
+                        <span class="badge bg-warning bg-opacity-20 text-warning px-3 py-2 rounded-pill font-monospace" id="complaintOpenBadge">
+                            @Model.ComplaintsList.Count(c => c.Status == "Open" || c.Status == "In Progress") Pending Action
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Point 43: Filter Pills (All, Open, In Progress, Resolved, Closed) & Search -->
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button type="button" class="btn btn-sm btn-outline-light rounded-pill px-3 fw-bold complaint-filter-btn active" onclick="filterComplaintTable('all', this)">
+                            All (<span id="count-comp-all">@Model.ComplaintsList.Count</span>)
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold complaint-filter-btn" onclick="filterComplaintTable('Open', this)">
+                            <i class="fa-solid fa-circle-exclamation me-1"></i> Open (<span id="count-comp-open">@Model.ComplaintsList.Count(c => c.Status == "Open")</span>)
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-warning rounded-pill px-3 fw-bold complaint-filter-btn" onclick="filterComplaintTable('Under Investigation', this)">
+                            <i class="fa-solid fa-magnifying-glass me-1"></i> Under Investigation (<span id="count-comp-investigation">@Model.ComplaintsList.Count(c => c.Status == "Under Investigation" || c.Status == "In Progress")</span>)
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold complaint-filter-btn" onclick="filterComplaintTable('Resolved', this)">
+                            <i class="fa-solid fa-circle-check me-1"></i> Resolved (<span id="count-comp-resolved">@Model.ComplaintsList.Count(c => c.Status == "Resolved")</span>)
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold complaint-filter-btn" onclick="filterComplaintTable('Rejected', this)">
+                            <i class="fa-solid fa-ban me-1"></i> Rejected (<span id="count-comp-rejected">@Model.ComplaintsList.Count(c => c.Status == "Rejected")</span>)
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold complaint-filter-btn" onclick="filterComplaintTable('Closed', this)">
+                            <i class="fa-solid fa-lock me-1"></i> Closed (<span id="count-comp-closed">@Model.ComplaintsList.Count(c => c.Status == "Closed")</span>)
+                        </button>
+                    </div>
+                    <div class="input-group input-group-sm" style="max-width: 280px;">
+                        <span class="input-group-text bg-dark text-secondary border-secondary"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" id="complaintSearchInput" class="form-control bg-dark text-white border-secondary" placeholder="Search Ticket, Order, Customer..." oninput="searchComplaintTable()" />
+                    </div>
+                </div>
+
+                <!-- Point 43 & 45: Complaints / Disputes Table (Ticket #, Order ID, Customer, Issue, Description, Attachment, Priority, Status, Date, Actions) -->
+                <div class="table-responsive">
+                    <table class="table approved-table">
+                        <thead>
+                            <tr>
+                                <th>Dispute / Ticket</th>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Issue / Category</th>
+                                <th>Description</th>
+                                <th style="text-align: center;">Attachment</th>
+                                <th>Priority</th>
+                                <th style="text-align: center;">Status</th>
+                                <th>Date</th>
+                                <th style="text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="complaintsTableBody">
+                            @foreach (var comp in Model.ComplaintsList)
+                            {
+                                <tr class="complaint-table-row" id="complaint-row-@comp.Id" data-status="@comp.Status" data-search="@comp.TicketId #D@(comp.Id) @comp.OrderNumber @comp.CustomerName @comp.CustomerMobile @comp.Issue @comp.Description">
+                                    <!-- Ticket Number & Dispute Number -->
+                                    <td>
+                                        <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                                            <div class="fw-bold text-danger font-monospace">#D@(comp.Id)</div>
+                                            @if (comp.EscalationLevel == 4)
+                                            {
+                                                <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-40 px-1.5 py-0.5 rounded-pill" style="font-size: 10px;">
+                                                    <i class="fa-solid fa-bullhorn me-0.5"></i> L4 Admin Escalation
+                                                </span>
+                                            }
+                                            else if (comp.EscalationLevel == 3)
+                                            {
+                                                <span class="badge bg-purple bg-opacity-25 text-purple border border-purple border-opacity-40 px-1.5 py-0.5 rounded-pill" style="color: #c084fc !important; border-color: rgba(192, 132, 252, 0.4) !important; font-size: 10px;">
+                                                    L3 Seller Tier
+                                                </span>
+                                            }
+                                            else if (comp.EscalationLevel == 2)
+                                            {
+                                                <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-30 px-1.5 py-0.5 rounded-pill" style="font-size: 10px;">
+                                                    L2 Support Tier
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary bg-opacity-25 text-light px-1.5 py-0.5 rounded-pill" style="font-size: 10px;">
+                                                    L1 Customer
+                                                </span>
+                                            }
+                                        </div>
+                                        <small class="text-secondary font-monospace" style="font-size: 11px;">@comp.TicketId</small>
+                                    </td>
+
+                                    <!-- Order Number -->
+                                    <td>
+                                        <span class="font-monospace text-info fw-bold">@comp.OrderNumber</span>
+                                        @if (comp.IsHighValueOrder || comp.OrderAmount >= 4999)
+                                        {
+                                            <div class="mt-0.5">
+                                                <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30 px-1.5 py-0.5 rounded-pill" style="font-size: 10px;">
+                                                    <i class="fa-solid fa-crown text-warning me-0.5"></i> ₹@(comp.OrderAmount > 0 ? comp.OrderAmount.ToString("N0") : "5,000+") High Value
+                                                </span>
+                                            </div>
+                                        }
+                                    </td>
+
+                                    <!-- Customer -->
+                                    <td>
+                                        <strong class="text-white">@comp.CustomerName</strong>
+                                        <div class="text-secondary small font-monospace">@comp.CustomerMobile</div>
+                                    </td>
+
+                                    <!-- Issue / Category -->
+                                    <td>
+                                        <span class="badge bg-secondary bg-opacity-30 text-light border border-secondary border-opacity-30">
+                                            @(comp.ReasonCategory ?? comp.Issue)
+                                        </span>
+                                    </td>
+
+                                    <!-- Description (Truncated) -->
+                                    <td style="max-width: 220px;" class="text-truncate text-secondary small" title="@comp.Description">
+                                        @comp.Description
+                                    </td>
+
+                                    <!-- Attachment -->
+                                    <td style="text-align: center;">
+                                        @if (!string.IsNullOrEmpty(comp.AttachmentUrl))
+                                        {
+                                            <a href="@comp.AttachmentUrl" target="_blank" class="badge bg-info bg-opacity-20 text-info border border-info border-opacity-30 text-decoration-none">
+                                                <i class="fa-solid fa-paperclip me-1"></i> Proof
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-secondary small">&mdash;</span>
+                                        }
+                                    </td>
+
+                                    <!-- Priority -->
+                                    <td>
+                                        @if (comp.Priority == "Urgent" || comp.Priority == "High")
+                                        {
+                                            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2 py-0.5 rounded-pill">
+                                                <i class="fa-solid fa-bolt me-1"></i> @comp.Priority
+                                            </span>
+                                        }
+                                        else if (comp.Priority == "Medium")
+                                        {
+                                            <span class="badge bg-warning bg-opacity-25 text-warning px-2 py-0.5 rounded-pill">
+                                                @comp.Priority
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary bg-opacity-30 text-light px-2 py-0.5 rounded-pill">
+                                                @comp.Priority
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <!-- Status (Open, Under Investigation, Resolved, Rejected, Closed) -->
+                                    <td style="text-align: center;" id="complaint-status-cell-@comp.Id">
+                                        @if (comp.Status == "Open")
+                                        {
+                                            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-circle-exclamation me-1"></i> Open
+                                            </span>
+                                        }
+                                        else if (comp.Status == "Under Investigation" || comp.Status == "In Progress")
+                                        {
+                                            <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-magnifying-glass me-1"></i> Under Investigation
+                                            </span>
+                                        }
+                                        else if (comp.Status == "Resolved")
+                                        {
+                                            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-circle-check me-1"></i> Resolved
+                                            </span>
+                                        }
+                                        else if (comp.Status == "Rejected")
+                                        {
+                                            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-ban me-1"></i> Rejected
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary bg-opacity-30 text-light px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-lock me-1"></i> @comp.Status
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <!-- Date -->
+                                    <td class="text-secondary small font-monospace">
+                                        @comp.Date
+                                    </td>
+
+                                    <!-- Actions -->
+                                    <td style="text-align: center;">
+                                        <div class="d-inline-flex gap-1.5 flex-wrap justify-content-center">
+                                            <!-- [View] -->
+                                            <button type="button" class="btn btn-outline-info btn-sm px-2 py-1 rounded-3" onclick="viewAdminComplaintModal(@comp.Id)" title="View Complaint Details">
+                                                <i class="fa-solid fa-eye me-1"></i> View
+                                            </button>
+                                            <!-- [Update Status] -->
+                                            <button type="button" class="btn btn-outline-warning btn-sm px-2 py-1 rounded-3" onclick="openUpdateComplaintStatusModal(@comp.Id, '@comp.Status', '@Html.Raw((comp.ResolutionNotes ?? "").Replace("'", "\\'"))')" title="Update Ticket Status">
+                                                <i class="fa-solid fa-pen-to-square me-1"></i> Status
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>

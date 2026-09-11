@@ -1,0 +1,220 @@
+@model ShopNext.Models.AdminDashboardViewModel
+@{
+    var pendingShops = Model.PendingShops ?? new List<ShopNext.Models.Shop>();
+    var approvedShops = Model.ApprovedShops ?? new List<ShopNext.Models.Shop>();
+}
+<div class="tab-panel-container active" id="panel-overview">
+            <!-- Admin Hero Header -->
+            <div class="admin-header-card">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                            <span class="badge bg-warning bg-opacity-15 text-warning border border-warning border-opacity-30 px-3 py-1 rounded-pill small fw-bold">
+                                <i class="fa-solid fa-crown me-1"></i> PHASE 3 &bull; ADMIN CONTROL
+                            </span>
+                            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-3 py-1 rounded-pill small">
+                                <i class="fa-solid fa-circle-dot me-1"></i> System Operational
+                            </span>
+                        </div>
+                        <h1 class="admin-title"><i class="fa-solid fa-shield-halved text-warning me-2"></i> ADMIN DASHBOARD</h1>
+                        <p class="text-secondary small mb-0">Unified platform telemetry, seller approvals, real-time finances, and operations management.</p>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <a asp-controller="Admin" asp-action="SystemMonitoring" class="btn btn-outline-success btn-sm rounded-pill px-3 py-2 fw-semibold">
+                            <i class="fa-solid fa-shield-halved me-1"></i> System Monitor
+                        </a>
+                        <a asp-controller="Account" asp-action="Logout" class="btn btn-outline-danger btn-sm rounded-pill px-3 py-2 fw-semibold">
+                            <i class="fa-solid fa-right-from-bracket me-1"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top 4 Core Platform Metrics -->
+            <div class="kpi-grid">
+                <div class="kpi-card" onclick="switchAdminTab('customers')" style="cursor: pointer;">
+                    <div class="kpi-icon-wrap" style="background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3);">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div>
+                        <div class="kpi-label">Customers</div>
+                        <div class="kpi-value" id="kpiCustomers">@Model.TotalCustomers.ToString("N0")</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card" onclick="switchAdminTab('sellers')" style="cursor: pointer;">
+                    <div class="kpi-icon-wrap" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3);">
+                        <i class="fa-solid fa-store"></i>
+                    </div>
+                    <div>
+                        <div class="kpi-label">Sellers</div>
+                        <div class="kpi-value" id="kpiSellers">@Model.TotalSellers.ToString("N0")</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card" onclick="switchAdminTab('products')" style="cursor: pointer;">
+                    <div class="kpi-icon-wrap" style="background: rgba(6, 182, 212, 0.15); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.3);">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                    </div>
+                    <div>
+                        <div class="kpi-label">Products</div>
+                        <div class="kpi-value" id="kpiProducts">@Model.TotalProducts.ToString("N0")</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card" onclick="switchAdminTab('orders')" style="cursor: pointer;">
+                    <div class="kpi-icon-wrap" style="background: rgba(139, 92, 246, 0.15); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3);">
+                        <i class="fa-solid fa-bag-shopping"></i>
+                    </div>
+                    <div>
+                        <div class="kpi-label">Orders</div>
+                        <div class="kpi-value" id="kpiOrders">@Model.TotalOrders.ToString("N0")</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Featured Today's Sales Banner -->
+            <div class="sales-highlight-card">
+                <div class="row align-items-center g-3">
+                    <div class="col-md-7">
+                        <div class="text-secondary small fw-bold text-uppercase mb-1"><i class="fa-solid fa-bolt me-1 text-success"></i> Real-Time Daily GMV</div>
+                        <div class="d-flex align-items-baseline gap-3 flex-wrap">
+                            <span class="text-secondary fs-4 fw-bold">Today's Sales:</span>
+                            <span class="sales-highlight-val text-emerald" style="color: #34d399;">₹@Model.TodaySales.ToString("N0")</span>
+                            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-40 px-2.5 py-1 rounded-pill small">
+                                <i class="fa-solid fa-arrow-trend-up me-1"></i> +18.4% vs yesterday
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-5 text-md-end">
+                        <div class="d-inline-flex flex-column gap-1 text-start p-2.5 rounded-3" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--card-border);">
+                            <small class="text-secondary">Platform 5% Commission: <strong class="text-warning font-monospace">₹22,500</strong></small>
+                            <small class="text-secondary">Settled Merchant Payouts: <strong class="text-success font-monospace">₹4,27,500</strong></small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- The 3 Pending Attention Cards -->
+            <div class="pending-grid">
+                <div class="pending-card" onclick="switchAdminTab('sellers')" style="border-left: 4px solid #f59e0b; cursor: pointer;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="fs-2 text-warning"><i class="fa-solid fa-user-clock"></i></div>
+                        <div>
+                            <div class="text-white fw-bold">Pending Seller Requests</div>
+                            <small class="text-secondary">New merchant applications</small>
+                        </div>
+                    </div>
+                    <div class="pending-count-badge bg-warning bg-opacity-15 text-warning border border-warning border-opacity-30">
+                        @Model.PendingSellerRequests
+                    </div>
+                </div>
+
+                <div class="pending-card" onclick="switchAdminTab('returns')" style="border-left: 4px solid #f43f5e; cursor: pointer;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="fs-2 text-danger"><i class="fa-solid fa-rotate-left"></i></div>
+                        <div>
+                            <div class="text-white fw-bold">Pending Returns</div>
+                            <small class="text-secondary">Doorstep returns to audit</small>
+                        </div>
+                    </div>
+                    <div class="pending-count-badge bg-danger bg-opacity-15 text-danger border border-danger border-opacity-30">
+                        @Model.PendingReturns
+                    </div>
+                </div>
+
+                <div class="pending-card" onclick="switchAdminTab('complaints')" style="border-left: 4px solid #06b6d4; cursor: pointer;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="fs-2 text-info"><i class="fa-solid fa-headset"></i></div>
+                        <div>
+                            <div class="text-white fw-bold">Pending Complaints</div>
+                            <small class="text-secondary">Customer resolution desk</small>
+                        </div>
+                    </div>
+                    <div class="pending-count-badge bg-info bg-opacity-15 text-info border border-info border-opacity-30">
+                        @Model.PendingComplaints
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seller Requests Panel & Active Directory -->
+            <div class="row g-4">
+                <div class="col-lg-5">
+                    <div class="glass-card">
+                        <h3 class="section-title">
+                            <span><i class="fa-solid fa-users-gear text-warning me-2"></i> Pending Seller KYC</span>
+                            <span class="badge bg-warning text-dark fs-6 rounded-pill" id="badgePendingCount">@pendingShops.Count</span>
+                        </h3>
+
+                        <div id="pendingShopsList">
+                            @if (!pendingShops.Any())
+                            {
+                                <div class="p-4 rounded-4 text-center border border-secondary border-opacity-25" style="background: rgba(15, 23, 42, 0.4);">
+                                    <div class="fs-1 text-success mb-2"><i class="fa-solid fa-circle-check"></i></div>
+                                    <h6 class="text-white fw-bold">No Pending Requests</h6>
+                                    <p class="text-secondary small mb-0">All merchant applications have been reviewed.</p>
+                                </div>
+                            }
+                            else
+                            {
+                                @foreach (var shop in pendingShops)
+                                {
+                                    <div class="p-3 rounded-4 mb-3 border border-secondary border-opacity-25" id="pending-card-@shop.Id" style="background: rgba(15, 23, 42, 0.55);">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div>
+                                                <div class="text-white fw-bold fs-5 pending-shop-name">@shop.ShopName</div>
+                                                <div class="text-secondary small"><i class="fa-solid fa-user me-1 text-primary"></i> @(string.IsNullOrWhiteSpace(shop.OwnerName) ? "Merchant" : shop.OwnerName) &bull; <i class="fa-solid fa-phone me-1 text-success"></i> @shop.PhoneNumber</div>
+                                            </div>
+                                            <span class="badge bg-warning bg-opacity-20 text-warning px-2.5 py-1 rounded-pill small pending-shop-cat">@shop.Category</span>
+                                        </div>
+                                        <div class="d-flex gap-2 mt-3">
+                                            <button type="button" class="btn btn-outline-info btn-sm flex-grow-1" onclick="viewSellerModal(@shop.Id)"><i class="fa-solid fa-eye me-1"></i> View</button>
+                                            <button type="button" class="btn btn-success btn-sm flex-grow-1" onclick="approveSeller(@shop.Id)"><i class="fa-solid fa-check me-1"></i> Approve</button>
+                                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="openRejectSellerModal(@shop.Id, '@Html.Raw(shop.ShopName.Replace("'", "\\'"))')"><i class="fa-solid fa-xmark"></i></button>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-7">
+                    <div class="glass-card">
+                        <h3 class="section-title">
+                            <span><i class="fa-solid fa-store text-success me-2"></i> Active Partner Stores</span>
+                            <span class="badge bg-success fs-6 rounded-pill" id="badgeActiveCount">@approvedShops.Count</span>
+                        </h3>
+                        <div class="table-responsive">
+                            <table class="table approved-table">
+                                <thead>
+                                    <tr>
+                                        <th>Store & Owner</th>
+                                        <th>Category</th>
+                                        <th>Mobile</th>
+                                        <th style="text-align: center;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="approvedShopsTableBody">
+                                    @foreach (var shop in approvedShops.Take(6))
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="fw-bold text-white">@shop.ShopName</div>
+                                                <div class="text-secondary small">@(string.IsNullOrEmpty(shop.City) ? "Patna" : shop.City)</div>
+                                            </td>
+                                            <td><span class="badge bg-secondary bg-opacity-30 text-light px-2 py-1">@shop.Category</span></td>
+                                            <td class="font-monospace text-secondary small">@shop.PhoneNumber</td>
+                                            <td style="text-align: center;">
+                                                <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-2.5 py-1 rounded-pill">Active</span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>

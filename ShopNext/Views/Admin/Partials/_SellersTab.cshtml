@@ -1,0 +1,142 @@
+@model ShopNext.Models.AdminDashboardViewModel
+        <div class="tab-panel-container" id="panel-sellers">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                    <div>
+                        <h3 class="fw-bold text-white mb-1"><i class="fa-solid fa-store text-warning me-2"></i> Seller Management</h3>
+                        <p class="text-secondary small mb-0">Review merchant onboarding, monitor shop performance, and manage approvals & restrictions.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <div class="btn-group bg-dark p-1 rounded-3 border border-secondary border-opacity-25" role="group">
+                            <button type="button" class="btn btn-sm btn-dark seller-filter-btn active" onclick="filterSellerTable('all', this)" id="btnFilterAll">All</button>
+                            <button type="button" class="btn btn-sm btn-dark seller-filter-btn" onclick="filterSellerTable('Approved', this)" id="btnFilterApproved">
+                                <span class="text-success"><i class="fa-solid fa-circle-check me-1"></i> Approved</span>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-dark seller-filter-btn" onclick="filterSellerTable('Pending', this)" id="btnFilterPending">
+                                <span class="text-warning"><i class="fa-solid fa-clock me-1"></i> Pending</span>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-dark seller-filter-btn" onclick="filterSellerTable('Rejected', this)" id="btnFilterRejected">
+                                <span class="text-danger"><i class="fa-solid fa-xmark me-1"></i> Rejected</span>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-dark seller-filter-btn" onclick="filterSellerTable('Blocked', this)" id="btnFilterBlocked">
+                                <span class="text-danger-emphasis" style="color: #f87171;"><i class="fa-solid fa-ban me-1"></i> Blocked</span>
+                            </button>
+                        </div>
+                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill font-monospace fw-bold">@Model.TotalSellers Sellers</span>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table approved-table">
+                        <thead>
+                            <tr>
+                                <th>Shop Name</th>
+                                <th>Owner</th>
+                                <th>Email</th>
+                                <th>Mobile</th>
+                                <th style="text-align: center;">Status</th>
+                                <th style="text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sellerTableBody">
+                            @foreach (var seller in Model.SellersList)
+                            {
+                                <tr id="seller-row-@seller.Id" class="seller-table-row" data-status="@seller.Status">
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="p-2 rounded-3 bg-warning bg-opacity-15 text-warning">
+                                                <i class="fa-solid fa-shop"></i>
+                                            </div>
+                                            <div>
+                                                <strong class="text-white seller-shop-name" id="seller-name-@seller.Id">@seller.ShopName</strong>
+                                                <div class="text-secondary small">
+                                                    <span class="badge bg-secondary bg-opacity-30 text-light me-1">@seller.Category</span>
+                                                    <span>@seller.City &bull; @seller.TotalProducts items</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="text-light fw-semibold seller-owner-name">@seller.Owner</div>
+                                        <small class="text-secondary">⭐ @seller.Rating.ToString("F1")</small>
+                                    </td>
+                                    <td class="text-secondary font-monospace small seller-email-val">@seller.Email</td>
+                                    <td class="text-secondary font-monospace small seller-mobile-val">@seller.Mobile</td>
+                                    <td style="text-align: center;" id="seller-status-cell-@seller.Id">
+                                        @if (seller.Status == "Approved")
+                                        {
+                                            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-circle-check me-1"></i> Approved
+                                            </span>
+                                        }
+                                        else if (seller.Status == "Pending")
+                                        {
+                                            <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-clock me-1"></i> Pending
+                                            </span>
+                                        }
+                                        else if (seller.Status == "Rejected")
+                                        {
+                                            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-xmark me-1"></i> Rejected
+                                            </span>
+                                        }
+                                        else if (seller.Status == "Blocked")
+                                        {
+                                            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill">
+                                                <i class="fa-solid fa-ban me-1"></i> Blocked
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary bg-opacity-25 text-secondary px-2.5 py-1 rounded-pill">@seller.Status</span>
+                                        }
+                                    </td>
+                                    <td style="text-align: center;" id="seller-action-cell-@seller.Id">
+                                        <div class="d-inline-flex gap-1.5 flex-wrap justify-content-center">
+                                            <!-- [View] -->
+                                            <button type="button" class="btn btn-outline-info btn-sm px-2 py-1 rounded-3" onclick="viewSellerModal(@seller.Id)" title="View Details">
+                                                <i class="fa-solid fa-eye me-1"></i> View
+                                            </button>
+
+                                            @if (seller.Status == "Pending")
+                                            {
+                                                <!-- [Approve] -->
+                                                <button type="button" class="btn btn-success btn-sm px-2 py-1 rounded-3 fw-bold" onclick="approveSeller(@seller.Id)" title="Approve Seller">
+                                                    <i class="fa-solid fa-check me-1"></i> Approve
+                                                </button>
+                                                <!-- [Reject] -->
+                                                <button type="button" class="btn btn-outline-danger btn-sm px-2 py-1 rounded-3" onclick="openRejectSellerModal(@seller.Id, '@Html.Raw(seller.ShopName.Replace("'", "\\'"))')" title="Reject Application">
+                                                    <i class="fa-solid fa-xmark me-1"></i> Reject
+                                                </button>
+                                            }
+                                            else if (seller.Status == "Approved")
+                                            {
+                                                <!-- [Block] -->
+                                                <button type="button" class="btn btn-outline-danger btn-sm px-2 py-1 rounded-3 fw-bold" onclick="openBlockSellerModal(@seller.Id, '@Html.Raw(seller.ShopName.Replace("'", "\\'"))')" title="Block Seller">
+                                                    <i class="fa-solid fa-ban me-1"></i> Block
+                                                </button>
+                                            }
+                                            else if (seller.Status == "Blocked")
+                                            {
+                                                <!-- [Unblock] -->
+                                                <button type="button" class="btn btn-outline-success btn-sm px-2 py-1 rounded-3 fw-bold" onclick="unblockSeller(@seller.Id)" title="Unblock Seller">
+                                                    <i class="fa-solid fa-lock-open me-1"></i> Unblock
+                                                </button>
+                                            }
+                                            else if (seller.Status == "Rejected")
+                                            {
+                                                <!-- [Approve] Re-approve -->
+                                                <button type="button" class="btn btn-outline-success btn-sm px-2 py-1 rounded-3 fw-bold" onclick="approveSeller(@seller.Id)" title="Re-approve Seller">
+                                                    <i class="fa-solid fa-check me-1"></i> Approve
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>

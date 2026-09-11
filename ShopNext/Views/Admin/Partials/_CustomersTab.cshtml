@@ -1,0 +1,124 @@
+@model ShopNext.Models.AdminDashboardViewModel
+        <div class="tab-panel-container" id="panel-customers">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                    <div>
+                        <h3 class="fw-bold text-white mb-1"><i class="fa-solid fa-users text-primary me-2"></i> Customer Management</h3>
+                        <p class="text-secondary small mb-0">Audit consumer profiles, order histories, and manage active / block permissions.</p>
+                    </div>
+                    <span class="badge bg-primary bg-opacity-25 text-primary px-3 py-2 rounded-pill font-monospace">@Model.TotalCustomers.ToString("N0") Customers</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table approved-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Mobile</th>
+                                <th style="text-align: center;">Status</th>
+                                <th style="text-align: center;">Risk Assessment (Point 36)</th>
+                                <th>Registration Date</th>
+                                <th style="text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customerTableBody">
+                            @foreach (var cust in Model.CustomersList)
+                            {
+                                <tr id="cust-row-@cust.Id">
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="p-2 rounded-circle bg-primary bg-opacity-15 text-primary">
+                                                <i class="fa-solid fa-user"></i>
+                                            </div>
+                                            <div>
+                                                <strong class="text-white cust-name" id="cust-name-@cust.Id">@cust.Name</strong>
+                                                <div class="text-secondary small">Patna &bull; @cust.TotalOrders orders</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-light cust-email">@cust.Email</td>
+                                    <td class="font-monospace text-secondary cust-mobile">@(string.IsNullOrWhiteSpace(cust.Mobile) ? cust.Phone : cust.Mobile)</td>
+                                    <td style="text-align: center;" id="cust-status-cell-@cust.Id">
+                                        @if (cust.RestrictionLevel == "Account Blocked" || cust.Status == "Blocked" || !cust.IsActive)
+                                        {
+                                            <span class="badge bg-danger text-white border border-danger px-2.5 py-1 rounded-pill"><i class="fa-solid fa-user-slash me-1"></i> Blocked</span>
+                                        }
+                                        else if (cust.RestrictionLevel == "Account Suspended" || cust.IsAccountSuspended)
+                                        {
+                                            <span class="badge bg-secondary bg-opacity-35 text-light border border-secondary border-opacity-30 px-2.5 py-1 rounded-pill"><i class="fa-solid fa-clock me-1"></i> Suspended</span>
+                                        }
+                                        else if (cust.RestrictionLevel == "Return Restricted" || cust.IsReturnDisabled)
+                                        {
+                                            <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30 px-2.5 py-1 rounded-pill" style="color: #fb923c !important;"><i class="fa-solid fa-rotate-left me-1"></i> Return Restricted</span>
+                                        }
+                                        else if (cust.RestrictionLevel == "COD Restricted" || cust.IsCodDisabled)
+                                        {
+                                            <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 px-2.5 py-1 rounded-pill"><i class="fa-solid fa-ban me-1"></i> COD Restricted</span>
+                                        }
+                                        else if (cust.RestrictionLevel == "Warning")
+                                        {
+                                            <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30 px-2.5 py-1 rounded-pill"><i class="fa-solid fa-triangle-exclamation me-1"></i> Warning</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-2.5 py-1 rounded-pill"><i class="fa-solid fa-circle-check me-1"></i> Normal</span>
+                                        }
+                                    </td>
+                                    <td style="text-align: center;" id="cust-risk-cell-@cust.Id">
+                                        @if (cust.RiskLevel == "High" || cust.RiskScore >= 70)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-danger px-2.5 py-1 rounded-pill shadow-sm" onclick="openCustomerRiskModal(@cust.Id)" title="High Fraud / Abuse Risk Detected - Click for Breakdown">
+                                                <span class="spinner-grow spinner-grow-sm text-danger me-1" style="width: 0.5rem; height: 0.5rem;" role="status"></span>
+                                                <span class="fw-bold">High 🔴</span>
+                                                <span class="badge bg-danger ms-1">@cust.RiskScore/100</span>
+                                            </button>
+                                        }
+                                        else if (cust.RiskLevel == "Medium" || cust.RiskScore >= 30)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-warning px-2.5 py-1 rounded-pill" onclick="openCustomerRiskModal(@cust.Id)" title="Medium Risk - Monitoring Recommended">
+                                                <span class="fw-bold">Medium 🟡</span>
+                                                <span class="badge bg-warning text-dark ms-1">@cust.RiskScore/100</span>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-success px-2.5 py-1 rounded-pill" onclick="openCustomerRiskModal(@cust.Id)" title="Low Risk - Verified Safe Shopper">
+                                                <span class="fw-bold">Low 🟢</span>
+                                                <span class="badge bg-success ms-1">@cust.RiskScore/100</span>
+                                            </button>
+                                        }
+                                        @if (cust.IsCodDisabled)
+                                        {
+                                            <div class="mt-1"><span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30" style="font-size: 0.68rem;"><i class="fa-solid fa-ban me-0.5"></i> COD Restricted</span></div>
+                                        }
+                                        @if (cust.IsReturnDisabled)
+                                        {
+                                            <div class="mt-1"><span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30" style="font-size: 0.68rem;"><i class="fa-solid fa-rotate-left me-0.5"></i> Return Blocked</span></div>
+                                        }
+                                    </td>
+                                    <td class="text-secondary small font-monospace">@cust.RegistrationDate</td>
+                                    <td style="text-align: center;" id="cust-action-cell-@cust.Id">
+                                        <div class="d-inline-flex gap-1.5 flex-wrap justify-content-center">
+                                            <!-- [Point 46: Manage Restrictions] -->
+                                            <button type="button" class="btn btn-outline-danger btn-sm px-2.5 py-1 rounded-3 fw-bold" onclick="openCustomerRestrictionModal(@cust.Id)" id="btn-restrict-cust-@cust.Id" title="Point 46: Granular Customer Restriction Management (Normal, Warning, COD, Return, Suspended, Blocked)">
+                                                <i class="fa-solid fa-user-gear me-1"></i> Restrict
+                                            </button>
+
+                                            <!-- [Risk Profile] -->
+                                            <button type="button" class="btn btn-outline-warning btn-sm px-2.5 py-1 rounded-3" onclick="openCustomerRiskModal(@cust.Id)" id="btn-risk-cust-@cust.Id" title="Inspect Suspicious Activity &amp; Risk Engine Score">
+                                                <i class="fa-solid fa-shield-halved me-1"></i> Risk
+                                            </button>
+
+                                            <!-- [View] -->
+                                            <button type="button" class="btn btn-outline-info btn-sm px-2.5 py-1 rounded-3" onclick="viewCustomerModal(@cust.Id)" id="btn-view-cust-@cust.Id" title="View Lifetime History &amp; Orders">
+                                                <i class="fa-solid fa-eye me-1"></i> View
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>

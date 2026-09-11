@@ -1,0 +1,190 @@
+@model ShopNext.Models.AdminDashboardViewModel
+        <div class="tab-panel-container" id="panel-orders">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                    <div>
+                        <h3 class="fw-bold text-white mb-1"><i class="fa-solid fa-bag-shopping text-emerald me-2" style="color: #34d399;"></i> Order Management &amp; Telemetry</h3>
+                        <p class="text-secondary small mb-0">Track all marketplace orders across customers, sellers, payment modes, and delivery lifecycle.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="badge bg-success bg-opacity-20 text-success px-3 py-2 rounded-pill font-monospace" id="orderTotalHeaderBadge">
+                            <i class="fa-solid fa-bag-shopping me-1"></i> @Model.OrdersList.Count Total Orders
+                        </span>
+                        <span class="badge bg-info bg-opacity-20 text-info px-3 py-2 rounded-pill font-monospace">
+                            ₹@Model.OrdersList.Sum(o => o.TotalAmount).ToString("N0") Volume
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Point 38: Multi-Dimensional Filter Bar (Date, Status, Seller, Customer) -->
+                <div class="p-3 rounded-4 mb-4 border border-secondary border-opacity-25" style="background: rgba(15, 23, 42, 0.65);">
+                    <div class="row g-3 align-items-center">
+                        <!-- Date Filter Buttons (Today, Yesterday, This Month, All) -->
+                        <div class="col-lg-4 col-md-12">
+                            <label class="form-label text-secondary small fw-bold mb-1"><i class="fa-regular fa-calendar me-1 text-info"></i> Date Filter</label>
+                            <div class="d-flex gap-1.5 flex-wrap">
+                                <button type="button" class="btn btn-sm btn-outline-light rounded-pill px-3 fw-bold order-date-btn active" onclick="setDateOrderFilter('all', this)" id="btnOrderDateAll">All Dates</button>
+                                <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-3 fw-bold order-date-btn" onclick="setDateOrderFilter('Today', this)">Today</button>
+                                <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-3 fw-bold order-date-btn" onclick="setDateOrderFilter('Yesterday', this)">Yesterday</button>
+                                <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-3 fw-bold order-date-btn" onclick="setDateOrderFilter('ThisMonth', this)">This Month</button>
+                            </div>
+                        </div>
+
+                        <!-- Status Filter Dropdown -->
+                        <div class="col-lg-2 col-md-4">
+                            <label class="form-label text-secondary small fw-bold mb-1"><i class="fa-solid fa-signal me-1 text-warning"></i> Status</label>
+                            <select id="orderStatusFilter" class="form-select form-select-sm bg-dark text-white border-secondary" onchange="filterAdminOrders()">
+                                <option value="all" selected>All Statuses</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Accepted">Accepted</option>
+                                <option value="Preparing">Preparing</option>
+                                <option value="OutForDelivery">Out For Delivery</option>
+                                <option value="Delivered">Delivered</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                        </div>
+
+                        <!-- Seller Filter Dropdown -->
+                        <div class="col-lg-3 col-md-4">
+                            <label class="form-label text-secondary small fw-bold mb-1"><i class="fa-solid fa-store me-1 text-warning"></i> Seller / Shop</label>
+                            <select id="orderSellerFilter" class="form-select form-select-sm bg-dark text-white border-secondary" onchange="filterAdminOrders()">
+                                <option value="all" selected>All Sellers</option>
+                                @foreach (var sellerName in Model.OrdersList.Select(o => o.ShopName).Distinct())
+                                {
+                                    <option value="@sellerName">@sellerName</option>
+                                }
+                            </select>
+                        </div>
+
+                        <!-- Customer Search Input -->
+                        <div class="col-lg-3 col-md-4">
+                            <label class="form-label text-secondary small fw-bold mb-1"><i class="fa-solid fa-user me-1 text-primary"></i> Customer Search</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-dark text-secondary border-secondary"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                <input type="text" id="orderCustomerSearch" class="form-control bg-dark text-white border-secondary" placeholder="Name, Phone, or #ORD..." oninput="filterAdminOrders()" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Point 38: Orders Table (Order ID, Customer, Seller, Amount, Payment, Status, Date) -->
+                <div class="table-responsive">
+                    <table class="table approved-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Seller</th>
+                                <th>Amount</th>
+                                <th>Payment</th>
+                                <th style="text-align: center;">Status</th>
+                                <th>Date</th>
+                                <th style="text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody">
+                            @foreach (var ord in Model.OrdersList)
+                            {
+                                <tr class="order-table-row" id="order-row-@ord.Id" data-date="@ord.DateFilterCategory" data-status="@ord.OrderStatus" data-seller="@ord.ShopName" data-customer="@ord.CustomerName @ord.CustomerMobile @ord.OrderNumber">
+                                    <!-- Order ID -->
+                                    <td>
+                                        <div class="font-monospace text-info fw-bold" id="order-num-@ord.Id">@ord.OrderNumber</div>
+                                        <small class="text-secondary">@ord.ItemCount item(s)</small>
+                                    </td>
+
+                                    <!-- Customer -->
+                                    <td>
+                                        <strong class="text-white">@ord.CustomerName</strong>
+                                        <div class="text-secondary small font-monospace">@ord.CustomerMobile</div>
+                                        <div class="text-muted small text-truncate" style="max-width: 180px;" title="@ord.DeliveryAddress">@ord.DeliveryAddress</div>
+                                    </td>
+
+                                    <!-- Seller -->
+                                    <td>
+                                        <strong class="text-white">@ord.ShopName</strong>
+                                        <div class="text-secondary small">Owner: @ord.SellerOwner</div>
+                                    </td>
+
+                                    <!-- Amount -->
+                                    <td>
+                                        <div class="font-monospace text-success fw-bold">₹@ord.TotalAmount.ToString("N2")</div>
+                                    </td>
+
+                                    <!-- Payment -->
+                                    <td>
+                                        <span class="badge bg-secondary bg-opacity-30 text-light px-2 py-0.5 mb-1 d-inline-block">@ord.PaymentMode</span>
+                                        <div>
+                                            @if (ord.PaymentStatus == "Paid" || ord.PaymentStatus == "Success")
+                                            {
+                                                <span class="badge bg-success bg-opacity-20 text-success py-0.5 px-1.5 rounded" id="order-pay-status-@ord.Id">Paid</span>
+                                            }
+                                            else if (ord.PaymentStatus == "Refunded")
+                                            {
+                                                <span class="badge bg-warning bg-opacity-20 text-warning py-0.5 px-1.5 rounded" id="order-pay-status-@ord.Id">Refunded</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger bg-opacity-20 text-danger py-0.5 px-1.5 rounded" id="order-pay-status-@ord.Id">@ord.PaymentStatus</span>
+                                            }
+                                        </div>
+                                    </td>
+
+                                    <!-- Status -->
+                                    <td style="text-align: center;" id="order-status-cell-@ord.Id">
+                                        @if (ord.OrderStatus == "Delivered")
+                                        {
+                                            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-30 px-2.5 py-1.5 rounded-pill">
+                                                <i class="fa-solid fa-circle-check me-1"></i> Delivered
+                                            </span>
+                                        }
+                                        else if (ord.OrderStatus == "OutForDelivery")
+                                        {
+                                            <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-30 px-2.5 py-1.5 rounded-pill">
+                                                <i class="fa-solid fa-truck-fast me-1"></i> Out for Delivery
+                                            </span>
+                                        }
+                                        else if (ord.OrderStatus == "Preparing" || ord.OrderStatus == "Accepted")
+                                        {
+                                            <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-30 px-2.5 py-1.5 rounded-pill">
+                                                <i class="fa-solid fa-boxes-packing me-1"></i> @ord.OrderStatus
+                                            </span>
+                                        }
+                                        else if (ord.OrderStatus == "Cancelled")
+                                        {
+                                            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-30 px-2.5 py-1.5 rounded-pill">
+                                                <i class="fa-solid fa-ban me-1"></i> Cancelled
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary bg-opacity-30 text-light border border-secondary border-opacity-30 px-2.5 py-1.5 rounded-pill">
+                                                <i class="fa-solid fa-clock me-1"></i> @ord.OrderStatus
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <!-- Date -->
+                                    <td class="text-secondary small font-monospace">
+                                        @ord.FormattedDate
+                                    </td>
+
+                                    <!-- Actions -->
+                                    <td style="text-align: center;">
+                                        <div class="d-inline-flex gap-1.5 flex-wrap justify-content-center">
+                                            <!-- [View] -->
+                                            <button type="button" class="btn btn-outline-info btn-sm px-2 py-1 rounded-3" onclick="viewAdminOrderModal(@ord.Id)" title="View Order Details">
+                                                <i class="fa-solid fa-eye me-1"></i> View
+                                            </button>
+                                            <!-- [Update Status] -->
+                                            <button type="button" class="btn btn-outline-warning btn-sm px-2 py-1 rounded-3" onclick="openUpdateOrderStatusModal(@ord.Id, '@ord.OrderStatus')" title="Change Order Status">
+                                                <i class="fa-solid fa-pen-to-square me-1"></i> Status
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>

@@ -1633,3 +1633,131 @@ GO
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Reviews_Product_CreatedDate' AND object_id = OBJECT_ID('Reviews'))
     CREATE NONCLUSTERED INDEX IX_Reviews_Product_CreatedDate ON dbo.Reviews (ProductId, CreatedDate DESC);
 GO
+
+-- ==============================================================================
+-- HIGH-PERFORMANCE ADMIN TELEMETRY STORED PROCEDURES (< 10ms execution)
+-- ==============================================================================
+
+-- 1. Master Dashboard Summary SP
+CREATE OR ALTER PROCEDURE dbo.sp_GetAdminDashboardSummary
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        (SELECT COUNT(1) FROM dbo.Users WHERE Role = 'Customer' AND IsDeleted = 0) AS TotalCustomers,
+        (SELECT COUNT(1) FROM dbo.Shops WHERE IsDeleted = 0) AS TotalSellers,
+        (SELECT COUNT(1) FROM dbo.Shops WHERE IsApproved = 0 AND IsDeleted = 0) AS PendingSellerRequests,
+        (SELECT COUNT(1) FROM dbo.Products WHERE IsDeleted = 0) AS TotalProducts,
+        (SELECT COUNT(1) FROM dbo.Orders WHERE IsDeleted = 0) AS TotalOrders,
+        (SELECT ISNULL(SUM(TotalAmount), 0) FROM dbo.Orders WHERE CAST(CreatedDate AS DATE) = CAST(GETDATE() AS DATE)) AS TodaySales,
+        (SELECT COUNT(1) FROM dbo.Orders WHERE ReturnStatus IS NOT NULL AND ReturnStatus NOT IN ('Resolved', 'Rejected')) AS PendingReturns,
+        (SELECT COUNT(1) FROM dbo.Complaints WHERE Status = 'Open') AS PendingComplaints;
+END;
+GO
+
+-- 2. Fast Admin Customers List SP
+CREATE OR ALTER PROCEDURE dbo.sp_GetAdminCustomersList
+    @Limit INT = 50
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT TOP (@Limit)
+        u.Id,
+        u.Name,
+        u.Email,
+        u.PhoneNumber,
+        u.CreatedAt,
+        u.CreatedDate,
+        u.IsActive,
+        u.RiskScore,
+        u.RiskLevel,
+        u.IsCodDisabled,
+        u.IsAccountSuspended,
+        ISNULL(o.OrdersCount, 0) AS TotalOrders,
+        ISNULL(o.TotalSpent, 0) AS TotalSpent
+    FROM dbo.Users u
+    OUTER APPLY (
+        SELECT COUNT(1) AS OrdersCount, ISNULL(SUM(ord.TotalAmount), 0) AS TotalSpent
+        FROM dbo.Orders ord
+        WHERE ord.CustomerId = u.Id AND ord.IsDeleted = 0
+    ) o
+    WHERE u.Role = 'Customer' AND u.IsDeleted = 0
+    ORDER BY u.CreatedDate DESC;
+END;
+GO
+
+-- 3. Fast Admin Sellers List SP
+CREATE OR ALTER PROCEDURE dbo.sp_GetAdminSellersList
+    @Limit INT = 50
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT TOP (@Limit)
+        s.Id,
+        s.ShopName,
+        s.OwnerName,
+        s.PhoneNumber,
+        s.Email,
+        s.Category,
+        s.City,
+        s.State,
+        s.IsApproved,
+        s.IsActive,
+        s.CreatedDate,
+        s.Rating,
+        ISNULL(p.ProductCount, 0) AS TotalProducts,
+        ISNULL(o.OrderCount, 0) AS TotalOrders
+    FROM dbo.Shops s
+    OUTER APPLY (
+        SELECT COUNT(1) AS ProductCount
+        FROM dbo.Products pr
+        WHERE pr.ShopId = s.Id AND pr.IsDeleted = 0
+    ) p
+    OUTER APPLY (
+        SELECT COUNT(1) AS OrderCount
+        FROM dbo.Orders ord
+        WHERE ord.ShopId = s.Id AND ord.IsDeleted = 0
+    ) o
+    WHERE s.IsDeleted = 0
+    ORDER BY s.CreatedDate DESC;
+END;
+GO
+
+-- 4. Fast Admin 3-Party Complaints List SP
+CREATE OR ALTER PROCEDURE dbo.sp_GetAdminComplaintsList
+    @Limit INT = 50
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT TOP (@Limit)
+        c.Id,
+        c.TicketNumber,
+        c.CustomerId,
+        c.OrderId,
+        c.Issue,
+        c.Description,
+        c.Priority,
+        c.Status,
+        c.ComplainantRole,
+        c.ComplainantName,
+        c.SellerStatement,
+        c.RiderStatement,
+        c.EscalationLevel,
+        c.EscalationStage,
+        c.OrderAmount,
+        c.CreatedDate,
+        u.Name AS CustomerName,
+        u.PhoneNumber AS CustomerPhone,
+        s.ShopName
+    FROM dbo.Complaints c
+    LEFT JOIN dbo.Users u ON u.Id = c.CustomerId
+    LEFT JOIN dbo.Orders ord ON ord.Id = c.OrderId
+    LEFT JOIN dbo.Shops s ON s.Id = ord.ShopId
+    WHERE c.IsDeleted = 0
+    ORDER BY c.CreatedDate DESC;
+END;
+GO
