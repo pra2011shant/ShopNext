@@ -1,4 +1,4 @@
-@* Views/Admin/Dashboard.cshtml - Point 31 & 32: Admin Sidebar Dashboard *@
+﻿@* Views/Admin/Dashboard.cshtml - Point 31 & 32: Admin Sidebar Dashboard *@
 @model ShopNext.Models.AdminDashboardViewModel
 @{
     ViewData["Title"] = "ADMIN DASHBOARD - ShopNext Control Panel";
@@ -714,26 +714,6 @@
 
 @section Scripts {
 <script>
-    // ==========================================
-    // SIDEBAR TAB NAVIGATION
-    // ==========================================
-    function switchAdminTab(tabKey, clickedEl) {
-        document.querySelectorAll('.nav-sidebar-item').forEach(el => el.classList.remove('active'));
-        if (clickedEl) {
-            clickedEl.classList.add('active');
-        } else {
-            const el = document.getElementById('nav-' + tabKey);
-            if (el) el.classList.add('active');
-        }
-
-        document.querySelectorAll('.tab-panel-container').forEach(panel => panel.classList.remove('active'));
-        const activePanel = document.getElementById('panel-' + tabKey);
-        if (activePanel) {
-            activePanel.classList.add('active');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    }
-
     // ==========================================
     // POINT 80: SMART RISK DRILL-DOWN INVESTIGATION
     // ==========================================
