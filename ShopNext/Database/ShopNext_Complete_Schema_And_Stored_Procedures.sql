@@ -452,16 +452,37 @@ IF OBJECT_ID('dbo.Complaints', 'U') IS NULL
 BEGIN
     CREATE TABLE dbo.Complaints (
         Id INT IDENTITY(1,1) PRIMARY KEY,
-        TicketId NVARCHAR(100) NOT NULL,
+        TicketNumber NVARCHAR(50) NOT NULL DEFAULT '',
         OrderId INT NOT NULL,
         CustomerId INT NOT NULL,
-        Issue NVARCHAR(200) NOT NULL,
+        Issue NVARCHAR(150) NOT NULL,
         Description NVARCHAR(MAX) NOT NULL,
-        AttachmentUrl NVARCHAR(MAX) NULL,
+        AttachmentUrl NVARCHAR(1000) NULL,
         Priority NVARCHAR(50) NOT NULL DEFAULT 'High',
         Status NVARCHAR(50) NOT NULL DEFAULT 'Open',
         ResolutionNotes NVARCHAR(MAX) NULL,
         ResolvedDate DATETIME2 NULL,
+        
+        -- Multi-party & 3-Way Statements
+        ComplainantRole NVARCHAR(50) NOT NULL DEFAULT 'Customer',
+        RiderId INT NULL,
+        ComplainantName NVARCHAR(150) NULL,
+        ReasonCategory NVARCHAR(100) NULL,
+        SellerStatement NVARCHAR(1000) NULL,
+        SellerStatementDate DATETIME2 NULL,
+        RiderStatement NVARCHAR(1000) NULL,
+        RiderStatementDate DATETIME2 NULL,
+        ThreadMessagesJson NVARCHAR(MAX) NULL,
+        
+        -- Escalation Tier & Priority
+        EscalationLevel INT NOT NULL DEFAULT 1,
+        EscalationStage NVARCHAR(50) NOT NULL DEFAULT 'Customer',
+        IsHighValueOrder BIT NOT NULL DEFAULT 0,
+        OrderAmount DECIMAL(18,2) NOT NULL DEFAULT 0,
+        EscalatedToAdminDate DATETIME2 NULL,
+        EscalationReason NVARCHAR(500) NULL,
+        
+        -- BaseModel Audit Fields
         Remark NVARCHAR(MAX) NULL,
         CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
         CreatedById INT NULL,
